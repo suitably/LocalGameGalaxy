@@ -71,7 +71,8 @@ export const MelodiqNotesGame: React.FC = () => {
   }, [engine, start]);
   const practise = useCallback(
     (section: number) => {
-      engine.setLoop(section);
+      // the weakest bar and the one after it
+      engine.setLoop(section, Math.min(section + 1, engine.sections.length - 1));
       engine.setSpeed(0.75);
       start();
     },

@@ -6,6 +6,7 @@ import { measureIndexAt } from '../../../../modules/music-score';
 import { useSectionName } from './useSectionName';
 import { ResultsTable } from './ResultsTable';
 import { WaitChip } from './WaitChip';
+import { SkipToEndButton } from './SkipToEndButton';
 
 interface StageOverlayProps {
   engine: StageEngine;
@@ -32,7 +33,13 @@ export function StageOverlay({ engine, onStart, onPractise }: StageOverlayProps)
     t(`games.melodiq_notes.stage.${key}`, opts);
   const { state, song, players, focus, mode } = engine;
 
-  if (state === 'playing') return <WaitChip engine={engine} />;
+  if (state === 'playing')
+    return (
+      <>
+        <WaitChip engine={engine} />
+        <SkipToEndButton engine={engine} floating />
+      </>
+    );
   if (!song || !players.length) return null;
 
   if (state === 'done') {
@@ -113,6 +120,7 @@ export function StageOverlay({ engine, onStart, onPractise }: StageOverlayProps)
         <Button variant="contained" size="large" onClick={onStart}>
           {paused ? k('resume') : k('start')}
         </Button>
+        {paused && <SkipToEndButton engine={engine} />}
       </Stack>
     </Box>
   );

@@ -1,4 +1,3 @@
-/** Shared song, sound and clock helpers for the stage engine tests. */
 import type { ScoreSong } from '../../../../../modules/music-score';
 import type { StageEngine } from '../StageEngine';
 import type { StageSound } from '../types';

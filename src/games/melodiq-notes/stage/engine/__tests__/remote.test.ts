@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { StageEngine } from '../StageEngine';
 import { applyRemoteJudged, seatRemotes, showRemoteInput } from '../remote';
-import { fakeSound, run, song } from './stageFixtures';
+import { fakeSound, run, song } from './fixtures';
 
 describe('StageEngine with pults', () => {
   it('seats a pult, never judges it itself and merges what the pult judged', () => {

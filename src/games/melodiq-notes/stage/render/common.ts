@@ -34,6 +34,15 @@ export const STAGE = {
 } as const;
 
 export const MISS_COLOR = STAGE.dim;
+
+/** Scrolling views put the play line at a third of the width; what lies left of it was played. */
+export const playLineX = (w: number, min = 52) => Math.max(min, w / 3);
+/** Opacity of notes that already passed the play line. */
+export const PLAYED_ALPHA = 0.35;
+/** Draws a note faint once its start has passed the play line. */
+export function fadeIfPlayed(g: Ctx, n: StageNote, beat: number) {
+  g.globalAlpha = n.t < beat ? PLAYED_ALPHA : 1;
+}
 export const FONT_BODY = fontFamilies.text;
 export const FONT_MONO = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 export const FONT_DISPLAY = fontFamilies.display;

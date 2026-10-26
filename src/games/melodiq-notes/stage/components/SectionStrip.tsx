@@ -1,16 +1,22 @@
 import { useMemo, useState } from 'react';
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { StageEngine } from '../engine/StageEngine';
 import { useStageLive } from '../useStage';
 import { sectionScore } from '../logic/judging';
 import {
-  groupOfSection,
-  groupSections,
+  loopSpan,
   mergeStats,
+  pickLoop,
+  rowProgress,
   sectionsWithNotes,
-  spanProgress,
+  stripRows,
+  togglePath,
+  type BarSpan,
+  type LoopPick,
+  type SectionGroup,
 } from '../logic/sectionGroups';
+import type { ScoreSong } from '../../../../modules/music-score';
 import { Playhead, SectionCell } from './SectionCell';
 import { useSectionName } from './useSectionName';
 
@@ -21,18 +27,38 @@ const gridOf = (n: number) => ({
   gap: '3px',
 });
 
+interface StripState {
+  song: ScoreSong | null;
+  /** Opened cell per row. */
+  path: number[];
+  pick: LoopPick | null;
+}
+
+/** Section span of the engine's loop (beats) as bars, or null without a loop. */
+function loopBars(engine: StageEngine): BarSpan | null {
+  if (!engine.loop) return null;
+  return {
+    first: engine.sectionAt(engine.loop.from),
+    last: engine.sectionAt(engine.loop.to - 1e-6),
+  };
+}
+
 /**
- * At most five group cells, coloured by how sure the highlighted player was; tap one to open its
- * sections, tap a section to loop it. Sections without notes carry no rating.
+ * The song as rows of at most five cells, coloured by how sure the highlighted player was. Tap a
+ * group to open its bars in the next row, down to single bars. Outside perform mode, two taps
+ * pick a loop's first and last bar or group; the loop chip turns it on and off.
  */
 export function SectionStrip({ engine }: { engine: StageEngine }) {
   useStageLive(engine);
   const { t } = useTranslation();
   const sectionName = useSectionName(engine);
-  const k = (key: string) => t(`games.melodiq_notes.stage.${key}`);
-  const [open, setOpen] = useState<number | null>(null);
-  const { sections, song, loop, focus, mode } = engine;
-  const groups = useMemo(() => (sections.length ? groupSections(sections) : []), [sections]);
+  const k = (key: string, opts?: Record<string, unknown>) =>
+    t(`games.melodiq_notes.stage.${key}`, opts);
+  const { sections, song, focus, mode } = engine;
+  const [state, setState] = useState<StripState>({ song: null, path: [], pick: null });
+  // a new song starts with closed rows and no pick
+  const { path, pick } = state.song === song ? state : { path: [], pick: null };
+  const rows = useMemo(() => stripRows(sections, path), [sections, path]);
   const hasNotes = useMemo(() => {
     const players = focus ? [focus] : engine.players;
     return sectionsWithNotes(
@@ -40,70 +66,84 @@ export function SectionStrip({ engine }: { engine: StageEngine }) {
       players.flatMap((p) => p.notes.map((n) => n.t)),
     );
   }, [sections, focus, engine.players]);
-  if (!song || !groups.length) return null;
-  const current = groupOfSection(groups, engine.sectionAt(Math.max(0, engine.beat)));
-  const expanded = open !== null && open < groups.length ? groups[open] : null;
-  const head = spanProgress(groups[current].from, groups[current].to, engine.beat);
-  const groupHead = head === null ? (engine.beat < 0 ? 0 : null) : (current + head) / groups.length;
-  const rate = (i: number) => {
-    const stat = focus?.stats.sections[i];
-    return stat && hasNotes[i] ? sectionScore(stat) : null;
+  if (!song || !rows.length) return null;
+
+  const picking = mode !== 'perform';
+  const looped = loopBars(engine);
+  const pickSpan = pick && picking ? loopSpan(pick) : null;
+  // a pick in progress shows over the running loop
+  const marked = pick && !pick.end ? pickSpan : (looped ?? pickSpan);
+  const spanName = (s: BarSpan) =>
+    s.first === s.last
+      ? sectionName(s.first)
+      : k('section_bars', { from: sections[s.first].firstBar, to: sections[s.last].lastBar });
+
+  const tap = (row: number, index: number, g: SectionGroup) => {
+    const nextPath = g.first === g.last ? path : togglePath(path, row, index);
+    const nextPick = picking ? pickLoop(pick, g) : pick;
+    setState({ song, path: nextPath, pick: nextPick });
+    // the loop follows a finished pick, and switches itself on
+    if (picking && nextPick?.end) {
+      const s = loopSpan(nextPick);
+      engine.setLoop(s.first, s.last);
+    }
   };
+  const toggleLoop = () => {
+    if (looped) engine.setLoop(null);
+    else if (pickSpan) engine.setLoop(pickSpan.first, pickSpan.last);
+  };
+  const hint = !picking
+    ? k('loop_perform')
+    : pick && !pick.end
+      ? k('loop_pick_end')
+      : k('loop_hint');
+  const chipSpan = looped ?? pickSpan;
+
   return (
     <Stack spacing={0.75}>
-      <Stack direction="row" justifyContent="space-between" flexWrap="wrap" gap={1}>
-        <Typography variant="caption" color="text.secondary">
+      <Stack direction="row" alignItems="center" flexWrap="wrap" gap={1}>
+        <Typography variant="caption" color="text.secondary" sx={{ flex: '1 1 auto' }}>
           {k('sections_title')}
         </Typography>
-        <Typography variant="caption" color="text.secondary">
-          {mode === 'perform' ? k('loop_perform') : loop ? k('loop_active') : k('loop_hint')}
-        </Typography>
+        <Chip
+          size="small"
+          color={looped ? 'primary' : 'default'}
+          variant={looped ? 'filled' : 'outlined'}
+          disabled={!picking || !chipSpan}
+          aria-pressed={!!looped}
+          label={chipSpan ? k('loop_chip', { bars: spanName(chipSpan) }) : k('loop_chip_none')}
+          onClick={toggleLoop}
+        />
       </Stack>
-      <Box sx={gridOf(groups.length)}>
-        {groups.map((g, gi) => {
-          const merged = mergeStats(focus?.stats.sections.slice(g.first, g.last + 1) ?? []);
-          const anyNotes = hasNotes.slice(g.first, g.last + 1).some(Boolean);
-          const label = g.firstBar === g.lastBar ? g.firstBar : `${g.firstBar}–${g.lastBar}`;
-          return (
-            <SectionCell
-              key={g.first}
-              label={label}
-              ariaLabel={
-                g.first === g.last
-                  ? sectionName(g.first)
-                  : t('games.melodiq_notes.stage.section_bars', { from: g.firstBar, to: g.lastBar })
-              }
-              score={anyNotes ? sectionScore(merged) : null}
-              empty={!anyNotes}
-              active={!!loop && g.from < loop.to && g.to > loop.from}
-              expanded={open === gi}
-              onClick={() => setOpen(open === gi ? null : gi)}
-            />
-          );
-        })}
-        <Playhead progress={groupHead} />
-      </Box>
-      {expanded && (
-        <Box sx={gridOf(expanded.last - expanded.first + 1)}>
-          {sections.slice(expanded.first, expanded.last + 1).map((s, j) => {
-            const i = expanded.first + j;
-            const inLoop = !!loop && s.from >= loop.from && s.from < loop.to;
-            return (
-              <SectionCell
-                key={s.from}
-                label={s.firstBar}
-                ariaLabel={sectionName(i)}
-                score={rate(i)}
-                empty={!hasNotes[i]}
-                active={inLoop}
-                disabled={mode === 'perform' || !hasNotes[i]}
-                onClick={() => engine.setLoop(loop?.from === s.from ? null : i)}
-              />
-            );
-          })}
-          <Playhead progress={spanProgress(expanded.from, expanded.to, engine.beat)} />
-        </Box>
-      )}
+      <Typography variant="caption" color="text.secondary">
+        {hint}
+      </Typography>
+      {rows.map((row, r) => {
+        const head = rowProgress(row, engine.beat);
+        return (
+          <Box key={`${r}-${row[0].first}`} sx={gridOf(row.length)}>
+            {row.map((g, gi) => {
+              const anyNotes = hasNotes.slice(g.first, g.last + 1).some(Boolean);
+              const merged = mergeStats(focus?.stats.sections.slice(g.first, g.last + 1) ?? []);
+              const single = g.first === g.last;
+              return (
+                <SectionCell
+                  key={g.first}
+                  label={single ? g.firstBar : `${g.firstBar}–${g.lastBar}`}
+                  ariaLabel={spanName(g)}
+                  score={anyNotes ? sectionScore(merged) : null}
+                  empty={!anyNotes}
+                  active={!!marked && g.first <= marked.last && g.last >= marked.first}
+                  expanded={single ? undefined : path[r] === gi}
+                  disabled={single && !picking}
+                  onClick={() => tap(r, gi, g)}
+                />
+              );
+            })}
+            <Playhead progress={head ?? (r === 0 && engine.beat < row[0].from ? 0 : null)} />
+          </Box>
+        );
+      })}
     </Stack>
   );
 }
