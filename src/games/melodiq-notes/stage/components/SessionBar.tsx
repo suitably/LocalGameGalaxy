@@ -21,6 +21,8 @@ interface SessionBarProps {
   input: {
     source: StageInputSource;
     midiCount: number;
+    /** The connected instrument MIDI listens on. */
+    midiName: string | null;
     choose: (s: StageInputSource) => void;
   };
   scheduleClicks: () => Promise<number[] | null>;
@@ -83,6 +85,7 @@ export function SessionBar(props: SessionBarProps) {
         engine={engine}
         source={input.source}
         midiCount={input.midiCount}
+        midiName={input.midiName}
         onChange={input.choose}
         schedule={scheduleClicks}
       />

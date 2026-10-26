@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMidiInput } from '../useMidiInput';
+import { midiInstrument } from '../logic/midiPorts';
 import { useMicPitch } from '../hooks/useMicPitch';
 import type { StageEngine } from './engine/StageEngine';
 
 export type StageInputSource = 'keys' | 'midi' | 'mic';
 
-/** Routes a MIDI device or the microphone to the highlighted player (the computer keyboard always works). */
+/**
+ * Routes a MIDI device or the microphone to the highlighted player (the computer keyboard always
+ * works). Until the player picks an input, MIDI is used whenever a real instrument is connected.
+ */
 export function useStageInput(engine: StageEngine) {
-  const [source, setSource] = useState<StageInputSource>('keys');
-  const sourceRef = useRef(source);
-  useEffect(() => {
-    sourceRef.current = source;
-  }, [source]);
+  // null: automatic (MIDI with an instrument, else the computer keys)
+  const [chosen, setChosen] = useState<StageInputSource | null>(null);
+  const sourceRef = useRef<StageInputSource>(chosen ?? 'keys');
   // Hits go straight to the engine, without a render per note.
   const onNoteOn = useCallback(
     (pitch: number) => {
@@ -19,7 +21,13 @@ export function useStageInput(engine: StageEngine) {
     },
     [engine],
   );
-  const midi = useMidiInput({ onNoteOn, rescan: source === 'midi' });
+  // automatic mode keeps looking, so an instrument plugged in later is picked up in Firefox too
+  const midi = useMidiInput({ onNoteOn, rescan: chosen === null || chosen === 'midi' });
+  const instrument = midiInstrument(midi.devices, midi.selectedDeviceId);
+  const source: StageInputSource = chosen ?? (instrument ? 'midi' : 'keys');
+  useEffect(() => {
+    sourceRef.current = source;
+  }, [source]);
   const mic = useMicPitch();
 
   const lastMic = useRef<number | null>(null);
@@ -35,8 +43,14 @@ export function useStageInput(engine: StageEngine) {
 
   const choose = (next: StageInputSource) => {
     if ((next === 'mic') !== mic.isMicActive) void mic.toggleMicrophone();
-    setSource(next);
+    setChosen(next);
   };
 
-  return { source, choose, midiDevices: midi.devices, micActive: mic.isMicActive };
+  return {
+    source,
+    choose,
+    midiDevices: midi.devices,
+    midiName: instrument?.name ?? null,
+    micActive: mic.isMicActive,
+  };
 }

@@ -5,7 +5,7 @@ Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)
 ## 2026-10-26 — Melodiq Notes: tidier stage layout (claude-code)
 
 - `docs/tech/song-pipeline.md`: "Find on YouTube" now sits in the recording panel, not the recording bar.
-- Outside `docs/`: Melodiq Notes `SessionBar`, `TransportBar`, `InputMenu`, `SpeedButton`, `BackingMenu`, `RecordingPanel`, `OffsetControls`, `NotesSheet`, `overlayContainer`, `stage/logic/recordingStatus.ts` (+ test); `SeekBar` (timeline + `FirstNoteButton`), `SectionStrip` (collapsible), `PlayerList` (sheet content), `LatencyControl` (`trigger` prop), `useMelodiqNotesHeader` and `SoundSettingsSection` without the mixer; removed `StageToolbar`, `RecordingBar`; locales.
+- Outside `docs/`: Melodiq Notes `SessionBar`, `TransportBar`, `InputMenu`, `SpeedButton`, `BackingMenu`, `RecordingPanel`, `OffsetControls`, `NotesSheet`, `overlayContainer`, `stage/logic/recordingStatus.ts` (+ test); `SeekBar` (timeline + `FirstNoteButton`), `SectionStrip` (collapsible), `PlayerList` (sheet content), `LatencyControl` (`trigger` prop), `useStageInput` (automatic MIDI), `logic/midiPorts.ts` `midiInstrument` (+ test), `useMelodiqNotesHeader` and `SoundSettingsSection` without the mixer; removed `StageToolbar`, `RecordingBar`; locales.
 
 ## 2026-10-26 — Remove the third-party Workshop fixture (#586, claude-code)
 

@@ -100,6 +100,7 @@ export const MelodiqNotesGame: React.FC = () => {
           input={{
             source: input.source,
             midiCount: input.midiDevices.length,
+            midiName: input.midiName,
             choose: input.choose,
           }}
           scheduleClicks={scheduleClicks}

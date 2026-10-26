@@ -20,13 +20,21 @@ interface InputMenuProps {
   engine: StageEngine;
   source: StageInputSource;
   midiCount: number;
+  midiName: string | null;
   onChange: (source: StageInputSource) => void;
   /** Plays the calibration clicks; resolves with their times. */
   schedule: () => Promise<number[] | null>;
 }
 
 /** One button for how the stage hears you: input source and its latency ("MIDI · 35 ms"). */
-export function InputMenu({ engine, source, midiCount, onChange, schedule }: InputMenuProps) {
+export function InputMenu({
+  engine,
+  source,
+  midiCount,
+  midiName,
+  onChange,
+  schedule,
+}: InputMenuProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
     t(`games.melodiq_notes.stage.${key}`, opts);
@@ -79,7 +87,7 @@ export function InputMenu({ engine, source, midiCount, onChange, schedule }: Inp
                   </ListItemIcon>
                   <ListItemText
                     primary={k(`input_${s}`)}
-                    secondary={disabled ? k('midi_none') : undefined}
+                    secondary={disabled ? k('midi_none') : s === 'midi' ? midiName : undefined}
                   />
                   {s === source && <CheckIcon fontSize="small" sx={{ ml: 2 }} />}
                 </MenuItem>
