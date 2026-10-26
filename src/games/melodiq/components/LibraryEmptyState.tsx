@@ -5,6 +5,7 @@ import LockOpenIcon from '@mui/icons-material/LockOpenRounded';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSongs } from '../hooks/useSongs';
+import { settingsPath } from '../../../features/settings/settingsRoutes';
 
 interface LibraryEmptyStateProps {
   hasConnectionError: boolean;
@@ -159,7 +160,7 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
             color="secondary"
             onClick={() =>
               // Settings → Server opens the setup wizard (OS download + auto-pairing).
-              navigate('/settings?tab=server&section=setup', {
+              navigate(settingsPath({ kind: 'app', section: 'connectivity', highlight: 'setup' }), {
                 state: { from: location.pathname + location.search },
               })
             }

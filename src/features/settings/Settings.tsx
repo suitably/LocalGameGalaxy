@@ -1,127 +1,69 @@
-import React, { lazy, Suspense, useEffect } from 'react';
-import { Box, CircularProgress } from '@mui/material';
+import React, { useEffect, useMemo } from 'react';
+import { useMediaQuery, useTheme } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../../context/TitleContext';
 import { useHeaderLayout } from '../../context/HeaderLayoutContext';
-import { GeneralSettings } from './components/GeneralSettings';
-import type { MelodiqSubTab } from './components/MelodiqSettingsCategory';
-import { resolveSettingsNav } from './settingsNav';
+import { gameRegistry } from '../../lib/gameRegistry';
+import { AppSettingsDetail } from './components/AppSettingsDetail';
+import { GameSettingsDetail } from './components/GameSettingsDetail';
+import { SettingsPageLayout } from './SettingsPageLayout';
+import { SettingsRail } from './SettingsRail';
+import { isEntryActive, useSettingsNav } from './settingsNavModel';
+import { parseSettingsLocation, settingsPath, type SettingsTarget } from './settingsRoutes';
 
-const NotificationSettingsCategory = lazy(() => import('./components/NotificationSettingsCategory').then(m => ({ default: m.NotificationSettingsCategory })));
-const ServerSettingsCategory = lazy(() => import('./components/ServerSettingsCategory').then(m => ({ default: m.ServerSettingsCategory })));
-const MelodiqSettingsCategory = lazy(() => import('./components/MelodiqSettingsCategory').then(m => ({ default: m.MelodiqSettingsCategory })));
-const MelodiqNotesSettingsCategory = lazy(() => import('./components/MelodiqNotesSettingsCategory').then(m => ({ default: m.MelodiqNotesSettingsCategory })));
+/** Master-detail settings page (rail + detail on `md`+, list page / detail page below). */
+export const Settings: React.FC = () => {
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const isWide = useMediaQuery(theme.breakpoints.up('md'));
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { setHomeAction } = useHeaderLayout();
+  const nav = useSettingsNav();
 
-interface SettingsProps {
-    activeGameId?: string;
-    activeSub?: string;
-    onBack?: () => void;
-    onNavigateToPlaylists?: () => void;
-}
+  const parsed = parseSettingsLocation(location.pathname, location.search);
+  const game =
+    parsed.kind === 'game'
+      ? gameRegistry.getGames().find((g) => g.id === parsed.gameId)
+      : undefined;
+  const hasGame = Boolean(game?.settings?.sections.length);
+  // Unknown games fall back to the list; unknown sections just show the whole game page.
+  const target: SettingsTarget = parsed.kind === 'game' && !hasGame ? { kind: 'list' } : parsed;
+  const shown: SettingsTarget =
+    target.kind === 'list' && isWide ? { kind: 'app', section: 'general' } : target;
+  const showDetail = target.kind !== 'list';
 
-export const Settings: React.FC<SettingsProps> = ({ activeGameId, activeSub: propSub, onBack, onNavigateToPlaylists }) => {
-    const { t } = useTranslation();
-    const [searchParams] = useSearchParams();
-    const location = useLocation();
-    const { setHomeAction } = useHeaderLayout();
+  const go = useMemo(
+    () => (to: SettingsTarget) => navigate(settingsPath(to), { state: location.state }),
+    [navigate, location.state],
+  );
 
-    const [eventSub, setEventSub] = React.useState<string | null>(null);
-    useEffect(() => {
-        const handler = (e: Event) => {
-            const detail = (e as CustomEvent<string>).detail;
-            if (typeof detail === 'string') {
-                setEventSub(detail);
-            }
-        };
-        window.addEventListener('melodiq_subtab_change', handler);
-        return () => window.removeEventListener('melodiq_subtab_change', handler);
-    }, []);
+  // Phone detail page: header back returns to the list (otherwise the header goes back to `from`).
+  useEffect(() => {
+    if (showDetail && !isWide) {
+      setHomeAction(() => go({ kind: 'list' }));
+      return () => setHomeAction(null);
+    }
+  }, [showDetail, isWide, go, setHomeAction]);
 
-    // Set page title for GlobalHeader / Layout
-    usePageTitle(t('settings.title', 'Settings'));
+  const entry = [...nav.top, ...nav.games, ...nav.bottom].find((e) => isEntryActive(e, shown));
+  usePageTitle(showDetail && !isWide && entry ? entry.label : t('settings.title', 'Settings'));
 
-    // Register onBack handler for GlobalHeader when rendered embedded with custom back action
-    // Only attempt to mutate the GlobalHeader if we are actually rendered as the top-level settings page (not embedded).
-    // An embedded Settings component (e.g., inside a game like Melodiq) should let its parent handle the header layout.
-    const isEmbedded = Boolean(activeGameId);
+  const gameFocus = shown.kind === 'game' ? (shown.highlight ?? shown.section) : undefined;
+  const detail =
+    shown.kind === 'app' ? (
+      <AppSettingsDetail section={shown.section} highlight={shown.highlight} />
+    ) : shown.kind === 'game' && game ? (
+      <GameSettingsDetail game={game} focusId={gameFocus} />
+    ) : null;
 
-    useEffect(() => {
-        if (onBack && !isEmbedded) {
-            setHomeAction(onBack);
-            return () => {
-                setHomeAction(null);
-            };
-        }
-    }, [onBack, setHomeAction, isEmbedded]);
-
-    // Determine active tab & sub-level navigation:
-    // Melodiq is default ONLY when coming from Melodiq; otherwise Allgemein (general) is default.
-    const { activeTab, activeSub: navSub, activeSection } = resolveSettingsNav(
-        searchParams,
-        location.state,
-        activeGameId
-    );
-
-    const effectiveSub = propSub || eventSub || navSub;
-    const melodiqSubTab: MelodiqSubTab = (['all', 'server', 'microphones', 'profiles', 'gameplay', 'playlists'].includes(effectiveSub))
-        ? (effectiveSub as MelodiqSubTab)
-        : 'all';
-
-    // Deep-linking scroll: If a specific sub or sub-sub section was targeted, scroll smoothly to it
-    useEffect(() => {
-        const targetId = activeSection
-            ? `settings-section-${activeSection}`
-            : (effectiveSub && effectiveSub !== 'all')
-                ? `settings-section-${effectiveSub}`
-                : null;
-
-        if (targetId) {
-            const timer = setTimeout(() => {
-                const el = document.getElementById(targetId);
-                if (el) {
-                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            }, 120);
-            return () => clearTimeout(timer);
-        }
-    }, [activeTab, effectiveSub, activeSection]);
-
-    const isMissingUsdbParam = searchParams.get('missing_usdb') === '1';
-
-    return (
-        <Box sx={{ width: '100%', maxWidth: 'lg', mx: 'auto', mt: { xs: 1, sm: 2 }, pb: 6 }}>
-            {/* Content Area - Navigation is handled directly in GlobalHeader (SettingsHeaderToolbar & SettingsHeaderSubNav) */}
-            {activeTab === 'general' && <GeneralSettings />}
-            {activeTab === 'server' && (
-                <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
-                    <ServerSettingsCategory
-                        autoFocusUsdb={isMissingUsdbParam}
-                        onBackToGame={onBack}
-                    />
-                </Suspense>
-            )}
-            {activeTab === 'notifications' && (
-                <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
-                    <NotificationSettingsCategory />
-                </Suspense>
-            )}
-            {activeTab === 'melodiq' && (
-                <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
-                    <MelodiqSettingsCategory 
-                        key={melodiqSubTab}
-                        activeSubTab={melodiqSubTab}
-                        onNavigateToPlaylists={onNavigateToPlaylists}
-                        autoFocusUsdb={isMissingUsdbParam}
-                        onBackToGame={onBack}
-                    />
-                </Suspense>
-            )}
-            {activeTab === 'melodiq-notes' && (
-                <Suspense fallback={<Box display="flex" justifyContent="center" p={4}><CircularProgress /></Box>}>
-                    <MelodiqNotesSettingsCategory onBackToGame={onBack} />
-                </Suspense>
-            )}
-        </Box>
-    );
+  return (
+    <SettingsPageLayout
+      isWide={isWide}
+      showDetail={showDetail}
+      rail={<SettingsRail nav={nav} current={shown} onSelect={go} />}
+      detail={detail}
+    />
+  );
 };

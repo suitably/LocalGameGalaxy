@@ -14,6 +14,8 @@ import AdsClickIcon from '@mui/icons-material/AdsClickRounded';
 import AutoStoriesIcon from '@mui/icons-material/AutoStoriesRounded';
 import PianoIcon from '@mui/icons-material/PianoRounded';
 import { SongsProvider } from '../games/melodiq';
+import type { GameSettingsSectionDefinition } from './gameSettingsTypes';
+import { withGameSettings } from './gameSettingsRegistry';
 
 export type GameCategory =
   'all' | 'dice' | 'drawing' | 'music' | 'social_deduction' | 'cards' | 'party' | 'puzzle';
@@ -23,6 +25,8 @@ export interface GameRouteDefinition {
   component: React.ReactNode;
 }
 
+export type { GameSettingsAudience, GameSettingsSectionDefinition } from './gameSettingsTypes';
+
 export interface GameDefinition {
   id: string;
   route: string;
@@ -31,7 +35,7 @@ export interface GameDefinition {
   icon: React.ReactNode;
   component: React.ReactNode;
   category: GameCategory;
-  hasSettings?: boolean;
+  settings?: { sections: GameSettingsSectionDefinition[] };
   nestedRoutes?: GameRouteDefinition[];
   standaloneRoutes?: GameRouteDefinition[];
 }
@@ -62,7 +66,7 @@ const KniffelGame = lazy(() => import('../games/kniffel').then(pick('KniffelGame
 const DartsGame = lazy(() => import('../games/darts').then(pick('DartsGame')));
 
 class GameRegistry {
-  private games: GameDefinition[] = [
+  private definitions: GameDefinition[] = [
     {
       id: 'darts',
       route: 'games/darts',
@@ -70,7 +74,6 @@ class GameRegistry {
       descriptionKey: 'games.darts.description',
       icon: <AdsClickIcon sx={{ fontSize: 72, mb: 2 }} />,
       category: 'party',
-      hasSettings: true,
       component: <DartsGame />,
     },
     {
@@ -135,7 +138,6 @@ class GameRegistry {
       icon: <GraphicEqIcon sx={{ fontSize: 72, mb: 2 }} />,
       category: 'music',
       component: <MelodiqGame />,
-      hasSettings: true,
       nestedRoutes: [
         {
           path: 'games/melodiq/queue',
@@ -217,6 +219,8 @@ class GameRegistry {
       component: <TabletopGame />,
     },
   ];
+
+  private games: GameDefinition[] = this.definitions.map(withGameSettings);
 
   getGames(): GameDefinition[] {
     return this.games;

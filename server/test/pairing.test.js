@@ -53,8 +53,8 @@ test('PairingStore', async (t) => {
   await t.test('buildPairingUrl points at the server settings with url and code', () => {
     const url = new URL(buildPairingUrl('https://nexumia.de/', 'http://localhost:3000', 'abc'));
     assert.strictEqual(url.origin, 'https://nexumia.de');
-    assert.strictEqual(url.pathname, '/settings');
-    assert.strictEqual(url.searchParams.get('tab'), 'server');
+    assert.strictEqual(url.pathname, '/settings/connectivity');
+    assert.strictEqual(url.searchParams.get('tab'), null);
     assert.strictEqual(url.searchParams.get('pair'), 'http://localhost:3000');
     assert.strictEqual(url.searchParams.get('code'), 'abc');
   });

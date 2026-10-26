@@ -8,6 +8,7 @@ import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import type { PartyLobbyController } from '../hooks/usePartyLobbyController';
+import { settingsPath } from '../../settings/settingsRoutes';
 
 export const PartyServerInfoCard: React.FC<{ lobby: PartyLobbyController }> = ({ lobby }) => {
   const { t } = useTranslation();
@@ -52,7 +53,7 @@ export const PartyServerInfoCard: React.FC<{ lobby: PartyLobbyController }> = ({
             size="small"
             variant="text"
             startIcon={<SettingsRoundedIcon />}
-            onClick={() => navigate('/settings')}
+            onClick={() => navigate(settingsPath({ kind: 'app', section: 'connectivity' }))}
             sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}
           >
             {t('party.manageBackend', 'Server verwalten')}

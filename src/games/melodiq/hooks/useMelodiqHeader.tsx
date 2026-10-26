@@ -2,7 +2,7 @@ import { useEffect, useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLayout, type MenuItem } from '../../../context/LayoutContext';
 
-import SettingsIcon from '@mui/icons-material/SettingsRounded';
+import QueueMusicIcon from '@mui/icons-material/QueueMusicRounded';
 import QrCodeIcon from '@mui/icons-material/QrCodeRounded';
 import FolderOpenIcon from '@mui/icons-material/FolderOpenRounded';
 
@@ -97,16 +97,7 @@ export const useMelodiqHeader = ({
     const homeAction = currentView === 'Home' ? null : handleHomeAction;
 
     if (currentView === 'Home') {
-      const headerActions: MenuItem[] = [
-        {
-          label: isClient
-            ? t('melodiq.client_settings', 'Spieler-Profil')
-            : t('settings.title', 'Einstellungen'),
-          icon: <SettingsIcon />,
-          action: () => callbacksRef.current.setCurrentView('Settings'),
-          showAlways: true,
-        },
-      ];
+      const headerActions: MenuItem[] = [];
 
       if (isClient && canEditHostSettings(clientRole)) {
         headerActions.push({
@@ -118,6 +109,12 @@ export const useMelodiqHeader = ({
       }
 
       if (!isClient) {
+        headerActions.push({
+          label: t('melodiq.manage_playlists', 'Manage Playlists'),
+          icon: <QueueMusicIcon />,
+          action: () => callbacksRef.current.setCurrentView('Playlists'),
+          showAlways: false,
+        });
         headerActions.push({
           label: 'Connect Phones',
           icon: <QrCodeIcon />,
@@ -137,20 +134,6 @@ export const useMelodiqHeader = ({
 
       setHeader(t('melodiq.title'), headerActions, homeAction, null, false, isClient);
       setCustomHeaderActions(tvModeActions);
-    } else if (currentView === 'Settings') {
-      if (isClient) {
-        setHeader(
-          t('melodiq.client_settings', 'Spieler-Profil'),
-          [],
-          homeAction,
-          null,
-          false,
-          isClient,
-        );
-      } else {
-        setHeader(t('settings.title', 'Einstellungen'), [], homeAction, null, true, false);
-      }
-      setCustomHeaderActions(null);
     } else {
       setHeader(t('melodiq.title'), [], homeAction, null, false, isClient);
       setCustomHeaderActions(null);

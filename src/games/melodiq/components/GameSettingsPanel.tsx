@@ -15,7 +15,7 @@ import { AutoplaySettings } from './AutoplaySettings';
 import { AudioSettingsSection } from './AudioSettingsSection';
 import { LyricsSettingsSection } from './LyricsSettingsSection';
 import { FallbackBackgroundField } from './FallbackBackgroundField';
-import { SettingSlider, SettingSwitch, SettingToggleGroup } from './GameSettingsControls';
+import { SettingSlider, SettingSwitch, SettingToggleGroup } from '../../../components/settings';
 
 interface GameSettingsPanelProps {
   settings: SettingsState;

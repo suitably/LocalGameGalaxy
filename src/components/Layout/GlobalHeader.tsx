@@ -17,33 +17,29 @@ import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useTranslation } from 'react-i18next';
 import { useHeaderLayout } from '../../context/HeaderLayoutContext';
 import { useTitle } from '../../context/TitleContext';
-import { useSettingsMode } from '../../context/SettingsModeContext';
+import { useGameSettings } from '../../context/GameSettingsContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { gameRegistry } from '../../lib/gameRegistry';
 import { usePWAInstall } from '../../hooks/usePWAInstall';
 import { HeaderOverflowMenu } from './HeaderOverflowMenu';
 import { useHomeNavigation } from './useHomeNavigation';
 import { PWAInstallDialog } from '../pwa/PWAInstallDialog';
-import {
-  SettingsHeaderToolbar,
-  SettingsHeaderSubNav,
-} from '../../features/settings/components/SettingsHeaderNav';
 import { hasGitHubPAT } from '../../lib/github';
+import { settingsPath } from '../../features/settings/settingsRoutes';
 
 export const GlobalHeader: React.FC = () => {
   const { t } = useTranslation();
   const { customHeaderTitle, menuItems, homeAction, customHeaderActions, hideHome } =
     useHeaderLayout();
   const { title } = useTitle();
-  const { isSettingsMode } = useSettingsMode();
+  const { openGameSettings } = useGameSettings();
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
   const isLargeScreen = useMediaQuery(theme.breakpoints.up('md'));
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const activeGame = gameRegistry.findGameByPath(location.pathname);
-  const hasSettings = activeGame?.hasSettings ?? false;
-  const isSettingsPage = location.pathname === '/settings' || isSettingsMode;
+  const isSettingsPage = location.pathname.startsWith('/settings');
   const { isStandalone, isInstallable, installApp, showIOSGuide, setShowIOSGuide } =
     usePWAInstall();
 
@@ -91,9 +87,7 @@ export const GlobalHeader: React.FC = () => {
             </Tooltip>
           )}
 
-          {isSettingsPage ? (
-            <SettingsHeaderToolbar />
-          ) : customHeaderTitle ? (
+          {customHeaderTitle && !isSettingsPage ? (
             <Box sx={{ flexGrow: 1, minWidth: 0, display: 'flex', alignItems: 'center' }}>
               {customHeaderTitle}
             </Box>
@@ -129,13 +123,18 @@ export const GlobalHeader: React.FC = () => {
             </Tooltip>
           )}
 
-          {/* Settings Icon (Global) - Hide on game routes and when on settings page */}
-          {!hasSettings && !isSettingsPage && (
+          {/* One settings gear: game sheet on games with settings, app settings elsewhere; hidden on /settings */}
+          {!isSettingsPage && (
             <Tooltip title={t('settings.title', 'Settings')}>
               <IconButton
                 color="inherit"
+                aria-label={t('settings.title', 'Settings')}
                 onClick={() =>
-                  navigate('/settings', { state: { from: location.pathname + location.search } })
+                  activeGame?.settings
+                    ? openGameSettings()
+                    : navigate(settingsPath({ kind: 'list' }), {
+                        state: { from: location.pathname + location.search },
+                      })
                 }
                 sx={{ ml: 0.5, p: 1.25 }}
               >
@@ -151,7 +150,9 @@ export const GlobalHeader: React.FC = () => {
               color="inherit"
               onClick={() => {
                 if (!hasGitHubPAT()) {
-                  navigate('/settings?tab=general&sub=feedback&missing_pat=1');
+                  navigate(
+                    settingsPath({ kind: 'app', section: 'integrations', highlight: 'pat' }),
+                  );
                 } else {
                   window.dispatchEvent(new Event('feedback:open'));
                 }
@@ -184,7 +185,6 @@ export const GlobalHeader: React.FC = () => {
 
           <HeaderOverflowMenu items={overflowItems} iconSize={isSmallScreen ? 'small' : 'medium'} />
         </Toolbar>
-        {isSettingsPage && <SettingsHeaderSubNav />}
       </AppBar>
       <PWAInstallDialog open={showIOSGuide} onClose={() => setShowIOSGuide(false)} />
     </>

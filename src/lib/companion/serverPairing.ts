@@ -2,7 +2,7 @@
  * One-time server pairing [ID: LIB-COMPANION-PAIRING]
  *
  * On start the Nexumia server prints (and on first start opens) a link
- * `/settings?tab=server&pair=<serverUrl>&code=<one-time code>`. The app trades the code for
+ * `/settings/connectivity?pair=<serverUrl>&code=<one-time code>`. The app trades the code for
  * an API key via `POST /api/pair` and stores URL and key, so nobody copies the token by hand.
  */
 import { setHelperActive, setHelperToken, setHelperUrl } from './companionSettings';

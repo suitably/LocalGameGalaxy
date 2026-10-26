@@ -12,7 +12,6 @@ import {
   loadWordleStats,
   saveWordleStats,
   loadDictionaryOnly,
-  saveDictionaryOnly,
 } from '../logic/wordleStorage';
 import type { LetterStatus, WordleGameMode, WordleState, WordleStats } from '../logic/types';
 
@@ -23,12 +22,10 @@ export function useWordle(
 ) {
   const [stats, setStats] = useState<WordleStats>(() => loadWordleStats());
   const [justFinished, setJustFinished] = useState(false);
-  const [dictionaryOnly, setDictionaryOnlyState] = useState<boolean>(() => loadDictionaryOnly());
+  const [dictionaryOnly, setDictionaryOnly] = useState<boolean>(() => loadDictionaryOnly());
 
-  const setDictionaryOnly = useCallback((value: boolean) => {
-    setDictionaryOnlyState(value);
-    saveDictionaryOnly(value);
-  }, []);
+  // The settings sheet writes the stored value; re-read it when the sheet closes.
+  const reloadDictionaryOnly = useCallback(() => setDictionaryOnly(loadDictionaryOnly()), []);
 
   // Cached state for practice mode so switching between modes doesn't lose practice progress
   const practiceStateRef = useRef<WordleState | null>(null);
@@ -321,7 +318,7 @@ export function useWordle(
     keyStatuses,
     justFinished,
     dictionaryOnly,
-    setDictionaryOnly,
+    reloadDictionaryOnly,
     addLetter,
     removeLetter,
     submitGuess,

@@ -21,7 +21,7 @@ export const AppearanceSettings: React.FC = () => {
   const { preference, setPreference } = useColorModePreference();
 
   return (
-    <Paper id="settings-section-appearance" sx={settingsCardSx}>
+    <Paper id="settings-section-appearance" tabIndex={-1} sx={settingsCardSx}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
         <ContrastIcon color="primary" />
         <Typography variant="h6">{t('settings.appearance_title', 'Appearance')}</Typography>

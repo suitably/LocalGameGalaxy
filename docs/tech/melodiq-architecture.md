@@ -32,7 +32,7 @@ Melodiq follows a strict separation of concerns, divided into domains:
 
 ### 2.1 State & Global Context
 
-- `SettingsContext.tsx` & `useSettings.ts`: Manages user preferences (mic latency, theme).
+- `SettingsContext.tsx` & `useSettings.ts`: Manages user preferences (mic latency, theme). The UI is the registered settings sections in `settings/` (`MelodiqProfilesSection`, `MelodiqGameplaySection` for the host, `MelodiqClientSection` for phones), shown in the header gear's settings sheet and on `/settings/games/melodiq`; microphones are app scope (`/settings/audio`).
 - `useQueue.ts`: Manages the global song queue. Synced across tabs using `BroadcastChannel`.
 - `useMelodiqGlobalEvents.tsx`: Orchestrates cross-component events (e.g., auto-playing the next song when TV connects).
 

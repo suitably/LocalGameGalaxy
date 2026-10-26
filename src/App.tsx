@@ -7,6 +7,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { gameRegistry } from './lib/gameRegistry';
 import { useServerUrlAutoConnect } from './hooks/useServerUrlAutoConnect';
 import { hasGitHubPAT } from './lib/github';
+import { settingsPath } from './features/settings/settingsRoutes';
 
 // Route-level code splitting: the hub and settings load on first visit (the party lobby is a
 // registry entry like the games, see gameRegistry.tsx).
@@ -30,7 +31,9 @@ function FeedbackRedirect() {
   const navigate = useNavigate();
   useEffect(() => {
     if (!hasGitHubPAT()) {
-      navigate('/settings?tab=general&sub=feedback&missing_pat=1', { replace: true });
+      navigate(settingsPath({ kind: 'app', section: 'integrations', highlight: 'pat' }), {
+        replace: true,
+      });
     } else {
       navigate('/', { replace: true });
       setTimeout(() => {
@@ -84,7 +87,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="settings"
+          path="settings/*"
           element={
             <Suspense fallback={<LoadingFallback />}>
               <Settings />

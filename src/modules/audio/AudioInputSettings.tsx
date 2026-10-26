@@ -15,8 +15,8 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/EditRounded';
 import CheckIcon from '@mui/icons-material/CheckRounded';
-import { MicrophoneManager } from '../audio/MicrophoneManager';
-import { storage, STORAGE_KEYS } from '../../../lib/storage';
+import { MicrophoneManager } from './MicrophoneManager';
+import { storage, STORAGE_KEYS } from '../../lib/storage';
 
 const MicVolumeMeter: React.FC<{ deviceId: string }> = ({ deviceId }) => {
   const [volume, setVolume] = useState(0);
@@ -71,7 +71,8 @@ const MicVolumeMeter: React.FC<{ deviceId: string }> = ({ deviceId }) => {
   );
 };
 
-export const HardwareMicSetup: React.FC = () => {
+/** Audio input devices: enable, rename and level meter (shared by app settings; keys MELODIQ_MIC_*). */
+export const AudioInputSettings: React.FC = () => {
   const { t } = useTranslation();
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [enabledMics, setEnabledMics] = useState<string[]>(() => {
@@ -117,6 +118,13 @@ export const HardwareMicSetup: React.FC = () => {
     loadDevices();
   }, []);
 
+  const saveName = (deviceId: string) => {
+    const newNames = { ...customNames, [deviceId]: editValue };
+    setCustomNames(newNames);
+    storage.setJson(STORAGE_KEYS.MELODIQ_MIC_NAMES, newNames);
+    setEditingId(null);
+  };
+
   const toggleMic = (deviceId: string) => {
     let newEnabled = [...enabledMics];
     if (newEnabled.includes(deviceId)) {
@@ -130,19 +138,23 @@ export const HardwareMicSetup: React.FC = () => {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-        <Typography variant="h6">{t('melodiq.hardware_mic')}</Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
         <Button variant="outlined" size="small" onClick={loadDevices}>
-          Refresh Devices
+          {t('settings.audio.refresh', 'Refresh devices')}
         </Button>
       </Box>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-        Aktiviere hier die echten Mikrofone, die beim Singen verwendet werden dürfen. Webcams oder
-        ungenutzte Anschlüsse solltest du deaktiviert lassen.
+        {t(
+          'settings.audio.hint_enable',
+          'Enable the real microphones that may be used for singing. Keep webcams and unused inputs disabled.',
+        )}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Das erste Mikrofon in der Liste bekommt "Spieler 1", das zweite bekommt "Spieler 2", usw.
+        {t(
+          'settings.audio.hint_order',
+          'The first enabled microphone is assigned to player 1, the second to player 2, and so on.',
+        )}
       </Typography>
 
       <List sx={{ bgcolor: 'background.paper', borderRadius: 2 }}>
@@ -150,11 +162,17 @@ export const HardwareMicSetup: React.FC = () => {
           const isEnabled = enabledMics.includes(d.deviceId);
           const orderIndex = enabledMics.indexOf(d.deviceId);
           const isEditing = editingId === d.deviceId;
-          const displayName = customNames[d.deviceId] || d.label || 'Unknown Audio Device';
+          const displayName =
+            customNames[d.deviceId] ||
+            d.label ||
+            t('settings.audio.unknown_device', 'Unknown audio device');
 
-          let subtext = 'Deaktiviert';
+          let subtext = t('settings.audio.disabled', 'Disabled');
           if (isEnabled) {
-            subtext = `Aktiv (Zugewiesen an lokalen Spieler ${orderIndex + 1})`;
+            subtext = t('settings.audio.active', {
+              defaultValue: 'Active (assigned to local player {{n}})',
+              n: orderIndex + 1,
+            });
           }
 
           return (
@@ -167,23 +185,11 @@ export const HardwareMicSetup: React.FC = () => {
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        const newNames = { ...customNames, [d.deviceId]: editValue };
-                        setCustomNames(newNames);
-                        storage.setJson(STORAGE_KEYS.MELODIQ_MIC_NAMES, newNames);
-                        setEditingId(null);
-                      }
+                      if (e.key === 'Enter') saveName(d.deviceId);
                     }}
                     autoFocus
                   />
-                  <IconButton
-                    onClick={() => {
-                      const newNames = { ...customNames, [d.deviceId]: editValue };
-                      setCustomNames(newNames);
-                      storage.setJson(STORAGE_KEYS.MELODIQ_MIC_NAMES, newNames);
-                      setEditingId(null);
-                    }}
-                  >
+                  <IconButton onClick={() => saveName(d.deviceId)}>
                     <CheckIcon />
                   </IconButton>
                 </Box>

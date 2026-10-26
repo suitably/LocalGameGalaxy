@@ -19,7 +19,8 @@ import { LiveMicTest } from './LiveMicTest';
 type DisplayMode = 'lyrics' | 'self' | 'all';
 
 interface ClientSettingsProps {
-  onBack: () => void;
+  /** Called after Save / on Cancel. Omit when embedded in a settings section (no back button). */
+  onBack?: () => void;
 }
 
 export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack }) => {
@@ -73,7 +74,7 @@ export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack }) => {
       displayMode,
       latency,
     });
-    onBack();
+    onBack?.();
   };
 
   return (
@@ -188,9 +189,11 @@ export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack }) => {
         <Box sx={{ flex: 1 }} />
 
         <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-          <Button variant="outlined" onClick={onBack} fullWidth>
-            {t('common.cancel', 'Cancel')}
-          </Button>
+          {onBack && (
+            <Button variant="outlined" onClick={onBack} fullWidth>
+              {t('common.cancel', 'Cancel')}
+            </Button>
+          )}
           <Button variant="contained" onClick={handleSave} fullWidth>
             {t('common.save', 'Save')}
           </Button>

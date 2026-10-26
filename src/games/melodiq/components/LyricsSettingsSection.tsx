@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SettingsState } from '../hooks/SettingsContext';
-import { SettingSlider, SettingSwitch, SettingToggleGroup } from './GameSettingsControls';
+import { SettingSlider, SettingSwitch, SettingToggleGroup } from '../../../components/settings';
 
 interface LyricsSettingsSectionProps {
   settings: SettingsState;

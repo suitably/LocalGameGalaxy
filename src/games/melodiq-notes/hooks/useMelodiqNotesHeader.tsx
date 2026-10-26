@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { alpha, Box, Stack, Typography, Chip } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/SettingsRounded';
 import LibraryMusicIcon from '@mui/icons-material/LibraryMusicRounded';
 import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
 import { useTranslation } from 'react-i18next';
@@ -12,7 +11,6 @@ interface UseMelodiqNotesHeaderOptions {
   currentArtist: string | null;
   effectiveBpm: number;
   onOpenSongSelect: () => void;
-  onOpenSettings: () => void;
 }
 
 export function useMelodiqNotesHeader({
@@ -20,7 +18,6 @@ export function useMelodiqNotesHeader({
   currentArtist,
   effectiveBpm,
   onOpenSongSelect,
-  onOpenSettings,
 }: UseMelodiqNotesHeaderOptions) {
   const { t } = useTranslation();
   const { setMenuItems, setCustomHeaderTitle } = useHeaderLayout();
@@ -102,12 +99,6 @@ export function useMelodiqNotesHeader({
         action: onOpenSongSelect,
         showAlways: true,
       },
-      {
-        label: t('games.melodiq_notes.settings', 'Einstellungen'),
-        icon: <SettingsIcon fontSize="small" />,
-        action: onOpenSettings,
-        showAlways: true,
-      },
     ];
 
     setMenuItems(items);
@@ -115,5 +106,5 @@ export function useMelodiqNotesHeader({
     return () => {
       setMenuItems([]);
     };
-  }, [onOpenSongSelect, onOpenSettings, setMenuItems, t]);
+  }, [onOpenSongSelect, setMenuItems, t]);
 }

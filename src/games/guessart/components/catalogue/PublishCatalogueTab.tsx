@@ -20,6 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import { calculateCatalogueDiff, publishCatalogueToGit } from '../../logic/catalogueManager';
 import type { CategoryItem, WordItem } from '../../logic/types';
 import { hasGitHubPAT } from '../../../../lib/github';
+import { settingsPath } from '../../../../features/settings/settingsRoutes';
 
 interface PublishCatalogueTabProps {
   categories: CategoryItem[];
@@ -50,7 +51,7 @@ export const PublishCatalogueTab: React.FC<PublishCatalogueTabProps> = ({
   const handlePublish = async () => {
     if (!hasGitHubPAT()) {
       onClose?.();
-      navigate('/settings?tab=general&missing_pat=1');
+      navigate(settingsPath({ kind: 'app', section: 'integrations', highlight: 'pat' }));
       return;
     }
 

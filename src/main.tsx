@@ -6,6 +6,8 @@ import App from './App';
 import { ColorModeProvider } from './context/ColorModeProvider';
 import { TitleProvider } from './context/TitleContext';
 import { LayoutProvider } from './context/LayoutContext';
+import { GameSettingsProvider } from './context/GameSettingsContext';
+import { gameRegistry } from './lib/gameRegistry';
 import { SettingsProvider } from './games/melodiq';
 import '@fontsource-variable/bricolage-grotesque/opsz.css';
 import '@fontsource-variable/figtree';
@@ -51,9 +53,11 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
         <SettingsProvider>
           <TitleProvider>
             <LayoutProvider>
-              <React.Suspense fallback={null}>
-                <App />
-              </React.Suspense>
+              <GameSettingsProvider resolveGame={(path) => gameRegistry.findGameByPath(path)}>
+                <React.Suspense fallback={null}>
+                  <App />
+                </React.Suspense>
+              </GameSettingsProvider>
             </LayoutProvider>
           </TitleProvider>
         </SettingsProvider>
