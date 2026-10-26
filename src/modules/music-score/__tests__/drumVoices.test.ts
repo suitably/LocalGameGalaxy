@@ -31,6 +31,11 @@ describe('drum voices', () => {
     expect(drumVoiceOfKey(10)).toBe('other');
   });
 
+  it('maps the Roland V-Drums hi-hat edge keys', () => {
+    expect(drumVoiceOfKey(22)).toBe('hihatClosed');
+    expect(drumVoiceOfKey(26)).toBe('hihatOpen');
+  });
+
   it('round-trips every voice through its canonical key (except shared keys)', () => {
     for (const v of DRUM_VOICES) {
       if (v === 'snareRimshot' || v === 'snareGhost' || v === 'other') continue;
@@ -110,5 +115,42 @@ describe('MusicXML drum import', () => {
     expect(part.notes.map((n) => n.pitch)).toEqual([46, 38, 43, 38]);
     expect(part.notes.map((n) => n.hand)).toEqual(['R', 'L', undefined, undefined]);
     expect(part.notes[1].syl).toBeUndefined();
+  });
+});
+
+const note = (iid: string, extra = '') =>
+  `<note>${extra}<unpitched><display-step>C</display-step><display-octave>5</display-octave></unpitched><duration>1</duration><instrument id="${iid}"/></note>`;
+const accentFlamXml = `<?xml version="1.0"?>
+<score-partwise version="3.1">
+  <part-list><score-part id="P1"><part-name>Drumset</part-name>
+    <midi-instrument id="HH"><midi-channel>10</midi-channel><midi-unpitched>43</midi-unpitched></midi-instrument>
+    <midi-instrument id="SN"><midi-channel>10</midi-channel><midi-unpitched>39</midi-unpitched></midi-instrument>
+  </score-part></part-list>
+  <part id="P1"><measure number="1"><attributes><divisions>1</divisions></attributes>
+    ${note('HH').replace('</note>', '<notations><articulations><accent/></articulations></notations></note>')}
+    ${note('SN', '<grace/>').replace('<duration>1</duration>', '')}
+    ${note('HH')}
+    ${note('SN', '<chord/>')}
+    ${note('SN', '<grace/>').replace('<duration>1</duration>', '')}
+    ${note('HH')}
+    ${note('SN')}
+  </measure></part>
+</score-partwise>`;
+
+describe('MusicXML drum accents and flams', () => {
+  const notes = parseMusicXml(accentFlamXml, 'a.musicxml', parseXml).parts[0].notes;
+
+  const at = (t: number, drum: string) => notes.find((n) => n.t === t && n.drum === drum);
+
+  it('marks accents', () => {
+    expect(notes.filter((n) => n.accent)).toEqual([at(0, 'hihatClosed')]);
+  });
+
+  it('turns a grace stroke into a flam on the same drum at the same moment only', () => {
+    // beat 1: grace snare, then hi-hat with a snare in the chord (flam);
+    // beat 2: grace snare before a hi-hat alone, the snare only comes on beat 3 (no flam)
+    expect(notes).toHaveLength(5);
+    expect(notes.filter((n) => n.flam)).toEqual([at(1, 'snare')]);
+    expect(at(3, 'snare')?.flam).toBeUndefined();
   });
 });

@@ -52,7 +52,14 @@ interface BarEvent {
   syl: string;
   drum?: DrumVoice;
   hand?: 'R' | 'L';
+  accent: boolean;
+  flam: boolean;
 }
+
+const hasAccent = (note: Element) => {
+  const art = kid(kid(note, 'notations') ?? note, 'articulations');
+  return !!art && (!!kid(art, 'accent') || !!kid(art, 'strong-accent'));
+};
 
 function readPartBars(pe: Element, info: PartInfo) {
   let div = 1;
@@ -63,6 +70,8 @@ function readPartBars(pe: Element, info: PartInfo) {
     const evs: BarEvent[] = [];
     let pos = 0;
     let last = 0;
+    // drum grace notes by instrument and position: a stroke on that drum right there is a flam
+    const graces = new Set<string>();
     for (const c of kids(m)) {
       if (c.tagName === 'attributes') {
         div = num(c, 'divisions', div) || div;
@@ -71,7 +80,11 @@ function readPartBars(pe: Element, info: PartInfo) {
       } else if (c.tagName === 'backup') pos -= num(c, 'duration');
       else if (c.tagName === 'forward') pos += num(c, 'duration');
       else if (c.tagName === 'note') {
-        if (kid(c, 'grace')) continue;
+        const iid = kid(c, 'instrument')?.getAttribute('id') || '';
+        if (kid(c, 'grace')) {
+          if (kid(c, 'unpitched')) graces.add(`${iid}@${pos}`);
+          continue;
+        }
         const d = num(c, 'duration');
         const isChord = !!kid(c, 'chord');
         const start = isChord ? last : pos;
@@ -79,6 +92,7 @@ function readPartBars(pe: Element, info: PartInfo) {
           last = pos;
           pos += d;
         }
+        const flam = graces.delete(`${iid}@${start}`);
         if (kid(c, 'rest')) continue;
         let pitch: number | null = null;
         let drum: DrumVoice | undefined;
@@ -93,7 +107,6 @@ function readPartBars(pe: Element, info: PartInfo) {
             transpose;
         else if (u) {
           isDrum = true;
-          const iid = kid(c, 'instrument')?.getAttribute('id') || '';
           const mapped = info.unpitched[iid];
           const nh = kid(c, 'notehead');
           const tech = kid(kid(c, 'notations') ?? c, 'technical');
@@ -138,6 +151,8 @@ function readPartBars(pe: Element, info: PartInfo) {
           syl,
           drum,
           hand,
+          accent: hasAccent(c),
+          flam: !!u && flam,
         });
       }
     }
@@ -163,6 +178,8 @@ function writeOutNotes(bars: BarEvent[][], order: number[], starts: number[]): S
       if (ev.syl) note.syl = ev.syl;
       if (ev.drum) note.drum = ev.drum;
       if (ev.hand) note.hand = ev.hand;
+      if (ev.accent) note.accent = true;
+      if (ev.flam) note.flam = true;
       notes.push(note);
       if (ev.tieStart) open.set(key, note);
       else open.delete(key);

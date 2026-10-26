@@ -289,4 +289,28 @@ describe('StageEngine', () => {
     e.seekTo(12);
     expect(e.loop).toBeNull();
   });
+
+  it('ignores the hi-hat pedal on drums unless the part writes pedal notes', () => {
+    const hihatSong = (pitch: number) => {
+      const s = song();
+      s.parts[2].notes = [0, 1, 2, 3].map((t) => ({ t, dur: 0.25, pitch }));
+      return s;
+    };
+    const e = new StageEngine(fakeSound());
+    e.loadSong(hihatSong(42), [{ partId: 'drums', inst: 'drums' }]);
+    e.start();
+    run(e, 5);
+    expect(e.waitingFor?.no).toBe(1);
+    e.hitPitch(44); // the foot keeping time: neither a hit nor a wrong note
+    expect(e.players[0].notes[0].judged).toBeNull();
+    expect(e.players[0].stats.sections[0].errors).toBe(0);
+    e.hitPitch(22); // V-Drums hi-hat edge
+    expect(e.players[0].notes[0].judged).toBe('learn');
+
+    e.loadSong(hihatSong(44), [{ partId: 'drums', inst: 'drums' }]);
+    e.start();
+    run(e, 5);
+    e.hitPitch(44);
+    expect(e.players[0].notes[0].judged).toBe('learn');
+  });
 });

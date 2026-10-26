@@ -130,6 +130,29 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     [run, show, replaceRecording],
   );
 
+  /** Aligns `rec` to `next` bar by bar; a result for a song or recording replaced meanwhile is dropped. */
+  const alignWith = useCallback(
+    async (next: ScoreSong, rec: RecordingSource) => {
+      const startedAs = generation.current;
+      const current = () => startedAs === generation.current;
+      setAlign({ kind: 'running', stage: 'analyse', fraction: 0 });
+      try {
+        const data = await (await fetch(rec.url)).arrayBuffer();
+        const result = await alignRecordingInBrowser(data, next, (stage, fraction) => {
+          if (current()) setAlign({ kind: 'running', stage, fraction });
+        });
+        if (!current()) return;
+        replaceMarks(result.marks);
+        setOffset(0);
+        setSaved(false);
+        setAlign({ kind: 'done', tuning: result.tuning });
+      } catch (e) {
+        if (current()) setAlign({ kind: 'failed', error: errorText(e) });
+      }
+    },
+    [replaceMarks],
+  );
+
   /** Shows a score loaded from the companion server, unless another song was chosen meanwhile. */
   const loadFromServer = useCallback(
     (fetchScore: () => Promise<ServerScoreLoad>) => {
@@ -145,10 +168,10 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
           replaceMarks(stored.marks);
           setOffset(stored.offsetSec);
           setAlign({ kind: 'done' });
-        }
+        } else if (rec) void alignWith(loaded.song, rec);
       });
     },
-    [run, show, replaceRecording, replaceMarks],
+    [run, show, replaceRecording, replaceMarks, alignWith],
   );
 
   /** Opens a score from the Notes library, with its linked song's mix when it has one. */
@@ -161,13 +184,17 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
   const setRecordingFile = useCallback(
     (file: File) => {
       generation.current++;
-      replaceRecording({ name: file.name, url: URL.createObjectURL(file), local: true, file });
+      const rec = { name: file.name, url: URL.createObjectURL(file), local: true, file };
+      replaceRecording(rec);
       replaceMarks(null);
       setOffset(0);
       setAlign({ kind: 'none' });
       setSaved(false);
+      // aligned at once: the score tempo alone puts the notes off the recording
+      // (bar 1 rarely starts at 0 s), and the button is easy to miss
+      if (song) void alignWith(song, rec);
     },
-    [replaceRecording, replaceMarks],
+    [song, replaceRecording, replaceMarks, alignWith],
   );
 
   // the engine follows song, recording and its mapping
@@ -185,24 +212,8 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
   }, [engine, song, recording, marks, offset]);
 
   const alignNow = useCallback(async () => {
-    if (!song || !recording) return;
-    const startedAs = generation.current;
-    const current = () => startedAs === generation.current;
-    setAlign({ kind: 'running', stage: 'analyse', fraction: 0 });
-    try {
-      const data = await (await fetch(recording.url)).arrayBuffer();
-      const result = await alignRecordingInBrowser(data, song, (stage, fraction) => {
-        if (current()) setAlign({ kind: 'running', stage, fraction });
-      });
-      if (!current()) return;
-      replaceMarks(result.marks);
-      setOffset(0);
-      setSaved(false);
-      setAlign({ kind: 'done', tuning: result.tuning });
-    } catch (e) {
-      if (current()) setAlign({ kind: 'failed', error: errorText(e) });
-    }
-  }, [song, recording, replaceMarks]);
+    if (song && recording) await alignWith(song, recording);
+  }, [song, recording, alignWith]);
 
   const stored = origin?.kind === 'notes' ? origin : null;
 

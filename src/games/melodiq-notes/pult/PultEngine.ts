@@ -11,7 +11,7 @@
  */
 import { drumLaneOf } from '../../../modules/music-score';
 import { advanceMisses, advanceSinging } from '../stage/engine/advance';
-import { playLane, playPitch, type PlayAt } from '../stage/engine/input';
+import { ignoredDrumKey, playLane, playPitch, type PlayAt } from '../stage/engine/input';
 import { StageEngine } from '../stage/engine/StageEngine';
 import type { StageSound } from '../stage/engine/types';
 import { pendingNotes } from '../stage/logic/judging';
@@ -137,7 +137,8 @@ export class PultEngine extends StageEngine {
     playPitch(this, midi, this.inputAt());
     this.onTap?.(this.now());
     if (view === 'keys') this.onInput?.({ kind: 'lane', lane: midi });
-    else if (view === 'drums') this.onInput?.({ kind: 'lane', lane: drumLaneOf(midi) });
+    else if (view === 'drums' && this.focus && !ignoredDrumKey(this.focus, midi))
+      this.onInput?.({ kind: 'lane', lane: drumLaneOf(midi) });
   }
 
   setVoice(pitch: number, singing: boolean) {

@@ -26,6 +26,10 @@ export interface StageNote {
   drum?: DrumVoice;
   /** Drums: sticking, when the score has it. */
   hand?: Hand;
+  /** Written accent: play this stroke louder. */
+  accent?: boolean;
+  /** Drums: a grace stroke on the same drum just before (flam). */
+  flam?: boolean;
   judged: Judgement | null;
   /** Beats sung on pitch (pitch view). */
   acc: number;

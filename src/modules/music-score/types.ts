@@ -16,6 +16,10 @@ export interface ScoreNote {
   drum?: DrumVoice;
   /** Drum parts: sticking (R/L) when the score has it. */
   hand?: Hand;
+  /** Written accent (`>` or `^`). */
+  accent?: boolean;
+  /** Drum parts: a grace stroke on the same drum just before (flam). */
+  flam?: boolean;
 }
 
 export interface ScorePart {

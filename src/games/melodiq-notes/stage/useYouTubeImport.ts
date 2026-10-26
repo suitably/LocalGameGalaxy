@@ -19,7 +19,6 @@ export function useYouTubeImport(state: StageSongState) {
   const [songs, setSongs] = useState<CompanionSong[] | null>(null);
   const [songsError, setSongsError] = useState<string | null>(null);
   const ctrl = useRef<AbortController | null>(null);
-  const alignPending = useRef(false);
 
   /** Song folders on the server, to show where the recording will go. */
   const refreshSongs = useCallback(() => {
@@ -53,10 +52,9 @@ export function useYouTubeImport(state: StageSongState) {
           undefined,
           controller.signal,
         );
-        alignPending.current = true;
+        // useStageSong aligns the song's mix once it is on stage, unless it brought marks
         const ok = await state.loadCatalogScore({ file: result.score.file, ...result });
         if (!ok) {
-          alignPending.current = false;
           throw new Error('the stored score could not be opened');
         }
         setRun({ kind: 'idle' });
@@ -74,14 +72,6 @@ export function useYouTubeImport(state: StageSongState) {
     ctrl.current?.abort();
     setRun({ kind: 'idle' });
   }, []);
-
-  // align once the linked piece and the song's mix are on stage, unless it brought marks
-  const { recording, loading, marks, alignNow } = state;
-  useEffect(() => {
-    if (!alignPending.current || loading || !recording) return;
-    alignPending.current = false;
-    if (!marks) void alignNow();
-  }, [recording, loading, marks, alignNow]);
 
   useEffect(() => () => ctrl.current?.abort(), []);
 

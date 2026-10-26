@@ -91,6 +91,10 @@ function playLaneLearning(
   }
 }
 
+/** A foot keeping time on the hi-hat pedal is no hi-hat stroke, unless the part writes pedal notes. */
+export const ignoredDrumKey = (p: StagePlayer, midi: number) =>
+  drumVoiceOfKey(midi) === 'hihatPedal' && !p.notes.some((n) => n.drum === 'hihatPedal');
+
 /** A pitch from MIDI or microphone: a key, a drum lane, a string (the one the open note is on) or a sung pitch. */
 export function playPitch(e: StageEngine, midi: number, at: PlayAt = focused(e)) {
   const p = at.player;
@@ -100,7 +104,10 @@ export function playPitch(e: StageEngine, midi: number, at: PlayAt = focused(e))
     p.voice = { pitch: midi, singing: true };
     return;
   }
-  if (view === 'drums') return playLane(e, drumLaneOf(midi), drumVoiceOfKey(midi), at);
+  if (view === 'drums') {
+    if (ignoredDrumKey(p, midi)) return;
+    return playLane(e, drumLaneOf(midi), drumVoiceOfKey(midi), at);
+  }
   if (view === 'keys') return playLane(e, midi, undefined, at);
   const near = p.notes
     .slice(lowerBound(p.notes, at.beat - 1))

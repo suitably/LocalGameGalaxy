@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-26 — Melodiq Notes: auto-align, drum accents/flams, hi-hat pedal (claude-code)
+
+- `docs/tech/song-pipeline.md`: a recording on stage without bar marks is aligned automatically (`useStageSong`), not only after the YouTube import.
+- Outside `docs/`: `useStageSong`, `useYouTubeImport`; `music-score` `ScoreNote.accent`/`flam` (`musicXml.ts`), `drumVoices.ts` keys 22/26; `stage/engine/input.ts` `ignoredDrumKey` (also `pult/PultEngine.ts`); `stage/render/drumsView.ts`; tests.
+
 ## 2026-10-26 — Melodiq Notes: tidier stage layout (claude-code)
 
 - `docs/tech/song-pipeline.md`: "Find on YouTube" now sits in the recording panel, not the recording bar.

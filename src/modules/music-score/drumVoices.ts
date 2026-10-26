@@ -29,6 +29,9 @@ export const GM_DRUM_MIN = 35;
 export const GM_DRUM_MAX = 81;
 
 const GM_VOICES: Record<number, DrumVoice> = {
+  // Roland V-Drums hi-hat bow is 42/46, its edge 22 (closed) and 26 (open)
+  22: 'hihatClosed',
+  26: 'hihatOpen',
   35: 'kick',
   36: 'kick',
   37: 'snareCrossStick',
@@ -78,7 +81,7 @@ export const DRUM_VOICE_KEY: Record<DrumVoice, number> = {
   other: 39,
 };
 
-/** General MIDI percussion key (35-81) to voice; anything else is `other`. */
+/** General MIDI percussion key (35-81, plus the V-Drums hi-hat edge) to voice; anything else is `other`. */
 export function drumVoiceOfKey(key: number): DrumVoice {
   return GM_VOICES[key] ?? 'other';
 }

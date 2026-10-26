@@ -17,6 +17,8 @@ import type { HitPoint, ViewContext } from './view';
 
 const LOOK_BEATS = 4.5;
 const FAR = 1 / 3.4;
+/** How far ahead of its note a flam's grace stroke is drawn (beats). */
+const FLAM_LEAD_BEATS = 0.09;
 
 /** Perspective highway (Guitar Hero style); the kick is a bar across all lanes. */
 export function drawDrums(v: ViewContext): HitPoint {
@@ -71,11 +73,26 @@ export function drawDrums(v: ViewContext): HitPoint {
     else {
       const gw = ((width * q.s) / 4) * 0.62;
       const gh = 18 * q.s;
+      if (n.flam) {
+        // the grace stroke: a small pill just before the main one
+        const f = persp((n.t - FLAM_LEAD_BEATS - beat) / LOOK_BEATS);
+        roundRect(g, laneX(n.lane, f.s) - gw * 0.7, f.y - gh / 4, gw / 2, gh / 2, gh / 4);
+        g.fillStyle = withAlpha(c, 0.6);
+        g.fill();
+      }
       roundRect(g, laneX(n.lane, q.s) - gw / 2, q.y - gh / 2, gw, gh, gh / 2);
     }
     fillWithHalo(g, c, 6 * q.s);
     const isKick = n.lane === 4;
-    drawNoteMarks(g, n, isKick ? cx : laneX(n.lane, q.s), q.y, q.s, isKick ? width * q.s - 12 : 0);
+    drawNoteMarks(
+      g,
+      n,
+      isKick ? cx : laneX(n.lane, q.s),
+      q.y,
+      q.s,
+      isKick ? width * q.s - 12 : 0,
+      ((width * q.s) / 4) * 0.62,
+    );
   }
 
   const rad = Math.min(width / 8 - 8, 40, h * 0.12);
@@ -117,7 +134,7 @@ export function drawDrums(v: ViewContext): HitPoint {
   return (n) => (n.lane === 4 ? { x: cx, y: kickY } : { x: laneX(n.lane, 1), y: hitY });
 }
 
-/** Voice glyph inside the note (open hi-hat, tom 2, ...) and sticking letter beside it. */
+/** Voice glyph inside the note (open hi-hat, tom 2, ...), accent and sticking letter beside it. */
 function drawNoteMarks(
   g: CanvasRenderingContext2D,
   n: StageNote,
@@ -125,6 +142,7 @@ function drawNoteMarks(
   y: number,
   scale: number,
   barWidth: number,
+  padWidth: number,
 ) {
   if (scale < 0.55) return;
   const glyph = n.drum ? DRUM_GLYPH[n.drum] : undefined;
@@ -133,6 +151,12 @@ function drawNoteMarks(
   if (glyph && n.lane !== 4) {
     g.font = `800 ${Math.round(11 * scale)}px ${FONT_MONO}`;
     g.fillText(glyph, x, y + 4 * scale);
+  }
+  if (n.accent) {
+    // just left of a pad note, at the left end of the kick bar (sticking sits on the right)
+    const ax = barWidth ? x - barWidth / 2 + 14 : x - padWidth / 2 - 9 * scale;
+    g.font = `900 ${Math.round(14 * scale)}px ${FONT_MONO}`;
+    g.fillText('>', ax, y + 5 * scale);
   }
   if (n.hand) {
     const dx = barWidth ? barWidth / 2 - 10 : 50 * scale;
