@@ -54,15 +54,13 @@ Compose files, README and [deployment](tech/deployment.md) pull `nexumia/galaxy-
 
 Since #538 a player can store the running table as a server game's default template (`PUT /api/tabletop/games/:id/template`, permission `allowTabletopTemplates`). On the device there is no such option: writing the table into `custom_games` under the game's id would shadow the starter JSON and the server game forever, because `TabletopGame` loads IndexedDB first. **(user)** Decide whether device-only games (and starter games) should get a local "save as default template", and how to reset it.
 
-## Q20 — Melodiq Notes: learn mode and latency calibration with pults (#573, #546)
-
-Since #573 a pult judges its player against the stage clock (`src/games/melodiq-notes/pult/PultEngine.ts`). Learn mode waits only for players on the stage's screen (`StageEngine.tick` skips `remoteId` players for `waitingFor`); a pult in learn mode judges like practice (timing window, misses). The input latency is calibrated only with the shared beep calibrator (`src/modules/audio/latency`): the stage sounds a beep, the pult's microphone hears it; without a microphone the value is set with a slider. **(user)** Decide (a) whether learn mode should also wait for pult players (needs a "waiting" message from the pult), and (b) whether a tap-along calibration (player taps to the stage's clicks; also covers touch and MIDI delay) should be added to `modules/audio/latency` as a second measurement.
-
 ## Q21 — Third-party Workshop fixture in an AGPL repository (#586)
 
 The repository is licensed `AGPL-3.0-or-later` since 2026-10-26 (`LICENSE`). `src/games/tabletop/tabletopsimulator/2500271578.json` and `.png` are a Tabletop Simulator Steam Workshop save of a commercial board game, used as a test fixture by `ttsParser.test.ts` and `steamWorkshopApi.test.ts`; `logic/gameValidator.ts` carries migrations written for that one game. **(user)** decided on 2026-10-26 that the app shall not fetch games from the Workshop or other outside sources and that the fixture must go; work item: #586.
 
 ## Resolved 2026-10-26
+
+- Q20 learn mode and latency calibration with pults (#573, #546) → maintainer decision: practising (learn mode, which waits) is for one player alone — the toggle is off with two or more players and a second player switches to practice; a single pult player is waited for until the pult's judgement arrives. Latency is calibrated by best practice: tap-along to clicks per input source (screen/keys, MIDI, microphone), on the stage and on each pult; network jitter only affects the clock sync, judging happens on the device. [sync-protocol §3](tech/sync-protocol.md#3-multi-channel-sync-usemultichannelsynct)
 
 - Q11 ONNX model tracked in git → `server/models/` untracked (it is already in `.gitignore`; `audio-separator` downloads the model into `MODELS_DIR` on first use). `server/.vapid_keys.json` (unused by any code) and the generated `dev-dist/` untracked too.
 

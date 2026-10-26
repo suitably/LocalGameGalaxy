@@ -35,7 +35,13 @@ export function StageToolbar({
         onChange={(_, v: StageMode | null) => v && engine.setMode(v)}
       >
         {(['learn', 'practice', 'perform'] as const).map((m) => (
-          <ToggleButton key={m} value={m}>
+          <ToggleButton
+            key={m}
+            value={m}
+            // learn mode waits for its player: for practising alone
+            disabled={m === 'learn' && engine.players.length > 1}
+            title={m === 'learn' && engine.players.length > 1 ? k('learn_solo') : undefined}
+          >
             {k(`modes.${m}`)}
           </ToggleButton>
         ))}

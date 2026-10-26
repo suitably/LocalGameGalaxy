@@ -3,13 +3,13 @@
  *
  * The stage hosts the room (`modules/room-game`): it publishes song and play state, seats the
  * pults that joined (at once, also mid-song), sends its transport as `clock`, answers clock pings,
- * chart requests and calibration beeps, shows what pults play and merges what they judged.
+ * chart requests and calibration click requests, shows what pults play and merges what they judged.
  */
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
 import { useRoomEvents, useRoomReducer } from '../../../modules/room-game';
-import { playCalibrationBeep } from '../../../modules/audio/latency';
 import { universalPartyManager } from '../../../features/party/logic/universalPartyManager';
 import type { StageEngine } from '../stage/engine/StageEngine';
+import { playCalibrationClicks } from '../stage/engine/calibrationClicks';
 import {
   applyRemoteJudged,
   seatRemotes,
@@ -80,8 +80,12 @@ export function useStageRoom(engine: StageEngine, roomId: string) {
           return;
         case 'input':
           return showRemoteInput(engine, ev.from, ev.input);
-        case 'beep':
-          return playCalibrationBeep();
+        case 'click-request': {
+          // stage time is this device's performance.now(), the clock the pult syncs to
+          const times = playCalibrationClicks(engine);
+          if (times) send({ kind: 'click-plan', from: myId, to: ev.from, id: ev.id, times });
+          return;
+        }
       }
     },
     [engine, myId, songKey],

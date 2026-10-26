@@ -54,13 +54,42 @@ describe('StageEngine with pults', () => {
     expect(e.focus).toBe(local);
   });
 
-  it('learn mode waits for the players on this screen only', () => {
+  it('learn mode waits for a pult player practising alone until the pult judged the note', () => {
     const e = new StageEngine(fakeSound());
     e.loadSong(song());
     seatRemotes(e, [{ id: 'a', name: 'Ann', partId: 'piano', inst: 'keyboard' }]);
     e.start();
     run(e, 3);
-    expect(e.waitingFor).toBeNull();
-    expect(e.beat).toBeGreaterThan(1);
+    expect(e.waitingFor).toBe(e.players[0]);
+    expect(e.beat).toBe(0);
+    const score = { score: 100, combo: 1, maxCombo: 1, judged: 1, weightSum: 1 };
+    applyRemoteJudged(e, 'a', { seq: 1, marks: [[0, 'learn']], score });
+    run(e, 0.6);
+    expect(e.beat).toBe(1);
+  });
+
+  it('keeps learn mode for one player: a second player switches to practice', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    expect(e.mode).toBe('learn');
+    e.start();
+    seatRemotes(e, [{ id: 'b', name: 'Ben', partId: 'bass', inst: 'bass' }]);
+    expect(e.mode).toBe('practice');
+    e.setMode('learn');
+    expect(e.mode).toBe('practice');
+    seatRemotes(e, []);
+    e.setMode('learn');
+    expect(e.mode).toBe('learn');
+  });
+
+  it('judges input on this screen at the beat the player heard', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    e.inputLatencyMs = 100;
+    e.setMode('perform');
+    e.start();
+    run(e, 2.1); // beat 0.2; the player heard beat 0
+    e.hit(60);
+    expect(e.players[0].notes[0].judged).toBe('perfect');
   });
 });

@@ -12,6 +12,11 @@ Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)
 - `docs/open-questions.md`: Q21 (third-party files, tracked VAPID keys).
 - Outside `docs/`: `LICENSE` (AGPL-3.0), `license` field in `package.json` and `package-lock.json` of root, `server/`, `signaling/`; README §8 Licence.
 
+## 2026-10-26 — Melodiq Notes: learn mode solo, tap-along latency per source (Q20, claude-code)
+
+- `docs/open-questions.md`: Q20 resolved (maintainer decision). `docs/tech/sync-protocol.md` §3 pult bullet (`click-request`/`click-plan` replace `beep`, latency shift, clock window, learn mode), `docs/tech/persistence.md` (`MELODIQ_NOTES_INPUT_LATENCY` per role and source), `docs/tech/architecture.md` `audio` row.
+- Outside `docs/`: `src/modules/audio/latency/{tapAlong,useTapAlong}.ts`; Melodiq Notes `StageEngine` (learn solo, `inputLatencyMs`, `configureInput`), `advance.ts`, `input.ts`, `remote.ts`, `browserSound.clickAt`, `calibrationClicks.ts`, `useInputLatency`, `useTapCalibration`, `LatencyControl`, `LatencyDialog`, `PultEngine`, `usePult`, `useStageRoom`, `PultView`, `StageToolbar`, `StageOverlay`, locales; removed `PultLatencyDialog`, `usePultLatency`.
+
 ## 2026-10-26 — Melodiq Notes: pult judges, players join any time (#573, #546, claude-code)
 
 - `docs/tech/sync-protocol.md` §3 Melodiq Notes stage ↔ pult bullet (new `clock`, `chart-request`/`chart`, `judged`, `beep` events; `input` display only), `docs/tech/game-catalog.md` melodiq-notes sync row, `docs/tech/architecture.md` `audio` row (`latency/`). `docs/open-questions.md`: Q20 (learn mode and latency calibration with pults).

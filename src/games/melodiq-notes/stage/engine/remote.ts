@@ -49,6 +49,7 @@ export function seatRemotes(e: StageEngine, members: PultMember[]) {
     p.name = seat.name;
     return [p];
   });
+  if (e.mode === 'learn' && e.players.length > 1) e.mode = 'practice';
   if (!e.focus || !e.players.includes(e.focus))
     e.focus = e.players.find((p) => !p.remoteId) ?? null;
   // the band plays the parts nobody plays, which just changed

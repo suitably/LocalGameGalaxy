@@ -48,6 +48,9 @@ export class StageEngine {
   /** With a recording, it replaces the band; this mutes it. */
   recordingAudible = true;
   state: PlayState = 'idle';
+  /** How late input on this screen arrives after the sound it follows (tap-along), ms. */
+  inputLatencyMs = 0;
+  onTap: ((localMs: number) => void) | null = null;
   beat = 0;
   countIn = 4;
   loop: BeatRange | null = null;
@@ -140,6 +143,7 @@ export class StageEngine {
     if (!this.song) return this.emit();
     this.players = createPlayers(this.song, this.seats, this.sections.length, this.startBeat);
     this.focus = this.players.find((p) => !p.remoteId) ?? null;
+    if (this.mode === 'learn' && this.players.length > 1) this.mode = 'practice';
     this.countIn = Math.min(6, Math.max(2, this.song.measureLengths[0] ?? 4));
     this.bandEvents = this.bandFor(this.song, this.band);
     this.bandIdx = 0;
@@ -149,8 +153,9 @@ export class StageEngine {
     this.emit();
   }
 
+  /** Learn mode waits for its player, so it is for practising alone. */
   setMode(mode: StageMode) {
-    this.mode = mode;
+    this.mode = mode === 'learn' && this.players.length > 1 ? 'practice' : mode;
     if (mode === 'perform') {
       this.setSpeed(1);
       this.loop = null;
@@ -246,8 +251,8 @@ export class StageEngine {
     }
     this.waitingFor = null;
     if (this.mode === 'learn') {
-      // learn mode waits for the players on this screen; a pult follows the clock
-      for (const p of this.players.filter((x) => !x.remoteId)) {
+      // a pult's player too: the stage waits until the pult's judgement arrives
+      for (const p of this.players) {
         p.pending = pendingNotes(p.notes, this.loop, p.instrument.view === 'pitch');
         const first = p.pending[0];
         if (
@@ -336,16 +341,24 @@ export class StageEngine {
   /** The focused player played `lane` (MIDI key, string, drum lane). */
   hit(lane: number) {
     playLane(this, lane);
+    this.onTap?.(performance.now());
   }
 
   /** A pitch from MIDI or microphone, mapped to what the focused player's instrument plays. */
   hitPitch(midi: number) {
     playPitch(this, midi);
+    this.onTap?.(performance.now());
   }
 
   /** The focused player's sung pitch (MIDI, fractional) and whether they are singing. */
   setVoice(pitch: number, singing: boolean) {
+    if (singing && this.focus && !this.focus.voice.singing) this.onTap?.(performance.now());
     if (this.focus) this.focus.voice = { pitch, singing };
+  }
+
+  /** Input latency (calibrated) and a listener for every hit or sung onset (tap-along calibration). */
+  configureInput(change: Partial<Pick<StageEngine, 'inputLatencyMs' | 'onTap'>>) {
+    Object.assign(this, change);
   }
 
   finish() {
