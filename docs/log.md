@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-26 — Remove the third-party Workshop fixture (#586, claude-code)
+
+- `docs/open-questions.md`: Q21 resolved (Workshop import stays, outside games are never stored in the repository).
+- Outside `docs/`: removed `src/games/tabletop/tabletopsimulator/2500271578.{json,png}`; `ttsParser.test.ts` and `steamWorkshopApi.test.ts` use a hand-made save; `logic/gameValidator.ts` without the game-specific migrations.
+
 ## 2026-10-26 — Untrack downloaded model, unused VAPID keys, dev-dist (claude-code)
 
 - `docs/open-questions.md`: Q11 resolved, Q21 narrowed to the Workshop fixture.
