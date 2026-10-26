@@ -64,6 +64,8 @@ export interface StageSound {
   playNote(inst: InstrumentKind, midi: number, durationSec: number, volume: number): void;
   playDrum(lane: number, volume: number): void;
   click(accent: boolean): void;
+  /** A louder click at `perfMs` (`performance.now()` time), for tap-along calibration. */
+  clickAt?(perfMs: number, accent: boolean): void;
   stopAll(): void;
 }
 

@@ -59,9 +59,9 @@ Compose files, README and [deployment](tech/deployment.md) pull `nexumia/galaxy-
 
 Since #538 a player can store the running table as a server game's default template (`PUT /api/tabletop/games/:id/template`, permission `allowTabletopTemplates`). On the device there is no such option: writing the table into `custom_games` under the game's id would shadow the starter JSON and the server game forever, because `TabletopGame` loads IndexedDB first. **(user)** Decide whether device-only games (and starter games) should get a local "save as default template", and how to reset it.
 
-## Q20 — Melodiq Notes: learn mode and latency calibration with pults (#573, #546)
+## Resolved 2026-10-26
 
-Since #573 a pult judges its player against the stage clock (`src/games/melodiq-notes/pult/PultEngine.ts`). Learn mode waits only for players on the stage's screen (`StageEngine.tick` skips `remoteId` players for `waitingFor`); a pult in learn mode judges like practice (timing window, misses). The input latency is calibrated only with the shared beep calibrator (`src/modules/audio/latency`): the stage sounds a beep, the pult's microphone hears it; without a microphone the value is set with a slider. **(user)** Decide (a) whether learn mode should also wait for pult players (needs a "waiting" message from the pult), and (b) whether a tap-along calibration (player taps to the stage's clicks; also covers touch and MIDI delay) should be added to `modules/audio/latency` as a second measurement.
+- Q20 learn mode and latency calibration with pults (#573, #546) → maintainer decision: practising (learn mode, which waits) is for one player alone — the toggle is off with two or more players and a second player switches to practice; a single pult player is waited for until the pult's judgement arrives. Latency is calibrated by best practice: tap-along to clicks per input source (screen/keys, MIDI, microphone), on the stage and on each pult; network jitter only affects the clock sync, judging happens on the device. [sync-protocol §3](tech/sync-protocol.md#3-multi-channel-sync-usemultichannelsynct)
 
 ## Resolved 2026-10-25
 

@@ -21,8 +21,11 @@ import { SongPicker } from './stage/components/SongPicker';
 import { InputSourcePicker } from './stage/components/InputSourcePicker';
 import type { StageDisplay } from './stage/render/stageRenderer';
 import { StageInvite } from './pult/components/StageInvite';
+import { LatencyControl } from './components/LatencyControl';
+import { playCalibrationClicks } from './stage/engine/calibrationClicks';
 
 const noop = () => {};
+const sameClock = (ms: number) => ms;
 
 /** Melodiq Notes: learn and play songs on keyboard, guitar, bass, drums, ukulele or voice, alone or as a band. */
 export const MelodiqNotesGame: React.FC = () => {
@@ -44,6 +47,10 @@ export const MelodiqNotesGame: React.FC = () => {
   const [removeRemote, setRemoveRemote] = useState<((id: string) => void) | null>(null);
   const onRoom = useCallback((remove: (id: string) => void) => setRemoveRemote(() => remove), []);
   const openInvite = useCallback(() => setInviteOpen(true), []);
+  const scheduleClicks = useCallback(async () => {
+    unlockAudio();
+    return playCalibrationClicks(engine);
+  }, [engine, unlockAudio]);
   const stageRef = useRef<HTMLDivElement>(null);
   const fullscreen = useFullscreen(stageRef);
   const portrait = useMediaQuery('(orientation: portrait)');
@@ -95,7 +102,15 @@ export const MelodiqNotesGame: React.FC = () => {
               ? `${song.artist ? `${song.artist} · ` : ''}${k('song_meta', { bars: song.measureStarts.length, parts: song.parts.length })}`
               : ''}
           </Typography>
-          <Box sx={{ ml: 'auto' }}>
+          <Box sx={{ ml: 'auto', display: 'flex', gap: 1, alignItems: 'center' }}>
+            <LatencyControl
+              engine={engine}
+              role="stage"
+              source={input.source}
+              schedule={scheduleClicks}
+              toClock={sameClock}
+              canStart
+            />
             <InputSourcePicker
               value={input.source}
               midiCount={input.midiDevices.length}

@@ -21,7 +21,6 @@ import {
   type PultRoomState,
 } from './logic/protocol';
 import { PultEngine } from './PultEngine';
-import { usePultLatency } from './usePultLatency';
 
 /** Pings quickly until the offset settles, then keeps it fresh. */
 const FAST_PING_MS = 300;
@@ -29,8 +28,10 @@ const SLOW_PING_MS = 3000;
 const SETTLED_SAMPLES = 5;
 /** A missing chart is asked for again this often. */
 const CHART_RETRY_MS = 1500;
-/** Judgements are sent in batches this often. */
-const BATCH_MS = 150;
+/** Judgements are sent in batches this often (learn mode waits for them). */
+const BATCH_MS = 60;
+/** The stage answers a click request within this time or not at all. */
+const CLICK_PLAN_TIMEOUT_MS = 3000;
 
 export function usePult(roomId: string, name: string, wantedPart: string | null) {
   const myId = useMemo(() => universalPartyManager.getMyPlayerId(), []);
@@ -55,6 +56,7 @@ export function usePult(roomId: string, name: string, wantedPart: string | null)
   const [samples, setSamples] = useState<ClockSample[]>([]);
   const clock = useMemo(() => estimateOffset(samples), [samples]);
   const sent = useRef(new Map<number, number>());
+  const clickPlans = useRef(new Map<number, (times: number[] | null) => void>());
   const lastPing = useRef(0);
   const hostId = state.hostId;
   const inst = me?.inst;
@@ -62,6 +64,10 @@ export function usePult(roomId: string, name: string, wantedPart: string | null)
     (ev: PultEvent) => {
       if (ev.kind === 'clock') {
         if (ev.from === hostId) engine.applyClock(ev);
+        return;
+      }
+      if (ev.kind === 'click-plan') {
+        if (ev.to === myId) clickPlans.current.get(ev.id)?.(ev.times);
         return;
       }
       if (ev.kind === 'chart') {
@@ -101,11 +107,6 @@ export function usePult(roomId: string, name: string, wantedPart: string | null)
   useEffect(() => {
     engine.setOffset(offset);
   }, [engine, offset]);
-
-  const latency = usePultLatency();
-  useEffect(() => {
-    engine.setInputLatency(latency.ms);
-  }, [engine, latency.ms]);
 
   // ask for the part's notes until they are here
   const partId = me?.partId;
@@ -155,8 +156,21 @@ export function usePult(roomId: string, name: string, wantedPart: string | null)
     };
   }, [dispatch, myId]);
 
-  /** Latency calibration: the stage sounds one beep. */
-  const requestBeep = useCallback(() => events.send({ kind: 'beep', from: myId }), [events, myId]);
+  /** Tap-along calibration: the stage plays clicks; resolves with their stage times, null on no answer. */
+  const requestClicks = useCallback(
+    () =>
+      new Promise<number[] | null>((resolve) => {
+        const id = Date.now();
+        const done = (times: number[] | null) => {
+          clickPlans.current.delete(id);
+          resolve(times);
+        };
+        clickPlans.current.set(id, done);
+        setTimeout(() => done(null), CLICK_PLAN_TIMEOUT_MS);
+        events.send({ kind: 'click-request', from: myId, id });
+      }),
+    [events, myId],
+  );
 
   return {
     engine,
@@ -168,7 +182,7 @@ export function usePult(roomId: string, name: string, wantedPart: string | null)
     clock,
     ready: wanted !== null && wanted === loaded,
     join,
-    latency,
-    requestBeep,
+    offset,
+    requestClicks,
   };
 }

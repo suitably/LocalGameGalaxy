@@ -79,8 +79,11 @@ export function resetRange(p: StagePlayer, from: number, to: number, restartBeat
 
 /** One frame for one player: judging on this screen, or only the pitch trail for a pult's player. */
 export function advancePlayer(e: StageEngine, p: StagePlayer, beatsPassed: number) {
-  if (p.remoteId) trackVoice(p, e.beat);
-  else if (p.instrument.view === 'pitch') {
+  if (p.remoteId) {
+    // the pult judges; learn mode only needs to know that the awaited note is being sung
+    trackVoice(p, e.beat);
+    if (e.waitingFor === p) startAwaitedNote(p);
+  } else if (p.instrument.view === 'pitch') {
     if (e.waitingFor) startAwaitedNote(p);
     advanceSinging(p, e.beat, beatsPassed, e.loop, e.judge);
   } else if (e.mode !== 'learn') advanceMisses(p, e.beat, e.secPerBeat, e.loop, e.judge);

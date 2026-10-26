@@ -4,9 +4,9 @@ import { buildChart, type Judgement, type StageNote } from '../../../stage/logic
 import { createPlayers } from '../../../stage/engine/players';
 import {
   addSample,
-  beepLatencyMs,
   clampLatency,
   clockSample,
+  CLOCK_SAMPLES_KEPT,
   estimateOffset,
   MAX_INPUT_LATENCY_MS,
   toStageTime,
@@ -101,9 +101,9 @@ describe('clock sync', () => {
     expect(toStageTime(50, 1000, 20)).toBe(1030);
   });
 
-  it('turns a calibration beep into an input latency within bounds', () => {
-    expect(beepLatencyMs(180, 60)).toBe(150);
-    expect(beepLatencyMs(20, 60)).toBe(0);
+  it('keeps a calibrated latency within bounds', () => {
+    expect(clampLatency(150.4)).toBe(150);
+    expect(clampLatency(-20)).toBe(0);
     expect(clampLatency(MAX_INPUT_LATENCY_MS + 50)).toBe(MAX_INPUT_LATENCY_MS);
     expect(clampLatency(Number.NaN)).toBe(0);
   });
@@ -111,7 +111,7 @@ describe('clock sync', () => {
   it('keeps only the latest samples', () => {
     let samples = [clockSample(0, 0, 1)!];
     for (let i = 0; i < 20; i++) samples = addSample(samples, clockSample(i, i, i + 2)!);
-    expect(samples.length).toBe(8);
+    expect(samples.length).toBe(CLOCK_SAMPLES_KEPT);
   });
 });
 
