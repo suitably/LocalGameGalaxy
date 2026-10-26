@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMidiInput } from '../useMidiInput';
 import { useMicPitch } from '../hooks/useMicPitch';
 import type { StageEngine } from './engine/StageEngine';
@@ -8,16 +8,20 @@ export type StageInputSource = 'keys' | 'midi' | 'mic';
 /** Routes a MIDI device or the microphone to the highlighted player (the computer keyboard always works). */
 export function useStageInput(engine: StageEngine) {
   const [source, setSource] = useState<StageInputSource>('keys');
-  const midi = useMidiInput();
-  const mic = useMicPitch();
-  const held = useRef<Set<number>>(new Set());
-
+  const sourceRef = useRef(source);
   useEffect(() => {
-    if (source !== 'midi') return;
-    const now = new Set(midi.pressedPitches);
-    for (const p of now) if (!held.current.has(p)) engine.hitPitch(p);
-    held.current = now;
-  }, [engine, source, midi.pressedPitches]);
+    sourceRef.current = source;
+  }, [source]);
+  // Hits go straight to the engine: short drum hits never survive until the next render.
+  const midi = useMidiInput(
+    useCallback(
+      (pitch: number) => {
+        if (sourceRef.current === 'midi') engine.hitPitch(pitch);
+      },
+      [engine],
+    ),
+  );
+  const mic = useMicPitch();
 
   const lastMic = useRef<number | null>(null);
   useEffect(() => {
