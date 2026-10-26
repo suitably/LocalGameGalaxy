@@ -1,67 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createAudioMap, type ScoreSong } from '../../../../../modules/music-score';
+import { createAudioMap } from '../../../../../modules/music-score';
 import { StageEngine } from '../StageEngine';
+import { fakeSound, run, song } from './fixtures';
 import { buildBandEvents, nextSeat } from '../players';
 import { playRemote, seatRemotes } from '../remote';
 import { nothingLeftToPlay } from '../transport';
 import { playerResults, weakestSection } from '../results';
-import type { StageRecording, StageSound } from '../types';
-
-/** 4 bars of 4/4 at 120 bpm (0.5 s per beat): piano melody on every beat, bass on every bar, drums. */
-function song(): ScoreSong {
-  const melody = Array.from({ length: 16 }, (_, t) => ({ t, dur: 1, pitch: 60 + (t % 5) }));
-  return {
-    title: 'T',
-    artist: '',
-    source: 't',
-    tempoMap: [{ beat: 0, bpm: 120 }],
-    measureStarts: [0, 4, 8, 12],
-    measureLengths: [4, 4, 4, 4],
-    measureNumbers: [1, 2, 3, 4],
-    end: 16,
-    parts: [
-      { id: 'piano', name: 'Piano', notes: melody, isDrum: false, program: 0, guess: 'keyboard' },
-      {
-        id: 'bass',
-        name: 'Bass',
-        notes: [0, 4, 8, 12].map((t) => ({ t, dur: 4, pitch: 36 })),
-        isDrum: false,
-        program: 33,
-        guess: 'bass',
-      },
-      {
-        id: 'drums',
-        name: 'Drums',
-        notes: [0, 1, 2, 3].map((t) => ({ t, dur: 0.25, pitch: 36 })),
-        isDrum: true,
-        program: null,
-        guess: 'drums',
-      },
-    ],
-  };
-}
-
-function fakeSound(): StageSound & { notes: number[]; clicks: number; drums: number } {
-  const s = {
-    notes: [] as number[],
-    clicks: 0,
-    drums: 0,
-    now: () => 0,
-    playNote: (_: unknown, midi: number) => s.notes.push(midi),
-    playDrum: () => {
-      s.drums++;
-    },
-    click: () => {
-      s.clicks++;
-    },
-    stopAll: () => {},
-  };
-  return s;
-}
-
-const run = (e: StageEngine, seconds: number, step = 0.02) => {
-  for (let t = 0; t < seconds - 1e-9; t += step) e.tick(step);
-};
+import type { StageRecording } from '../types';
 
 describe('StageEngine', () => {
   it('picks the keyboard player by default and lets the band play the rest', () => {
@@ -251,6 +196,35 @@ describe('StageEngine', () => {
     const [from] = (rec.play as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(from).toBeGreaterThanOrEqual(1.5);
     expect(from).toBeLessThan(1.6);
+  });
+
+  it('leaves out bars before the recording starts (an intro it lacks)', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    // bars 1-2 lie before the recording, bar 3 starts at 0 s
+    const marks = [0, 4, 8, 12, 16].map((beat) => ({ beat, sec: (beat - 8) * 0.5 }));
+    const rec: StageRecording = {
+      map: createAudioMap(song(), marks, 0),
+      startBeat: 8,
+      duration: 30,
+      time: () => 0,
+      isPlaying: () => false,
+      play: vi.fn(),
+      pause: vi.fn(),
+      setRate: vi.fn(),
+      setVolume: vi.fn(),
+    };
+    e.setRecording(rec);
+    expect(e.beat).toBe(8 - e.countIn);
+    expect(e.players[0].notes[0].t).toBe(8);
+    e.setMode('perform');
+    e.start();
+    run(e, 2.04);
+    const [from] = (rec.play as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(from).toBeGreaterThanOrEqual(0);
+    expect(from).toBeLessThan(0.1);
+    e.seekTo(0);
+    expect(e.beat).toBe(8 - e.countIn);
   });
 
   it('seeks on the timeline and jumps to the first note with a lead-in', () => {

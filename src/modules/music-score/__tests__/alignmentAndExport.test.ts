@@ -4,7 +4,7 @@ import { ALIGN_SAMPLE_RATE } from '../dsp';
 import { refineMarksWithOnsets } from '../onsets';
 import { applyBarMarksToMusicXml, barTemposFromMarks, readAudioOffset } from '../tempoExport';
 import { parseMusicXml } from '../musicXml';
-import { createAudioMap, beatToSec } from '../timing';
+import { createAudioMap, beatToSec, firstRecordedBeat } from '../timing';
 import { assignTab, drumLaneOf, guessInstrument, STRING_TUNINGS, topLine } from '../instruments';
 import type { BarMark, ScoreSong } from '../types';
 import { REPEAT_SCORE, parseXml, serializeXml } from './fixtures';
@@ -96,6 +96,23 @@ describe('createAudioMap', () => {
   it('falls back to the score tempo plus offset', () => {
     const map = createAudioMap(song, null, 1);
     expect(map.secAt(4)).toBeCloseTo(beatToSec(song.tempoMap, 4) + 1);
+  });
+});
+
+describe('firstRecordedBeat', () => {
+  it('starts at the first bar the recording has', () => {
+    const intro = [-4.4, -2.2, 0, 2.2, 4.4].map((sec, i) => ({ beat: i * 4, sec }));
+    expect(firstRecordedBeat(intro)).toBe(8);
+  });
+
+  it('is 0 when bar 1 is in the recording or there are no marks', () => {
+    expect(
+      firstRecordedBeat([
+        { beat: 0, sec: 1 },
+        { beat: 4, sec: 3 },
+      ]),
+    ).toBe(0);
+    expect(firstRecordedBeat(null)).toBe(0);
   });
 });
 
