@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-26 — Settings unification plan (claude-code)
+
+- New `docs/reports/2026-10-26-settings-unification-plan.md`, listed in `docs/reports/index.md`.
+- No code or configuration outside `docs/` changed.
+
 ## 2026-10-26 — Melodiq Notes: tidier stage layout (claude-code)
 
 - `docs/tech/song-pipeline.md`: "Find on YouTube" now sits in the recording panel, not the recording bar.
