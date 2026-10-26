@@ -21,6 +21,12 @@ export interface PlayAt {
   silent: boolean;
 }
 
+/** Lights the played key, string or pad for a moment. */
+export function flashLane(p: StagePlayer, lane: number) {
+  p.pressed.add(lane);
+  setTimeout(() => p.pressed.delete(lane), PRESS_FLASH_MS);
+}
+
 const focused = (e: StageEngine): PlayAt => ({ player: e.focus, beat: e.beat, silent: false });
 
 /** A player played `lane` (MIDI key, string or drum lane). */
@@ -32,8 +38,7 @@ export function playLane(
 ) {
   const p = at.player;
   if (!p) return;
-  p.pressed.add(lane);
-  setTimeout(() => p.pressed.delete(lane), PRESS_FLASH_MS);
+  flashLane(p, lane);
   const view = p.instrument.view;
   if (!at.silent && view === 'drums') e.sound.playDrum(lane, 1);
   else if (!at.silent && view === 'keys') e.sound.playNote(p.instrument.kind, lane, 0.5, 1);

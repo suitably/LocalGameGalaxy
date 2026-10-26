@@ -1,4 +1,4 @@
-import type { MicrophoneManager } from '../../audio/MicrophoneManager';
+import type { MicrophoneManager } from '../MicrophoneManager';
 
 export interface BeepSample {
   found: boolean;

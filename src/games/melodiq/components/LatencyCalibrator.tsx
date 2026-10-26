@@ -1,7 +1,10 @@
 import React from 'react';
 import type { MicrophoneManager } from '../audio/MicrophoneManager';
-import { LatencyCalibratorPanel } from './LatencyCalibratorPanel';
-import { detectBeep, type BeepSample } from './hooks/detectBeep';
+import {
+  detectBeep,
+  LatencyCalibratorPanel,
+  type BeepSample,
+} from '../../../modules/audio/latency';
 
 interface LatencyCalibratorProps {
   onComplete: (latencyMs: number) => void;

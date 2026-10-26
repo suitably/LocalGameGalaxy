@@ -30,7 +30,12 @@ export function advanceSinging(
     const n = p.notes[p.missIdx++];
     if (!n.judged && inLoop(loop, n.t)) judge(p, n, pitchJudgement(n.acc / n.dur));
   }
-  p.history.push({ beat, pitch: singing ? pitch : null });
+  trackVoice(p, beat);
+}
+
+/** Keeps the sung pitch trail of the last beats (also for a pult's player, judged on the pult). */
+export function trackVoice(p: StagePlayer, beat: number) {
+  p.history.push({ beat, pitch: p.voice.singing ? p.voice.pitch : null });
   while (p.history.length && p.history[0].beat < beat - HISTORY_BEATS) p.history.shift();
 }
 
@@ -51,7 +56,7 @@ export function advanceMisses(
 ) {
   while (
     p.missIdx < p.notes.length &&
-    (beat - p.notes[p.missIdx].t) * secPerBeat(p.notes[p.missIdx].t) > GOOD_SEC + p.missGraceSec
+    (beat - p.notes[p.missIdx].t) * secPerBeat(p.notes[p.missIdx].t) > GOOD_SEC
   ) {
     const n = p.notes[p.missIdx++];
     if (!n.judged && inLoop(loop, n.t)) judge(p, n, 'miss');

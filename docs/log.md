@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-26 — Melodiq Notes: pult judges, players join any time (#573, #546, claude-code)
+
+- `docs/tech/sync-protocol.md` §3 Melodiq Notes stage ↔ pult bullet (new `clock`, `chart-request`/`chart`, `judged`, `beep` events; `input` display only), `docs/tech/game-catalog.md` melodiq-notes sync row, `docs/tech/architecture.md` `audio` row (`latency/`). `docs/open-questions.md`: Q19 (learn mode with pults).
+- Outside `docs/`: Melodiq Notes `pult/` (`PultEngine`, `usePult`, `usePultLatency`, `useStageRoom`, `PultView`, `PultLatencyDialog`, `StageInvite`; logic `protocol`, `pultSong`, `stageClock`, `remoteHits`, `clockSync`; removed `usePultInput`, `PultPad`), `stage/engine/{StageEngine,remote,players,advance,input,types}.ts`, `stage/useStage.ts`, `PlayerList`; latency calibrator moved from `src/games/melodiq/components` to `src/modules/audio/latency/` (keys `latencyCalibrator.*` in `public/locales`); storage key `MELODIQ_NOTES_INPUT_LATENCY`.
+
 ## 2026-10-25 — Melodiq Notes: alignment skips missing intro/outro, tambourine mark (claude-code)
 
 - `docs/tech/song-pipeline.md` §4 alignment paragraph and `docs/tech/architecture.md` `music-score` row: DTW skips score bars at either end. Outside `docs/`: `src/modules/music-score/{alignment.ts,noteFit.ts,drumVoices.ts}`, `stage/logic/drumGlyphs.ts`, tests. Separate drum lanes: issue #571.

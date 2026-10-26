@@ -12,9 +12,14 @@ const CLOCK_SNAP_SEC = 0.1;
 /** The progress bar moves smoothly enough at this rate; everything else is drawn on the canvas. */
 const PROGRESS_REFRESH_MS = 250;
 
-/** One engine and one audio context per mounted stage; the engine advances on the audio clock every frame. */
-export function useStage() {
-  const [engine] = useState(() => new StageEngine());
+/**
+ * One engine and one audio context per mounted stage; the engine advances on the audio clock
+ * every frame. A pult passes its own engine (`create`), which follows the stage's clock instead.
+ */
+export function useStage<E extends StageEngine = StageEngine>(
+  create: () => E = () => new StageEngine() as E,
+) {
+  const [engine] = useState(create);
   const soundRef = useRef<BrowserStageSound | null>(null);
   const version = useSyncExternalStore(engine.subscribe, engine.getVersion);
 

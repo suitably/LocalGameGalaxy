@@ -38,3 +38,16 @@ export function estimateOffset(samples: ClockSample[]): ClockSample | null {
 /** Stage time of a local moment; `inputLatencyMs` is how late this device notices a hit. */
 export const toStageTime = (localMs: number, offset: number, inputLatencyMs = 0) =>
   localMs + offset - inputLatencyMs;
+
+/** Longest input latency a device may be calibrated to. */
+export const MAX_INPUT_LATENCY_MS = 500;
+
+export const clampLatency = (ms: number) =>
+  Number.isFinite(ms) ? Math.round(Math.min(MAX_INPUT_LATENCY_MS, Math.max(0, ms))) : 0;
+
+/**
+ * Input latency from one calibration beep: the stage sounds it when the request arrives (half a
+ * round trip after it was sent), the pult's microphone hears it `elapsedMs` after sending.
+ */
+export const beepLatencyMs = (elapsedMs: number, rttMs: number) =>
+  clampLatency(elapsedMs - rttMs / 2);

@@ -2,14 +2,20 @@
  * The stage's side of the pult room [ID: GAME-MELODIQ-NOTES-STAGE-ROOM]
  *
  * The stage hosts the room (`modules/room-game`): it publishes song and play state, seats the
- * pults that joined (between songs, never mid-play), answers clock pings and judges the pults'
- * input at the stage time it was played.
+ * pults that joined (at once, also mid-song), sends its transport as `clock`, answers clock pings,
+ * chart requests and calibration beeps, shows what pults play and merges what they judged.
  */
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
 import { useRoomEvents, useRoomReducer } from '../../../modules/room-game';
+import { playCalibrationBeep } from '../../../modules/audio/latency';
 import { universalPartyManager } from '../../../features/party/logic/universalPartyManager';
 import type { StageEngine } from '../stage/engine/StageEngine';
-import { playRemote, seatRemotes } from '../stage/engine/remote';
+import {
+  applyRemoteJudged,
+  seatRemotes,
+  showRemoteInput,
+  stageClockOf,
+} from '../stage/engine/remote';
 import {
   initialPultRoom,
   PULT_GAME_KEY,
@@ -19,8 +25,10 @@ import {
   type PultRoomAction,
   type PultRoomState,
 } from './logic/protocol';
-import { pultSongOf } from './logic/pultSong';
-import { remoteLagSec } from './logic/remoteHits';
+import { packChart, pultSongOf } from './logic/pultSong';
+
+/** While idle the clock is repeated this often, so a pult that just joined gets it. */
+const CLOCK_HEARTBEAT_MS = 2000;
 
 export function useStageRoom(engine: StageEngine, roomId: string) {
   const myId = useMemo(() => universalPartyManager.getMyPlayerId(), []);
@@ -38,36 +46,68 @@ export function useStageRoom(engine: StageEngine, roomId: string) {
 
   const song = engine.song;
   const pultSong = useMemo(() => (song ? pultSongOf(song) : null), [song]);
+  const songKey = pultSong?.key ?? null;
   const play = engine.state;
   useEffect(() => {
     dispatch({ type: 'STAGE', song: pultSong, play });
   }, [dispatch, pultSong, play, version]);
 
-  // a pult joining mid-song gets its seat once the song is over or back at the start
+  // a pult gets its seat as soon as it joins, also mid-song
   useEffect(() => {
-    if (play === 'idle' || play === 'done') seatRemotes(engine, state.members);
-  }, [engine, play, song, state.members]);
+    seatRemotes(engine, state.members);
+  }, [engine, song, version, state.members]);
 
   const onEvent = useCallback(
     (ev: PultEvent, send: (ev: PultEvent) => void) => {
       if (ev.from === myId) return;
-      if (ev.kind === 'ping')
-        send({
-          kind: 'pong',
-          from: myId,
-          to: ev.from,
-          id: ev.id,
-          t0: ev.t0,
-          ts: performance.now(),
-        });
-      else if (ev.kind === 'input') {
-        const lag = remoteLagSec(performance.now(), ev.at);
-        if (lag !== null) playRemote(engine, ev.from, ev.input, lag);
+      switch (ev.kind) {
+        case 'ping':
+          return send({
+            kind: 'pong',
+            from: myId,
+            to: ev.from,
+            id: ev.id,
+            t0: ev.t0,
+            ts: performance.now(),
+          });
+        case 'chart-request': {
+          const chart = engine.song && ev.songKey === songKey && packChart(engine.song, ev.partId);
+          if (chart) send({ kind: 'chart', from: myId, to: ev.from, chart });
+          return;
+        }
+        case 'judged':
+          if (ev.songKey === songKey) applyRemoteJudged(engine, ev.from, ev);
+          return;
+        case 'input':
+          return showRemoteInput(engine, ev.from, ev.input);
+        case 'beep':
+          return playCalibrationBeep();
       }
     },
-    [engine, myId],
+    [engine, myId, songKey],
   );
-  useRoomEvents<PultEvent>({ gameKey: PULT_GAME_KEY, roomId, onEvent });
+  const events = useRoomEvents<PultEvent>({ gameKey: PULT_GAME_KEY, roomId, onEvent });
 
-  return { members: state.members };
+  // the transport goes out on every change and a few times per second while playing
+  useEffect(() => {
+    if (!songKey) return;
+    const sendClock = () =>
+      events.send({
+        kind: 'clock',
+        from: myId,
+        ...stageClockOf(engine, songKey, performance.now()),
+      });
+    sendClock();
+    const unsubscribe = engine.subscribeLive(sendClock);
+    const timer = setInterval(sendClock, CLOCK_HEARTBEAT_MS);
+    return () => {
+      unsubscribe();
+      clearInterval(timer);
+    };
+  }, [engine, events, myId, songKey]);
+
+  /** Sends a pult's player away (their seat goes back to the stage). */
+  const remove = useCallback((id: string) => dispatch({ type: 'LEAVE', id }), [dispatch]);
+
+  return { members: state.members, remove };
 }

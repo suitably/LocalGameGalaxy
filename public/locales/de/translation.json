@@ -725,11 +725,11 @@
         "song_meta": "{{bars}} Takte · {{parts}} Spuren",
         "action_error": "Das hat nicht geklappt ({{error}}).",
         "players_title": "Spieler",
-        "player_add": "Spieler hinzufügen",
+        "player_add": "Spieler hier hinzufügen",
         "player_part": "Spur von Spieler {{no}}",
         "player_view": "Ansicht von Spieler {{no}}",
         "player_remove": "Spieler {{no}} entfernen",
-        "players_note": "Bis zu {{max}} Personen spielen auf diesem Bildschirm, jede über ihr eigenes MIDI-Gerät oder Mikrofon; die Computertastatur steuert den markierten Spieler (Tab wechselt).",
+        "players_note": "Bis zu {{max}} Spieler, alle hier im Splitscreen. Spieler an diesem Bildschirm teilen sich Tastatur, MIDI oder Mikrofon (der markierte Spieler; Tab wechselt); eingeladene Spieler spielen auf ihrem eigenen Gerät und werden dort bewertet.",
         "backing": "Begleitung",
         "backing_all": "Alles",
         "backing_others": "Nur Begleitung",
@@ -764,13 +764,15 @@
         "yt_storing_score": "Noten werden in der Notes-Bibliothek mit dem Song verknüpft …",
         "yt_failed": "Das hat nicht geklappt ({{error}}).",
         "yt_download": "Herunterladen und ausrichten",
-        "yt_use": "Verwenden und ausrichten"
+        "yt_use": "Verwenden und ausrichten",
+        "player_remote": "Eigenes Gerät",
+        "keys_remote": "Alle spielen auf ihrem eigenen Gerät – ihre Noten werden dort bewertet."
       },
       "pult": {
         "title": "Melodiq Notes – dein Instrument",
         "invite": "Mitspieler einladen",
         "invite_title": "Auf dem eigenen Gerät spielen · Raum {{room}}",
-        "invite_hint": "Jede Person öffnet den Link oder scannt den QR-Code ihrer Stimme auf ihrem Handy oder Tablet. Ihr Gerät zeigt nur ihr Instrument und nimmt dort MIDI, Mikrofon oder Tasten entgegen; die Bühne behält Noten, Band und Wertung. Neue Mitspieler bekommen ihren Platz vor dem nächsten Start.",
+        "invite_hint": "Jede Person öffnet den Link oder scannt den QR-Code ihrer Stimme auf Handy oder Tablet. Ihr Gerät zeigt die fallenden Noten ihrer Stimme, nimmt MIDI, Mikrofon, Tasten oder Touch an und bewertet sie; dieser Bildschirm zeigt alle im Splitscreen mit der Band. Mitspielen geht jederzeit, auch mitten im Lied.",
         "invite_message": "Spiel {{part}} mit uns in Melodiq Notes: {{link}}",
         "stage_row": "Bühne (dieser Bildschirm)",
         "connecting": "Verbinde mit Bühne {{room}} …",
@@ -779,9 +781,14 @@
         "part": "Deine Stimme",
         "clock": "Synchron · {{ms}} ms",
         "clock_pending": "Uhr wird abgeglichen …",
-        "playing": "Läuft – die Bühne wertet deine Noten.",
+        "playing": "Läuft – dein Gerät bewertet deine Noten, die Bühne zeigt sie.",
         "waiting": "Warte, bis die Bühne startet.",
-        "sing_hint": "Wähle „Mikrofon“ und sing – die Bühne zeigt deine Tonhöhe."
+        "sing_hint": "Wähle „Mikrofon“ und sing – die Bühne zeigt deine Tonhöhe.",
+        "loading_part": "Lade deine Stimme von der Bühne…",
+        "latency_button": "Latenz {{ms}} ms",
+        "latency_title": "Eingabelatenz",
+        "latency_hint": "Wie viel später du die Bühne hörst, als sie spielt, plus die Verzögerung dieses Geräts. Kalibriere mit dem Mikrofon dieses Geräts, während die Bühne einen Piepton spielt, oder stelle sie von Hand ein.",
+        "latency_value": "Latenz: {{ms}} ms"
       }
     },
     "kniffel": {
@@ -2057,5 +2064,19 @@
     "turnBodyStoryGeneric": "Die Geschichte geht weiter – schreibe deinen Teil!",
     "turnBodyGenericWithActor": "{{actor}} hat den Zug beendet. Du bist dran!",
     "turnBodyGeneric": "Du bist am Zug!"
+  },
+  "latencyCalibrator": {
+    "auto": "Automatische Kalibrierung",
+    "calibrating": "Kalibriere…",
+    "mic_level": "Mikrofonpegel",
+    "requires_speakers": "Lautsprecher müssen eingeschaltet sein. Es ertönen Pieptöne.",
+    "noise": "Messe Hintergrundgeräusche…",
+    "threshold": "Schwelle auf {{percent}} % gesetzt. Starte Pieptöne…",
+    "testing": "Test {{no}}/{{total}}…",
+    "missed": "{{count}} von {{total}} Pieptönen nicht erkannt.",
+    "missed_hint": "Letzter Pegel: {{peak}} % bei Schwelle {{threshold}} %. Lautsprecher lauter stellen.",
+    "inconsistent": "Ungleichmäßige Ergebnisse (Abweichung {{ms}} ms). Bitte erneut versuchen.",
+    "done": "Kalibrierung abgeschlossen: {{ms}} ms",
+    "error": "Fehler: {{error}}"
   }
 }

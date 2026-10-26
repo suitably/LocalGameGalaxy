@@ -16,6 +16,8 @@ export interface PlayerSeat {
   inst: InstrumentKind;
   /** Set when the player plays on their own device (a pult) instead of this screen. */
   remoteId?: string;
+  /** The pult's player name. */
+  name?: string;
 }
 
 /**
@@ -33,10 +35,9 @@ export interface FxEvent {
 
 export interface StagePlayer {
   no: number;
-  /** Pult id when this player plays on their own device. */
+  /** Pult id when this player plays on their own device; the pult judges them, not the stage. */
   remoteId?: string;
-  /** Extra seconds before an unplayed note counts as missed (input from a pult arrives late). */
-  missGraceSec: number;
+  name?: string;
   part: ScorePart;
   instrument: StageInstrument;
   notes: StageNote[];
