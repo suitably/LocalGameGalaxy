@@ -26,7 +26,8 @@ export type DrumLane = (typeof DRUM_LANES)[number];
 export function drumLaneOf(midiKey: number): number {
   if (midiKey === 35 || midiKey === 36) return 4;
   if (midiKey >= 37 && midiKey <= 40) return 2;
-  if ([41, 43, 45, 47, 48, 50].includes(midiKey)) return 3;
+  // 58: Roland V-Drums tom 3 rim (GM vibraslap, never written for a kit)
+  if ([41, 43, 45, 47, 48, 50, 58].includes(midiKey)) return 3;
   if ([49, 51, 52, 53, 55, 57, 59].includes(midiKey)) return 0;
   return 1;
 }

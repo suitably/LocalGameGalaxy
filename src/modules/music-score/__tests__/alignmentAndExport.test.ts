@@ -150,6 +150,7 @@ describe('instruments', () => {
 
   it('maps GM drum keys to lanes', () => {
     expect([36, 38, 42, 45, 49].map(drumLaneOf)).toEqual([4, 2, 1, 3, 0]);
+    expect(drumLaneOf(58)).toBe(3); // Roland tom 3 rim
   });
 
   it('gives chord notes distinct strings and keeps frets in reach', () => {
