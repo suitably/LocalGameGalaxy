@@ -1,5 +1,11 @@
 import { lowerBound, type Judgement, type StageNote } from '../logic/charts';
-import { GOOD_SEC, pendingNotes, pitchJudgement, type BeatRange } from '../logic/judging';
+import {
+  GOOD_SEC,
+  LEARN_LATE_SEC,
+  pendingNotes,
+  pitchJudgement,
+  type BeatRange,
+} from '../logic/judging';
 import type { StageEngine } from './StageEngine';
 import type { StagePlayer } from './types';
 
@@ -45,6 +51,31 @@ export function startAwaitedNote(p: StagePlayer) {
   const n = p.pending[0];
   if (n && p.voice.singing && Math.abs(p.voice.pitch - n.pitch) <= PITCH_TOLERANCE)
     n.started = true;
+}
+
+/**
+ * Learn mode: the beat the song may reach by `next`, and who it waits for. A pult's player too:
+ * the stage waits until the pult's judgement arrives.
+ */
+export function learnWait(e: StageEngine, next: number): number {
+  e.waitingFor = null;
+  if (e.mode !== 'learn') return next;
+  let waitAt = Infinity;
+  for (const p of e.players) {
+    const singing = p.instrument.view === 'pitch';
+    p.pending = pendingNotes(p.notes, e.loop, singing);
+    const first = p.pending[0];
+    if (!first) continue;
+    // a hit (input latency removed) that comes a little late still counts without a stop
+    const at = singing
+      ? first.t
+      : first.t + (LEARN_LATE_SEC + e.inputLatencyMs / 1000) / e.secPerBeat(first.t);
+    if (next >= at && at < waitAt) {
+      e.waitingFor = p;
+      waitAt = at;
+    }
+  }
+  return e.waitingFor ? Math.max(e.beat, waitAt) : next;
 }
 
 /** Practice and perform: notes that passed the timing window unplayed are misses. */

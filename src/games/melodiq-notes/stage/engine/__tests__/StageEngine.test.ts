@@ -27,14 +27,42 @@ describe('StageEngine', () => {
     e.loadSong(song());
     e.start();
     run(e, 5);
-    expect(e.beat).toBe(0);
+    expect(e.beat).toBeCloseTo(0.28); // runs on LEARN_LATE_SEC (0.14 s = 0.28 beats) past the note
     expect(e.waitingFor?.no).toBe(1);
     e.hit(65);
     expect(e.players[0].stats.sections[0].errors).toBe(1);
     e.hit(60);
     expect(e.players[0].notes[0].judged).toBe('learn');
     run(e, 0.6);
-    expect(e.beat).toBe(1);
+    expect(e.beat).toBeCloseTo(1.28);
+  });
+
+  it('learn mode takes a slightly late hit without stopping and an early one within LEARN_EARLY_SEC', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    e.start();
+    run(e, 2.1); // 0.1 s past note 0
+    expect(e.waitingFor).toBeNull();
+    e.hit(60);
+    expect(e.players[0].notes[0].judged).toBe('learn');
+    run(e, 0.1); // 0.3 s before note 1: too early, but no error while the song runs
+    e.hit(61);
+    expect(e.players[0].notes[1].judged).toBeNull();
+    expect(e.players[0].stats.sections[0].errors).toBe(0);
+    run(e, 0.1); // 0.2 s before note 1
+    e.hit(61);
+    expect(e.players[0].notes[1].judged).toBe('learn');
+  });
+
+  it('learn mode takes the awaited note however large the input latency is', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    e.configureInput({ inputLatencyMs: 400 });
+    e.start();
+    run(e, 5);
+    expect(e.waitingFor?.no).toBe(1);
+    e.hit(60);
+    expect(e.players[0].notes[0].judged).toBe('learn');
   });
 
   it('perform mode judges timing and misses notes that pass', () => {

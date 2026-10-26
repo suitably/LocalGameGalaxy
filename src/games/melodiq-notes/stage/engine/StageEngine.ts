@@ -1,8 +1,8 @@
 import type { ScoreSong } from '../../../../modules/music-score';
 import { lowerBound, type Judgement, type StageNote } from '../logic/charts';
-import { pendingNotes, recordJudgement, type BeatRange } from '../logic/judging';
+import { recordJudgement, type BeatRange } from '../logic/judging';
 import { buildSections, sectionIndexAt, type Section } from '../logic/sections';
-import { advancePlayer, resetRange } from './advance';
+import { advancePlayer, learnWait, resetRange } from './advance';
 import { playLane, playPitch } from './input';
 import {
   loopSections,
@@ -249,21 +249,7 @@ export class StageEngine {
       const heard = rec.map.beatAt(rec.time());
       if (Math.abs(heard - next) < SYNC_SNAP_BEATS) next += (heard - next) * 0.25;
     }
-    this.waitingFor = null;
-    if (this.mode === 'learn') {
-      // a pult's player too: the stage waits until the pult's judgement arrives
-      for (const p of this.players) {
-        p.pending = pendingNotes(p.notes, this.loop, p.instrument.view === 'pitch');
-        const first = p.pending[0];
-        if (
-          first &&
-          next >= first.t &&
-          (!this.waitingFor || first.t < this.waitingFor.pending[0].t)
-        )
-          this.waitingFor = p;
-      }
-      if (this.waitingFor) next = Math.max(this.beat, this.waitingFor.pending[0].t);
-    }
+    next = learnWait(this, next);
     this.playBand(next);
     this.beat = next;
     for (const p of this.players) advancePlayer(this, p, this.beat - before);

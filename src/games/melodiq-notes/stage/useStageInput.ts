@@ -12,7 +12,7 @@ export function useStageInput(engine: StageEngine) {
   useEffect(() => {
     sourceRef.current = source;
   }, [source]);
-  // Hits go straight to the engine: short drum hits never survive until the next render.
+  // Hits go straight to the engine, without a render per note.
   const midi = useMidiInput(
     useCallback(
       (pitch: number) => {

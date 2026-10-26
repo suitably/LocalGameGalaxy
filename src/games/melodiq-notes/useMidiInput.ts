@@ -8,21 +8,15 @@ export interface MidiDevice {
   state: string;
 }
 
-export interface ActiveMidiNote {
-  pitch: number;
-  velocity: number;
-  timestamp: number;
-}
-
 /**
- * `onNoteOn` fires for every hit as it arrives; drum modules send note-off a few ms after
- * note-on, so a hit can come and go between two renders and never show up in `pressedPitches`.
+ * `onNoteOn` fires for every hit as it arrives. Hits are not kept in React state: a re-render
+ * per note-on and note-off made busy passages stutter, and drum modules send note-off a few ms
+ * after note-on, so a hit could come and go between two renders.
  */
 export const useMidiInput = (onNoteOn?: (pitch: number, velocity: number) => void) => {
   const [devices, setDevices] = useState<MidiDevice[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
   const selectedDeviceIdRef = useRef<string | null>(null);
-  const [activeNotes, setActiveNotes] = useState<Map<number, ActiveMidiNote>>(new Map());
   const [isSupported, setIsSupported] = useState<boolean>(true);
   const midiAccessRef = useRef<MIDIAccess | null>(null);
   const onNoteOnRef = useRef(onNoteOn);
@@ -37,25 +31,8 @@ export const useMidiInput = (onNoteOn?: (pitch: number, velocity: number) => voi
     const [status, noteNumber, velocity] = event.data;
     const command = status & 0xf0;
 
-    // Note On command: 0x90, Note Off command: 0x80
-    if (command === 0x90 && velocity > 0) {
-      onNoteOnRef.current?.(noteNumber, velocity);
-      setActiveNotes((prev) => {
-        const next = new Map(prev);
-        next.set(noteNumber, {
-          pitch: noteNumber,
-          velocity,
-          timestamp: performance.now(),
-        });
-        return next;
-      });
-    } else if (command === 0x80 || (command === 0x90 && velocity === 0)) {
-      setActiveNotes((prev) => {
-        const next = new Map(prev);
-        next.delete(noteNumber);
-        return next;
-      });
-    }
+    // Note On command: 0x90 (velocity 0 means Note Off)
+    if (command === 0x90 && velocity > 0) onNoteOnRef.current?.(noteNumber, velocity);
   }, []);
 
   /** Listens only on the selected input; re-run after hot-plug, since new ports start unbound. */
@@ -130,8 +107,5 @@ export const useMidiInput = (onNoteOn?: (pitch: number, velocity: number) => voi
     devices,
     selectedDeviceId,
     setSelectedDeviceId,
-    activeNotes,
-    /** Array of currently pressed MIDI pitches (numbers) */
-    pressedPitches: Array.from(activeNotes.keys()),
   };
 };

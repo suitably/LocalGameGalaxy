@@ -5,7 +5,7 @@ import {
   type DrumVoice,
 } from '../../../../modules/music-score';
 import { lowerBound, type StageNote } from '../logic/charts';
-import { GOOD_SEC, nearestOpenNote, pendingNotes, timingJudgement } from '../logic/judging';
+import { LEARN_EARLY_SEC, nearestOpenNote, pendingNotes, timingJudgement } from '../logic/judging';
 import type { StageEngine } from './StageEngine';
 import type { StagePlayer } from './types';
 
@@ -75,7 +75,11 @@ function playLaneLearning(
   const target = onLane
     .filter((n) => n.t - onLane[0].t < 1e-6)
     .sort((x, y) => rank(x) - rank(y))[0];
-  if (target && (target.t - at.beat) * e.secPerBeat(target.t) <= GOOD_SEC) {
+  // late hits count until the song waits, and any hit on the lane while it waits
+  const inTime =
+    target &&
+    (e.waitingFor === p || (target.t - at.beat) * e.secPerBeat(target.t) <= LEARN_EARLY_SEC);
+  if (target && inTime) {
     if (!at.silent && p.instrument.view === 'strings')
       e.sound.playNote(p.instrument.kind, target.pitch, target.dur * e.secPerBeat(target.t), 1);
     e.judge(p, target, 'learn');

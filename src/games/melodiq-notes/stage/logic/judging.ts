@@ -3,6 +3,9 @@ import { lowerBound, type Judgement, type StageNote } from './charts';
 
 export const PERFECT_SEC = 0.06;
 export const GOOD_SEC = 0.14;
+/** Learn mode: how early a hit may come, and how long the song runs on past a note before it waits. */
+export const LEARN_EARLY_SEC = 0.25;
+export const LEARN_LATE_SEC = GOOD_SEC;
 const POINTS = { perfect: 100, learn: 100, good: 60, miss: 0 } as const;
 const WEIGHT = { perfect: 1, learn: 1, good: 0.6, miss: 0 } as const;
 const COMBO_PER_MULTIPLIER = 8;

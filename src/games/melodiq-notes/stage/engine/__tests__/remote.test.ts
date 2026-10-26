@@ -61,11 +61,11 @@ describe('StageEngine with pults', () => {
     e.start();
     run(e, 3);
     expect(e.waitingFor).toBe(e.players[0]);
-    expect(e.beat).toBe(0);
+    expect(e.beat).toBeCloseTo(0.28); // LEARN_LATE_SEC past the note
     const score = { score: 100, combo: 1, maxCombo: 1, judged: 1, weightSum: 1 };
     applyRemoteJudged(e, 'a', { seq: 1, marks: [[0, 'learn']], score });
     run(e, 0.6);
-    expect(e.beat).toBe(1);
+    expect(e.beat).toBeCloseTo(1.28);
   });
 
   it('keeps learn mode for one player: a second player switches to practice', () => {
