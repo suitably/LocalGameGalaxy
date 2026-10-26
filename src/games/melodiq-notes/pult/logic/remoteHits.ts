@@ -46,8 +46,10 @@ export function applyJudged(
   judge: Judge,
 ): number {
   let applied = 0;
+  // ids follow note order; bars before the recording may be left out at the start
+  const first = p.notes[0]?.id ?? 0;
   for (const [id, kind] of marks) {
-    const n = p.notes[id];
+    const n = p.notes[id - first];
     if (!n || n.id !== id || n.judged) continue;
     judge(p, n, kind);
     applied++;

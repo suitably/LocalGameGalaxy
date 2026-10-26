@@ -58,6 +58,7 @@ const clock = (over: Partial<StageClock>): StageClock => ({
   songKey: songKeyOf(song()),
   at: 1000,
   beat: 0,
+  startBeat: 0,
   rate: 2,
   play: 'playing',
   mode: 'perform',
@@ -140,5 +141,16 @@ describe('PultEngine', () => {
       { kind: 'lane', lane: 62 },
       { kind: 'lane', lane: 64 },
     ]);
+  });
+});
+
+describe('PultEngine with a recording that starts later', () => {
+  it('leaves out the bars before the stage starts, like the stage', () => {
+    const { e, time } = pult();
+    e.applyClock(clock({ startBeat: 4, beat: 0 }));
+    expect(e.players[0].notes[0].t).toBe(4);
+    expect(e.players[0].notes[0].id).toBe(4);
+    run(e, time, 1);
+    expect(e.takeBatch()).toBeNull();
   });
 });

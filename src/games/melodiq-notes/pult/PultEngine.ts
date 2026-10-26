@@ -70,17 +70,24 @@ export class PultEngine extends StageEngine {
     if (this.clock) this.applyClock(this.clock);
   }
 
+  /** Bars before the stage's recording are left out here too, so both sides play the same notes. */
+  get startBeat() {
+    return this.clock?.startBeat ?? 0;
+  }
+
   /** The stage's latest transport. Learn mode does not wait for a pult, so it judges like practice. */
   applyClock(clock: StageClock) {
+    const from = this.startBeat;
     this.clock = clock;
     if (clock.rate > 0) this.rate = clock.rate;
     if (clock.songKey !== this.songKey || !this.song) return;
     this.mode = clock.mode === 'learn' ? 'practice' : clock.mode;
     this.loop = clock.loop;
-    if (clock.play === this.state) return;
+    if (from !== clock.startBeat) this.reset();
+    else if (clock.play === this.state) return;
     // back to the start (or a new round after the end): fresh notes and score, like the stage
-    if (clock.play === 'idle' || this.state === 'done') this.reset();
-    if (clock.play === 'idle') return;
+    else if (clock.play === 'idle' || this.state === 'done') this.reset();
+    if (clock.play === 'idle' || clock.play === this.state) return;
     this.state = clock.play;
     this.emit();
   }

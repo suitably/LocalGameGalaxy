@@ -62,6 +62,8 @@ export interface StageClock {
   songKey: string;
   at: number;
   beat: number;
+  /** First beat the stage plays (bars before its recording are left out). */
+  startBeat: number;
   /** Beats per real second while playing (tempo, recording and speed included). */
   rate: number;
   play: PlayState;

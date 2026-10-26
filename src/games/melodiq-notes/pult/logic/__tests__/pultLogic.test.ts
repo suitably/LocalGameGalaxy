@@ -119,6 +119,7 @@ const CLOCK: StageClock = {
   songKey: 'k',
   at: 1000,
   beat: 4,
+  startBeat: 0,
   rate: 2,
   play: 'playing',
   mode: 'perform',

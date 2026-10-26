@@ -1,5 +1,6 @@
 import { lowerBound, type Judgement, type StageNote } from '../logic/charts';
-import { GOOD_SEC, pitchJudgement, type BeatRange } from '../logic/judging';
+import { GOOD_SEC, pendingNotes, pitchJudgement, type BeatRange } from '../logic/judging';
+import type { StageEngine } from './StageEngine';
 import type { StagePlayer } from './types';
 
 const PITCH_TOLERANCE = 0.8;
@@ -74,4 +75,14 @@ export function resetRange(p: StagePlayer, from: number, to: number, restartBeat
   }
   p.missIdx = lowerBound(p.notes, restartBeat);
   p.history = [];
+}
+
+/** One frame for one player: judging on this screen, or only the pitch trail for a pult's player. */
+export function advancePlayer(e: StageEngine, p: StagePlayer, beatsPassed: number) {
+  if (p.remoteId) trackVoice(p, e.beat);
+  else if (p.instrument.view === 'pitch') {
+    if (e.waitingFor) startAwaitedNote(p);
+    advanceSinging(p, e.beat, beatsPassed, e.loop, e.judge);
+  } else if (e.mode !== 'learn') advanceMisses(p, e.beat, e.secPerBeat, e.loop, e.judge);
+  p.pending = pendingNotes(p.notes, e.loop, p.instrument.view === 'pitch');
 }

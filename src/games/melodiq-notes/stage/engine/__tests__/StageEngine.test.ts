@@ -1,66 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createAudioMap, type ScoreSong } from '../../../../../modules/music-score';
+import { createAudioMap } from '../../../../../modules/music-score';
 import { StageEngine } from '../StageEngine';
 import { buildBandEvents, nextSeat } from '../players';
-import { applyRemoteJudged, seatRemotes, showRemoteInput } from '../remote';
 import { playerResults, weakestSection } from '../results';
-import type { StageRecording, StageSound } from '../types';
-
-/** 4 bars of 4/4 at 120 bpm (0.5 s per beat): piano melody on every beat, bass on every bar, drums. */
-function song(): ScoreSong {
-  const melody = Array.from({ length: 16 }, (_, t) => ({ t, dur: 1, pitch: 60 + (t % 5) }));
-  return {
-    title: 'T',
-    artist: '',
-    source: 't',
-    tempoMap: [{ beat: 0, bpm: 120 }],
-    measureStarts: [0, 4, 8, 12],
-    measureLengths: [4, 4, 4, 4],
-    measureNumbers: [1, 2, 3, 4],
-    end: 16,
-    parts: [
-      { id: 'piano', name: 'Piano', notes: melody, isDrum: false, program: 0, guess: 'keyboard' },
-      {
-        id: 'bass',
-        name: 'Bass',
-        notes: [0, 4, 8, 12].map((t) => ({ t, dur: 4, pitch: 36 })),
-        isDrum: false,
-        program: 33,
-        guess: 'bass',
-      },
-      {
-        id: 'drums',
-        name: 'Drums',
-        notes: [0, 1, 2, 3].map((t) => ({ t, dur: 0.25, pitch: 36 })),
-        isDrum: true,
-        program: null,
-        guess: 'drums',
-      },
-    ],
-  };
-}
-
-function fakeSound(): StageSound & { notes: number[]; clicks: number; drums: number } {
-  const s = {
-    notes: [] as number[],
-    clicks: 0,
-    drums: 0,
-    now: () => 0,
-    playNote: (_: unknown, midi: number) => s.notes.push(midi),
-    playDrum: () => {
-      s.drums++;
-    },
-    click: () => {
-      s.clicks++;
-    },
-    stopAll: () => {},
-  };
-  return s;
-}
-
-const run = (e: StageEngine, seconds: number, step = 0.02) => {
-  for (let t = 0; t < seconds - 1e-9; t += step) e.tick(step);
-};
+import type { StageRecording } from '../types';
+import { fakeSound, run, song } from './stageFixtures';
 
 describe('StageEngine', () => {
   it('picks the keyboard player by default and lets the band play the rest', () => {
@@ -104,66 +48,6 @@ describe('StageEngine', () => {
     expect(first.judged).toBe('perfect');
     expect(second.judged).toBe('miss');
     expect(e.players[0].stats.combo).toBe(0);
-  });
-
-  it('seats a pult, never judges it itself and merges what the pult judged', () => {
-    const sound = fakeSound();
-    const e = new StageEngine(sound);
-    e.loadSong(song());
-    seatRemotes(e, [{ id: 'a', name: 'Ann', partId: 'piano', inst: 'keyboard' }]);
-    expect(e.players[0]).toMatchObject({ remoteId: 'a', name: 'Ann' });
-    // local keys must not drive the pult's player
-    expect(e.focus).toBeNull();
-    e.setMode('perform');
-    e.start();
-    run(e, 4);
-    e.hit(60);
-    expect(e.players[0].notes.every((n) => n.judged === null)).toBe(true);
-    const score = { score: 100, combo: 1, maxCombo: 1, judged: 1, weightSum: 1 };
-    applyRemoteJudged(e, 'a', { seq: 1, marks: [[0, 'perfect']], score });
-    expect(e.players[0].notes[0].judged).toBe('perfect');
-    // an older batch arriving late changes nothing
-    applyRemoteJudged(e, 'a', { seq: 0, marks: [[1, 'miss']], score: { ...score, score: 0 } });
-    expect(e.players[0].notes[1].judged).toBeNull();
-    expect(e.players[0].stats.score).toBe(100);
-    showRemoteInput(e, 'a', { kind: 'lane', lane: 62 });
-    expect(e.players[0].pressed.has(62)).toBe(true);
-    expect(sound.notes).not.toContain(62);
-    seatRemotes(e, []);
-    expect(e.players[0].remoteId).toBeUndefined();
-  });
-
-  it('seats a pult joining mid-song at once and keeps the others playing', () => {
-    const e = new StageEngine(fakeSound());
-    e.loadSong(song());
-    e.setMode('perform');
-    e.start();
-    run(e, 2.02);
-    e.hit(60);
-    run(e, 1);
-    const local = e.players[0];
-    seatRemotes(e, [{ id: 'b', name: 'Ben', partId: 'bass', inst: 'bass' }]);
-    expect(e.state).toBe('playing');
-    expect(e.players[0]).toBe(local);
-    expect(e.players[0].notes[0].judged).toBe('perfect');
-    expect(e.players.map((p) => [p.no, p.remoteId])).toEqual([
-      [1, undefined],
-      [2, 'b'],
-    ]);
-    expect(e.players[1].missIdx).toBeGreaterThan(0);
-    expect(e.focus).toBe(local);
-    e.setFocus(e.players[1]);
-    expect(e.focus).toBe(local);
-  });
-
-  it('learn mode waits for the players on this screen only', () => {
-    const e = new StageEngine(fakeSound());
-    e.loadSong(song());
-    seatRemotes(e, [{ id: 'a', name: 'Ann', partId: 'piano', inst: 'keyboard' }]);
-    e.start();
-    run(e, 3);
-    expect(e.waitingFor).toBeNull();
-    expect(e.beat).toBeGreaterThan(1);
   });
 
   it('plays the whole song, finishes and reports results', () => {
@@ -290,6 +174,35 @@ describe('StageEngine', () => {
     const [from] = (rec.play as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(from).toBeGreaterThanOrEqual(1.5);
     expect(from).toBeLessThan(1.6);
+  });
+
+  it('leaves out bars before the recording starts (an intro it lacks)', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    // bars 1-2 lie before the recording, bar 3 starts at 0 s
+    const marks = [0, 4, 8, 12, 16].map((beat) => ({ beat, sec: (beat - 8) * 0.5 }));
+    const rec: StageRecording = {
+      map: createAudioMap(song(), marks, 0),
+      startBeat: 8,
+      duration: 30,
+      time: () => 0,
+      isPlaying: () => false,
+      play: vi.fn(),
+      pause: vi.fn(),
+      setRate: vi.fn(),
+      setVolume: vi.fn(),
+    };
+    e.setRecording(rec);
+    expect(e.beat).toBe(8 - e.countIn);
+    expect(e.players[0].notes[0].t).toBe(8);
+    e.setMode('perform');
+    e.start();
+    run(e, 2.04);
+    const [from] = (rec.play as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(from).toBeGreaterThanOrEqual(0);
+    expect(from).toBeLessThan(0.1);
+    e.seekTo(0);
+    expect(e.beat).toBe(8 - e.countIn);
   });
 
   it('seeks on the timeline and jumps to the first note with a lead-in', () => {

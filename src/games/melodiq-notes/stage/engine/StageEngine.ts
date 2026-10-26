@@ -1,10 +1,10 @@
-import { bpmAt, type ScoreSong } from '../../../../modules/music-score';
+import type { ScoreSong } from '../../../../modules/music-score';
 import { lowerBound, type Judgement, type StageNote } from '../logic/charts';
 import { pendingNotes, recordJudgement, type BeatRange } from '../logic/judging';
 import { buildSections, sectionIndexAt, type Section } from '../logic/sections';
-import { advanceMisses, advanceSinging, resetRange, startAwaitedNote, trackVoice } from './advance';
+import { advancePlayer, resetRange } from './advance';
 import { playLane, playPitch } from './input';
-import { seekStage, seekToFirstNote, syncRecording } from './transport';
+import { secPerBeatAt, seekStage, seekToFirstNote, syncRecording } from './transport';
 import { buildBandEvents, createPlayers, defaultSeats, nextSeat } from './players';
 import type {
   BandEvent,
@@ -131,12 +131,12 @@ export class StageEngine {
     this.recording?.pause();
     this.state = 'idle';
     if (!this.song) return this.emit();
-    this.players = createPlayers(this.song, this.seats, this.sections.length);
+    this.players = createPlayers(this.song, this.seats, this.sections.length, this.startBeat);
     this.focus = this.players.find((p) => !p.remoteId) ?? null;
     this.countIn = Math.min(6, Math.max(2, this.song.measureLengths[0] ?? 4));
-    this.bandEvents = buildBandEvents(this.song, this.seats, this.band, this.countIn);
+    this.bandEvents = this.bandFor(this.song, this.band);
     this.bandIdx = 0;
-    this.beat = -this.countIn;
+    this.beat = this.startBeat - this.countIn;
     this.waitingFor = null;
     if (this.loop) this.restartAt(this.loop.from);
     this.emit();
@@ -161,7 +161,7 @@ export class StageEngine {
   setBand(mode: BandMode) {
     this.band = mode;
     if (this.song) {
-      this.bandEvents = buildBandEvents(this.song, this.seats, mode, this.countIn);
+      this.bandEvents = this.bandFor(this.song, mode);
       this.bandIdx = lowerBound(this.bandEvents, this.beat);
     }
     this.emit();
@@ -173,11 +173,19 @@ export class StageEngine {
     this.emit();
   }
 
+  /** First beat that is played: with a recording, its first bar (an intro it lacks is left out). */
+  get startBeat() {
+    return this.recording?.startBeat ?? 0;
+  }
+
   setRecording(recording: StageRecording | null) {
+    const from = this.startBeat;
     this.recording?.pause();
     this.recording = recording;
     recording?.setVolume(this.recordingAudible ? 1 : 0);
-    this.emit();
+    // other bars are played now: back to the count-in
+    if (this.startBeat !== from) this.reset();
+    else this.emit();
   }
 
   /** Keys, MIDI and microphone of this screen only ever drive a player on this screen. */
@@ -230,13 +238,7 @@ export class StageEngine {
   }
 
   /** Real seconds per beat at `beat`: the recording's tempo when one is attached, else the score's. */
-  secPerBeat = (beat: number) => {
-    if (!this.song) return 0.5;
-    const map = this.recording?.map;
-    const from = Math.max(0, beat - 0.5);
-    const recorded = map ? map.secAt(from + 1) - map.secAt(from) : 0;
-    return (recorded > 0 ? recorded : 60 / bpmAt(this.song.tempoMap, beat)) / this.speed;
-  };
+  secPerBeat = (beat: number) => secPerBeatAt(this, beat);
   sectionAt = (beat: number) => sectionIndexAt(this.sections, beat);
 
   /** Advances the song by `dt` seconds of real time. */
@@ -268,15 +270,7 @@ export class StageEngine {
     }
     this.playBand(next);
     this.beat = next;
-    for (const p of this.players) {
-      if (p.remoteId) trackVoice(p, this.beat);
-      else if (p.instrument.view === 'pitch') {
-        if (this.waitingFor) startAwaitedNote(p);
-        advanceSinging(p, this.beat, this.beat - before, this.loop, this.judge);
-      } else if (this.mode !== 'learn')
-        advanceMisses(p, this.beat, this.secPerBeat, this.loop, this.judge);
-      p.pending = pendingNotes(p.notes, this.loop, p.instrument.view === 'pitch');
-    }
+    for (const p of this.players) advancePlayer(this, p, this.beat - before);
     if (this.loop && this.beat >= this.loop.to) this.restartAt(this.loop.from);
     else if (!this.loop && this.beat >= song.end + 1) this.finish();
     syncRecording(this);
@@ -285,6 +279,10 @@ export class StageEngine {
       this.sectionAt(Math.max(0, before)) !== this.sectionAt(Math.max(0, this.beat))
     )
       this.notifyLive();
+  }
+
+  private bandFor(song: ScoreSong, mode: BandMode) {
+    return buildBandEvents(song, this.seats, mode, this.countIn, this.startBeat);
   }
 
   private playBand(until: number) {
