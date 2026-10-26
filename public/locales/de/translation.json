@@ -30,7 +30,7 @@
     "darts": {
       "title": "Dart Checker",
       "description": "Verfolge deinen Punktestand in 301, 501 oder aufzählen.",
-      "settings": "Spieleinstellungen",
+      "game_setup": "Spiel einrichten",
       "mode": "Spielmodus",
       "count_up": "Aufzählen",
       "double_out": "Double Out (Doppel-Aus)",
@@ -1245,6 +1245,8 @@
     }
   },
   "settings": {
+    "game_sheet_title": "{{game}} · Einstellungen",
+    "app_settings_link": "App-Einstellungen",
     "title": "Einstellungen",
     "general_tab": "Allgemein",
     "general_desc": "Sprache, Darstellung, Feedback und GitHub-Integration.",

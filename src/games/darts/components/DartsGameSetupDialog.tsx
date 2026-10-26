@@ -28,7 +28,7 @@ interface Props {
   state: DartsGameState;
 }
 
-export function DartsSettings({ open, onClose, state }: Props) {
+export function DartsGameSetupDialog({ open, onClose, state }: Props) {
   const { t } = useTranslation();
   const [mode, setMode] = useState(state.settings.mode);
   const [doubleOut, setDoubleOut] = useState(state.settings.doubleOut);
@@ -69,7 +69,7 @@ export function DartsSettings({ open, onClose, state }: Props) {
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{t('games.darts.settings')}</DialogTitle>
+      <DialogTitle>{t('games.darts.game_setup')}</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
           <FormControl fullWidth>

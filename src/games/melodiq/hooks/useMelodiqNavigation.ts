@@ -1,20 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 
 export type MelodiqView =
-  'Home' | 'Settings' | 'Session' | 'Connection' | 'Playlists' | 'PlaylistDetails' | 'DownloadWait';
+  'Home' | 'Session' | 'Connection' | 'Playlists' | 'PlaylistDetails' | 'DownloadWait';
 
-const SUB_VIEWS: readonly MelodiqView[] = [
-  'Settings',
-  'Connection',
-  'Playlists',
-  'PlaylistDetails',
-];
+const SUB_VIEWS: readonly MelodiqView[] = ['Connection', 'Playlists', 'PlaylistDetails'];
 
 /** Current Melodiq view plus browser-history handling for the sub views (back button). */
-export function useMelodiqNavigation(isSettingsFromUrl: boolean, refreshSongs: () => unknown) {
-  const [currentView, setCurrentView] = useState<MelodiqView>(() =>
-    isSettingsFromUrl ? 'Settings' : 'Home',
-  );
+export function useMelodiqNavigation() {
+  const [currentView, setCurrentView] = useState<MelodiqView>('Home');
   const handleSetCurrentView = useCallback((v: string) => {
     setCurrentView(v as MelodiqView);
   }, []);
@@ -26,11 +19,6 @@ export function useMelodiqNavigation(isSettingsFromUrl: boolean, refreshSongs: (
       setCurrentView('Home');
     }
   }, []);
-
-  const handleBackFromSettings = useCallback(() => {
-    refreshSongs();
-    handleCloseSubView();
-  }, [refreshSongs, handleCloseSubView]);
 
   useEffect(() => {
     if (SUB_VIEWS.includes(currentView)) {
@@ -46,6 +34,5 @@ export function useMelodiqNavigation(isSettingsFromUrl: boolean, refreshSongs: (
     setCurrentView,
     handleSetCurrentView,
     handleCloseSubView,
-    handleBackFromSettings,
   };
 }

@@ -7,8 +7,6 @@ export const wordleTranslations = {
     'wordle.mode.practice': 'Üben',
     'wordle.not_enough_letters': 'Nicht genügend Buchstaben!',
     'wordle.not_in_dictionary': 'Nicht im Wörterbuch!',
-    'wordle.settings.title': 'Einstellungen',
-    'wordle.settings.btn_tooltip': 'Einstellungen',
     'wordle.settings.dictionary_only': 'Nur Wörterbuch-Wörter',
     'wordle.settings.dictionary_only_hint':
       'Tipps müssen ein bekanntes Wort sein. Ungültige Wörter kosten keinen Versuch.',
@@ -54,8 +52,6 @@ export const wordleTranslations = {
     'wordle.mode.practice': 'Practice',
     'wordle.not_enough_letters': 'Not enough letters!',
     'wordle.not_in_dictionary': 'Not in word list!',
-    'wordle.settings.title': 'Settings',
-    'wordle.settings.btn_tooltip': 'Settings',
     'wordle.settings.dictionary_only': 'Only dictionary words',
     'wordle.settings.dictionary_only_hint':
       'Guesses must be a known word. Invalid words do not use up an attempt.',

@@ -5,7 +5,6 @@ import { GameLayout } from '../../components/Layout/GameLayout';
 import { bpmAt } from '../../modules/music-score';
 import { DEMO_SONGS } from './demoSongs';
 import { useMelodiqNotesHeader } from './hooks/useMelodiqNotesHeader';
-import { SoundSettingsDialog } from './components/SoundSettingsDialog';
 import { useStage, useStageTexts } from './stage/useStage';
 import { useStageSong } from './stage/useStageSong';
 import { useStageInput } from './stage/useStageInput';
@@ -34,7 +33,6 @@ export const MelodiqNotesGame: React.FC = () => {
   const input = useStageInput(engine);
   const [display, setDisplay] = useState<StageDisplay>('instrument');
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   // null until first opened: the room only exists once someone is invited
   const [inviteOpen, setInviteOpen] = useState<boolean | null>(null);
   const [removeRemote, setRemoveRemote] = useState<((id: string) => void) | null>(null);
@@ -49,14 +47,12 @@ export const MelodiqNotesGame: React.FC = () => {
   const portrait = useMediaQuery('(orientation: portrait)');
 
   const openPicker = useCallback(() => setPickerOpen(true), []);
-  const openSettings = useCallback(() => setSettingsOpen(true), []);
   const song = engine.song;
   useMelodiqNotesHeader({
     currentTitle: song?.title ?? null,
     currentArtist: song?.artist ?? null,
     effectiveBpm: song ? Math.round(bpmAt(song.tempoMap, 0) * engine.speed) : 0,
     onOpenSongSelect: openPicker,
-    onOpenSettings: openSettings,
   });
 
   const start = useCallback(() => {
@@ -175,7 +171,6 @@ export const MelodiqNotesGame: React.FC = () => {
         <SectionStrip engine={engine} />
       </Stack>
       <SongPicker open={pickerOpen} onClose={() => setPickerOpen(false)} state={songState} />
-      <SoundSettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       {inviteOpen !== null && (
         <StageInvite
           engine={engine}

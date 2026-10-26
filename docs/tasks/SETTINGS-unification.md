@@ -3,7 +3,7 @@ type: Task
 title: 'Settings unification: app settings vs. game settings (one PR)'
 description: 'Implementation spec for the settings unification plan: typed settings routes, shared settings UI kit, registry-driven game settings, master–detail settings page, in-game settings sheet, Melodiq/Melodiq Notes/Wordle/Darts migration.'
 tags: [settings, ux, navigation, melodiq, melodiq-notes, wordle, darts]
-status: draft
+status: stable
 generated:
   at: 2026-10-26T14:00:00+01:00
   by: claude-code
@@ -120,7 +120,7 @@ The gameplay section keeps "Reset to defaults" (`SettingsResetButton` + `DEFAULT
 
 ## Progress
 
-- [ ] A
-- [ ] B
-- [ ] C
-- [ ] Gates, docs (architecture.md, melodiq-architecture.md, CHANGELOG, log), PR
+- [x] A
+- [x] B
+- [x] C (C9: `RemoteHostSettingsModal` unchanged — it sends a `HostSettings` patch, `GameSettingsPanel` edits full `SettingsState`; reuse would change the RPC payload)
+- [x] Gates, docs (architecture.md, melodiq-architecture.md, CHANGELOG, log), PR

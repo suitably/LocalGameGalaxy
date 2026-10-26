@@ -2,6 +2,13 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-26 — Settings unification implemented (claude-code)
+
+- `docs/tech/architecture.md`: new §3.8 (app vs. game settings, routes, registry sections, sheet), reuse catalog gains the settings UI kit and `useStoredSettings`, §3.4 lists `GameSettingsContext`.
+- `docs/tech/melodiq-architecture.md`: Melodiq settings UI is the registered sections.
+- `docs/tasks/SETTINGS-unification.md` (done) listed in `docs/tasks/index.md`; plan report notes the implementation.
+- Outside `docs/`: `src/features/settings/` rewritten (master–detail, `settingsRoutes.ts`), `src/components/settings/`, `src/context/GameSettingsContext.tsx`, `src/lib/gameSettingsRegistry.tsx`, `src/hooks/useStoredSettings.ts`, `src/modules/audio/AudioInputSettings.tsx`, game sections in Melodiq / Melodiq Notes / Wordle, Darts `DartsGameSetupDialog`, `GlobalHeader` gear rule, `server/src/core/pairing.ts` URL, locales, CHANGELOG.
+
 ## 2026-10-26 — Settings unification plan (claude-code)
 
 - New `docs/reports/2026-10-26-settings-unification-plan.md`, listed in `docs/reports/index.md`; maintainer decisions D1–D6 recorded (master–detail, Games group, global Audio input, old URLs removed except pairing).

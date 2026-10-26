@@ -16,6 +16,7 @@ import { useSearchFilters } from './hooks/useSearchFilters';
 import { MelodiqHomeView } from './components/MelodiqHomeView';
 import { MelodiqSubViews } from './components/MelodiqSubViews';
 import { PlaybackFeedback } from './components/PlaybackFeedback';
+import { useGameSettingsHost } from '../../context/GameSettingsContext';
 import { useMelodiqNavigation } from './hooks/useMelodiqNavigation';
 import { useMelodiqPlayback } from './hooks/useMelodiqPlayback';
 import { useSongQueueDialog } from './hooks/useSongQueueDialog';
@@ -60,14 +61,9 @@ export const MelodiqGameContent: React.FC = () => {
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [showQueueDrawer, setShowQueueDrawer] = useState(false);
 
-  const isSettingsFromUrl = Boolean(searchParams.get('tab') || searchParams.get('sub'));
-  const {
-    currentView,
-    setCurrentView,
-    handleSetCurrentView,
-    handleCloseSubView,
-    handleBackFromSettings,
-  } = useMelodiqNavigation(isSettingsFromUrl, refreshSongs);
+  const { currentView, setCurrentView, handleSetCurrentView, handleCloseSubView } =
+    useMelodiqNavigation();
+  useGameSettingsHost({ audience: isClient ? 'client' : 'host', onClose: refreshSongs });
 
   const playback = useMelodiqPlayback({
     isClient,
@@ -142,8 +138,6 @@ export const MelodiqGameContent: React.FC = () => {
       <MelodiqSubViews
         currentView={currentView}
         setCurrentView={setCurrentView}
-        isClient={isClient}
-        onBackFromSettings={handleBackFromSettings}
         onCloseSubView={handleCloseSubView}
       />
 

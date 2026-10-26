@@ -17,7 +17,7 @@ import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useTranslation } from 'react-i18next';
 import { useHeaderLayout } from '../../context/HeaderLayoutContext';
 import { useTitle } from '../../context/TitleContext';
-import { useSettingsMode } from '../../context/SettingsModeContext';
+import { useGameSettings } from '../../context/GameSettingsContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { gameRegistry } from '../../lib/gameRegistry';
 import { usePWAInstall } from '../../hooks/usePWAInstall';
@@ -32,15 +32,14 @@ export const GlobalHeader: React.FC = () => {
   const { customHeaderTitle, menuItems, homeAction, customHeaderActions, hideHome } =
     useHeaderLayout();
   const { title } = useTitle();
-  const { isSettingsMode } = useSettingsMode();
+  const { openGameSettings } = useGameSettings();
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
   const isLargeScreen = useMediaQuery(theme.breakpoints.up('md'));
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const activeGame = gameRegistry.findGameByPath(location.pathname);
-  const hasSettings = activeGame?.hasSettings ?? false;
-  const isSettingsPage = location.pathname.startsWith('/settings') || isSettingsMode;
+  const isSettingsPage = location.pathname.startsWith('/settings');
   const { isStandalone, isInstallable, installApp, showIOSGuide, setShowIOSGuide } =
     usePWAInstall();
 
@@ -124,15 +123,18 @@ export const GlobalHeader: React.FC = () => {
             </Tooltip>
           )}
 
-          {/* Settings Icon (Global) - Hide on game routes and when on settings page */}
-          {!hasSettings && !isSettingsPage && (
+          {/* One settings gear: game sheet on games with settings, app settings elsewhere; hidden on /settings */}
+          {!isSettingsPage && (
             <Tooltip title={t('settings.title', 'Settings')}>
               <IconButton
                 color="inherit"
+                aria-label={t('settings.title', 'Settings')}
                 onClick={() =>
-                  navigate(settingsPath({ kind: 'list' }), {
-                    state: { from: location.pathname + location.search },
-                  })
+                  activeGame?.settings
+                    ? openGameSettings()
+                    : navigate(settingsPath({ kind: 'list' }), {
+                        state: { from: location.pathname + location.search },
+                      })
                 }
                 sx={{ ml: 0.5, p: 1.25 }}
               >

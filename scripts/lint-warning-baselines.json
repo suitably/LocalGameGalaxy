@@ -20,7 +20,7 @@
   "src/context/TitleContext.tsx": 3,
   "src/features/party/logic/universalPartyManager.ts": 1,
   "src/features/settings/components/server/useSignalingTrackerState.ts": 2,
-  "src/games/darts/components/DartsSettings.tsx": 1,
+  "src/games/darts/components/DartsGameSetupDialog.tsx": 1,
   "src/games/darts/useDartsGame.ts": 1,
   "src/games/guessart/GuessArtGame.tsx": 1,
   "src/games/guessart/hooks/useGuessArtGame.ts": 3,

@@ -4,6 +4,7 @@ Agent-ready specs for **open** work. Each mirrors a GitHub issue in `suitably/Lo
 
 | Spec                                                                                                                          | Issue | State on PR #384 branch                                                          |
 | ----------------------------------------------------------------------------------------------------------------------------- | ----- | -------------------------------------------------------------------------------- |
+| [Settings unification: app vs. game settings](SETTINGS-unification.md)                                                        | —     | done on branch `claude/settings-struktur-plan-ougni3`                            |
 | [Melodiq RemoteHostSettingsModal + typed WebRTC RPC](ISSUE-356-melodiq-remote-host-settings.md)                               | #356  | open                                                                             |
 | [Decompose PartyLobby](ISSUE-359-decompose-party-lobby.md)                                                                    | #359  | done (`PartyLobby.tsx` 96 lines, sections in `components/`)                      |
 | [Cards score views dedup](ISSUE-360-cards-views-dedup.md)                                                                     | #360  | open                                                                             |

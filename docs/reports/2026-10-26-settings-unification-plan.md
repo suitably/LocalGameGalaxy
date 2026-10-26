@@ -20,6 +20,8 @@ sources:
 
 # Settings unification plan
 
+> **Note (2026-10-26):** implemented in one PR per [docs/tasks/SETTINGS-unification.md](../tasks/SETTINGS-unification.md); living description in [architecture.md §3.8](../tech/architecture.md#38-settings-app-scope-vs-game-scope).
+
 Two problems: (1) settings look and behave differently on every surface; (2) app-wide and game-specific settings are mixed, with Melodiq as a special case inside the global page. This report lists what exists, defines a target model and cuts it into PR-sized slices.
 
 ## 1. Current state (as of 2026-10-26)

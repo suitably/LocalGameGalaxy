@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-21
+  at: 2026-10-26
   method: 'read against src/lib/gameRegistry.tsx, src/modules/*, src/context/*, src/lib/storage.ts, server/src/{index,config}.ts, server/src/core/*, server/src/plugins/*, signaling/src/index.js'
 sources:
   - 'src/lib/gameRegistry.tsx'
@@ -44,7 +44,7 @@ src/
 ├── App.tsx, main.tsx, i18n.ts, theme.ts
 ├── assets/
 ├── components/      # app-wide UI: common/ (ConfirmDialog…), connection/, feedback/, games/ (Die3D), Layout/ (GlobalHeader), push/, pwa/
-├── context/         # TitleContext, HeaderLayoutContext, SettingsModeContext, LayoutContext (composite adapter)
+├── context/         # TitleContext, HeaderLayoutContext, SettingsModeContext, GameSettingsContext, LayoutContext (composite adapter)
 ├── features/        # hub/, party/ (Universal Party lobby), settings/
 ├── games/           # 15 game folders — one self-contained domain each (see game-catalog)
 ├── hooks/           # useWakeLock, useScreenOrientation, usePWAInstall, useServerUrlAutoConnect, usePrefersReducedMotion
@@ -105,19 +105,21 @@ The full per-game table (route, size, storage, sync, i18n source, shared modules
 
 Other shared building blocks outside `src/modules/` (check these before writing a new one — this is the reuse catalog [AGENTS.md](../../AGENTS.md) points to):
 
-| Building block           | Path                                                                            | Provides                                                                                                                                  |
-| ------------------------ | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Confirm dialog           | `src/components/common/ConfirmDialog.tsx`                                       | MUI confirmation modal (replaces `confirm()`)                                                                                             |
-| List states              | `src/components/common/{EmptyState,ErrorState,ListSkeleton}.tsx`                | Empty / error (+retry) / loading placeholder for lists and lobbies (DESIGN.md §6); no shimmer                                             |
-| Game header bar          | `src/components/common/GameHeaderBar.tsx`                                       | Flat AppBar + toolbar shell for in-game top bars (GuessArt, Storyteller)                                                                  |
-| 3D dice                  | `src/components/games/Die3D.tsx`, `useDiceRollAnimation.ts`                     | animated die; roll delay before values are revealed                                                                                       |
-| Header & titles          | `src/context/TitleContext.tsx`, `src/context/HeaderLayoutContext.tsx`           | `usePageTitle`, `useHeaderLayout` — actions, menu items, safe hub exit (§3.4)                                                             |
-| Push                     | `src/components/push/`, `src/lib/push/pushClient.ts`                            | permission banner, settings, Web Push / ntfy client (§3.3)                                                                                |
-| Storage                  | `src/lib/storage.ts`                                                            | key/value storage with memory fallback, `STORAGE_KEYS` (§3.5)                                                                             |
-| Design tokens, hub areas | `src/themeTokens.ts`, `src/lib/areas.ts`, `src/components/brand/AreaSymbol.tsx` | colour/type tokens behind `src/theme.ts` (`theme.palette.piece`), category → area mapping, area symbols ([DESIGN.md](../../DESIGN.md) §8) |
-| Wake lock, orientation   | `src/hooks/useWakeLock.ts`, `src/hooks/useScreenOrientation.ts`                 | keep screen on, lock orientation                                                                                                          |
-| GitHub publishing        | `src/lib/github.ts`                                                             | `createGitHubPR` (REST via `fetch`)                                                                                                       |
-| WebRTC                   | `src/lib/webrtc/`                                                               | `WebRTCHostManager`, `useWebRTCClient`, `WebRTCHostContext`, `trackerLogic.ts`                                                            |
+| Building block           | Path                                                                            | Provides                                                                                                                                     |
+| ------------------------ | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Confirm dialog           | `src/components/common/ConfirmDialog.tsx`                                       | MUI confirmation modal (replaces `confirm()`)                                                                                                |
+| List states              | `src/components/common/{EmptyState,ErrorState,ListSkeleton}.tsx`                | Empty / error (+retry) / loading placeholder for lists and lobbies (DESIGN.md §6); no shimmer                                                |
+| Game header bar          | `src/components/common/GameHeaderBar.tsx`                                       | Flat AppBar + toolbar shell for in-game top bars (GuessArt, Storyteller)                                                                     |
+| 3D dice                  | `src/components/games/Die3D.tsx`, `useDiceRollAnimation.ts`                     | animated die; roll delay before values are revealed                                                                                          |
+| Header & titles          | `src/context/TitleContext.tsx`, `src/context/HeaderLayoutContext.tsx`           | `usePageTitle`, `useHeaderLayout` — actions, menu items, safe hub exit (§3.4)                                                                |
+| Settings UI kit          | `src/components/settings/`                                                      | `SettingsSection`, `SettingRow`, `SettingSwitch` / `SettingSlider` / `SettingToggleGroup`, `SettingsResetButton`, `GameSettingsSheet` (§3.8) |
+| Stored settings          | `src/hooks/useStoredSettings.ts`                                                | typed settings object in `storage` with defaults, `update`, `reset`                                                                          |
+| Push                     | `src/components/push/`, `src/lib/push/pushClient.ts`                            | permission banner, settings, Web Push / ntfy client (§3.3)                                                                                   |
+| Storage                  | `src/lib/storage.ts`                                                            | key/value storage with memory fallback, `STORAGE_KEYS` (§3.5)                                                                                |
+| Design tokens, hub areas | `src/themeTokens.ts`, `src/lib/areas.ts`, `src/components/brand/AreaSymbol.tsx` | colour/type tokens behind `src/theme.ts` (`theme.palette.piece`), category → area mapping, area symbols ([DESIGN.md](../../DESIGN.md) §8)    |
+| Wake lock, orientation   | `src/hooks/useWakeLock.ts`, `src/hooks/useScreenOrientation.ts`                 | keep screen on, lock orientation                                                                                                             |
+| GitHub publishing        | `src/lib/github.ts`                                                             | `createGitHubPR` (REST via `fetch`)                                                                                                          |
+| WebRTC                   | `src/lib/webrtc/`                                                               | `WebRTCHostManager`, `useWebRTCClient`, `WebRTCHostContext`, `trackerLogic.ts`                                                               |
 
 ### 3.3 Notifications (Web Push + ntfy)
 
@@ -132,7 +134,8 @@ UI layout state is split to avoid app-wide re-renders (`src/context/`):
 
 - `TitleContext` — `usePageTitle`, `useTitle`.
 - `HeaderLayoutContext` — header visibility, custom title/actions, menu items, home action (`useHeaderLayout`).
-- `SettingsModeContext` — `isSettingsMode` (`useSettingsMode`).
+- `SettingsModeContext` — `isSettingsMode` (`useSettingsMode`); kept for `LayoutContext.setHeader`, no reader left (`GlobalHeader` detects settings pages by pathname).
+- `GameSettingsContext` — `useGameSettings()` (`openGameSettings`, `closeGameSettings`), `useGameSettingsHost({ audience, onClose })` for the active game (§3.8).
 - `LayoutContext` — backward-compatible composite (`useLayout`, `useLayoutContext`, `useHeader`). New code should use the specific context.
 
 ### 3.5 Persistence
@@ -156,6 +159,15 @@ UI layout state is split to avoid app-wide re-renders (`src/context/`):
 ### 3.7 Signaling tracker (`signaling/`)
 
 Standalone `bittorrent-tracker` server, `PORT`/`TRACKER_PORT` (default 8000), `/health`. `npm run tracker` starts it via `scripts/start-tracker.js`. Clients derive its URL from the helper URL (`storage.getSignalingUrl()` → `ws(s)://<helper-host>:8000`) or use public WebTorrent trackers. Details: [webrtc-signaling](webrtc-signaling.md), [operations/webrtc-tracker](../operations/webrtc-tracker.md).
+
+### 3.8 Settings: app scope vs. game scope
+
+Decisions and rationale: [settings unification plan](../reports/2026-10-26-settings-unification-plan.md).
+
+- **App settings** — `/settings` (`src/features/settings/Settings.tsx`), master–detail: rail ≥ `md`, list page → detail page below. Sections in fixed order: `general` (language, appearance), `audio` (`AudioInputSettings` from `src/modules/audio`), `connectivity` (pairing, signaling, companion plugins, server setup), `notifications`, `integrations` (GitHub PAT), then **Games**, then `about` (feedback).
+- **Routes** — `settingsPath(target)` / `parseSettingsLocation()` in `src/features/settings/settingsRoutes.ts`: `/settings/:section`, `/settings/games/:gameId[/:section]`, `?highlight=<id>` scrolls to `settings-section-<id>`. Build links only with `settingsPath`. The only legacy query honoured is `pair` + `code` (pairing links of older companion servers); `server/src/core/pairing.ts` prints `/settings/connectivity?pair=…&code=…`.
+- **Game settings** — declared per game in `src/lib/gameSettingsRegistry.tsx` (`GameDefinition.settings.sections`: `id`, `titleKey`, `icon`, lazy `component`, `audience` `all | host | client`). Section components live in `src/games/<id>/settings/` and are self-contained. The same sections render on `/settings/games/<id>` (host/all) and in the in-game `GameSettingsSheet`, which the header gear opens on a game route with settings; elsewhere the gear opens `/settings`. Games never add their own settings gear or dialog.
+- **Round options** (players, mode of the running game) stay in the game's setup UI, e.g. Darts `DartsGameSetupDialog`.
 
 ## 4. Component design rules
 

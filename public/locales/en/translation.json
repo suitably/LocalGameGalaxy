@@ -30,7 +30,7 @@
     "darts": {
       "title": "Dart Checker",
       "description": "Track your score in 301, 501 or Count Up games.",
-      "settings": "Game Settings",
+      "game_setup": "Game setup",
       "mode": "Game Mode",
       "count_up": "Count Up",
       "double_out": "Double Out Required",
@@ -1245,6 +1245,8 @@
     }
   },
   "settings": {
+    "game_sheet_title": "{{game}} · Settings",
+    "app_settings_link": "App settings",
     "title": "Settings",
     "general_tab": "General",
     "general_desc": "Language, appearance, feedback, and GitHub integration.",

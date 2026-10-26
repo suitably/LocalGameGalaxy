@@ -9,3 +9,15 @@ export interface GameSettingsSectionDefinition {
   component: React.LazyExoticComponent<React.ComponentType>;
   audience?: GameSettingsAudience;
 }
+
+/** Audience of the viewer: hosts see 'all' + 'host' sections, clients 'all' + 'client'. */
+export type GameSettingsViewer = Exclude<GameSettingsAudience, 'all'>;
+
+/** Sections visible to a viewer. */
+export const filterSectionsByAudience = (
+  sections: readonly GameSettingsSectionDefinition[],
+  audience: GameSettingsViewer,
+): GameSettingsSectionDefinition[] =>
+  sections.filter(
+    (s) => s.audience === undefined || s.audience === 'all' || s.audience === audience,
+  );

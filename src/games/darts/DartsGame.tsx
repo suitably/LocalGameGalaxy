@@ -3,12 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { DartsScoreboard } from './components/DartsScoreboard';
 import { DartsInput } from './components/DartsInput';
 import { useDartsGame } from './useDartsGame';
-import { DartsSettings } from './components/DartsSettings';
+import { DartsGameSetupDialog } from './components/DartsGameSetupDialog';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { usePageTitle, useHeaderLayout } from '../../context/LayoutContext';
 import { useEffect } from 'react';
 import { useState } from 'react';
-import SettingsIcon from '@mui/icons-material/SettingsRounded';
+import TuneIcon from '@mui/icons-material/TuneRounded';
 import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
 
 export function DartsGame() {
@@ -27,8 +27,8 @@ export function DartsGame() {
         action: () => setConfirmRestartOpen(true),
       },
       {
-        label: t('games.darts.settings'),
-        icon: <SettingsIcon />,
+        label: t('games.darts.game_setup'),
+        icon: <TuneIcon />,
         action: () => setSettingsOpen(true),
       },
     ]);
@@ -64,7 +64,11 @@ export function DartsGame() {
         </Box>
       </Box>
 
-      <DartsSettings open={settingsOpen} onClose={() => setSettingsOpen(false)} state={gameState} />
+      <DartsGameSetupDialog
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        state={gameState}
+      />
 
       <ConfirmDialog
         open={confirmRestartOpen}

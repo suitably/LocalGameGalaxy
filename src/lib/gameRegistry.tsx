@@ -35,7 +35,6 @@ export interface GameDefinition {
   icon: React.ReactNode;
   component: React.ReactNode;
   category: GameCategory;
-  hasSettings?: boolean;
   settings?: { sections: GameSettingsSectionDefinition[] };
   nestedRoutes?: GameRouteDefinition[];
   standaloneRoutes?: GameRouteDefinition[];
@@ -75,7 +74,6 @@ class GameRegistry {
       descriptionKey: 'games.darts.description',
       icon: <AdsClickIcon sx={{ fontSize: 72, mb: 2 }} />,
       category: 'party',
-      hasSettings: true,
       component: <DartsGame />,
     },
     {
@@ -140,7 +138,6 @@ class GameRegistry {
       icon: <GraphicEqIcon sx={{ fontSize: 72, mb: 2 }} />,
       category: 'music',
       component: <MelodiqGame />,
-      hasSettings: true,
       nestedRoutes: [
         {
           path: 'games/melodiq/queue',
