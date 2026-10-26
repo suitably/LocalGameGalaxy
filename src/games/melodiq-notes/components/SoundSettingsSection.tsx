@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Typography, Button, Stack, Tooltip } from '@mui/material';
+import { Box, Typography, Button, Stack } from '@mui/material';
 import VolumeUpIcon from '@mui/icons-material/VolumeUpRounded';
-import GraphicEqIcon from '@mui/icons-material/GraphicEqRounded';
 import { useTranslation } from 'react-i18next';
 import { SoundfontProviderFields } from './SoundfontProviderFields';
 import {
@@ -12,14 +11,10 @@ import {
 import { useAudioSynth } from '../useAudioSynth';
 
 interface SoundSettingsSectionProps {
-  partsCount: number;
-  onOpenMixer?: () => void;
   onSoundConfigChanged?: () => void;
 }
 
 export const SoundSettingsSection: React.FC<SoundSettingsSectionProps> = ({
-  partsCount,
-  onOpenMixer,
   onSoundConfigChanged,
 }) => {
   const { t } = useTranslation();
@@ -67,20 +62,6 @@ export const SoundSettingsSection: React.FC<SoundSettingsSectionProps> = ({
           >
             {t('games.melodiq_notes.test_sound', 'Probe anhören')}
           </Button>
-
-          {partsCount > 1 && onOpenMixer && (
-            <Tooltip title={t('games.melodiq_notes.ensemble_mixer', 'Band-Mixer')}>
-              <Button
-                startIcon={<GraphicEqIcon />}
-                variant="outlined"
-                size="small"
-                onClick={onOpenMixer}
-                sx={{ borderRadius: 2 }}
-              >
-                Mixer ({partsCount})
-              </Button>
-            </Tooltip>
-          )}
         </Box>
       </Stack>
     </Box>

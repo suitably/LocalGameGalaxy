@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { alpha, Box, Stack, Typography, Chip } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/SettingsRounded';
 import LibraryMusicIcon from '@mui/icons-material/LibraryMusicRounded';
-import GraphicEqIcon from '@mui/icons-material/GraphicEqRounded';
 import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle, useHeaderLayout } from '../../../context/LayoutContext';
@@ -12,9 +11,7 @@ interface UseMelodiqNotesHeaderOptions {
   currentTitle: string | null;
   currentArtist: string | null;
   effectiveBpm: number;
-  partsCount: number;
   onOpenSongSelect: () => void;
-  onOpenMixer: () => void;
   onOpenSettings: () => void;
 }
 
@@ -22,9 +19,7 @@ export function useMelodiqNotesHeader({
   currentTitle,
   currentArtist,
   effectiveBpm,
-  partsCount,
   onOpenSongSelect,
-  onOpenMixer,
   onOpenSettings,
 }: UseMelodiqNotesHeaderOptions) {
   const { t } = useTranslation();
@@ -107,16 +102,6 @@ export function useMelodiqNotesHeader({
         action: onOpenSongSelect,
         showAlways: true,
       },
-      ...(partsCount > 1
-        ? [
-            {
-              label: t('games.melodiq_notes.ensemble_mixer', 'Band-Mixer'),
-              icon: <GraphicEqIcon fontSize="small" />,
-              action: onOpenMixer,
-              showAlways: false,
-            },
-          ]
-        : []),
       {
         label: t('games.melodiq_notes.settings', 'Einstellungen'),
         icon: <SettingsIcon fontSize="small" />,
@@ -130,5 +115,5 @@ export function useMelodiqNotesHeader({
     return () => {
       setMenuItems([]);
     };
-  }, [partsCount, onOpenSongSelect, onOpenMixer, onOpenSettings, setMenuItems, t]);
+  }, [onOpenSongSelect, onOpenSettings, setMenuItems, t]);
 }

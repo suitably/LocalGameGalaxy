@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { Alert, Box, Button, Paper, Stack, Typography, useMediaQuery } from '@mui/material';
+import { Alert, Box, Paper, Stack, Typography, useMediaQuery } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { bpmAt } from '../../modules/music-score';
@@ -12,20 +12,13 @@ import { useStageInput } from './stage/useStageInput';
 import { useFullscreen } from './stage/useFullscreen';
 import { StageCanvas } from './stage/components/StageCanvas';
 import { StageOverlay } from './stage/components/StageOverlay';
-import { StageToolbar } from './stage/components/StageToolbar';
-import { SeekBar } from './stage/components/SeekBar';
+import { TransportBar } from './stage/components/TransportBar';
+import { SessionBar } from './stage/components/SessionBar';
 import { SectionStrip } from './stage/components/SectionStrip';
-import { PlayerList } from './stage/components/PlayerList';
-import { RecordingBar } from './stage/components/RecordingBar';
 import { SongPicker } from './stage/components/SongPicker';
-import { InputSourcePicker } from './stage/components/InputSourcePicker';
 import type { StageDisplay } from './stage/render/stageRenderer';
 import { StageInvite } from './pult/components/StageInvite';
-import { LatencyControl } from './components/LatencyControl';
 import { playCalibrationClicks } from './stage/engine/calibrationClicks';
-
-const noop = () => {};
-const sameClock = (ms: number) => ms;
 
 /** Melodiq Notes: learn and play songs on keyboard, guitar, bass, drums, ukulele or voice, alone or as a band. */
 export const MelodiqNotesGame: React.FC = () => {
@@ -62,9 +55,7 @@ export const MelodiqNotesGame: React.FC = () => {
     currentTitle: song?.title ?? null,
     currentArtist: song?.artist ?? null,
     effectiveBpm: song ? Math.round(bpmAt(song.tempoMap, 0) * engine.speed) : 0,
-    partsCount: 0,
     onOpenSongSelect: openPicker,
-    onOpenMixer: noop,
     onOpenSettings: openSettings,
   });
 
@@ -87,49 +78,39 @@ export const MelodiqNotesGame: React.FC = () => {
   );
 
   const rotate = fullscreen.active && portrait && engine.players.length > 1;
+  const transport = (
+    <TransportBar
+      engine={engine}
+      display={display}
+      onDisplay={setDisplay}
+      onTogglePause={togglePause}
+      fullscreen={{
+        active: fullscreen.active,
+        enter: () => void fullscreen.enter(),
+        exit: fullscreen.exit,
+      }}
+    />
+  );
   return (
     <GameLayout maxWidth="lg" disablePadding>
       <Stack spacing={1.5} sx={{ p: { xs: 1, sm: 2 } }}>
-        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-          <Button variant="outlined" size="small" onClick={openPicker}>
-            {k('song_pick')}
-          </Button>
-          <Button variant="outlined" size="small" onClick={openInvite}>
-            {t('games.melodiq_notes.pult.invite')}
-          </Button>
-          <Typography variant="body2" color="text.secondary" noWrap sx={{ minWidth: 0 }}>
-            {song
-              ? `${song.artist ? `${song.artist} · ` : ''}${k('song_meta', { bars: song.measureStarts.length, parts: song.parts.length })}`
-              : ''}
-          </Typography>
-          <Box sx={{ ml: 'auto', display: 'flex', gap: 1, alignItems: 'center' }}>
-            <LatencyControl
-              engine={engine}
-              role="stage"
-              source={input.source}
-              schedule={scheduleClicks}
-              toClock={sameClock}
-              canStart
-            />
-            <InputSourcePicker
-              value={input.source}
-              midiCount={input.midiDevices.length}
-              onChange={input.choose}
-            />
-          </Box>
-        </Stack>
+        <SessionBar
+          engine={engine}
+          songState={songState}
+          input={{
+            source: input.source,
+            midiCount: input.midiDevices.length,
+            choose: input.choose,
+          }}
+          scheduleClicks={scheduleClicks}
+          onInvite={openInvite}
+          onRemoveRemote={removeRemote}
+        />
         {songState.error && !pickerOpen && (
           <Alert severity="error" onClose={songState.clearError}>
             {k('action_error', { error: songState.error })}
           </Alert>
         )}
-        <StageToolbar
-          engine={engine}
-          display={display}
-          onDisplay={setDisplay}
-          onTogglePause={togglePause}
-          onFullscreen={() => void fullscreen.enter()}
-        />
         <Paper
           ref={stageRef}
           variant="outlined"
@@ -156,7 +137,7 @@ export const MelodiqNotesGame: React.FC = () => {
                 variant="caption"
                 sx={{
                   position: 'absolute',
-                  bottom: 64,
+                  bottom: 72,
                   left: '50%',
                   transform: 'translateX(-50%)',
                   bgcolor: 'background.paper',
@@ -169,41 +150,28 @@ export const MelodiqNotesGame: React.FC = () => {
               </Typography>
             )}
             {fullscreen.active && (
-              <Stack
-                direction="row"
-                spacing={0.5}
+              <Box
                 sx={{
                   position: 'absolute',
                   bottom: 8,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
+                  left: 8,
+                  right: 8,
                   bgcolor: 'background.paper',
-                  borderRadius: 2,
-                  p: 0.5,
-                  opacity: 0.6,
-                  '&:hover': { opacity: 1 },
+                  borderRadius: 3,
+                  px: 1,
+                  py: 0.5,
+                  opacity: 0.7,
+                  transition: 'opacity 0.2s',
+                  '&:hover, &:focus-within': { opacity: 1 },
                 }}
               >
-                <Button size="small" onClick={togglePause}>
-                  {engine.state === 'playing' ? k('pause') : k('resume')}
-                </Button>
-                <Button
-                  size="small"
-                  onClick={() => setDisplay(display === 'notation' ? 'instrument' : 'notation')}
-                >
-                  {display === 'notation' ? k('view_instrument') : k('view_notation')}
-                </Button>
-                <Button size="small" onClick={fullscreen.exit}>
-                  {k('exit_fullscreen')}
-                </Button>
-              </Stack>
+                {transport}
+              </Box>
             )}
           </StageCanvas>
         </Paper>
-        <SeekBar engine={engine} />
+        {!fullscreen.active && transport}
         <SectionStrip engine={engine} />
-        <RecordingBar state={songState} />
-        <PlayerList engine={engine} onInvite={openInvite} onRemoveRemote={removeRemote} />
       </Stack>
       <SongPicker open={pickerOpen} onClose={() => setPickerOpen(false)} state={songState} />
       <SoundSettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
