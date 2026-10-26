@@ -6,6 +6,7 @@ import LZString from 'lz-string';
 import type { EvaluatedLetter, LetterStatus, WordleStats } from './types';
 
 import { ENGLISH_TARGET_WORDS, GERMAN_TARGET_WORDS } from './wordLists';
+import { publicAppLink } from '../../../lib/publicAppUrl';
 
 export { ENGLISH_TARGET_WORDS, GERMAN_TARGET_WORDS };
 
@@ -171,7 +172,7 @@ export const wordleEngine = {
       )
       .join('\n');
 
-    return `${header}\n\n${grid}\n\nhttps://localgamegalaxy.app/#/games/wordle`;
+    return `${header}\n\n${grid}\n\n${publicAppLink('games/wordle')}`;
   },
 
   /**

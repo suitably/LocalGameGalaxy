@@ -26,7 +26,10 @@ describe('wordleEngine', () => {
     const result = wordleEngine.evaluateGuess('ERASE', 'SPEED');
     // Index 0 ('E'): present (matches index 2 or 3 in target)
     // Index 4 ('E'): correct (matches index 4? No, SPEED has 'E' at 2, 3 and 'D' at 4 -> present)
-    expect(result.filter((r) => r.char === 'E' && (r.status === 'present' || r.status === 'correct')).length).toBe(2);
+    expect(
+      result.filter((r) => r.char === 'E' && (r.status === 'present' || r.status === 'correct'))
+        .length,
+    ).toBe(2);
   });
 
   it('generates consistent deterministic daily words for the same date', () => {
@@ -89,5 +92,7 @@ describe('wordleEngine', () => {
     const shareText = wordleEngine.generateShareGrid(evaluations, true, 'daily', '2026-09-02');
     expect(shareText).toContain('🟩🟨⬛⬛🟩');
     expect(shareText).toContain('1/6');
+    expect(shareText).toContain('https://games.nexumia.de/games/wordle');
+    expect(shareText).not.toContain('localgamegalaxy.app');
   });
 });
