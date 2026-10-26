@@ -59,6 +59,10 @@ Compose files, README and [deployment](tech/deployment.md) pull `nexumia/galaxy-
 
 Since #538 a player can store the running table as a server game's default template (`PUT /api/tabletop/games/:id/template`, permission `allowTabletopTemplates`). On the device there is no such option: writing the table into `custom_games` under the game's id would shadow the starter JSON and the server game forever, because `TabletopGame` loads IndexedDB first. **(user)** Decide whether device-only games (and starter games) should get a local "save as default template", and how to reset it.
 
+## Q20 — Melodiq Notes: learn mode and latency calibration with pults (#573, #546)
+
+Since #573 a pult judges its player against the stage clock (`src/games/melodiq-notes/pult/PultEngine.ts`). Learn mode waits only for players on the stage's screen (`StageEngine.tick` skips `remoteId` players for `waitingFor`); a pult in learn mode judges like practice (timing window, misses). The input latency is calibrated only with the shared beep calibrator (`src/modules/audio/latency`): the stage sounds a beep, the pult's microphone hears it; without a microphone the value is set with a slider. **(user)** Decide (a) whether learn mode should also wait for pult players (needs a "waiting" message from the pult), and (b) whether a tap-along calibration (player taps to the stage's clicks; also covers touch and MIDI delay) should be added to `modules/audio/latency` as a second measurement.
+
 ## Resolved 2026-10-25
 
 - Q18 one storage place for Melodiq Notes sheet music (#534, #486) → maintainer decision: (a) and (b) yes — the Notes library is the only score store; a piece links a Melodiq song with `songId` and plays with its mix, bar marks live in the piece; song-folder scores are imported once on startup (non-destructive, marker file). (c) `POST`/`DELETE /api/songs/:id/scores` answer `410`; reads and marks routes stay as deprecated aliases of the linked pieces. [song-pipeline §4](tech/song-pipeline.md#4-sheet-music-for-melodiq-notes)

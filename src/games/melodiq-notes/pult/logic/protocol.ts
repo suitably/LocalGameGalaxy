@@ -1,16 +1,21 @@
 /**
  * Stage ↔ Pult protocol for Melodiq Notes [ID: GAME-MELODIQ-NOTES-PULT-PROTOCOL]
  *
- * The stage (TV / laptop) owns the clock, the score and the judging. Every player's own device
- * (the "Pult") joins with a part and an instrument, measures its clock offset to the stage with
- * ping/pong and sends what its player plays, stamped with the estimated stage time.
+ * The stage (TV / laptop) shows the game, owns the clock and the score and shows every player in
+ * split screen. Every player's own device (the "Pult") joins with a part, measures its clock
+ * offset to the stage with ping/pong, fetches the notes of its part (`chart`), follows the stage's
+ * transport (`clock`) and judges its player's input locally. It sends the judgements and its score
+ * (`judged`) and, for the stage's display only, what was played (`input`).
  *
  * Two kinds of traffic, both over `modules/room-game`:
  * - room state (`PultRoomState`, host-run reducer): who plays which part, the song, play state;
- * - live events (`PultEvent`, fire-and-forget): ping/pong and played input.
+ * - live events (`PultEvent`, fire-and-forget): clock, charts, input, judgements, calibration.
  */
 import type { InstrumentKind } from '../../../../modules/music-score';
-import type { PlayState } from '../../stage/engine/types';
+import type { Judgement } from '../../stage/logic/charts';
+import type { BeatRange } from '../../stage/logic/judging';
+import type { PlayState, StageMode } from '../../stage/engine/types';
+import type { PackedChart } from './pultSong';
 
 /** A part of the stage's song as a pult can pick it. */
 export interface PultPart {
@@ -30,6 +35,8 @@ export interface PultMember {
 }
 
 export interface PultSong {
+  /** Changes with every song the stage loads; stale charts and judgements carry an old one. */
+  key: string;
   title: string;
   parts: PultPart[];
 }
@@ -47,17 +54,53 @@ export type PultRoomAction =
   | { type: 'LEAVE'; id: string }
   | { type: 'STAGE'; song: PultSong | null; play: PlayState };
 
-/** What a player did on their pult: a lane (key, string, drum lane), a pitch (MIDI / mic) or their voice. */
-export type PultInput =
-  | { kind: 'lane'; lane: number }
-  | { kind: 'pitch'; pitch: number }
-  | { kind: 'voice'; pitch: number | null };
+/** What a player did on their pult, for the stage's display: a lane (key, string, drum lane) or their voice. */
+export type PultInput = { kind: 'lane'; lane: number } | { kind: 'voice'; pitch: number | null };
+
+/** The stage's transport at stage time `at` (ms): enough for a pult to run the same song clock. */
+export interface StageClock {
+  songKey: string;
+  at: number;
+  beat: number;
+  /** First beat the stage plays (bars before its recording are left out). */
+  startBeat: number;
+  /** Beats per real second while playing (tempo, recording and speed included). */
+  rate: number;
+  play: PlayState;
+  mode: StageMode;
+  loop: BeatRange | null;
+}
+
+/** Totals of a pult's player; the stage shows these instead of counting itself. */
+export interface PultScore {
+  score: number;
+  combo: number;
+  maxCombo: number;
+  judged: number;
+  weightSum: number;
+}
+
+/** Judgements since the last batch: note id (in `buildChart` order) and result. */
+export type JudgedMark = [noteId: number, kind: Judgement];
 
 export type PultEvent =
   | { kind: 'ping'; from: string; id: number; t0: number }
   | { kind: 'pong'; from: string; to: string; id: number; t0: number; ts: number }
-  /** `at`: when it was played, in stage clock milliseconds (see clockSync). */
-  | { kind: 'input'; from: string; input: PultInput; at: number };
+  | ({ kind: 'clock'; from: string } & StageClock)
+  | { kind: 'chart-request'; from: string; songKey: string; partId: string }
+  | { kind: 'chart'; from: string; to: string; chart: PackedChart }
+  | { kind: 'input'; from: string; input: PultInput }
+  /** `seq` grows with every batch of a pult, so a late batch cannot roll back its totals. */
+  | {
+      kind: 'judged';
+      from: string;
+      songKey: string;
+      seq: number;
+      marks: JudgedMark[];
+      score: PultScore;
+    }
+  /** Latency calibration: the pult asks the stage to sound one beep. */
+  | { kind: 'beep'; from: string };
 
 export const PULT_MAX_MEMBERS = 4;
 export const PULT_GAME_KEY = 'melodiq-notes-pult';

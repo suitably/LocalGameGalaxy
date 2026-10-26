@@ -728,11 +728,11 @@
         "song_meta": "{{bars}} bars · {{parts}} tracks",
         "action_error": "That did not work ({{error}}).",
         "players_title": "Players",
-        "player_add": "Add player",
+        "player_add": "Add player here",
         "player_part": "Part of player {{no}}",
         "player_view": "View of player {{no}}",
         "player_remove": "Remove player {{no}}",
-        "players_note": "Up to {{max}} people play on this screen, each with their own MIDI device or microphone; the computer keys control the highlighted player (Tab switches).",
+        "players_note": "Up to {{max}} players, all shown here in split screen. Players on this screen share the computer keys, MIDI or microphone (the highlighted player; Tab switches); invited players play and are judged on their own device.",
         "backing": "Backing",
         "backing_all": "Everything",
         "backing_others": "Backing only",
@@ -767,13 +767,15 @@
         "yt_storing_score": "Linking the score to the song in the Notes library …",
         "yt_failed": "That did not work ({{error}}).",
         "yt_download": "Download and align",
-        "yt_use": "Use and align"
+        "yt_use": "Use and align",
+        "player_remote": "Own device",
+        "keys_remote": "Everyone plays on their own device – their notes are judged there."
       },
       "pult": {
         "title": "Melodiq Notes – your instrument",
         "invite": "Invite players",
         "invite_title": "Play on your own device · room {{room}}",
-        "invite_hint": "Each player opens the link or scans the QR code of their part on their phone or tablet. Their device shows only their instrument and takes MIDI, microphone or keys there; the stage keeps the notes, the band and the score. New players are seated before the next song starts.",
+        "invite_hint": "Each player opens the link or scans the QR code of their part on their phone or tablet. Their device shows the falling notes of their part, takes MIDI, microphone, keys or touch and judges them; this screen shows everyone in split screen with the band. Players can join at any time, also mid-song.",
         "invite_message": "Play {{part}} with us in Melodiq Notes: {{link}}",
         "stage_row": "Stage (this screen)",
         "connecting": "Connecting to stage {{room}}…",
@@ -782,9 +784,14 @@
         "part": "Your part",
         "clock": "Synced · {{ms}} ms",
         "clock_pending": "Syncing clock…",
-        "playing": "Playing – the stage judges your notes.",
+        "playing": "Playing – your device judges your notes, the stage shows them.",
         "waiting": "Waiting for the stage to start.",
-        "sing_hint": "Choose “Microphone” and sing – the stage shows your pitch."
+        "sing_hint": "Choose “Microphone” and sing – the stage shows your pitch.",
+        "loading_part": "Loading your part from the stage…",
+        "latency_button": "Latency {{ms}} ms",
+        "latency_title": "Input latency",
+        "latency_hint": "How much later you hear the stage than it plays, plus this device's delay. Calibrate with the microphone near this device while the stage plays a beep, or set it by hand.",
+        "latency_value": "Latency: {{ms}} ms"
       }
     },
     "kniffel": {
@@ -2060,5 +2067,19 @@
     "turnBodyStoryGeneric": "The story continues – write your part!",
     "turnBodyGenericWithActor": "{{actor}} completed their turn. It's your turn!",
     "turnBodyGeneric": "It's your turn!"
+  },
+  "latencyCalibrator": {
+    "auto": "Auto calibration",
+    "calibrating": "Calibrating…",
+    "mic_level": "Mic level",
+    "requires_speakers": "Requires speakers to be turned on. Plays beeps.",
+    "noise": "Measuring background noise…",
+    "threshold": "Threshold set to {{percent}} %. Starting beeps…",
+    "testing": "Testing {{no}}/{{total}}…",
+    "missed": "Failed to detect {{count}} of {{total}} beeps.",
+    "missed_hint": "Last peak: {{peak}} % vs threshold {{threshold}} %. Try a louder speaker volume.",
+    "inconsistent": "Inconsistent results (variance {{ms}} ms). Try again.",
+    "done": "Calibration complete: {{ms}} ms",
+    "error": "Error: {{error}}"
   }
 }

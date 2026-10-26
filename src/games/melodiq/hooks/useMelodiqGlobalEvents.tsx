@@ -5,7 +5,7 @@ import { type Song, type SongMeta } from '../db';
 import { type TVEvent } from './useTVMode';
 import { useClientSessionSync } from './useClientSessionSync';
 import { useRemoteConfigListener } from './useRemoteConfigListener';
-import { playCalibrationBeep } from './playCalibrationBeep';
+import { playCalibrationBeep } from '../../../modules/audio/latency';
 
 interface UseMelodiqGlobalEventsProps {
   lastEvent: TVEvent | null;

@@ -135,7 +135,7 @@ function drawHeader(
   const layout = fitHeaderSegments(
     {
       width: w,
-      player: several ? texts.player(p.no) : null,
+      player: p.name ?? (several ? texts.player(p.no) : null),
       instrument: texts.instrument(p.instrument.kind),
       focusMarker: several && focus ? texts.keyboardFocus : null,
       partName: p.part.name,

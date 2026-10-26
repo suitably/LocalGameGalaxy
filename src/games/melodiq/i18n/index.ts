@@ -188,13 +188,6 @@ export const melodiqResources = {
       history: 'History',
       no_history: 'No history found.',
 
-      calibrator: {
-        auto: 'Auto Calibration',
-        calibrating: 'Calibrating...',
-        mic_level: 'Mic Level',
-        requires_speakers: 'Requires speakers to be turned on.',
-      },
-
       helper: {
         connected: 'Connected',
         connecting: 'Connecting...',
@@ -529,13 +522,6 @@ export const melodiqResources = {
       add_to_queue: 'Zur Warteschlange hinzufügen',
       history: 'Verlauf',
       no_history: 'Kein Verlauf gefunden.',
-
-      calibrator: {
-        auto: 'Automatische Kalibrierung',
-        calibrating: 'Kalibriere...',
-        mic_level: 'Mikrofonpegel',
-        requires_speakers: 'Lautsprecher müssen eingeschaltet sein.',
-      },
 
       helper: {
         connected: 'Verbunden',

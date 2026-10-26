@@ -2,7 +2,7 @@ import type { ScoreSong } from '../../../../modules/music-score';
 import { lowerBound, type Judgement, type StageNote } from '../logic/charts';
 import { pendingNotes, recordJudgement, type BeatRange } from '../logic/judging';
 import { buildSections, sectionIndexAt, type Section } from '../logic/sections';
-import { advanceMisses, advanceSinging, resetRange, startAwaitedNote } from './advance';
+import { advancePlayer, resetRange } from './advance';
 import { playLane, playPitch } from './input';
 import {
   loopSections,
@@ -139,7 +139,7 @@ export class StageEngine {
     this.state = 'idle';
     if (!this.song) return this.emit();
     this.players = createPlayers(this.song, this.seats, this.sections.length, this.startBeat);
-    this.focus = this.players.find((p) => !p.remoteId) ?? this.players[0] ?? null;
+    this.focus = this.players.find((p) => !p.remoteId) ?? null;
     this.countIn = Math.min(6, Math.max(2, this.song.measureLengths[0] ?? 4));
     this.bandEvents = this.bandFor(this.song, this.band);
     this.bandIdx = 0;
@@ -195,14 +195,17 @@ export class StageEngine {
     else this.emit();
   }
 
+  /** Keys, MIDI and microphone of this screen only ever drive a player on this screen. */
   setFocus(player: StagePlayer) {
+    if (player.remoteId) return;
     this.focus = player;
     this.emit();
   }
 
   focusNext() {
-    if (this.players.length < 2 || !this.focus) return;
-    this.setFocus(this.players[(this.players.indexOf(this.focus) + 1) % this.players.length]);
+    const local = this.players.filter((p) => !p.remoteId);
+    if (local.length < 2 || !this.focus) return;
+    this.setFocus(local[(local.indexOf(this.focus) + 1) % local.length]);
   }
 
   /** Loops sections `first..last` (bars); null ends the loop. */
@@ -243,7 +246,8 @@ export class StageEngine {
     }
     this.waitingFor = null;
     if (this.mode === 'learn') {
-      for (const p of this.players) {
+      // learn mode waits for the players on this screen; a pult follows the clock
+      for (const p of this.players.filter((x) => !x.remoteId)) {
         p.pending = pendingNotes(p.notes, this.loop, p.instrument.view === 'pitch');
         const first = p.pending[0];
         if (
@@ -257,14 +261,7 @@ export class StageEngine {
     }
     this.playBand(next);
     this.beat = next;
-    for (const p of this.players) {
-      if (p.instrument.view === 'pitch') {
-        if (this.waitingFor) startAwaitedNote(p);
-        advanceSinging(p, this.beat, this.beat - before, this.loop, this.judge);
-      } else if (this.mode !== 'learn')
-        advanceMisses(p, this.beat, this.secPerBeat, this.loop, this.judge);
-      p.pending = pendingNotes(p.notes, this.loop, p.instrument.view === 'pitch');
-    }
+    for (const p of this.players) advancePlayer(this, p, this.beat - before);
     if (this.loop && this.beat >= this.loop.to) this.restartAt(this.loop.from);
     else if (!this.loop && this.beat >= song.end + 1) this.finish();
     syncRecording(this);

@@ -1,19 +1,15 @@
 /**
  * A player's own device in the stage's room [ID: GAME-MELODIQ-NOTES-PULT-HOOK]
  *
- * Joins the stage's room on a part, keeps a clock offset to the stage (ping/pong) and sends what
- * the player plays, stamped with the stage time. Judging happens on the stage.
+ * Joins the stage's room on a part, keeps a clock offset to the stage (ping/pong), fetches the
+ * part's notes, runs a `PultEngine` on the stage's clock and sends what it judged (`judged`) and
+ * what was played (`input`, for the stage's display).
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRoomEvents, useRoomReducer } from '../../../modules/room-game';
 import { universalPartyManager } from '../../../features/party/logic/universalPartyManager';
-import {
-  addSample,
-  clockSample,
-  estimateOffset,
-  toStageTime,
-  type ClockSample,
-} from './logic/clockSync';
+import { useStage } from '../stage/useStage';
+import { addSample, clockSample, estimateOffset, type ClockSample } from './logic/clockSync';
 import {
   freePart,
   initialPultRoom,
@@ -21,18 +17,24 @@ import {
   pultRoomAllows,
   pultRoomReducer,
   type PultEvent,
-  type PultInput,
   type PultRoomAction,
   type PultRoomState,
 } from './logic/protocol';
+import { PultEngine } from './PultEngine';
+import { usePultLatency } from './usePultLatency';
 
 /** Pings quickly until the offset settles, then keeps it fresh. */
 const FAST_PING_MS = 300;
 const SLOW_PING_MS = 3000;
 const SETTLED_SAMPLES = 5;
+/** A missing chart is asked for again this often. */
+const CHART_RETRY_MS = 1500;
+/** Judgements are sent in batches this often. */
+const BATCH_MS = 150;
 
 export function usePult(roomId: string, name: string, wantedPart: string | null) {
   const myId = useMemo(() => universalPartyManager.getMyPlayerId(), []);
+  const { engine, unlockAudio } = useStage(() => new PultEngine());
   const initialState = useMemo(() => initialPultRoom(''), []);
   const { state, dispatch, synced } = useRoomReducer<PultRoomState, PultRoomAction>({
     gameKey: PULT_GAME_KEY,
@@ -45,13 +47,29 @@ export function usePult(roomId: string, name: string, wantedPart: string | null)
   });
   const me = state.members.find((m) => m.id === myId) ?? null;
   const part = state.song?.parts.find((p) => p.id === me?.partId) ?? null;
+  const songKey = state.song?.key ?? null;
+  // which chart the engine plays: `<song key>:<part id>`
+  const [loaded, setLoaded] = useState<string | null>(null);
+  const wanted = songKey && me ? `${songKey}:${me.partId}` : null;
 
   const [samples, setSamples] = useState<ClockSample[]>([]);
   const clock = useMemo(() => estimateOffset(samples), [samples]);
   const sent = useRef(new Map<number, number>());
   const lastPing = useRef(0);
+  const hostId = state.hostId;
+  const inst = me?.inst;
   const onEvent = useCallback(
     (ev: PultEvent) => {
+      if (ev.kind === 'clock') {
+        if (ev.from === hostId) engine.applyClock(ev);
+        return;
+      }
+      if (ev.kind === 'chart') {
+        if (ev.to !== myId || ev.from !== hostId) return;
+        engine.loadChart(ev.chart, inst);
+        setLoaded(`${ev.chart.songKey}:${ev.chart.part.id}`);
+        return;
+      }
       if (ev.kind !== 'pong' || ev.to !== myId) return;
       const t0 = sent.current.get(ev.id);
       // only answers to this page's own pings (MQTT may redeliver an old one)
@@ -61,7 +79,7 @@ export function usePult(roomId: string, name: string, wantedPart: string | null)
       if (!s) return;
       setSamples((prev) => addSample(prev, s));
     },
-    [myId],
+    [engine, hostId, inst, myId],
   );
   const events = useRoomEvents<PultEvent>({ gameKey: PULT_GAME_KEY, roomId, onEvent });
 
@@ -79,10 +97,44 @@ export function usePult(roomId: string, name: string, wantedPart: string | null)
     return () => clearInterval(timer);
   }, [events, myId, settled]);
 
+  const offset = clock?.offset ?? null;
+  useEffect(() => {
+    engine.setOffset(offset);
+  }, [engine, offset]);
+
+  const latency = usePultLatency();
+  useEffect(() => {
+    engine.setInputLatency(latency.ms);
+  }, [engine, latency.ms]);
+
+  // ask for the part's notes until they are here
+  const partId = me?.partId;
+  useEffect(() => {
+    if (!wanted || wanted === loaded || !songKey || !partId) return;
+    const ask = () => events.send({ kind: 'chart-request', from: myId, songKey, partId });
+    ask();
+    const timer = setInterval(ask, CHART_RETRY_MS);
+    return () => clearInterval(timer);
+  }, [events, myId, wanted, loaded, songKey, partId]);
+
+  // judgements in batches, what was played at once
+  useEffect(() => {
+    engine.setOnInput((input) => events.send({ kind: 'input', from: myId, input }));
+    const timer = setInterval(() => {
+      const batch = engine.takeBatch();
+      if (batch && engine.songKey)
+        events.send({ kind: 'judged', from: myId, songKey: engine.songKey, ...batch });
+    }, BATCH_MS);
+    return () => {
+      engine.setOnInput(null);
+      clearInterval(timer);
+    };
+  }, [engine, events, myId]);
+
   const join = useCallback(
-    (partId: string) => {
-      const p = state.song?.parts.find((x) => x.id === partId);
-      if (p) dispatch({ type: 'JOIN', member: { id: myId, name, partId, inst: p.inst } });
+    (id: string) => {
+      const p = state.song?.parts.find((x) => x.id === id);
+      if (p) dispatch({ type: 'JOIN', member: { id: myId, name, partId: id, inst: p.inst } });
     },
     [dispatch, myId, name, state.song],
   );
@@ -103,15 +155,20 @@ export function usePult(roomId: string, name: string, wantedPart: string | null)
     };
   }, [dispatch, myId]);
 
-  const offset = clock?.offset ?? null;
-  const play = useCallback(
-    (input: PultInput) => {
-      // without a clock the stage could not place the input in time
-      if (offset === null) return;
-      events.send({ kind: 'input', from: myId, input, at: toStageTime(performance.now(), offset) });
-    },
-    [events, myId, offset],
-  );
+  /** Latency calibration: the stage sounds one beep. */
+  const requestBeep = useCallback(() => events.send({ kind: 'beep', from: myId }), [events, myId]);
 
-  return { state, synced, me, part, clock, join, play };
+  return {
+    engine,
+    unlockAudio,
+    state,
+    synced,
+    me,
+    part,
+    clock,
+    ready: wanted !== null && wanted === loaded,
+    join,
+    latency,
+    requestBeep,
+  };
 }

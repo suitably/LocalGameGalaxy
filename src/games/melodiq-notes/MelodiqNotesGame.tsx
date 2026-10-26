@@ -41,6 +41,9 @@ export const MelodiqNotesGame: React.FC = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   // null until first opened: the room only exists once someone is invited
   const [inviteOpen, setInviteOpen] = useState<boolean | null>(null);
+  const [removeRemote, setRemoveRemote] = useState<((id: string) => void) | null>(null);
+  const onRoom = useCallback((remove: (id: string) => void) => setRemoveRemote(() => remove), []);
+  const openInvite = useCallback(() => setInviteOpen(true), []);
   const stageRef = useRef<HTMLDivElement>(null);
   const fullscreen = useFullscreen(stageRef);
   const portrait = useMediaQuery('(orientation: portrait)');
@@ -84,7 +87,7 @@ export const MelodiqNotesGame: React.FC = () => {
           <Button variant="outlined" size="small" onClick={openPicker}>
             {k('song_pick')}
           </Button>
-          <Button variant="outlined" size="small" onClick={() => setInviteOpen(true)}>
+          <Button variant="outlined" size="small" onClick={openInvite}>
             {t('games.melodiq_notes.pult.invite')}
           </Button>
           <Typography variant="body2" color="text.secondary" noWrap sx={{ minWidth: 0 }}>
@@ -185,12 +188,17 @@ export const MelodiqNotesGame: React.FC = () => {
         <SeekBar engine={engine} />
         <SectionStrip engine={engine} />
         <RecordingBar state={songState} />
-        <PlayerList engine={engine} />
+        <PlayerList engine={engine} onInvite={openInvite} onRemoveRemote={removeRemote} />
       </Stack>
       <SongPicker open={pickerOpen} onClose={() => setPickerOpen(false)} state={songState} />
       <SoundSettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       {inviteOpen !== null && (
-        <StageInvite engine={engine} open={inviteOpen} onClose={() => setInviteOpen(false)} />
+        <StageInvite
+          engine={engine}
+          open={inviteOpen}
+          onClose={() => setInviteOpen(false)}
+          onRoom={onRoom}
+        />
       )}
     </GameLayout>
   );

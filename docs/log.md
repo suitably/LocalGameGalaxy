@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-26 — Melodiq Notes: pult judges, players join any time (#573, #546, claude-code)
+
+- `docs/tech/sync-protocol.md` §3 Melodiq Notes stage ↔ pult bullet (new `clock`, `chart-request`/`chart`, `judged`, `beep` events; `input` display only), `docs/tech/game-catalog.md` melodiq-notes sync row, `docs/tech/architecture.md` `audio` row (`latency/`). `docs/open-questions.md`: Q20 (learn mode and latency calibration with pults).
+- Outside `docs/`: Melodiq Notes `pult/` (`PultEngine`, `usePult`, `usePultLatency`, `useStageRoom`, `PultView`, `PultLatencyDialog`, `StageInvite`; logic `protocol`, `pultSong`, `stageClock`, `remoteHits`, `clockSync`; removed `usePultInput`, `PultPad`), `stage/engine/{StageEngine,remote,players,advance,input,types}.ts`, `stage/useStage.ts`, `PlayerList`; latency calibrator moved from `src/games/melodiq/components` to `src/modules/audio/latency/` (keys `latencyCalibrator.*` in `public/locales`); storage key `MELODIQ_NOTES_INPUT_LATENCY`.
+
 ## 2026-10-25 — Melodiq Notes: safer skip cost in alignment (claude-code)
 
 - `docs/tech/song-pipeline.md` §4: skip cost factor 1.1 (was 0.89, which shifted a real arrangement by two bars). Outside `docs/`: `src/modules/music-score/alignment.ts`.

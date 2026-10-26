@@ -79,8 +79,9 @@ export function StageOverlay({ engine, onStart, onPractise }: StageOverlayProps)
     ? players.map((p) => k(`instruments.${p.instrument.kind}`)).join(' · ')
     : `${k(`instruments.${players[0].instrument.kind}`)} · ${players[0].part.name}`;
   const view = focus?.instrument.view;
-  const keysHint =
-    view === 'keys'
+  const keysHint = !focus
+    ? k('keys_remote')
+    : view === 'keys'
       ? k('keys_keyboard')
       : view === 'strings'
         ? k('keys_strings', { count: focus?.instrument.kind === 'guitar' ? 6 : 4 })

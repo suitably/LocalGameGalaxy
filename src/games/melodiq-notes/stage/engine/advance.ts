@@ -1,5 +1,6 @@
 import { lowerBound, type Judgement, type StageNote } from '../logic/charts';
-import { GOOD_SEC, pitchJudgement, type BeatRange } from '../logic/judging';
+import { GOOD_SEC, pendingNotes, pitchJudgement, type BeatRange } from '../logic/judging';
+import type { StageEngine } from './StageEngine';
 import type { StagePlayer } from './types';
 
 const PITCH_TOLERANCE = 0.8;
@@ -30,7 +31,12 @@ export function advanceSinging(
     const n = p.notes[p.missIdx++];
     if (!n.judged && inLoop(loop, n.t)) judge(p, n, pitchJudgement(n.acc / n.dur));
   }
-  p.history.push({ beat, pitch: singing ? pitch : null });
+  trackVoice(p, beat);
+}
+
+/** Keeps the sung pitch trail of the last beats (also for a pult's player, judged on the pult). */
+export function trackVoice(p: StagePlayer, beat: number) {
+  p.history.push({ beat, pitch: p.voice.singing ? p.voice.pitch : null });
   while (p.history.length && p.history[0].beat < beat - HISTORY_BEATS) p.history.shift();
 }
 
@@ -51,7 +57,7 @@ export function advanceMisses(
 ) {
   while (
     p.missIdx < p.notes.length &&
-    (beat - p.notes[p.missIdx].t) * secPerBeat(p.notes[p.missIdx].t) > GOOD_SEC + p.missGraceSec
+    (beat - p.notes[p.missIdx].t) * secPerBeat(p.notes[p.missIdx].t) > GOOD_SEC
   ) {
     const n = p.notes[p.missIdx++];
     if (!n.judged && inLoop(loop, n.t)) judge(p, n, 'miss');
@@ -69,4 +75,14 @@ export function resetRange(p: StagePlayer, from: number, to: number, restartBeat
   }
   p.missIdx = lowerBound(p.notes, restartBeat);
   p.history = [];
+}
+
+/** One frame for one player: judging on this screen, or only the pitch trail for a pult's player. */
+export function advancePlayer(e: StageEngine, p: StagePlayer, beatsPassed: number) {
+  if (p.remoteId) trackVoice(p, e.beat);
+  else if (p.instrument.view === 'pitch') {
+    if (e.waitingFor) startAwaitedNote(p);
+    advanceSinging(p, e.beat, beatsPassed, e.loop, e.judge);
+  } else if (e.mode !== 'learn') advanceMisses(p, e.beat, e.secPerBeat, e.loop, e.judge);
+  p.pending = pendingNotes(p.notes, e.loop, p.instrument.view === 'pitch');
 }

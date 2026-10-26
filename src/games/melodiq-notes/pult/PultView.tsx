@@ -1,12 +1,15 @@
 /**
- * Melodiq Notes on a player's own device: only their instrument [ID: GAME-MELODIQ-NOTES-PULT-VIEW]
+ * Melodiq Notes on a player's own device: their part, judged here [ID: GAME-MELODIQ-NOTES-PULT-VIEW]
  *
- * Opened from the stage's invite link (`?pult=<room>&part=<part>`). Shows the part this pult
- * plays, the input source and the instrument's pads; the notes and the judging stay on the stage.
+ * Opened from the stage's invite link (`?pult=<room>&part=<part>`). Shows the falling notes of
+ * this player's part on the stage's clock, their own score, the input source and the latency
+ * calibration. The judgements go to the stage, which shows every player in split screen.
  */
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Alert,
+  Box,
+  Button,
   Chip,
   CircularProgress,
   MenuItem,
@@ -20,11 +23,14 @@ import { usePageTitle } from '../../../context/TitleContext';
 import { useWakeLock } from '../../../hooks/useWakeLock';
 import { GameLayout } from '../../../components/Layout/GameLayout';
 import { getOrCreatePlayerName } from '../../../features/party/logic/playerName';
-import { STAGE_INSTRUMENTS } from '../stage/logic/instruments';
 import { InputSourcePicker } from '../stage/components/InputSourcePicker';
-import { PultPad } from './components/PultPad';
+import { StageCanvas } from '../stage/components/StageCanvas';
+import { useStageInput } from '../stage/useStageInput';
+import { useStageTexts } from '../stage/useStage';
+import { PultLatencyDialog } from './components/PultLatencyDialog';
 import { usePult } from './usePult';
-import { usePultInput } from './usePultInput';
+
+const noop = () => {};
 
 export const PultView: React.FC<{ roomId: string; wantedPart: string | null }> = ({
   roomId,
@@ -37,7 +43,9 @@ export const PultView: React.FC<{ roomId: string; wantedPart: string | null }> =
   useWakeLock(true);
   const name = useMemo(() => getOrCreatePlayerName(), []);
   const pult = usePult(roomId, name, wantedPart);
-  const input = usePultInput(pult.part, pult.play);
+  const input = useStageInput(pult.engine);
+  const texts = useStageTexts();
+  const [latencyOpen, setLatencyOpen] = useState(false);
   const { state, part, clock } = pult;
   const taken = new Set(state.members.filter((m) => m.id !== pult.me?.id).map((m) => m.partId));
 
@@ -51,10 +59,11 @@ export const PultView: React.FC<{ roomId: string; wantedPart: string | null }> =
     );
   else if (!state.song) status = <Alert severity="info">{k('no_song')}</Alert>;
   else if (!part) status = <Alert severity="warning">{k('no_part')}</Alert>;
+  else if (!pult.ready) status = <Alert severity="info">{k('loading_part')}</Alert>;
 
   return (
-    <GameLayout maxWidth="sm">
-      <Stack spacing={2}>
+    <GameLayout maxWidth="sm" disablePadding>
+      <Stack spacing={1.5} sx={{ p: { xs: 1, sm: 2 } }}>
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
           <Typography variant="h6" sx={{ flex: 1, minWidth: 0 }} noWrap>
             {state.song?.title ?? k('title')}
@@ -82,29 +91,61 @@ export const PultView: React.FC<{ roomId: string; wantedPart: string | null }> =
             ))}
           </TextField>
         )}
-        {part && (
+        {part && pult.ready && (
           <>
-            <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              justifyContent="space-between"
+              flexWrap="wrap"
+              useFlexGap
+            >
               <Typography variant="body2" color="text.secondary">
                 {state.play === 'playing' ? k('playing') : k('waiting')}
               </Typography>
-              <InputSourcePicker
-                value={input.source}
-                midiCount={input.midiDevices.length}
-                onChange={input.choose}
-              />
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                <Button size="small" variant="outlined" onClick={() => setLatencyOpen(true)}>
+                  {k('latency_button', { ms: pult.latency.ms })}
+                </Button>
+                <InputSourcePicker
+                  value={input.source}
+                  midiCount={input.midiDevices.length}
+                  onChange={(next) => {
+                    pult.unlockAudio();
+                    input.choose(next);
+                  }}
+                />
+              </Box>
             </Stack>
-            <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 3 }}>
-              <PultPad
-                view={STAGE_INSTRUMENTS[part.inst].view}
-                inst={part.inst}
-                octaveBase={part.octaveBase}
-                onLane={input.hitLane}
+            <Paper
+              variant="outlined"
+              sx={{
+                height: 'clamp(320px, 62dvh, 560px)',
+                borderRadius: 3,
+                overflow: 'hidden',
+                bgcolor: 'background.default',
+              }}
+            >
+              <StageCanvas
+                engine={pult.engine}
+                display="instrument"
+                texts={texts}
+                onGesture={pult.unlockAudio}
+                onTogglePause={noop}
               />
             </Paper>
           </>
         )}
       </Stack>
+      <PultLatencyDialog
+        open={latencyOpen}
+        onClose={() => setLatencyOpen(false)}
+        latencyMs={pult.latency.ms}
+        onChange={pult.latency.set}
+        rttMs={clock?.rtt ?? null}
+        requestBeep={pult.requestBeep}
+      />
     </GameLayout>
   );
 };

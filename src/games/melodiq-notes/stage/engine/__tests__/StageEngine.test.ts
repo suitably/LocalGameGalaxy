@@ -3,7 +3,6 @@ import { createAudioMap } from '../../../../../modules/music-score';
 import { StageEngine } from '../StageEngine';
 import { fakeSound, run, song } from './fixtures';
 import { buildBandEvents, nextSeat } from '../players';
-import { playRemote, seatRemotes } from '../remote';
 import { nothingLeftToPlay } from '../transport';
 import { playerResults, weakestSection } from '../results';
 import type { StageRecording } from '../types';
@@ -50,26 +49,6 @@ describe('StageEngine', () => {
     expect(first.judged).toBe('perfect');
     expect(second.judged).toBe('miss');
     expect(e.players[0].stats.combo).toBe(0);
-  });
-
-  it('judges a pult player at the beat its late input was played, silently', () => {
-    const sound = fakeSound();
-    const e = new StageEngine(sound);
-    e.loadSong(song());
-    seatRemotes(e, [{ id: 'a', name: 'A', partId: 'piano', inst: 'keyboard' }]);
-    expect(e.players[0].remoteId).toBe('a');
-    e.setMode('perform');
-    e.start();
-    run(e, 2.32); // 0.32 s into beat 0: too late on this screen, within the pult's grace
-    expect(e.players[0].notes[0].judged).toBeNull();
-    playRemote(e, 'a', { kind: 'lane', lane: 60 }, 0.3);
-    expect(e.players[0].notes[0].judged).toBe('perfect');
-    expect(sound.notes).not.toContain(60);
-    run(e, 1.0);
-    expect(e.players[0].notes[1].judged).toBe('miss');
-    playRemote(e, 'nobody', { kind: 'lane', lane: 62 }, 0);
-    seatRemotes(e, []);
-    expect(e.players[0].remoteId).toBeUndefined();
   });
 
   it('plays the whole song, finishes and reports results', () => {
