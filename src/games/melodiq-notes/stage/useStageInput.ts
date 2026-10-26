@@ -13,14 +13,13 @@ export function useStageInput(engine: StageEngine) {
     sourceRef.current = source;
   }, [source]);
   // Hits go straight to the engine, without a render per note.
-  const midi = useMidiInput(
-    useCallback(
-      (pitch: number) => {
-        if (sourceRef.current === 'midi') engine.hitPitch(pitch);
-      },
-      [engine],
-    ),
+  const onNoteOn = useCallback(
+    (pitch: number) => {
+      if (sourceRef.current === 'midi') engine.hitPitch(pitch);
+    },
+    [engine],
   );
+  const midi = useMidiInput({ onNoteOn, rescan: source === 'midi' });
   const mic = useMicPitch();
 
   const lastMic = useRef<number | null>(null);
