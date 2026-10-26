@@ -1,15 +1,7 @@
-import {
-  Box,
-  Button,
-  Chip,
-  IconButton,
-  MenuItem,
-  Paper,
-  Select,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Chip, IconButton, MenuItem, Select, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/CloseRounded';
+import PersonAddIcon from '@mui/icons-material/PersonAddRounded';
+import QrCodeIcon from '@mui/icons-material/QrCode2Rounded';
 import { useTranslation } from 'react-i18next';
 import type { InstrumentKind } from '../../../../modules/music-score';
 import type { StageEngine } from '../engine/StageEngine';
@@ -35,24 +27,19 @@ export function PlayerList({ engine, onInvite, onRemoveRemote }: PlayerListProps
   if (!song) return null;
   const canAdd = !!nextSeat(song, engine.seats);
   return (
-    <Paper variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
-        <Typography variant="subtitle1" fontWeight={700}>
-          {k('players_title')}
-        </Typography>
-        <Stack direction="row" spacing={1}>
-          <Button
-            size="small"
-            variant="outlined"
-            disabled={!canAdd}
-            onClick={() => engine.addPlayer()}
-          >
-            {k('player_add')}
-          </Button>
-          <Button size="small" variant="outlined" onClick={onInvite}>
-            {t('games.melodiq_notes.pult.invite')}
-          </Button>
-        </Stack>
+    <Box>
+      <Stack direction="row" spacing={1} sx={{ mb: 1.5 }}>
+        <Button
+          variant="contained"
+          startIcon={<PersonAddIcon />}
+          disabled={!canAdd}
+          onClick={() => engine.addPlayer()}
+        >
+          {k('player_add')}
+        </Button>
+        <Button variant="outlined" startIcon={<QrCodeIcon />} onClick={onInvite}>
+          {t('games.melodiq_notes.pult.invite')}
+        </Button>
       </Stack>
       <Stack spacing={0.75}>
         {engine.seats.map((seat, i) => (
@@ -67,10 +54,8 @@ export function PlayerList({ engine, onInvite, onRemoveRemote }: PlayerListProps
               borderRadius: 2,
               border: 1,
               borderColor: 'divider',
-              gridTemplateColumns: {
-                xs: '10px minmax(0, 1fr) auto',
-                sm: '10px auto minmax(0, 1fr) auto auto',
-              },
+              // name and remove button on top, part and view below: the list lives in a narrow sheet
+              gridTemplateColumns: '10px minmax(0, 1fr) 40px',
             }}
           >
             <Box
@@ -89,7 +74,7 @@ export function PlayerList({ engine, onInvite, onRemoveRemote }: PlayerListProps
                 direction="row"
                 spacing={1}
                 alignItems="center"
-                sx={{ gridColumn: { xs: '2 / 4', sm: '3 / 5' }, minWidth: 0 }}
+                sx={{ gridColumn: '2 / 4', minWidth: 0 }}
               >
                 <Typography variant="body2" noWrap sx={{ minWidth: 0 }}>
                   {`${song.parts.find((p) => p.id === seat.partId)?.name ?? ''} · ${k(`instruments.${seat.inst}`)}`}
@@ -103,7 +88,7 @@ export function PlayerList({ engine, onInvite, onRemoveRemote }: PlayerListProps
                   value={seat.partId}
                   inputProps={{ 'aria-label': k('player_part', { no: i + 1 }) }}
                   onChange={(e) => engine.setSeat(i, { partId: e.target.value })}
-                  sx={{ gridColumn: { xs: '2 / 4', sm: 'auto' }, minWidth: 0 }}
+                  sx={{ gridColumn: '2 / 4', minWidth: 0 }}
                 >
                   {song.parts.map((part) => (
                     <MenuItem key={part.id} value={part.id}>
@@ -120,7 +105,7 @@ export function PlayerList({ engine, onInvite, onRemoveRemote }: PlayerListProps
                   value={seat.inst}
                   inputProps={{ 'aria-label': k('player_view', { no: i + 1 }) }}
                   onChange={(e) => engine.setSeat(i, { inst: e.target.value as InstrumentKind })}
-                  sx={{ gridColumn: { xs: 2, sm: 'auto' }, minWidth: 130 }}
+                  sx={{ gridColumn: '2 / 4', minWidth: 0 }}
                 >
                   {INSTRUMENT_ORDER.map((kind) => (
                     <MenuItem key={kind} value={kind}>
@@ -137,7 +122,7 @@ export function PlayerList({ engine, onInvite, onRemoveRemote }: PlayerListProps
               onClick={() =>
                 seat.remoteId ? onRemoveRemote?.(seat.remoteId) : engine.removePlayer(i)
               }
-              sx={{ gridColumn: { xs: 3, sm: 'auto' }, gridRow: { xs: 1, sm: 'auto' } }}
+              sx={{ gridColumn: 3, gridRow: 1 }}
             >
               <CloseIcon fontSize="small" />
             </IconButton>
@@ -152,6 +137,6 @@ export function PlayerList({ engine, onInvite, onRemoveRemote }: PlayerListProps
       >
         {k('players_note', { max: MAX_PLAYERS })}
       </Typography>
-    </Paper>
+    </Box>
   );
 }

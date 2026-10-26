@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isVirtualMidiPort, pickMidiInput } from '../midiPorts';
+import { isVirtualMidiPort, midiInstrument, pickMidiInput } from '../midiPorts';
 
 const through = { id: 'through', name: 'Midi Through Port-0', state: 'connected' };
 const drums = { id: 'td11', name: 'TD-11 MIDI 1', state: 'connected' };
@@ -34,5 +34,17 @@ describe('isVirtualMidiPort', () => {
   it('matches only loopback names', () => {
     expect(isVirtualMidiPort('Midi Through Port-0')).toBe(true);
     expect(isVirtualMidiPort('TD-11 MIDI 1')).toBe(false);
+  });
+});
+
+describe('midiInstrument', () => {
+  it('returns the selected connected instrument', () => {
+    expect(midiInstrument([through, piano], 'piano')).toBe(piano);
+  });
+
+  it('ignores the loopback port, a disconnected device and no selection', () => {
+    expect(midiInstrument([through], 'through')).toBeNull();
+    expect(midiInstrument([{ ...piano, state: 'disconnected' }], 'piano')).toBeNull();
+    expect(midiInstrument([piano], null)).toBeNull();
   });
 });

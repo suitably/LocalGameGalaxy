@@ -769,7 +769,20 @@
         "yt_use": "Verwenden und ausrichten",
         "player_remote": "Eigenes Gerät",
         "keys_remote": "Alle spielen auf ihrem eigenen Gerät – ihre Noten werden dort bewertet.",
-        "learn_solo": "Der Lernmodus wartet auf seinen Spieler – er ist zum Üben allein."
+        "learn_solo": "Der Lernmodus wartet auf seinen Spieler – er ist zum Üben allein.",
+        "input_chip": "{{input}} · {{ms}} ms",
+        "latency_calibrate": "Latenz kalibrieren …",
+        "players_count_one": "{{count}} Spieler",
+        "players_count_other": "{{count}} Spieler",
+        "rec_chip_none": "Aufnahme",
+        "rec_chip_unaligned": "Aufnahme · nicht abgeglichen",
+        "rec_chip_aligned": "Aufnahme · abgeglichen",
+        "rec_chip_running": "Abgleich {{percent}} %",
+        "rec_chip_failed": "Aufnahme · Fehler",
+        "rec_source": "Quelle",
+        "rec_sync": "Abgleich mit den Noten",
+        "rec_keep": "Speichern & Export",
+        "sections_label": "Takte & Schleife"
       },
       "pult": {
         "title": "Melodiq Notes – dein Instrument",

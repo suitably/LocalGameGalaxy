@@ -16,3 +16,12 @@ export function pickMidiInput(
   if (current && real.some((i) => i.id === current)) return current;
   return (real[0] ?? connected[0])?.id ?? null;
 }
+
+/** The connected instrument (not a loopback port) MIDI would listen on, or null without one. */
+export function midiInstrument<T extends { id: string; name: string; state: string }>(
+  inputs: ReadonlyArray<T>,
+  selectedId: string | null,
+): T | null {
+  const picked = inputs.find((i) => i.id === selectedId && i.state === 'connected');
+  return picked && !isVirtualMidiPort(picked.name) ? picked : null;
+}

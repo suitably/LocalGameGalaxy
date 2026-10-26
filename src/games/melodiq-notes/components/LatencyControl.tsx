@@ -19,6 +19,8 @@ interface LatencyControlProps {
   toClock: (localMs: number) => number;
   canStart: boolean;
   note?: React.ReactNode;
+  /** Replaces the default "Latency N ms" button, e.g. with an entry in an input menu. */
+  trigger?: (latencyMs: number, open: () => void) => React.ReactNode;
 }
 
 export const LatencyControl: React.FC<LatencyControlProps> = ({
@@ -29,6 +31,7 @@ export const LatencyControl: React.FC<LatencyControlProps> = ({
   toClock,
   canStart,
   note,
+  trigger,
 }) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -40,9 +43,13 @@ export const LatencyControl: React.FC<LatencyControlProps> = ({
   const calibration = useTapCalibration(engine, schedule, toClock, latency.set);
   return (
     <>
-      <Button size="small" variant="outlined" onClick={() => setOpen(true)}>
-        {t('games.melodiq_notes.latency.button', { ms: latency.ms })}
-      </Button>
+      {trigger ? (
+        trigger(latency.ms, () => setOpen(true))
+      ) : (
+        <Button size="small" variant="outlined" onClick={() => setOpen(true)}>
+          {t('games.melodiq_notes.latency.button', { ms: latency.ms })}
+        </Button>
+      )}
       <LatencyDialog
         open={open}
         onClose={() => setOpen(false)}

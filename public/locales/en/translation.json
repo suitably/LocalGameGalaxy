@@ -769,7 +769,20 @@
         "yt_use": "Use and align",
         "player_remote": "Own device",
         "keys_remote": "Everyone plays on their own device – their notes are judged there.",
-        "learn_solo": "Learn mode waits for its player – it is for one player practising alone."
+        "learn_solo": "Learn mode waits for its player – it is for one player practising alone.",
+        "input_chip": "{{input}} · {{ms}} ms",
+        "latency_calibrate": "Calibrate latency …",
+        "players_count_one": "{{count}} player",
+        "players_count_other": "{{count}} players",
+        "rec_chip_none": "Recording",
+        "rec_chip_unaligned": "Recording · not aligned",
+        "rec_chip_aligned": "Recording · aligned",
+        "rec_chip_running": "Aligning {{percent}} %",
+        "rec_chip_failed": "Recording · error",
+        "rec_source": "Source",
+        "rec_sync": "Align with the score",
+        "rec_keep": "Save & export",
+        "sections_label": "Bars & loop"
       },
       "pult": {
         "title": "Melodiq Notes – your instrument",
