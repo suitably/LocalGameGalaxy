@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-26 — Licence AGPL-3.0-or-later (claude-code)
+
+- `docs/open-questions.md`: Q21 (third-party files, tracked VAPID keys).
+- Outside `docs/`: `LICENSE` (AGPL-3.0), `license` field in `package.json` and `package-lock.json` of root, `server/`, `signaling/`; README §8 Licence.
+
 ## 2026-10-26 — Melodiq Notes: pult judges, players join any time (#573, #546, claude-code)
 
 - `docs/tech/sync-protocol.md` §3 Melodiq Notes stage ↔ pult bullet (new `clock`, `chart-request`/`chart`, `judged`, `beep` events; `input` display only), `docs/tech/game-catalog.md` melodiq-notes sync row, `docs/tech/architecture.md` `audio` row (`latency/`). `docs/open-questions.md`: Q20 (learn mode and latency calibration with pults).

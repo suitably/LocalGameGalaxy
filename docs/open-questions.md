@@ -63,6 +63,11 @@ Since #538 a player can store the running table as a server game's default templ
 
 Since #573 a pult judges its player against the stage clock (`src/games/melodiq-notes/pult/PultEngine.ts`). Learn mode waits only for players on the stage's screen (`StageEngine.tick` skips `remoteId` players for `waitingFor`); a pult in learn mode judges like practice (timing window, misses). The input latency is calibrated only with the shared beep calibrator (`src/modules/audio/latency`): the stage sounds a beep, the pult's microphone hears it; without a microphone the value is set with a slider. **(user)** Decide (a) whether learn mode should also wait for pult players (needs a "waiting" message from the pult), and (b) whether a tap-along calibration (player taps to the stage's clicks; also covers touch and MIDI delay) should be added to `modules/audio/latency` as a second measurement.
 
+## Q21 — Third-party files in an AGPL repository
+
+The repository is licensed `AGPL-3.0-or-later` since 2026-10-26 (`LICENSE`). Some tracked files are not the maintainer's own work and cannot be covered by that licence: `src/games/tabletop/tabletopsimulator/2500271578.json` and `.png` (a Tabletop Simulator Steam Workshop save of a commercial board game, used as a test fixture) and `server/models/` (the `UVR-MDX-NET-Inst_HQ_3.onnx` separation model and its `*.json` metadata; **Unverified:** origin and licence, probably Ultimate Vocal Remover models via the `audio-separator` project; size: Q11). `server/.vapid_keys.json` is tracked although `.gitignore` lists it.
+Resolve: record holder and licence of each third-party file (REUSE annotations), replace the Workshop fixture with a self-made sample, and **(user)** remove `server/.vapid_keys.json` from git and rotate the keys if they are used anywhere.
+
 ## Resolved 2026-10-25
 
 - Q18 one storage place for Melodiq Notes sheet music (#534, #486) → maintainer decision: (a) and (b) yes — the Notes library is the only score store; a piece links a Melodiq song with `songId` and plays with its mix, bar marks live in the piece; song-folder scores are imported once on startup (non-destructive, marker file). (c) `POST`/`DELETE /api/songs/:id/scores` answer `410`; reads and marks routes stay as deprecated aliases of the linked pieces. [song-pipeline §4](tech/song-pipeline.md#4-sheet-music-for-melodiq-notes)
