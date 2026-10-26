@@ -1,8 +1,18 @@
+import { bpmAt } from '../../../../modules/music-score';
 import { firstNoteBeat, leadInBeat } from '../logic/seek';
 import type { StageEngine } from './StageEngine';
 
 /** How far the recording may drift from the song clock before it is moved (scaled by speed). */
 const RESEEK_SEC = 0.25;
+
+/** Real seconds per beat at `beat`: the recording's tempo when one is attached, else the score's. */
+export function secPerBeatAt(e: StageEngine, beat: number) {
+  if (!e.song) return 0.5;
+  const map = e.recording?.map;
+  const from = Math.max(0, beat - 0.5);
+  const recorded = map ? map.secAt(from + 1) - map.secAt(from) : 0;
+  return (recorded > 0 ? recorded : 60 / bpmAt(e.song.tempoMap, beat)) / e.speed;
+}
 
 /** Keeps the recording on the song clock: starts after the count-in, waits with learn mode, seeks after loops. */
 export function syncRecording(e: StageEngine) {
@@ -20,7 +30,7 @@ export function syncRecording(e: StageEngine) {
 export function seekStage(e: StageEngine, beat: number, loopLeadBeats: number) {
   const song = e.song;
   if (!song || !e.players.length) return;
-  const target = Math.min(song.end, Math.max(-e.countIn, beat));
+  const target = Math.min(song.end, Math.max(e.startBeat - e.countIn, beat));
   if (e.loop && (target >= e.loop.to || target < e.loop.from - loopLeadBeats)) e.loop = null;
   e.sound.stopAll();
   e.waitingFor = null;
@@ -34,5 +44,9 @@ export function seekStage(e: StageEngine, beat: number, loopLeadBeats: number) {
 export function seekToFirstNote(e: StageEngine, leadInSec: number, loopLeadBeats: number) {
   const first = firstNoteBeat(e.players.map((p) => p.notes));
   if (first === null) return;
-  seekStage(e, leadInBeat(first, leadInSec, e.secPerBeat(first), -e.countIn), loopLeadBeats);
+  seekStage(
+    e,
+    leadInBeat(first, leadInSec, e.secPerBeat(first), e.startBeat - e.countIn),
+    loopLeadBeats,
+  );
 }

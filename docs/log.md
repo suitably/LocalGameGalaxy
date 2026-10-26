@@ -6,6 +6,13 @@ Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)
 
 - `docs/tech/sync-protocol.md` §3 Melodiq Notes stage ↔ pult bullet (new `clock`, `chart-request`/`chart`, `judged`, `beep` events; `input` display only), `docs/tech/game-catalog.md` melodiq-notes sync row, `docs/tech/architecture.md` `audio` row (`latency/`). `docs/open-questions.md`: Q19 (learn mode with pults).
 - Outside `docs/`: Melodiq Notes `pult/` (`PultEngine`, `usePult`, `usePultLatency`, `useStageRoom`, `PultView`, `PultLatencyDialog`, `StageInvite`; logic `protocol`, `pultSong`, `stageClock`, `remoteHits`, `clockSync`; removed `usePultInput`, `PultPad`), `stage/engine/{StageEngine,remote,players,advance,input,types}.ts`, `stage/useStage.ts`, `PlayerList`; latency calibrator moved from `src/games/melodiq/components` to `src/modules/audio/latency/` (keys `latencyCalibrator.*` in `public/locales`); storage key `MELODIQ_NOTES_INPUT_LATENCY`.
+## 2026-10-25 — Melodiq Notes: safer skip cost in alignment (claude-code)
+
+- `docs/tech/song-pipeline.md` §4: skip cost factor 1.1 (was 0.89, which shifted a real arrangement by two bars). Outside `docs/`: `src/modules/music-score/alignment.ts`.
+
+## 2026-10-25 — Melodiq Notes: stage leaves out bars before the recording (claude-code)
+
+- `docs/tech/song-pipeline.md` §4 alignment paragraph: stage starts at `firstRecordedBeat`. Outside `docs/`: `src/modules/music-score/timing.ts`, Melodiq Notes `stage/engine/{StageEngine,players,transport,types,browserRecording}.ts`, tests.
 
 ## 2026-10-25 — Melodiq Notes: alignment skips missing intro/outro, tambourine mark (claude-code)
 
