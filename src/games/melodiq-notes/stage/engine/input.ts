@@ -12,8 +12,8 @@ import type { StagePlayer } from './types';
 const PRESS_FLASH_MS = 160;
 
 /**
- * Who played and when: the focused player now, or a pult's player at the beat its input was
- * played (it arrives late). A pult plays its own sound, so the stage stays silent for it.
+ * Who played and when: the focused player now, or on a pult its player at the stage beat the
+ * input was played. `silent` skips the sound.
  */
 export interface PlayAt {
   player: StagePlayer | null;
@@ -27,7 +27,12 @@ export function flashLane(p: StagePlayer, lane: number) {
   setTimeout(() => p.pressed.delete(lane), PRESS_FLASH_MS);
 }
 
-const focused = (e: StageEngine): PlayAt => ({ player: e.focus, beat: e.beat, silent: false });
+/** The focused player now, at the beat the sound was that they followed (input latency removed). */
+const focused = (e: StageEngine): PlayAt => ({
+  player: e.focus,
+  beat: e.beat - e.inputLatencyMs / 1000 / e.secPerBeat(Math.max(0, e.beat)),
+  silent: false,
+});
 
 /** A player played `lane` (MIDI key, string or drum lane). */
 export function playLane(

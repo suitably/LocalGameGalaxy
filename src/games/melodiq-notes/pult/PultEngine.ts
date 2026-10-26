@@ -3,8 +3,11 @@
  *
  * Plays the part the stage sent (`loadChart`) and follows the stage's transport (`applyClock`)
  * instead of running its own: no band, no count-in of its own, seeks and loops come from the
- * stage. Input is judged at the stage beat it was played, corrected by this device's input
- * latency; the judgements are collected for the stage (`takeBatch`).
+ * stage. The whole part runs `inputLatencyMs` behind the stage clock (tap-along calibration: how
+ * late the player hears the stage and how late their input arrives), so the notes cross the line
+ * when the player hears them and input is judged against that. Network delay never enters the
+ * judging: input is stamped here, only the clock offset (clockSync) depends on the network.
+ * The judgements are collected for the stage (`takeBatch`).
  */
 import { drumLaneOf } from '../../../modules/music-score';
 import { advanceMisses, advanceSinging } from '../stage/engine/advance';
@@ -26,8 +29,6 @@ export class PultEngine extends StageEngine {
   clock: StageClock | null = null;
   /** Stage time − local time (ms), from clockSync; null until measured. */
   offset: number | null = null;
-  /** How late this device notices a hit (calibrated), ms. */
-  inputLatencyMs = 0;
   /** What the player played, for the stage's display. */
   onInput: ((input: PultInput) => void) | null = null;
   private marks: JudgedMark[] = [];
@@ -51,10 +52,6 @@ export class PultEngine extends StageEngine {
     this.offset = offset;
   }
 
-  setInputLatency(ms: number) {
-    this.inputLatencyMs = ms;
-  }
-
   setOnInput(fn: ((input: PultInput) => void) | null) {
     this.onInput = fn;
   }
@@ -75,13 +72,13 @@ export class PultEngine extends StageEngine {
     return this.clock?.startBeat ?? 0;
   }
 
-  /** The stage's latest transport. Learn mode does not wait for a pult, so it judges like practice. */
+  /** The stage's latest transport; in learn mode the stage waits until this pult's judgement arrives. */
   applyClock(clock: StageClock) {
     const from = this.startBeat;
     this.clock = clock;
     if (clock.rate > 0) this.rate = clock.rate;
     if (clock.songKey !== this.songKey || !this.song) return;
-    this.mode = clock.mode === 'learn' ? 'practice' : clock.mode;
+    this.mode = clock.mode;
     this.loop = clock.loop;
     if (from !== clock.startBeat) this.reset();
     else if (clock.play === this.state) return;
@@ -92,8 +89,9 @@ export class PultEngine extends StageEngine {
     this.emit();
   }
 
+  /** The stage time this player hears and plays to now. */
   private stageNow() {
-    return this.offset === null ? null : this.now() + this.offset;
+    return this.offset === null ? null : toStageTime(this.now(), this.offset, this.inputLatencyMs);
   }
 
   tick(dt: number) {
@@ -111,7 +109,8 @@ export class PultEngine extends StageEngine {
     for (const p of this.players) {
       if (p.instrument.view === 'pitch')
         advanceSinging(p, this.beat, Math.max(0, this.beat - before), this.loop, this.judge);
-      else advanceMisses(p, this.beat, this.secPerBeat, this.loop, this.judge);
+      else if (this.mode !== 'learn')
+        advanceMisses(p, this.beat, this.secPerBeat, this.loop, this.judge);
       p.pending = pendingNotes(p.notes, this.loop, p.instrument.view === 'pitch');
     }
   }
@@ -119,27 +118,31 @@ export class PultEngine extends StageEngine {
   /** Who played and when: the stage beat of the moment the player played, latency removed. */
   private inputAt(): PlayAt {
     const clock = this.clock;
+    const stageNow = this.stageNow();
     const beat =
-      clock && this.offset !== null && clock.songKey === this.songKey
-        ? stageBeatAt(clock, toStageTime(this.now(), this.offset, this.inputLatencyMs))
+      clock && stageNow !== null && clock.songKey === this.songKey
+        ? stageBeatAt(clock, stageNow)
         : this.beat;
     return { player: this.focus, beat, silent: false };
   }
 
   hit(lane: number) {
     playLane(this, lane, undefined, this.inputAt());
+    this.onTap?.(this.now());
     this.onInput?.({ kind: 'lane', lane });
   }
 
   hitPitch(midi: number) {
     const view = this.focus?.instrument.view;
     playPitch(this, midi, this.inputAt());
+    this.onTap?.(this.now());
     if (view === 'keys') this.onInput?.({ kind: 'lane', lane: midi });
     else if (view === 'drums') this.onInput?.({ kind: 'lane', lane: drumLaneOf(midi) });
   }
 
   setVoice(pitch: number, singing: boolean) {
-    super.setVoice(pitch, singing);
+    if (singing && this.focus && !this.focus.voice.singing) this.onTap?.(this.now());
+    if (this.focus) this.focus.voice = { pitch, singing };
     const now = this.now();
     if (singing === this.lastVoice.singing && now - this.lastVoice.at < VOICE_EVERY_MS) return;
     this.lastVoice = { at: now, singing };

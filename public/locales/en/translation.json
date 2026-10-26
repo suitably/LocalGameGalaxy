@@ -627,7 +627,6 @@
           "practice": "Your own tempo, sections on loop. The song keeps going.",
           "perform": "Original tempo, score and combo count."
         },
-        "wait_all": "It waits until everyone has hit their note.",
         "mode": "Mode",
         "speed": "Speed",
         "display": "View",
@@ -769,7 +768,8 @@
         "yt_download": "Download and align",
         "yt_use": "Use and align",
         "player_remote": "Own device",
-        "keys_remote": "Everyone plays on their own device – their notes are judged there."
+        "keys_remote": "Everyone plays on their own device – their notes are judged there.",
+        "learn_solo": "Learn mode waits for its player – it is for one player practising alone."
       },
       "pult": {
         "title": "Melodiq Notes – your instrument",
@@ -788,10 +788,22 @@
         "waiting": "Waiting for the stage to start.",
         "sing_hint": "Choose “Microphone” and sing – the stage shows your pitch.",
         "loading_part": "Loading your part from the stage…",
-        "latency_button": "Latency {{ms}} ms",
-        "latency_title": "Input latency",
-        "latency_hint": "How much later you hear the stage than it plays, plus this device's delay. Calibrate with the microphone near this device while the stage plays a beep, or set it by hand.",
-        "latency_value": "Latency: {{ms}} ms"
+        "network": "Network round trip {{ms}} ms – only the clock sync uses the network, your notes are judged on this device."
+      },
+      "latency": {
+        "button": "Latency {{ms}} ms",
+        "title": "Latency · {{source}}",
+        "hint": "Tap along to the clicks with what you play with: the pad below, the computer keys, your MIDI instrument or a note into the microphone. The first three clicks are for finding the beat. This measures everything at once: how late the sound reaches you and how late your input arrives. Each input has its own value.",
+        "start": "Play 12 clicks",
+        "pad": "Tap",
+        "value": "Latency: {{ms}} ms",
+        "tap_idle": "Start, listen and tap along.",
+        "tap_waiting": "Waiting for the clicks…",
+        "tap_running": "Tap along… {{taps}} taps",
+        "tap_no_clicks": "No clicks came – is the stage open and its sound on?",
+        "tap_done": "Done: {{ms}} ms (±{{spread}} ms)",
+        "tap_few_taps": "Too few taps on the clicks – try again.",
+        "tap_uneven": "The taps were too uneven – try again and tap steadily."
       }
     },
     "kniffel": {

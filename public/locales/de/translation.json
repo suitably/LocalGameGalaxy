@@ -627,7 +627,6 @@
           "practice": "Eigenes Tempo, Abschnitte als Schleife. Das Lied läuft weiter.",
           "perform": "Originaltempo, Punkte und Combo zählen."
         },
-        "wait_all": "Es wartet, bis alle ihre Note getroffen haben.",
         "mode": "Modus",
         "speed": "Tempo",
         "display": "Ansicht",
@@ -769,7 +768,8 @@
         "yt_download": "Herunterladen und ausrichten",
         "yt_use": "Verwenden und ausrichten",
         "player_remote": "Eigenes Gerät",
-        "keys_remote": "Alle spielen auf ihrem eigenen Gerät – ihre Noten werden dort bewertet."
+        "keys_remote": "Alle spielen auf ihrem eigenen Gerät – ihre Noten werden dort bewertet.",
+        "learn_solo": "Der Lernmodus wartet auf seinen Spieler – er ist zum Üben allein."
       },
       "pult": {
         "title": "Melodiq Notes – dein Instrument",
@@ -788,10 +788,22 @@
         "waiting": "Warte, bis die Bühne startet.",
         "sing_hint": "Wähle „Mikrofon“ und sing – die Bühne zeigt deine Tonhöhe.",
         "loading_part": "Lade deine Stimme von der Bühne…",
-        "latency_button": "Latenz {{ms}} ms",
-        "latency_title": "Eingabelatenz",
-        "latency_hint": "Wie viel später du die Bühne hörst, als sie spielt, plus die Verzögerung dieses Geräts. Kalibriere mit dem Mikrofon dieses Geräts, während die Bühne einen Piepton spielt, oder stelle sie von Hand ein.",
-        "latency_value": "Latenz: {{ms}} ms"
+        "network": "Netzwerk-Laufzeit {{ms}} ms – das Netz dient nur dem Uhrenabgleich, deine Noten werden auf diesem Gerät bewertet."
+      },
+      "latency": {
+        "button": "Latenz {{ms}} ms",
+        "title": "Latenz · {{source}}",
+        "hint": "Klopfe zu den Klicks mit dem, womit du spielst: das Feld unten, die Computertastatur, dein MIDI-Instrument oder ein Ton ins Mikrofon. Die ersten drei Klicks dienen zum Einfinden. Gemessen wird alles zusammen: wie spät der Ton bei dir ankommt und wie spät deine Eingabe ankommt. Jede Eingabeart hat ihren eigenen Wert.",
+        "start": "12 Klicks spielen",
+        "pad": "Tippen",
+        "value": "Latenz: {{ms}} ms",
+        "tap_idle": "Starten, zuhören und mitklopfen.",
+        "tap_waiting": "Warte auf die Klicks…",
+        "tap_running": "Mitklopfen… {{taps}} Anschläge",
+        "tap_no_clicks": "Keine Klicks gekommen – ist die Bühne offen und ihr Ton an?",
+        "tap_done": "Fertig: {{ms}} ms (±{{spread}} ms)",
+        "tap_few_taps": "Zu wenige Anschläge auf den Klicks – bitte noch einmal.",
+        "tap_uneven": "Die Anschläge waren zu ungleichmäßig – noch einmal und gleichmäßig klopfen."
       }
     },
     "kniffel": {

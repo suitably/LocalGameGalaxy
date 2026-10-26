@@ -5,7 +5,8 @@
  * split screen. Every player's own device (the "Pult") joins with a part, measures its clock
  * offset to the stage with ping/pong, fetches the notes of its part (`chart`), follows the stage's
  * transport (`clock`) and judges its player's input locally. It sends the judgements and its score
- * (`judged`) and, for the stage's display only, what was played (`input`).
+ * (`judged`) and, for the stage's display only, what was played (`input`). Learn mode is for a
+ * single player; when that player is on a pult, the stage waits for the pult's judgement.
  *
  * Two kinds of traffic, both over `modules/room-game`:
  * - room state (`PultRoomState`, host-run reducer): who plays which part, the song, play state;
@@ -99,8 +100,9 @@ export type PultEvent =
       marks: JudgedMark[];
       score: PultScore;
     }
-  /** Latency calibration: the pult asks the stage to sound one beep. */
-  | { kind: 'beep'; from: string };
+  /** Tap-along calibration: the pult asks for clicks, the stage plays them at the stage times it names. */
+  | { kind: 'click-request'; from: string; id: number }
+  | { kind: 'click-plan'; from: string; to: string; id: number; times: number[] };
 
 export const PULT_MAX_MEMBERS = 4;
 export const PULT_GAME_KEY = 'melodiq-notes-pult';

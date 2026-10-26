@@ -100,7 +100,7 @@ export function StageOverlay({ engine, onStart, onPractise }: StageOverlayProps)
                 bar: measureIndexAt(song, Math.max(0, engine.beat)) + 1,
                 total: song.measureStarts.length,
               })
-            : `${k(`mode_hint.${mode}`)}${several && mode === 'learn' ? ` ${k('wait_all')}` : ''}`}
+            : k(`mode_hint.${mode}`)}
         </Typography>
         {!paused && (
           <Typography

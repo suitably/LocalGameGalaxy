@@ -105,10 +105,26 @@ describe('PultEngine', () => {
     expect(e.takeBatch()).toBeNull();
   });
 
-  it('judges like practice in learn mode, since the stage does not wait for a pult', () => {
-    const { e } = pult();
+  it('in learn mode marks no misses and judges the awaited note when it is played', () => {
+    const { e, time } = pult();
     e.applyClock(clock({ mode: 'learn' }));
-    expect(e.mode).toBe('practice');
+    expect(e.mode).toBe('learn');
+    run(e, time, 0.6);
+    expect(e.takeBatch()).toBeNull();
+    e.hit(60);
+    expect(e.takeBatch()?.marks).toEqual([[0, 'learn']]);
+  });
+
+  it('runs the part behind the stage clock by its latency and reports taps for calibration', () => {
+    const { e, time } = pult();
+    e.inputLatencyMs = 250;
+    const taps: number[] = [];
+    e.configureInput({ onTap: (ms) => taps.push(ms) });
+    e.applyClock(clock({}));
+    run(e, time, 1); // stage at beat 2, this player hears beat 1.5
+    expect(e.beat).toBeCloseTo(1.5, 1);
+    e.hit(60);
+    expect(taps).toEqual([time.ms]);
   });
 
   it('starts over when the stage goes back to the start and rewinds on loops', () => {

@@ -5,11 +5,10 @@
  * this player's part on the stage's clock, their own score, the input source and the latency
  * calibration. The judgements go to the stage, which shows every player in split screen.
  */
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   Alert,
   Box,
-  Button,
   Chip,
   CircularProgress,
   MenuItem,
@@ -27,7 +26,7 @@ import { InputSourcePicker } from '../stage/components/InputSourcePicker';
 import { StageCanvas } from '../stage/components/StageCanvas';
 import { useStageInput } from '../stage/useStageInput';
 import { useStageTexts } from '../stage/useStage';
-import { PultLatencyDialog } from './components/PultLatencyDialog';
+import { LatencyControl } from '../components/LatencyControl';
 import { usePult } from './usePult';
 
 const noop = () => {};
@@ -45,8 +44,8 @@ export const PultView: React.FC<{ roomId: string; wantedPart: string | null }> =
   const pult = usePult(roomId, name, wantedPart);
   const input = useStageInput(pult.engine);
   const texts = useStageTexts();
-  const [latencyOpen, setLatencyOpen] = useState(false);
-  const { state, part, clock } = pult;
+  const { state, part, clock, offset } = pult;
+  const toStageClock = useCallback((local: number) => local + (offset ?? 0), [offset]);
   const taken = new Set(state.members.filter((m) => m.id !== pult.me?.id).map((m) => m.partId));
 
   let status: React.ReactNode = null;
@@ -105,9 +104,21 @@ export const PultView: React.FC<{ roomId: string; wantedPart: string | null }> =
                 {state.play === 'playing' ? k('playing') : k('waiting')}
               </Typography>
               <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                <Button size="small" variant="outlined" onClick={() => setLatencyOpen(true)}>
-                  {k('latency_button', { ms: pult.latency.ms })}
-                </Button>
+                <LatencyControl
+                  engine={pult.engine}
+                  role="pult"
+                  source={input.source}
+                  schedule={pult.requestClicks}
+                  toClock={toStageClock}
+                  canStart={offset !== null}
+                  note={
+                    clock && (
+                      <Typography variant="caption" color="text.secondary">
+                        {k('network', { ms: Math.round(clock.rtt) })}
+                      </Typography>
+                    )
+                  }
+                />
                 <InputSourcePicker
                   value={input.source}
                   midiCount={input.midiDevices.length}
@@ -138,14 +149,6 @@ export const PultView: React.FC<{ roomId: string; wantedPart: string | null }> =
           </>
         )}
       </Stack>
-      <PultLatencyDialog
-        open={latencyOpen}
-        onClose={() => setLatencyOpen(false)}
-        latencyMs={pult.latency.ms}
-        onChange={pult.latency.set}
-        rttMs={clock?.rtt ?? null}
-        requestBeep={pult.requestBeep}
-      />
     </GameLayout>
   );
 };

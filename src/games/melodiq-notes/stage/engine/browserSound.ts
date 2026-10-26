@@ -65,12 +65,17 @@ export class BrowserStageSound implements StageSound {
   }
 
   click(accent: boolean) {
-    const t = this.ctx.currentTime;
+    this.clickAt(performance.now(), accent, 0.08);
+  }
+
+  /** A click at `perfMs` (`performance.now()` time), placed exactly on the audio clock. */
+  clickAt(perfMs: number, accent: boolean, volume = 0.3) {
+    const t = this.ctx.currentTime + Math.max(0, (perfMs - performance.now()) / 1000);
     const o = this.ctx.createOscillator();
     o.type = 'square';
     o.frequency.value = accent ? 2093 : 1047;
     const g = this.ctx.createGain();
-    g.gain.setValueAtTime(0.08, t);
+    g.gain.setValueAtTime(volume, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
     o.connect(g).connect(this.master);
     o.start(t);
