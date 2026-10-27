@@ -1,20 +1,21 @@
 /**
- * Keeps hands private across the shared sync channel [ID: LOGIC-TABLETOP-PRIVATE-HANDS]
+ * Keeps hands and hidden zones private across the shared sync channel [ID: LOGIC-TABLETOP-PRIVATE-HANDS]
  *
- * Host: redacts outgoing snapshots/deltas and seals each seat's faces with that seat's key.
+ * Host: redacts outgoing snapshots/deltas (private hand faces, widgets in hidden zones) and seals
+ * what each seat may see with that seat's key.
  * Seat device: sends its public key, derives the shared key from the host's public key and
  * restores its own cards. Without WebCrypto (e.g. plain-HTTP LAN origins) it passes data through
  * unchanged, which is the previous, non-private behaviour.
  */
 import type { TabletopGameDefinition } from './types';
 import type { GameDelta } from './stateDelta';
+import { redactDelta, redactGame, restoreCards, type WidgetSecret } from './handPrivacy';
 import {
-  redactDelta,
-  redactGame,
-  restoreCards,
-  type CardSecret,
-  type SeatSecrets,
-} from './handPrivacy';
+  hasActiveHiddenZone,
+  redactZoneWidgets,
+  withZoneVisibilityChanges,
+  type BroadcastSecrets,
+} from './hiddenZoneRedaction';
 import {
   deriveSealKey,
   exportPublicKey,
@@ -54,11 +55,17 @@ export class PrivateHandChannel {
     this.seatKeys.set(seat, await deriveSealKey(pair.privateKey, theirPublic));
   }
 
-  private get private(): boolean {
+  /** Hands are redacted once a seat registered a key. */
+  private get privateHands(): boolean {
     return this.supported && this.seatKeys.size > 0;
   }
 
-  private async sealAll(secrets: SeatSecrets): Promise<SealedSecrets | undefined> {
+  /** Hidden zones are redacted whenever sealing works, so seatless devices and spectators see nothing. */
+  private hidesZones(game: Pick<TabletopGameDefinition, 'hiddenZones'>): boolean {
+    return this.supported && hasActiveHiddenZone(game.hiddenZones);
+  }
+
+  private async sealAll(secrets: BroadcastSecrets): Promise<SealedSecrets | undefined> {
     const sealed: SealedSecrets = {};
     for (const [seat, cards] of Object.entries(secrets)) {
       const key = this.seatKeys.get(Number(seat));
@@ -67,17 +74,36 @@ export class PrivateHandChannel {
     return Object.keys(sealed).length > 0 ? sealed : undefined;
   }
 
-  /** Snapshot as broadcast: private faces removed, each seat's faces sealed for that seat. */
+  /** Snapshot as broadcast: private data removed, what each seat may see sealed for that seat. */
   async outgoingSnapshot(game: TabletopGameDefinition) {
-    if (!this.private) return { state: game, hostKey: await this.publicKey() };
-    const { game: state, secrets } = redactGame(game);
-    return { state, sealed: await this.sealAll(secrets), hostKey: await this.publicKey() };
+    const hostKey = await this.publicKey();
+    if (!this.privateHands && !this.hidesZones(game)) return { state: game, hostKey };
+    const hand = this.privateHands ? redactGame(game) : { game, secrets: {} };
+    const { widgets, secrets } = redactZoneWidgets(
+      game.widgets,
+      { widgets: hand.game.widgets, secrets: hand.secrets },
+      game.hiddenZones,
+    );
+    return { state: { ...game, widgets }, sealed: await this.sealAll(secrets), hostKey };
   }
 
-  async outgoingDelta(delta: GameDelta, gameAfter: TabletopGameDefinition) {
-    if (!this.private) return { delta };
-    const redacted = redactDelta(delta, gameAfter);
-    return { delta: redacted.delta, sealed: await this.sealAll(redacted.secrets) };
+  /** `gameBefore` lets a zone change resend the widgets whose visibility it changed. */
+  async outgoingDelta(
+    delta: GameDelta,
+    gameAfter: TabletopGameDefinition,
+    gameBefore?: TabletopGameDefinition,
+  ) {
+    const zones = this.hidesZones(gameAfter) || this.hidesZones(gameBefore ?? gameAfter);
+    if (!this.privateHands && !zones) return { delta };
+    const full =
+      gameBefore && zones ? withZoneVisibilityChanges(delta, gameBefore, gameAfter) : delta;
+    const hand = this.privateHands ? redactDelta(full, gameAfter) : { delta: full, secrets: {} };
+    const { widgets, secrets } = redactZoneWidgets(
+      full.widgets,
+      { widgets: hand.delta.widgets, secrets: hand.secrets },
+      gameAfter.hiddenZones,
+    );
+    return { delta: { ...full, widgets }, sealed: await this.sealAll(secrets) };
   }
 
   // ─── Seat device ──────────────────────────────────────────────────────
@@ -105,7 +131,7 @@ export class PrivateHandChannel {
     const box = seat !== null ? sealed?.[seat] : undefined;
     if (!box || !this.hostKey) return widgets;
     try {
-      const secrets = await unseal<Record<string, CardSecret>>(this.hostKey.key, box);
+      const secrets = await unseal<Record<string, WidgetSecret>>(this.hostKey.key, box);
       return restoreCards(widgets as never, secrets) as T;
     } catch {
       return widgets;

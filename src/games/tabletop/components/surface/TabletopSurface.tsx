@@ -56,7 +56,8 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     readOnly,
     dispatch: seatDispatch,
   });
-  const selection = useTabletopSelection({ dispatch });
+  const obscuredIds = useObscuredWidgetIds(game, activeSeat?.index);
+  const selection = useTabletopSelection({ dispatch, obscuredIds });
 
   const {
     transform,
@@ -103,15 +104,12 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     () => filterBoardHolders(game.widgets, visibleIds, isTvMode),
     [game.widgets, visibleIds, isTvMode],
   );
-
   const boardWidgets = useMemo(
     () => filterBoardWidgets(game.widgets, visibleIds, isTvMode),
     [game.widgets, visibleIds, isTvMode],
   );
 
-  const obscuredIds = useObscuredWidgetIds(game, activeSeat?.index);
   const fitToScreen = useFitToScreen(containerRef, game.table, setTransform, setContainerSize);
-
   const onPointerDownBoardWidget = (e: React.PointerEvent, w: TabletopWidget) => {
     if (isSpectator) return; // bubbles up to the board pan
     if (!selection.handleWidgetClick(w.id, e.shiftKey)) handlePointerDownWidget(e, w);
@@ -192,6 +190,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
           widgets={game.widgets}
           tableWidth={game.table.width}
           tableHeight={game.table.height}
+          obscuredIds={obscuredIds}
           onFinishAnimation={(id) =>
             dispatch({ type: 'FINISH_ANIMATION', payload: { animationId: id } })
           }
@@ -234,6 +233,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
         pointerPos={dragPointer}
         grabOffset={grabOffset}
         scale={transform.scale}
+        obscured={activeDragId !== null && obscuredIds.has(activeDragId)}
       />
 
       <SurfaceContextMenu

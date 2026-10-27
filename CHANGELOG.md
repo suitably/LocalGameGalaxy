@@ -181,6 +181,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Tabletop: hidden zones stay hidden** (#551): a piece in another player's hidden zone no longer shows while it is dragged, while a card flies to it, or when selected with Shift or "select all". The table device also stops sending such pieces to the other devices: phones get only an empty outline, and only the zone's owner can open the real piece. Spectators see no hidden zone. When the zone is revealed, everyone gets the real pieces again.
 - **Light mode inside games** (#552): primary-coloured headings, scores and icons in Guess Art, Knister, Imposter, Melodiq, Melodiq Notes, Qwixx, Werewolf and the tabletop controller use the readable dark amber (`primary.text`) instead of yellow on paper. Dark mode looks the same.
 - **Melodiq Notes: replugged MIDI instrument** (#599): when an instrument disconnects, the input menu says so and, until it sends notes again, suggests restarting the browser. Firefox on Linux lists a replugged device again but delivers none of its notes until it restarts.
 - **Party spectators** (#550): spectators no longer appear as players in Knister and Gartic Phone rounds. On the tabletop, the host decides from its own party roster who may play, so a phone cannot leave the spectator role by omitting its flag.

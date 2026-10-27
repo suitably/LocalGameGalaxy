@@ -7,16 +7,18 @@ import { Box } from '@mui/material';
 import type { CardWidget, TokenWidget } from '../../logic/types';
 import { CardWidgetView } from '../widgets/CardWidgetView';
 import { TokenWidgetView } from '../widgets/TokenWidgetView';
+import { ObscuredPlaceholder } from './ObscuredPlaceholder';
 
 export type DockDragItem =
-  | { type: 'card'; card: CardWidget }
-  | { type: 'piece'; piece: TokenWidget; groupName: string };
+  { type: 'card'; card: CardWidget } | { type: 'piece'; piece: TokenWidget; groupName: string };
 
 interface DockDragOverlayProps {
   item: DockDragItem | null;
   pointerPos: { x: number; y: number } | null;
   grabOffset?: { x: number; y: number };
   scale?: number;
+  /** Inside a hidden zone the viewer may not see: show a placeholder only (#551). */
+  obscured?: boolean;
 }
 
 export const DockDragOverlay: React.FC<DockDragOverlayProps> = ({
@@ -24,6 +26,7 @@ export const DockDragOverlay: React.FC<DockDragOverlayProps> = ({
   pointerPos,
   grabOffset = { x: 0, y: 0 },
   scale = 1,
+  obscured = false,
 }) => {
   if (!item || !pointerPos) return null;
 
@@ -61,19 +64,15 @@ export const DockDragOverlay: React.FC<DockDragOverlayProps> = ({
           position: 'relative',
         }}
       >
-        {item.type === 'card' ? (
-          <CardWidgetView
-            widget={{ ...item.card, x: 0, y: 0, faceUp: true }}
-            isDragging={false}
-          />
+        {obscured ? (
+          <ObscuredPlaceholder sx={{ position: 'absolute', inset: 0 }} />
+        ) : item.type === 'card' ? (
+          <CardWidgetView widget={{ ...item.card, x: 0, y: 0, faceUp: true }} isDragging={false} />
         ) : (
-          <TokenWidgetView
-            widget={{ ...item.piece, x: 0, y: 0 }}
-            isDragging={true}
-          />
+          <TokenWidgetView widget={{ ...item.piece, x: 0, y: 0 }} isDragging={true} />
         )}
       </Box>
     </Box>,
-    document.body
+    document.body,
   );
 };
