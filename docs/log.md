@@ -5,7 +5,8 @@ Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)
 ## 2026-10-27 — Clear open issues implemented (claude-code)
 
 - `docs/workflows/ci-cd-pipelines.md`: new "Runner and tool pinning" (#589); `docs/tech/deployment.md`: arm64 macOS runner is `macos-15`.
-- Outside `docs/`: all workflows on `ubuntu-24.04` / `macos-15`, wrangler version from `tools/wrangler/package.json` (Dependabot entry) (#589).
+- `docs/tech/melodiq-architecture.md` §2.6: the host echoes the duet part in `songInfo`; the phone takes part names from it instead of parsing the song (#545).
+- Outside `docs/`: all workflows on `ubuntu-24.04` / `macos-15`, wrangler version from `tools/wrangler/package.json` (Dependabot entry) (#589); Melodiq `useBroadcastSongInfo`, `usePhoneTrackChoice`, `usePhoneClientMessages`, `trackChoice.ts` (+ test), `PhoneTrackChoiceOverlay`, `PhoneJoinPrompt` via i18n (#545).
 
 ## 2026-10-26 — M1: CHANGELOG consolidated, feedback fixes (claude-code)
 

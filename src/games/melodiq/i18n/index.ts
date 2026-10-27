@@ -3,6 +3,12 @@ import i18n from '../../../i18n';
 export const melodiqResources = {
   en: {
     melodiq: {
+      join_prompt: {
+        title: 'Session in progress',
+        body: 'A song is currently playing. How would you like to join?',
+        singer: 'Join as singer',
+        spectator: 'Just watch',
+      },
       queue_drawer: {
         now_playing: 'Now Playing',
         clear: 'Clear',
@@ -337,6 +343,12 @@ export const melodiqResources = {
   },
   de: {
     melodiq: {
+      join_prompt: {
+        title: 'Session läuft',
+        body: 'Gerade läuft ein Song. Wie möchtest du einsteigen?',
+        singer: 'Als Sänger:in mitmachen',
+        spectator: 'Nur zuschauen',
+      },
       queue_drawer: {
         now_playing: 'Läuft gerade',
         clear: 'Leeren',
