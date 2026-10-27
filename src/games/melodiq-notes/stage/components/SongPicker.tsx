@@ -87,7 +87,7 @@ export function SongPicker({ open, onClose, state }: SongPickerProps) {
               ref={fileRef}
               type="file"
               hidden
-              accept=".mxl,.musicxml,.xml,.mid,.midi"
+              accept=".mxl,.musicxml,.xml,.mid,.midi,.gp"
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 e.target.value = '';

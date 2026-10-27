@@ -1,4 +1,11 @@
-import { extractMxl, parseMidi, parseMusicXml, type ScoreSong } from '../../../modules/music-score';
+import {
+  extractGpif,
+  extractMxl,
+  parseGuitarPro,
+  parseMidi,
+  parseMusicXml,
+  type ScoreSong,
+} from '../../../modules/music-score';
 
 const browserXml = (text: string) => new DOMParser().parseFromString(text, 'application/xml');
 
@@ -8,11 +15,13 @@ export interface LoadedScore {
   xml: string | null;
 }
 
-/** Reads .mxl, .musicxml/.xml or .mid/.midi bytes into a song. */
+/** Reads .mxl, .musicxml/.xml, .mid/.midi or Guitar Pro 7/8 .gp bytes into a song. */
 export function readScoreFile(fileName: string, data: ArrayBuffer): LoadedScore {
   const lower = fileName.toLowerCase();
   const bytes = new Uint8Array(data);
   if (/\.midi?$/.test(lower)) return { song: parseMidi(bytes, fileName), xml: null };
+  if (lower.endsWith('.gp'))
+    return { song: parseGuitarPro(extractGpif(bytes), fileName, browserXml), xml: null };
   const xml = lower.endsWith('.mxl') ? extractMxl(bytes) : new TextDecoder().decode(bytes);
   return { song: parseMusicXml(xml, fileName, browserXml), xml };
 }

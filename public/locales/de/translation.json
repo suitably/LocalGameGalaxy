@@ -693,7 +693,7 @@
         "no_scores": "Noch keine Noten",
         "find_scores": "Noten suchen",
         "find_scores_hint": "Öffnet die MuseScore-Suche. Lade dort die Partitur als MusicXML (.mxl) herunter, öffne sie unter „Datei\" und speichere sie in der Notes-Bibliothek.",
-        "open_file": "MusicXML oder MIDI öffnen",
+        "open_file": "MusicXML, MIDI oder Guitar Pro öffnen",
         "file_hint": "Eine Datei von diesem Gerät; sie wird nicht gespeichert.",
         "loading": "Wird geladen …",
         "load_error": "Die Datei konnte nicht gelesen werden ({{error}}).",
