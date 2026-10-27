@@ -99,6 +99,11 @@ test('Media Endpoint & Streaming', async (t) => {
           audio: '/music/song.mp3',
           video: null,
           originalAudio: null,
+          folder: '/music',
+          karaoke: true,
+          folderScores: [],
+          recordings: [],
+          labels: {},
         },
       ]);
       try {

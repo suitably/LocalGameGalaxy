@@ -7,9 +7,10 @@ import { usdbRouter } from './routes/usdb';
 import { separatorRouter } from './routes/separator';
 import { configRouter } from './routes/config';
 import { playlistsRouter } from './routes/playlists';
-import { scoresRouter } from './routes/scores';
-import { getSongCache, scanSongs } from './services/scanner';
-import { migrateSongFolderScores } from './services/scoreMigration';
+import { songFilesRouter } from './routes/songFiles';
+import { notesMigrationRouter } from './routes/notesMigration';
+import { initialScan } from './services/scanner';
+import { migrateNotesPiecesOnce } from './services/notesMigration';
 
 export const melodiqPlugin: GalaxyPlugin = {
   id: 'melodiq',
@@ -43,6 +44,7 @@ export const melodiqPlugin: GalaxyPlugin = {
       '/api/playlists/*',
       '/api/browse',
       '/api/feedback',
+      '/api/notes/*',
     ];
 
     for (const p of melodiqAuthPaths) {
@@ -51,21 +53,20 @@ export const melodiqPlugin: GalaxyPlugin = {
 
     // Mount sub-routers
     app.route('/', songsRouter);
-    app.route('/', scoresRouter);
+    app.route('/', songFilesRouter);
+    app.route('/', notesMigrationRouter);
     app.route('/', mediaRouter);
     app.route('/', usdbRouter);
     app.route('/', separatorRouter);
     app.route('/', configRouter);
     app.route('/', playlistsRouter);
 
-    // Initial song library scan, then the one-time import of song-folder scores into Notes (Q18)
-    scanSongs()
-      .then(() => migrateSongFolderScores(getSongCache()))
+    // Initial song library scan, then the one-time move of the old Notes library into song
+    // folders (#568)
+    initialScan()
+      .then(() => migrateNotesPiecesOnce())
       .catch((e: unknown) =>
-        console.warn(
-          '[Notes] Song-folder score import failed:',
-          e instanceof Error ? e.message : e,
-        ),
+        console.warn('[Notes] Library migration failed:', e instanceof Error ? e.message : e),
       );
   },
 };

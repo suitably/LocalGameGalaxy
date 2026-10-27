@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { nudgeOffset } from './logic/tuning';
 import {
   applyBarMarksToMusicXml,
@@ -13,7 +13,7 @@ import { isCompanionEnabled, type CompanionSong } from '../../../lib/companion/s
 import type { CatalogScore } from './logic/scoreCatalog';
 import {
   loadKaraokeVocals,
-  loadNotesPieceScore,
+  loadSongScore,
   type RecordingSource,
   type ServerScoreLoad,
   type SongOrigin,
@@ -158,10 +158,9 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     [loadFromServer],
   );
 
-  /** Opens a score from the Notes library, with its linked song's mix when it has one. */
+  /** Opens a score from a song folder, with the song's mix when it has one. */
   const loadCatalogScore = useCallback(
-    (item: CatalogScore) =>
-      loadFromServer(() => loadNotesPieceScore(item.piece, item.score, item.song)),
+    (item: CatalogScore) => loadFromServer(() => loadSongScore(item.song, item.score)),
     [loadFromServer],
   );
 
@@ -211,33 +210,38 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     }
   }, [song, recording, replaceMarks]);
 
-  const stored = origin?.kind === 'notes' ? origin : null;
+  // a karaoke `.txt` on stage is stored already; only a new recording of it can be saved
+  const stored = useMemo(() => {
+    if (origin?.kind === 'notes') return { songId: origin.songId, scoreFile: origin.scoreFile };
+    return origin?.kind === 'karaoke' ? { songId: origin.songId, scoreFile: null } : null;
+  }, [origin]);
 
-  /** Everything goes to the Notes library (Q18): the piece with what is missing, and the marks. */
+  /** Everything goes to the song folder (#568): the score if missing, a recording, the marks. */
   const saveToServer = useCallback(async () => {
     if (!song) return;
     const savingAs = generation.current;
     try {
       const result = await saveToNotesLibrary({
-        stored: stored && { pieceId: stored.pieceId, scoreFile: stored.scoreFile },
+        stored,
         title: song.title,
         artist: song.artist,
         scoreFile: openedFile.current,
         xml,
         recordingFile: recording?.file ?? null,
-        // marks for a linked song's mix name no recording of the piece
+        // marks for the song's mix name no recording
         recordingName: recording && !recording.file && !recording.songMix ? recording.name : null,
         marks,
         offsetSec: offset,
       });
       if (savingAs !== generation.current) return;
-      setOrigin({
-        kind: 'notes',
-        title: song.title,
-        pieceId: result.pieceId,
-        scoreFile: result.scoreFile,
-        songId: stored?.songId ?? null,
-      });
+      if (result.scoreFile) {
+        setOrigin({
+          kind: 'notes',
+          title: song.title,
+          songId: result.songId,
+          scoreFile: result.scoreFile,
+        });
+      }
       // the recording keeps playing from its object URL, but counts as stored now
       if (recording?.file && result.recordingName) {
         setRecording({ name: result.recordingName, url: recording.url, local: true });
@@ -248,7 +252,7 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     }
   }, [song, stored, xml, marks, offset, recording]);
 
-  // a stored piece only needs marks or a recording; anything else needs its MusicXML to upload
+  // a stored score only needs marks or a recording; anything else needs its MusicXML to upload
   const canSaveToServer = !!song && isCompanionEnabled() && (!!stored || !!xml);
 
   /** The score on stage as a file: the one opened, else its MusicXML. */
