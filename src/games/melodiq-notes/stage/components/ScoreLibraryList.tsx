@@ -21,13 +21,12 @@ import {
   scoreSearchUrl,
   type CompanionSong,
 } from '../../../../lib/companion/songScoresApi';
-import { deleteNotesPiece } from '../../../../lib/companion/notesLibraryApi';
+import { deleteLibrarySong } from '../../../../lib/companion/notesLibraryApi';
 import {
   filterCatalog,
   loadScoreCatalog,
   type CatalogEntry,
   type CatalogScore,
-  type ScoreCatalog,
 } from '../logic/scoreCatalog';
 
 const MAX_LISTED = 80;
@@ -39,15 +38,15 @@ interface ScoreLibraryListProps {
 }
 
 /**
- * The sheet-music library of Melodiq Notes: the pieces of the Notes library (the only score
- * store, Q18). Pieces linked to a Melodiq song carry a badge and play with the song's mix; songs
- * with a karaoke `.txt` also offer their vocals (#566).
+ * The sheet-music library of Melodiq Notes: one entry per song folder, the only store (#568).
+ * Songs with a karaoke `.txt` carry a badge, play with their mix and also offer their vocals
+ * (#566); only songs without `.txt` can be deleted here (Melodiq songs are deleted in Melodiq).
  */
 export function ScoreLibraryList({ onPlay, onPlayKaraoke }: ScoreLibraryListProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
     t(`games.melodiq_notes.stage.${key}`, opts);
-  const [catalog, setCatalog] = useState<ScoreCatalog | null>(null);
+  const [catalog, setCatalog] = useState<CatalogEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [deleting, setDeleting] = useState<CatalogEntry | null>(null);
@@ -66,15 +65,15 @@ export function ScoreLibraryList({ onPlay, onPlayKaraoke }: ScoreLibraryListProp
   }, [enabled, reload]);
 
   const shown = useMemo(
-    () => filterCatalog(catalog?.entries ?? [], query).slice(0, MAX_LISTED),
+    () => filterCatalog(catalog ?? [], query).slice(0, MAX_LISTED),
     [catalog, query],
   );
 
   const remove = async (entry: CatalogEntry) => {
     setDeleting(null);
-    if (!entry.piece) return;
+    if (entry.karaoke) return;
     try {
-      await deleteNotesPiece(entry.piece.id);
+      await deleteLibrarySong(entry.song.id);
       reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -82,16 +81,9 @@ export function ScoreLibraryList({ onPlay, onPlayKaraoke }: ScoreLibraryListProp
   };
 
   if (!enabled) return <Alert severity="info">{k('server_off')}</Alert>;
-  const errors = catalog?.errors ?? {};
   return (
     <Stack spacing={1.5}>
       {error && <ErrorState dense message={k('server_error', { error })} onRetry={reload} />}
-      {errors.notes && (
-        <Alert severity="warning">{k('notes_server_error', { error: errors.notes })}</Alert>
-      )}
-      {errors.songs && (
-        <Alert severity="warning">{k('server_error', { error: errors.songs })}</Alert>
-      )}
       <TextField
         size="small"
         label={k('search')}
@@ -108,7 +100,7 @@ export function ScoreLibraryList({ onPlay, onPlayKaraoke }: ScoreLibraryListProp
         {k('find_scores')}
       </Link>
       {!catalog && !error && <ListSkeleton rows={3} />}
-      {catalog?.entries.length === 0 && <EmptyState dense message={k('notes_empty')} />}
+      {catalog?.length === 0 && <EmptyState dense message={k('notes_empty')} />}
       {shown.map((entry) => (
         <Box key={entry.key} sx={{ border: 1, borderColor: 'divider', borderRadius: 2, p: 1.25 }}>
           <Stack direction="row" alignItems="center" spacing={1}>
@@ -118,7 +110,7 @@ export function ScoreLibraryList({ onPlay, onPlayKaraoke }: ScoreLibraryListProp
             <Typography variant="caption" color="text.secondary">
               {k('notes_recordings', { count: entry.recordings })}
             </Typography>
-            {entry.piece?.songId && (
+            {entry.song.karaoke !== false && (
               <Chip
                 size="small"
                 variant="outlined"
@@ -126,7 +118,7 @@ export function ScoreLibraryList({ onPlay, onPlayKaraoke }: ScoreLibraryListProp
                 title={k('source_song_hint')}
               />
             )}
-            {entry.piece && (
+            {!entry.karaoke && entry.song.karaoke === false && (
               <IconButton
                 size="small"
                 aria-label={k('notes_delete')}
@@ -151,7 +143,7 @@ export function ScoreLibraryList({ onPlay, onPlayKaraoke }: ScoreLibraryListProp
             )}
             {entry.scores.map((item) => (
               <Button key={item.file} size="small" variant="contained" onClick={() => onPlay(item)}>
-                {k('play_score')}: {item.file}
+                {k('play_score')}: {item.label ?? item.file}
               </Button>
             ))}
             {entry.karaoke && (
@@ -170,10 +162,7 @@ export function ScoreLibraryList({ onPlay, onPlayKaraoke }: ScoreLibraryListProp
       <ConfirmDialog
         open={!!deleting}
         title={k('notes_delete')}
-        message={
-          k('notes_delete_confirm', { title: deleting?.title ?? '' }) +
-          (deleting?.piece?.songId ? ` ${k('notes_delete_song_kept')}` : '')
-        }
+        message={k('notes_delete_confirm', { title: deleting?.title ?? '' })}
         confirmText={t('common.delete')}
         confirmColor="error"
         onConfirm={() => deleting && void remove(deleting)}
