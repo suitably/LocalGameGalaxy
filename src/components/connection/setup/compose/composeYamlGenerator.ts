@@ -122,7 +122,14 @@ function companionVolumes(options: ComposeGeneratorOptions): string[] {
       ? [mount(p.tabletop, d.tabletop, '/app/tabletop', 'Tabletop: games, saved ones in saved/')]
       : []),
     ...(options.notes
-      ? [mount(p.notes, d.notes, '/app/notes', 'Melodiq Notes: scores, recordings, bar marks')]
+      ? [
+          mount(
+            p.notes,
+            d.notes,
+            '/app/notes',
+            'old Melodiq Notes library (moved into song folders)',
+          ),
+        ]
       : []),
   ];
 }

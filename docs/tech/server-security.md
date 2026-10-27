@@ -8,8 +8,8 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-25
-  method: 'read server/src/core/app.ts, server/src/plugins/melodiq/{index.ts,middleware/auth.ts}, server/src/plugins/tabletop/routes/*.ts, server/src/plugins/notes/**/*.ts, server/src/plugins/relay/index.ts, server/src/utils/helpers.ts, server/src/core/pairing.ts'
+  at: 2026-10-27
+  method: 'read server/src/core/app.ts, server/src/plugins/melodiq/{index.ts,middleware/auth.ts,routes/songFiles.ts,routes/notesMigration.ts}, server/src/plugins/tabletop/routes/*.ts, server/src/plugins/notes/index.ts, server/src/plugins/relay/index.ts, server/src/utils/helpers.ts, server/src/core/pairing.ts'
 sources:
   - 'server/src/plugins/melodiq/middleware/auth.ts'
   - 'server/src/core/app.ts'
@@ -71,9 +71,9 @@ The token is stored in `config.json` and loaded at server startup via `server/sr
 **Token validation middleware** (`server/src/core/auth.ts`, re-exported by `server/src/plugins/melodiq/middleware/auth.ts`):
 
 - Reads `Authorization: Bearer <token>` or the `?token=` query parameter.
-- Applied by the `melodiq` plugin to: `/api/songs*`, `/api/status`, `/api/auth/me`, `/media`, `/api/usdb/*`, `/api/youtube/*`, `/api/separator/*`, `/api/config/*`, `/api/playlists*`, `/api/browse`, `/api/feedback` (`server/src/plugins/melodiq/index.ts`). Public: `/health`, `/api/info`.
+- Applied by the `melodiq` plugin to: `/api/songs*`, `/api/status`, `/api/auth/me`, `/media`, `/api/usdb/*`, `/api/youtube/*`, `/api/separator/*`, `/api/config/*`, `/api/playlists*`, `/api/browse`, `/api/feedback`, `/api/notes/*` (`server/src/plugins/melodiq/index.ts`). Public: `/health`, `/api/info`.
 - Applied by the `tabletop` plugin to `/api/tabletop/*` and `/tabletop/media`; `/api/tabletop/config/*` additionally needs `requireMasterToken`. `/tabletop/proxy-image` checks its token itself. Saving games needs any valid token; only games under `saved/` can be overwritten, and deleting one needs `allowSongDeletion` (or the master token). Named table states (`/api/tabletop/saves`) can be listed and loaded with any token; storing one needs `allowTabletopSaves`, and only the key that stored it may overwrite or delete it (the master token may also delete). `PUT/DELETE /api/tabletop/games/:id/template` needs `allowTabletopTemplates`. Checks use `hasPermission` from `server/src/core/auth.ts`.
-- Applied by the `notes` plugin to `/api/notes/*` and `/notes/media/*`. Files are addressed by piece id and a file name the listing found, never by path. Deleting files or pieces needs `allowSongDeletion` (or the master token).
+- Song-folder files (#568, `routes/songFiles.ts`) are addressed by song id and a file name the scan found, never by path, and the song folder must lie in a library directory. Creating songs, uploading scores or recordings, labels and marks need any valid token; deleting a file or a song needs `allowSongDeletion` (or the master token). The old Notes library migration (`/api/notes/migration`) can be read with any token; running it or removing the originals (`run`, `confirm`) needs `requireMasterToken`. `/api/notes/pieces*` and `/notes/media/*` no longer exist.
 - Matches against the master `config.token` (which grants full permissions) or a valid API key in `config.apiKeys`.
 - Returns `401 Unauthorized` if missing or mismatched.
 - Management routes in `routes/config.ts` additionally use `requireMasterToken` (master token or API key with `allowManagement: true`; else `403`). Song deletion checks `allowSongDeletion`.

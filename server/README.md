@@ -43,7 +43,7 @@ All settings can be configured via environment variables in `docker-compose.yml`
 | `PLUGINS`         | `relay,melodiq,tabletop,notes` | Plugins to load; drop the ones you do not need                                                    |
 | `MUSIC_DIR`       | `/app/music`                   | Root folder containing UltraStar karaoke songs                                                    |
 | `TABLETOP_DIR`    | `/app/tabletop`                | Tabletop game library; games saved from the app go to `saved/` inside it                          |
-| `NOTES_DIR`       | `/app/notes`                   | Melodiq Notes library: one folder per piece with scores, recordings and bar marks                 |
+| `NOTES_DIR`       | `/app/notes`                   | Old Melodiq Notes library, moved into song folders once on startup (#568)                         |
 | `CONFIG_PATH`     | `/app/config/config.json`      | Persistent configuration file path                                                                |
 | `SECURITY_TOKEN`  | _(auto-generated)_             | Master authentication bearer token. Generated automatically and stored in `config.json` if empty. |
 | `ENABLE_TUNNEL`   | `false`                        | Set to `true` to auto-launch Cloudflare Quick Tunnel on container startup                         |
@@ -60,7 +60,7 @@ volumes:
   - ./config:/app/config # Persistent configuration (config.json)
   - ./models:/app/models # Downloaded ONNX and PyTorch/Whisper models
   - ./tabletop:/app/tabletop # Tabletop games (saved games in tabletop/saved/)
-  - ./notes:/app/notes # Melodiq Notes pieces (scores, recordings, marks)
+  - ./notes:/app/notes # old Melodiq Notes library (migration source)
 ```
 
 The app's **Settings → Server → Docker Compose Generator** builds this file for you: pick the games, folders, ports and token, download it and run `docker compose up -d`.
@@ -79,21 +79,24 @@ The app's **Settings → Server → Docker Compose Generator** builds this file 
 │   │   ├── Artist - Title (Instrumental).mp3
 │   │   ├── Artist - Title (Vocals).mp3
 │   │   ├── cover.jpg
-│   │   └── video.mp4
+│   │   ├── video.mp4
+│   │   ├── Lead.mxl                       # score for Melodiq Notes (MusicXML/MIDI)
+│   │   ├── Lead.mxl.marks.json            # bar marks (score ↔ recording)
+│   │   ├── Take 1.webm                    # Notes recording
+│   │   └── song.json                      # title, artist, score labels
+│   ├── Debussy - Clair de Lune/           # a song without .txt (sheet music only)
+│   │   ├── song.json                      # stable id, title, artist
+│   │   └── Clair de Lune.mxl
 ├── config/                   # [VOLUME] Persistent server settings
 │   └── config.json
 ├── models/                   # [VOLUME] Cached ML models
 ├── tabletop/                 # [VOLUME] Tabletop games
 │   └── saved/My Game/game.json        # saved from the app
-└── notes/                    # [VOLUME] Melodiq Notes library
-    └── Debussy - Clair de Lune/
-        ├── piece.json                     # title, artist, optional songId (Melodiq song whose mix it plays with)
-        ├── Clair de Lune.mxl              # score (MusicXML/MIDI)
-        ├── Clair de Lune.mxl.marks.json   # bar marks (score ↔ recording)
-        └── Take 1.mp3                     # recording
+└── notes/                    # [VOLUME] old Melodiq Notes library (migration source)
+    └── .song-folders-migrated.json        # which pieces were moved into song folders
 ```
 
-The Notes library is the only sheet-music store. On startup the server imports scores it finds in song folders once into pieces linked to the song (`songId`), leaving the originals in place; `notes/.song-scores-imported.json` records what was imported. `POST`/`DELETE /api/songs/:id/scores` are deprecated and answer `410` ([song pipeline §4](../docs/tech/song-pipeline.md#4-sheet-music-for-melodiq-notes)).
+The song folder is the only store for Melodiq and Melodiq Notes (#568). On startup the server moves the old Notes library (`notes/`, one folder per piece with `piece.json`) into song folders once: linked pieces into their song's folder, others into new song folders without `.txt`. The originals stay until `POST /api/notes/migration/confirm`; `GET /api/notes/migration` shows the state ([song pipeline §4](../docs/tech/song-pipeline.md#4-sheet-music-for-melodiq-notes)).
 
 ---
 

@@ -2,6 +2,13 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-27 — Song folder as the only store for Melodiq and Melodiq Notes, #568 (claude-code)
+
+- `docs/tech/song-pipeline.md` §1, §3–§5: Q18 description replaced — scanner (songs with or without `.txt`), `song.json`, song-folder routes (`routes/songFiles.ts`), migration of the old Notes library (`services/notesMigration.ts`), Notes library one entry per song, YouTube import into the song folder.
+- `docs/tech/architecture.md` (plugins), `docs/tech/server-security.md` (auth of the new routes, `/api/notes/*` now under the melodiq plugin), `server/README.md` (layout, `NOTES_DIR`).
+- `docs/open-questions.md`: Q18 reversed by #568 (Resolved 2026-10-27).
+- Outside `docs/`: server `services/songFolder.ts`, `scanner.ts` (`readSongFolder`, `refreshSongFolder`, `initialScan`), `routes/songFiles.ts` replaces `routes/scores.ts`, `services/notesMigration.ts` + `routes/notesMigration.ts` replace `services/scoreMigration.ts`, `notes` plugin reduced to a stub, `Song`/`ClientSong` types, `songFolderTarget` for songs without `.txt`, `extractYouTubeId` moved to `ultrastarTxt.ts`; server tests `song_folders.test.js`, `notes_migration.test.js` replace `notes_plugin.test.js`, `song_scores.test.js`. Client `songScoresApi.ts`, `notesLibraryApi.ts`, `scoreCatalog.ts`, `notesLibrarySync.ts`, `youtubeImport.ts`, `serverScoreLoad.ts`, `useStageSong.ts`, `useYouTubeImport.ts`, `ScoreLibraryList.tsx`, locales, tests.
+
 ## 2026-10-27 — One model for Melodiq and Melodiq Notes, #566 slice 1–2 (claude-code)
 
 - `docs/reports/2026-10-27-maintainer-decisions.md`: direction "one model, not one file format" (#565, new #604).
