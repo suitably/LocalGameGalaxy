@@ -30,7 +30,7 @@ Do **not** copy types from here into code — import them from the source file. 
 | Player lobby              | `src/modules/player-management/types.ts`  | `LobbyPlayerItem`, `UseLobbyPlayersOptions`, `UseLobbyPlayersResult`, `PlayerManagerCardProps`                           |
 | MQTT sync                 | `src/modules/sync/MqttMailboxService.ts`  | `MqttEnvelope<T>`, `MqttMailboxOptions`, `MessageListener<T>`                                                            |
 | Multi-channel sync        | `src/modules/sync/useMultiChannelSync.ts` | `UseMultiChannelSyncOptions<T>`, `UseMultiChannelSyncReturn<T>`                                                          |
-| Melodiq song parsing      | `src/games/melodiq/parser.ts`             | `Note`, `SongTrack`, `ParsedSong`                                                                                        |
+| UltraStar song parsing    | `src/modules/music-score/ultrastar.ts`    | `UltraStarNote`, `UltraStarTrack`, `UltraStarSong`                                                                       |
 | Melodiq library / DB      | `src/games/melodiq/db.ts`                 | `Song`, `SongMeta`, `Score`, `Playlist`, `StoredDirectoryHandle`                                                         |
 | Melodiq runtime / network | `src/games/melodiq/types.ts`              | `UserProfile`, `ActivePlayer`, `PassiveGameState`, `MelodiqParticipant`, `MelodiqNetworkMessage`, Presentation API shims |
 | Tabletop                  | `src/games/tabletop/logic/types.ts`       | `WidgetType`, `TabletopWidget` (union of `CardWidget`, `DeckWidget`, …), `TabletopGameDefinition`, `HiddenZone`          |
@@ -83,8 +83,8 @@ GuessArt's payload type, for example, is `GameSnapshot { game: GuessArtGameRecor
 ### UltraStar song
 
 ```typescript
-// src/games/melodiq/parser.ts
-export interface Note {
+// src/modules/music-score/ultrastar.ts (Melodiq imports it via src/games/melodiq/parser.ts as Note / SongTrack / ParsedSong)
+export interface UltraStarNote {
   type: string; // ':' normal, '*' golden, 'F' freestyle, 'R' rap, 'G' golden rap, '-' line break
   start: number; // beats after GAP
   duration: number; // beats

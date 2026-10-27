@@ -698,6 +698,8 @@
         "loading": "Wird geladen …",
         "load_error": "Die Datei konnte nicht gelesen werden ({{error}}).",
         "play_score": "Spielen",
+        "play_karaoke": "Gesang (Karaoke)",
+        "play_karaoke_hint": "Spielt die Gesangsstimme aus der Karaoke-Datei des Songs mit seinem Mix; keine Synchronisierung nötig.",
         "audio_title": "Aufnahme",
         "audio_none": "Keine Aufnahme: Die Begleitung kommt vom Synthesizer.",
         "audio_add": "Aufnahme wählen",

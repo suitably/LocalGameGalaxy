@@ -51,7 +51,10 @@ export function SongPicker({ open, onClose, state }: SongPickerProps) {
       </Tabs>
       <DialogContent sx={{ minHeight: 320 }}>
         {tab === 'notes' && (
-          <ScoreLibraryList onPlay={(item) => closeIfLoaded(state.loadCatalogScore(item))} />
+          <ScoreLibraryList
+            onPlay={(item) => closeIfLoaded(state.loadCatalogScore(item))}
+            onPlayKaraoke={(song) => closeIfLoaded(state.loadKaraoke(song))}
+          />
         )}
         {tab === 'library' && (
           <LibraryTab

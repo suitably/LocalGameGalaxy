@@ -698,6 +698,8 @@
         "loading": "Loading …",
         "load_error": "The file could not be read ({{error}}).",
         "play_score": "Play",
+        "play_karaoke": "Vocals (karaoke)",
+        "play_karaoke_hint": "Plays the singing line of the song's karaoke file with its mix; no alignment needed.",
         "audio_title": "Recording",
         "audio_none": "No recording: the backing comes from the synthesiser.",
         "audio_add": "Choose recording",

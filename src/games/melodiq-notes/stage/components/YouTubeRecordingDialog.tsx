@@ -42,7 +42,8 @@ export function YouTubeRecordingDialog({
 
   useEffect(() => refreshSongs(), [refreshSongs]);
 
-  const linked = state.origin?.kind === 'notes' ? state.origin.songId : null;
+  const origin = state.origin;
+  const linked = origin?.kind === 'notes' || origin?.kind === 'karaoke' ? origin.songId : null;
   const plan = useMemo(
     () => (songs ? planImport(matchSong(songs, title, artist, linked)) : null),
     [songs, title, artist, linked],

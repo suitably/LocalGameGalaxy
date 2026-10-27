@@ -9,9 +9,10 @@ import {
   pinBar,
   type ScoreSong,
 } from '../../../modules/music-score';
-import { isCompanionEnabled } from '../../../lib/companion/songScoresApi';
+import { isCompanionEnabled, type CompanionSong } from '../../../lib/companion/songScoresApi';
 import type { CatalogScore } from './logic/scoreCatalog';
 import {
+  loadKaraokeVocals,
   loadNotesPieceScore,
   type RecordingSource,
   type ServerScoreLoad,
@@ -149,6 +150,12 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
       });
     },
     [run, show, replaceRecording, replaceMarks],
+  );
+
+  /** Opens a Melodiq song's karaoke vocals with the song's mix and computed bar marks (#566). */
+  const loadKaraoke = useCallback(
+    (karaokeSong: CompanionSong) => loadFromServer(() => loadKaraokeVocals(karaokeSong)),
+    [loadFromServer],
   );
 
   /** Opens a score from the Notes library, with its linked song's mix when it has one. */
@@ -298,6 +305,7 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     loadExample,
     loadFile,
     loadCatalogScore,
+    loadKaraoke,
     setRecordingFile,
     alignNow,
     saveToServer,

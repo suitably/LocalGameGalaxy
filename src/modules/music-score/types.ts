@@ -16,7 +16,12 @@ export interface ScoreNote {
   drum?: DrumVoice;
   /** Drum parts: sticking (R/L) when the score has it. */
   hand?: Hand;
+  /** Vocal notes from an UltraStar `.txt`: its scoring kind (MusicXML has none of these). */
+  ultrastar?: UltraStarKind;
 }
+
+/** UltraStar note kinds besides a normal note (`:`): `*` golden, `F` freestyle, `R` rap, `G` golden rap. */
+export type UltraStarKind = 'golden' | 'freestyle' | 'rap' | 'goldenRap';
 
 export interface ScorePart {
   id: string;
@@ -26,6 +31,8 @@ export interface ScorePart {
   /** General MIDI program (0-based) when the source names one. */
   program: number | null;
   guess: InstrumentKind;
+  /** Vocal parts: beats where a lyric line ends (UltraStar `-` line breaks), in order. */
+  phraseBreaks?: number[];
 }
 
 export interface TempoEvent {
