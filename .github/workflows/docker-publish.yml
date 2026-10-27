@@ -87,14 +87,13 @@ jobs:
 
       # Docker Metadata for Base Image
       # Image names are fixed to the nexumia namespace that compose files and docs pull from.
-      # nexumia/melodiq-server is a deprecated alias kept for existing users; remove it once no one pulls it.
+      # nexumia/melodiq-server (deprecated alias) is no longer published from 1.2.0 (Q17).
       - name: Extract Docker metadata (Base Image)
         id: meta_base
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: |
             nexumia/nexumia-server
-            nexumia/melodiq-server
           flavor: |
             latest=auto
           tags: |
@@ -123,7 +122,6 @@ jobs:
         with:
           images: |
             nexumia/nexumia-server
-            nexumia/melodiq-server
           flavor: |
             suffix=-full
             latest=false

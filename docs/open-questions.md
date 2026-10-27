@@ -37,17 +37,14 @@ ADR-0004 says "Demucs via PyTorch". `server/src/plugins/melodiq/services/separat
 
 **[user]** VirtualTabletop games rely on routines (14 580 in its library); our button routines express about 1.2 % of them, so imported buttons do nothing. Options: translate the trivial subset and list the rest in an import report, or build a sandboxed interpreter for VTT's routine language (the scripting-scope question from the [2026-10-21 plan](reports/2026-10-21-tabletop-vtt-plan.md), slice 9).
 
-## Q16 — Tabletop hidden-zone leaks outside the board
+## Resolved 2026-10-27
 
-Since #539 board widgets inside a non-revealed hidden zone render as placeholders for other seats, but `BoardDragOverlay`, `DockDragOverlay`, `FlyingCardsLayer` and select-all / shift-multiselect (`SelectionHighlightLayer`, `WidgetContextMenu`) do not check zones; sync still sends full widget data to every device. A device without a selected seat falls back to the first seat as viewer. Decide whether to close these gaps in a follow-up.
+Decisions in [2026-10-27 maintainer decisions](reports/2026-10-27-maintainer-decisions.md); implementation follows in each issue.
 
-## Q17 — Docker Hub namespace of the server and signaling images (#530)
-
-Compose files, README and [deployment](tech/deployment.md) pull `nexumia/galaxy-signaling`, `nexumia/nexumia-server` and the deprecated `nexumia/melodiq-server`. Until #530 the workflow pushed to `${DOCKERHUB_USERNAME}/…`, so the pulled name only existed if that secret was `nexumia`. The workflow now pushes to the literal `nexumia` namespace. **(user)** Confirm that the Docker Hub account behind `DOCKERHUB_USERNAME` owns the `nexumia` namespace, and decide when to stop publishing `melodiq-server`.
-
-## Q19 — Local default template for tabletop games (#538)
-
-Since #538 a player can store the running table as a server game's default template (`PUT /api/tabletop/games/:id/template`, permission `allowTabletopTemplates`). On the device there is no such option: writing the table into `custom_games` under the game's id would shadow the starter JSON and the server game forever, because `TabletopGame` loads IndexedDB first. **(user)** Decide whether device-only games (and starter games) should get a local "save as default template", and how to reset it.
+- Q16 tabletop hidden-zone leaks (#551) → close the UI leaks **and** redact hidden widgets per seat on the host.
+- Q17 Docker Hub namespace → the account owns `nexumia`; `nexumia/melodiq-server` is no longer published from 1.2.0 (`docker-publish.yml`).
+- Q19 local tabletop templates (#547) → a separate store keyed by game id, with "reset to original".
+- Q18 (resolved 2026-10-26) will be reversed by #568: the song folder becomes the only store, and `song.json` replaces `piece.json`.
 
 ## Resolved 2026-10-26
 

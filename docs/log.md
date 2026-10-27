@@ -2,6 +2,12 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-27 — Maintainer decisions recorded (claude-code)
+
+- New `docs/reports/2026-10-27-maintainer-decisions.md` (listed in `docs/reports/index.md`): decisions for #547, #549, #551, #553, #565/#568, #571, #587, #590, #592, #593, #595 and Q17.
+- `docs/open-questions.md`: Q16, Q17, Q19 resolved; note that #568 will reverse Q18. `docs/tech/deployment.md`: `melodiq-server` alias ends at 1.2.0.
+- Outside `docs/`: `docker-publish.yml` no longer pushes `nexumia/melodiq-server` (Q17).
+
 ## 2026-10-27 — Clear open issues implemented (claude-code)
 
 - `docs/workflows/ci-cd-pipelines.md`: new "Runner and tool pinning" (#589); `docs/tech/deployment.md`: arm64 macOS runner is `macos-15`.
