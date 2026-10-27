@@ -8,7 +8,9 @@ import { separatorRouter } from './routes/separator';
 import { configRouter } from './routes/config';
 import { playlistsRouter } from './routes/playlists';
 import { songFilesRouter } from './routes/songFiles';
+import { notesMigrationRouter } from './routes/notesMigration';
 import { initialScan } from './services/scanner';
+import { migrateNotesPiecesOnce } from './services/notesMigration';
 
 export const melodiqPlugin: GalaxyPlugin = {
   id: 'melodiq',
@@ -42,6 +44,7 @@ export const melodiqPlugin: GalaxyPlugin = {
       '/api/playlists/*',
       '/api/browse',
       '/api/feedback',
+      '/api/notes/*',
     ];
 
     for (const p of melodiqAuthPaths) {
@@ -51,15 +54,19 @@ export const melodiqPlugin: GalaxyPlugin = {
     // Mount sub-routers
     app.route('/', songsRouter);
     app.route('/', songFilesRouter);
+    app.route('/', notesMigrationRouter);
     app.route('/', mediaRouter);
     app.route('/', usdbRouter);
     app.route('/', separatorRouter);
     app.route('/', configRouter);
     app.route('/', playlistsRouter);
 
-    // Initial song library scan (the notes plugin waits for it to migrate its old library)
-    initialScan().catch((e: unknown) =>
-      console.warn('[Scanner] Initial scan failed:', e instanceof Error ? e.message : e),
-    );
+    // Initial song library scan, then the one-time move of the old Notes library into song
+    // folders (#568)
+    initialScan()
+      .then(() => migrateNotesPiecesOnce())
+      .catch((e: unknown) =>
+        console.warn('[Notes] Library migration failed:', e instanceof Error ? e.message : e),
+      );
   },
 };
