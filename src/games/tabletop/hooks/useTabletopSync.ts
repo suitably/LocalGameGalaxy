@@ -136,7 +136,7 @@ export function useTabletopSync({
           break;
       }
     },
-    [senderId, isHost, dispatch, onReturnToLobby, enqueue, hands, seat],
+    [senderId, isHost, roomId, dispatch, onReturnToLobby, enqueue, hands, seat],
   );
 
   const { publish } = useMultiChannelSync<TabletopSyncEnvelope>({
