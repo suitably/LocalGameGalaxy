@@ -3,6 +3,6 @@
   "private": true,
   "description": "Single source of the wrangler version the workflows deploy with (read by ci.yml and deploy-push-relay.yml, updated by Dependabot). Nothing installs it.",
   "devDependencies": {
-    "wrangler": "4.151.3"
+    "wrangler": "4.152.0"
   }
 }
