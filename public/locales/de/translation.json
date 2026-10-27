@@ -683,6 +683,7 @@
         "input_midi": "MIDI",
         "input_mic": "Mikrofon",
         "midi_none": "Kein MIDI-Gerät gefunden",
+        "midi_lost": "„{{name}}“ wurde getrennt. Wieder eingesteckt, aber es kommen keine Noten an? Starte den Browser neu (Firefox unter Linux erkennt ein neu eingestecktes MIDI-Gerät nicht).",
         "song_pick": "Song wählen",
         "tab_examples": "Beispiele",
         "tab_file": "Datei",

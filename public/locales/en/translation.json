@@ -683,6 +683,7 @@
         "input_midi": "MIDI",
         "input_mic": "Microphone",
         "midi_none": "No MIDI device found",
+        "midi_lost": "\"{{name}}\" was disconnected. Plugged it back in and no notes arrive? Restart the browser (Firefox on Linux does not pick up a replugged MIDI device).",
         "song_pick": "Choose song",
         "tab_examples": "Examples",
         "tab_file": "File",

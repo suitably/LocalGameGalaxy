@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { Box, Button, Divider, ListItemIcon, ListItemText, Menu, MenuItem } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  Divider,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+} from '@mui/material';
 import CheckIcon from '@mui/icons-material/CheckRounded';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
 import KeyboardIcon from '@mui/icons-material/KeyboardRounded';
@@ -21,6 +30,8 @@ interface InputMenuProps {
   source: StageInputSource;
   midiCount: number;
   midiName: string | null;
+  /** An instrument that disappeared and has sent nothing since. */
+  midiLost: string | null;
   onChange: (source: StageInputSource) => void;
   /** Plays the calibration clicks; resolves with their times. */
   schedule: () => Promise<number[] | null>;
@@ -32,6 +43,7 @@ export function InputMenu({
   source,
   midiCount,
   midiName,
+  midiLost,
   onChange,
   schedule,
 }: InputMenuProps) {
@@ -93,6 +105,11 @@ export function InputMenu({
                 </MenuItem>
               );
             })}
+            {midiLost && (
+              <Alert severity="warning" sx={{ mx: 1, my: 0.5, maxWidth: 320 }}>
+                {k('midi_lost', { name: midiLost })}
+              </Alert>
+            )}
             <Divider />
             <MenuItem
               onClick={() => {

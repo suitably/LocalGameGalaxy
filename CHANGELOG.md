@@ -177,6 +177,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Melodiq Notes: replugged MIDI instrument** (#599): when an instrument disconnects, the input menu says so and, until it sends notes again, suggests restarting the browser. Firefox on Linux lists a replugged device again but delivers none of its notes until it restarts.
 - **Party spectators** (#550): spectators no longer appear as players in Knister and Gartic Phone rounds. On the tabletop, the host decides from its own party roster who may play, so a phone cannot leave the spectator role by omitting its flag.
 - **Melodiq: duet part on the phone** (#545): the phone shows the part its singer really has, also when the host switched it; the picker appears only for phones the host has a singer for, and the phone no longer parses the song a second time for it. The "Session in progress" prompt on phones is translated (de/en).
 - **Share links** (#588): Wordle and Sudoku results link to https://games.nexumia.de/games/… instead of the foreign `localgamegalaxy.app/#/…`; the Sudoku share text is translated (de/en) instead of always German.

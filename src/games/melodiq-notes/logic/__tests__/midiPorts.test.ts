@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isVirtualMidiPort, midiInstrument, pickMidiInput } from '../midiPorts';
+import { isVirtualMidiPort, midiInstrument, pickMidiInput, lostMidiInstrument } from '../midiPorts';
 
 const through = { id: 'through', name: 'Midi Through Port-0', state: 'connected' };
 const drums = { id: 'td11', name: 'TD-11 MIDI 1', state: 'connected' };
@@ -46,5 +46,15 @@ describe('midiInstrument', () => {
     expect(midiInstrument([through], 'through')).toBeNull();
     expect(midiInstrument([{ ...piano, state: 'disconnected' }], 'piano')).toBeNull();
     expect(midiInstrument([piano], null)).toBeNull();
+  });
+});
+
+describe('lostMidiInstrument (#599)', () => {
+  it('remembers an instrument that went away', () => {
+    expect(lostMidiInstrument(null, 'TD-11', null)).toBe('TD-11');
+    // listed again but silent: the hint stays (a note clears it in useStageInput)
+    expect(lostMidiInstrument('TD-11', null, 'TD-11')).toBe('TD-11');
+    expect(lostMidiInstrument(null, null, 'TD-11')).toBeNull();
+    expect(lostMidiInstrument(null, 'TD-11', 'TD-11')).toBeNull();
   });
 });
