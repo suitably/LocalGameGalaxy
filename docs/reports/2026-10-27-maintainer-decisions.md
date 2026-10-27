@@ -32,3 +32,13 @@ Implementing agents: take these as settled. Paste the matching lines into the "D
 | #549 Wordle dictionary       | Hunspell-derived lists: German from igerman98 (GPL, compatible with AGPL), English from SCOWL. The 5-letter words are extracted at build time and loaded as a lazy, offline chunk.                                                                                                                                                                 |
 | #565 / #568 one song folder  | (1) The song folder becomes the only store; this reverses Q18. (2) A song without a `.txt` is identified by an id stored in `song.json`. (3) `/api/notes/pieces…` and the deprecated `/api/songs/:id/scores` routes are replaced right away; clients switch in the same PR. (4) Notes' own recordings live in the song folder as additional audio. |
 | Q17 Docker Hub               | The account behind `DOCKERHUB_USERNAME` owns the `nexumia` namespace. Stop publishing `nexumia/melodiq-server` with 1.2.0.                                                                                                                                                                                                                         |
+
+## Melodiq and Melodiq Notes: one model, not one file format
+
+Follow-up answer on #565:
+
+- One recording for both games: the song folder holds the mix, the `.txt` and the scores (#568). A `.txt` needs no alignment, because `#GAP` + `#BPM` give the bar marks directly.
+- A `.txt` is a vocal part in Notes (#566). `ScoreNote` gains an optional UltraStar note kind (golden / freestyle / rap / golden rap) and parts gain phrase breaks, so nothing is lost.
+- MusicXML vocal lines reach Melodiq (#567). Besides the export, a song without a `.txt` sings from the score's vocal part, timed by the bar marks.
+- No `.txt` → `.mxl` conversion on disk: it would lose data and drift from the source. MusicXML and `.txt` are export formats, generated on demand.
+- Melodiq's gameplay moves from `ParsedSong` to `ScoreSong` in its own step (#604).

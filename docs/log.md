@@ -2,6 +2,12 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-27 — One model for Melodiq and Melodiq Notes, #566 slice 1–2 (claude-code)
+
+- `docs/reports/2026-10-27-maintainer-decisions.md`: direction "one model, not one file format" (#565, new #604).
+- `docs/tech/data-models.md`, `docs/tech/architecture.md` §3.2: the UltraStar parser lives in `modules/music-score` (`ultrastar.ts`), `ultraStarToScore` (`ultrastarScore.ts`).
+- Outside `docs/`: `src/games/melodiq/parser.ts` → `src/modules/music-score/ultrastar.ts` (Melodiq keeps a re-export shim), `ultrastarScore.ts` + tests, `ScoreNote.ultrastar`, `ScorePart.phraseBreaks`.
+
 ## 2026-10-27 — Maintainer decisions recorded (claude-code)
 
 - New `docs/reports/2026-10-27-maintainer-decisions.md` (listed in `docs/reports/index.md`): decisions for #547, #549, #551, #553, #565/#568, #571, #587, #590, #592, #593, #595 and Q17.

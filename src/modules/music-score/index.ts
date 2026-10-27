@@ -15,3 +15,5 @@ export * from './alignFeatures';
 export * from './anchors';
 export * from './onsetAlign';
 export * from './drumVoices';
+export * from './ultrastar';
+export * from './ultrastarScore';
