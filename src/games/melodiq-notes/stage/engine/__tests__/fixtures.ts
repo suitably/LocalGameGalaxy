@@ -1,6 +1,19 @@
 import type { ScoreSong } from '../../../../../modules/music-score';
 import type { StageEngine } from '../StageEngine';
-import type { StageSound } from '../types';
+import { vi } from 'vitest';
+import type { StageRecording, StageSound } from '../types';
+
+/** A recording that never plays by itself: tests read its `play` calls. */
+export const fakeRecording = (map: StageRecording['map']): StageRecording => ({
+  map,
+  duration: 30,
+  time: () => 0,
+  isPlaying: () => false,
+  play: vi.fn(),
+  pause: vi.fn(),
+  setRate: vi.fn(),
+  setVolume: vi.fn(),
+});
 
 /** 4 bars of 4/4 at 120 bpm (0.5 s per beat): piano melody on every beat, bass on every bar, drums. */
 export function song(): ScoreSong {
