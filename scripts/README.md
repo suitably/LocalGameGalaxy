@@ -46,6 +46,15 @@ Validates that architectural changes are synced with documentation and i18n file
   npm run check:docs
   ```
 
+### `check-audit.mjs`
+
+Production dependency audit (root, `server/`, `signaling/`): fails on high/critical advisories not accepted in `audit-allowlist.json` (reason + expiry). Blocking in `release.yml`, advisory in `ci.yml`. See [ci-cd-pipelines.md](../docs/workflows/ci-cd-pipelines.md#supply-chain-provenance-sbom-dependency-audit).
+
+- **Execution**:
+  ```bash
+  npm run check:security
+  ```
+
 ---
 
 ### `token-usage.mjs`

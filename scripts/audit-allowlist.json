@@ -1,0 +1,4 @@
+{
+  "$comment": "Accepted production advisories for scripts/check-audit.mjs. Entry: id (GHSA id or npm advisory number), optional package, reason, expires (YYYY-MM-DD). Rules: docs/workflows/ci-cd-pipelines.md (Dependency audit).",
+  "advisories": []
+}
