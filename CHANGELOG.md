@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Melodiq Notes plays karaoke songs** (#566): every Melodiq song with an UltraStar `.txt` appears in the Notes library. "Vocals (karaoke)" opens its singing line (both parts of a duet) as a vocal score that plays with the song's mix, with no alignment step, because the `.txt` is already timed to the mix. The UltraStar parser moved into the shared music-score module.
 - **Tabletop: shuffle animation** (#556): a shuffled deck briefly riffles its two halves, on every device at the table, so everyone sees that it was shuffled. It is skipped when the device asks for reduced motion.
 - **Melodiq Notes: e-drum kits switch to the drum view** (#601): before the song starts, the first hit from an e-drum kit (MIDI channel 10) switches the highlighted player to the drum highway, on the song's drum part if it has one. A part or view the player picked in the players panel is never changed. Players on their own device keep the part the stage gave them.
 - **Tabletop: stacking order polish** (#548): on iPhone and iPad a long press on a piece opens its menu (Bring to front …), Ctrl/Cmd+] / [ also reorder the piece selected in the editor, and the editor's "Keep layer when moved" stops a piece (e.g. a label) from jumping to the top when it is moved.

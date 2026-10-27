@@ -10,6 +10,7 @@ import {
   type NotesPiece,
   type NotesPieceScore,
 } from '../../../lib/companion/notesLibraryApi';
+import { parseUltraStarTxt, ultraStarToScore } from '../../../modules/music-score';
 import { readScoreFile, type LoadedScore } from './loadScore';
 
 export type SongOrigin =
@@ -22,7 +23,9 @@ export type SongOrigin =
       scoreFile: string;
       /** Melodiq song the piece is linked to (it plays with that song's mix). */
       songId: string | null;
-    };
+    }
+  /** The vocal part of a Melodiq song's karaoke `.txt` (#566). */
+  | { kind: 'karaoke'; title: string; songId: string };
 
 export interface RecordingSource {
   name: string;
@@ -99,5 +102,26 @@ export async function loadNotesPieceScore(
       songId: piece.songId ?? null,
     },
     ...pickRecording(piece, song, stored),
+  };
+}
+
+/**
+ * A Melodiq song's karaoke `.txt` as a vocal score with the song's mix. The `.txt` is timed to that
+ * mix, so its bar marks come from `#BPM` / `#GAP` and nothing has to be aligned (#566).
+ */
+export async function loadKaraokeVocals(song: CompanionSong): Promise<ServerScoreLoad> {
+  const parsed = parseUltraStarTxt(song.txtContent ?? '');
+  const { song: score, marks } = ultraStarToScore(parsed, `${song.artist} - ${song.title}.txt`);
+  score.title = song.title;
+  score.artist = song.artist;
+  if (score.parts.length === 0) throw new Error('The karaoke file has no notes.');
+  const mix = songRecording(song);
+  return {
+    loaded: { song: score, xml: null },
+    origin: { kind: 'karaoke', title: song.title, songId: song.id },
+    recording: mix
+      ? { name: song.title, url: companionUrl(mix), local: false, songMix: true }
+      : null,
+    marks: mix ? { marks, offsetSec: 0, audio: null } : null,
   };
 }

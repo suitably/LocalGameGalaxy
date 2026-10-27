@@ -1,4 +1,5 @@
 import {
+  hasKaraoke,
   listCompanionSongs,
   songRecording,
   type CompanionSong,
@@ -11,7 +12,9 @@ import {
 
 /**
  * The sheet-music library of Melodiq Notes: the pieces of the Notes library, the only score store
- * (Q18). A piece linked to a Melodiq song (`songId`) plays with that song's mix.
+ * (Q18). A piece linked to a Melodiq song (`songId`) plays with that song's mix. Melodiq songs with
+ * a karaoke `.txt` add their vocals (#566): on the piece linked to them, else as an entry of their
+ * own without a piece.
  */
 export interface CatalogScore {
   file: string;
@@ -22,14 +25,17 @@ export interface CatalogScore {
 }
 
 export interface CatalogEntry {
-  /** The piece id. */
+  /** The piece id, or `song:<id>` for a karaoke song without a piece. */
   key: string;
   title: string;
   artist: string;
-  piece: NotesPiece;
+  /** Null for a karaoke song no piece links. */
+  piece: NotesPiece | null;
   /** The linked Melodiq song, when the server still has it. */
   song: CompanionSong | null;
   scores: CatalogScore[];
+  /** The song whose karaoke `.txt` plays as a vocal part, when it has one. */
+  karaoke: CompanionSong | null;
   /** The piece's own recordings plus the linked song's mix. */
   recordings: number;
 }
@@ -47,23 +53,39 @@ export function normaliseCatalogText(text: string): string {
 export const catalogKey = (title: string, artist: string) =>
   `${normaliseCatalogText(artist)}\u0000${normaliseCatalogText(title)}`;
 
-/** One entry per Notes piece, sorted by artist and title; `songs` only resolve `songId`. */
+/** One entry per Notes piece plus one per karaoke song no piece links, by artist and title. */
 export function buildScoreCatalog(pieces: NotesPiece[], songs: CompanionSong[]): CatalogEntry[] {
   const songsById = new Map(songs.map((s) => [s.id, s]));
-  return pieces
-    .map((piece): CatalogEntry => {
-      const song = (piece.songId && songsById.get(piece.songId)) || null;
-      return {
-        key: piece.id,
-        title: piece.title,
-        artist: piece.artist,
-        piece,
-        song,
-        scores: piece.scores.map((score) => ({ file: score.file, piece, score, song })),
-        recordings: piece.recordings.length + (song && songRecording(song) ? 1 : 0),
-      };
-    })
-    .sort((a, b) => a.artist.localeCompare(b.artist) || a.title.localeCompare(b.title));
+  const linkedIds = new Set(pieces.map((p) => p.songId).filter(Boolean));
+  const mixCount = (song: CompanionSong | null) => (song && songRecording(song) ? 1 : 0);
+  const pieceEntries = pieces.map((piece): CatalogEntry => {
+    const song = (piece.songId && songsById.get(piece.songId)) || null;
+    return {
+      key: piece.id,
+      title: piece.title,
+      artist: piece.artist,
+      piece,
+      song,
+      scores: piece.scores.map((score) => ({ file: score.file, piece, score, song })),
+      karaoke: song && hasKaraoke(song) ? song : null,
+      recordings: piece.recordings.length + mixCount(song),
+    };
+  });
+  const karaokeEntries = songs
+    .filter((song) => hasKaraoke(song) && !linkedIds.has(song.id))
+    .map((song): CatalogEntry => ({
+      key: `song:${song.id}`,
+      title: song.title,
+      artist: song.artist,
+      piece: null,
+      song,
+      scores: [],
+      karaoke: song,
+      recordings: mixCount(song),
+    }));
+  return [...pieceEntries, ...karaokeEntries].sort(
+    (a, b) => a.artist.localeCompare(b.artist) || a.title.localeCompare(b.title),
+  );
 }
 
 /** Every word of the query must appear in artist or title. */
@@ -97,6 +119,7 @@ export async function loadScoreCatalog(api: CatalogApi = defaultApi): Promise<Sc
   const [pieces, songs] = await Promise.allSettled([api.listPieces(), api.listSongs()]);
   const errors: ScoreCatalog['errors'] = {};
   if (pieces.status === 'rejected') errors.notes = reason(pieces);
+  // a server without the Melodiq plugin has no song list: only warn when a piece needs it
   const linked = pieces.status === 'fulfilled' && pieces.value.some((p) => !!p.songId);
   if (songs.status === 'rejected' && linked) errors.songs = reason(songs);
   return {

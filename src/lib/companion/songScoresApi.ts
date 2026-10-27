@@ -18,6 +18,8 @@ export interface CompanionSong {
   audio: string | null;
   instrumentalAudio: string | null;
   cover: string | null;
+  /** The UltraStar `.txt` (karaoke lyrics and notes); Melodiq Notes shows it as a vocal part (#566). */
+  txtContent?: string;
 }
 
 export interface StoredBarMarks {
@@ -30,6 +32,9 @@ export interface StoredBarMarks {
 export const isCompanionEnabled = () => isHelperActive() && !!getHelperUrl();
 
 export const listCompanionSongs = () => request<CompanionSong[]>('/api/songs');
+
+/** Whether the song has karaoke notes Melodiq Notes can play as a vocal part. */
+export const hasKaraoke = (song: CompanionSong) => !!song.txtContent?.trim();
 
 /** The song's mixed recording (server-relative media URL), if it has one. */
 export const songRecording = (song: CompanionSong) => song.originalAudio ?? song.audio;

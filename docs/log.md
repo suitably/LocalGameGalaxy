@@ -7,6 +7,7 @@ Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)
 - `docs/reports/2026-10-27-maintainer-decisions.md`: direction "one model, not one file format" (#565, new #604).
 - `docs/tech/data-models.md`, `docs/tech/architecture.md` §3.2: the UltraStar parser lives in `modules/music-score` (`ultrastar.ts`), `ultraStarToScore` (`ultrastarScore.ts`).
 - Outside `docs/`: `src/games/melodiq/parser.ts` → `src/modules/music-score/ultrastar.ts` (Melodiq keeps a re-export shim), `ultrastarScore.ts` + tests, `ScoreNote.ultrastar`, `ScorePart.phraseBreaks`.
+- `docs/tech/song-pipeline.md` §4: karaoke vocals in Melodiq Notes. Outside `docs/`: `CompanionSong.txtContent` / `hasKaraoke`, `scoreCatalog.ts` (karaoke entries, `piece` may be null), `loadKaraokeVocals` + origin `karaoke`, `useStageSong.loadKaraoke`, `ScoreLibraryList` / `SongPicker`, locales, tests (#566 slice 3).
 
 ## 2026-10-27 — Maintainer decisions recorded (claude-code)
 

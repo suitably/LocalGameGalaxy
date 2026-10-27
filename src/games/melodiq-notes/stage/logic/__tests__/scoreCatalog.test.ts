@@ -72,6 +72,29 @@ describe('buildScoreCatalog', () => {
   });
 });
 
+describe('karaoke songs in the catalog (#566)', () => {
+  const karaoke = (
+    id: string,
+    title: string,
+    linkedMix: string | null = '/media?path=mix.mp3',
+  ) => ({
+    ...song(id, title, 'A', linkedMix),
+    txtContent: '#BPM:120\n: 0 4 0 la\nE',
+  });
+
+  it('adds the vocals to the linked piece and lists unlinked karaoke songs on their own', () => {
+    const entries = buildScoreCatalog(
+      [piece('p1', 'Linked', 'A', { songId: 's1' })],
+      [karaoke('s1', 'Linked'), karaoke('s2', 'Alone', null), song('s3', 'No txt', 'A', null)],
+    );
+    expect(entries.map((e) => [e.key, e.karaoke?.id ?? null, e.piece?.id ?? null])).toEqual([
+      ['song:s2', 's2', null],
+      ['p1', 's1', 'p1'],
+    ]);
+    expect(entries[0]).toMatchObject({ scores: [], recordings: 0 });
+  });
+});
+
 describe('loadScoreCatalog', () => {
   it('lists pieces when the song list fails and warns only if a piece is linked', async () => {
     const failing = () => Promise.reject(new Error('404'));
