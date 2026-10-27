@@ -46,6 +46,25 @@ Validates that architectural changes are synced with documentation and i18n file
   npm run check:docs
   ```
 
+### `changelog.mjs`
+
+Changelog and docs-log fragments (#593): `check`, `next-version`, `collect`, `collect-log`, `bump`, `release`, `notes`, `verify`. Pure logic in `lib/changelog.mjs` (tests: `lib/changelog.test.mjs`). Formats: [changelog.d/README.md](../changelog.d/README.md), [knowledge-base-maintenance.md §3](../docs/workflows/knowledge-base-maintenance.md#3-lifecycle).
+
+- **Execution**:
+  ```bash
+  npm run check:changelog
+  npm run changelog -- next-version --bump auto
+  ```
+
+### `check-audit.mjs`
+
+Production dependency audit (root, `server/`, `signaling/`): fails on high/critical advisories not accepted in `audit-allowlist.json` (reason + expiry). Blocking in `release.yml`, advisory in `ci.yml`. See [ci-cd-pipelines.md](../docs/workflows/ci-cd-pipelines.md#supply-chain-provenance-sbom-dependency-audit).
+
+- **Execution**:
+  ```bash
+  npm run check:security
+  ```
+
 ---
 
 ### `token-usage.mjs`

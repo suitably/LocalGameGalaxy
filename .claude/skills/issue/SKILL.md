@@ -48,6 +48,6 @@ When locating the change needs more than ~5 file reads: one `scout` subagent wit
 ## 5. Close
 
 1. One `gate-runner`; fix failures and re-run only the failing gate.
-2. Owning docs (`docs/tech/…`, `docs/log.md`, CHANGELOG) per AGENTS.md §9; spec (if any) → `status: stable`.
+2. Owning docs (`docs/tech/…`, a `docs/log.d/` fragment, a `changelog.d/` fragment) per AGENTS.md §2/§9; spec (if any) → `status: stable`.
 3. `npm run tokens` — **required before the PR**: the PR description must contain the table under "Token usage" with the mode (trivial / inline / delegated).
 4. Commit (Conventional Commits), push, open the PR with `Closes #N`.

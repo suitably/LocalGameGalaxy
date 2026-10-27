@@ -35,8 +35,17 @@ jobs:
       - name: Install Root Dependencies
         run: npm ci
 
+      # Blocking here, advisory in ci.yml (#592). Accepted advisories: scripts/audit-allowlist.json
+      - name: Production Dependency Audit (high/critical, blocking)
+        run: npm run check:security
+
       - name: Run Repository Hygiene
         run: npm run check:hygiene
+
+      # Tag pushes only: tag, every package.json / lockfile, Android versionName and CHANGELOG agree (#593)
+      - name: Verify Release Version Consistency
+        if: github.event_name == 'push'
+        run: node scripts/changelog.mjs verify "${GITHUB_REF_NAME#v}"
 
       - name: Run Pipeline Scripts Tests
         run: npm run test:scripts
@@ -91,15 +100,23 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "Release tag: $TAG"
 
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      # The release text is the CHANGELOG section (#593); tags from before the fragments fall back to generated notes
       - name: Create Draft Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.resolve_tag.outputs.tag }}
         run: |
-          gh release create "$TAG" \
-            --draft \
-            --title "$TAG" \
-            --generate-notes
+          if node scripts/changelog.mjs notes "${TAG#v}" > "$RUNNER_TEMP/notes.md"; then
+            gh release create "$TAG" --draft --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md"
+          else
+            echo "::warning::CHANGELOG.md has no section for ${TAG#v}; using generated release notes."
+            gh release create "$TAG" --draft --title "$TAG" --generate-notes
+          fi
 
   build-android:
     name: Build & Attach Android APK
@@ -108,6 +125,8 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     steps:
       - name: Checkout Source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -168,6 +187,12 @@ jobs:
             cp app/build/outputs/apk/debug/app-debug.apk ../nexumia-debug.apk
           fi
 
+      - name: Attest APK Build Provenance
+        if: steps.setup_signing.outputs.has_keystore == 'true'
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: nexumia.apk
+
       - name: Upload APK to Draft Release
         if: steps.setup_signing.outputs.has_keystore == 'true'
         env:
@@ -191,6 +216,8 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -244,6 +271,14 @@ jobs:
           cd release/windows && zip -r ../../nexumia-server-win.zip ./* && cd ../..
           cd release/macos && tar -czf ../../nexumia-server-macos.tar.gz ./* && cd ../..
 
+      - name: Attest Server Archives Build Provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            nexumia-server-linux.tar.gz
+            nexumia-server-macos.tar.gz
+            nexumia-server-win.zip
+
       - name: Upload Server Archives to Draft Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -263,6 +298,8 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     strategy:
       matrix:
         include:
@@ -315,6 +352,11 @@ jobs:
           chmod +x release/nexumia-server-* release/start-server.*
           tar -czf "$ARCHIVE.tar.gz" -C release .
 
+      - name: Attest Archive Build Provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: ${{ matrix.archive }}.tar.gz
+
       - name: Upload Archive to Draft Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -322,9 +364,61 @@ jobs:
           ARCHIVE: ${{ matrix.archive }}
         run: gh release upload "$TAG" "$ARCHIVE.tar.gz" --clobber --repo "$GITHUB_REPOSITORY"
 
+  # CycloneDX SBOMs of the production dependencies (root app, companion server, signaling tracker)
+  sbom:
+    name: Generate & Attach SBOMs
+    needs: create-release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    strategy:
+      matrix:
+        include:
+          - lockfile: package-lock.json
+            asset: nexumia-sbom.cdx.json
+          - lockfile: server/package-lock.json
+            asset: nexumia-server-sbom.cdx.json
+          - lockfile: signaling/package-lock.json
+            asset: nexumia-signaling-sbom.cdx.json
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Generate SBOM (CycloneDX)
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          file: ${{ matrix.lockfile }}
+          format: cyclonedx-json
+          output-file: ${{ matrix.asset }}
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Attest SBOM Build Provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: ${{ matrix.asset }}
+
+      - name: Upload SBOM to Draft Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.create-release.outputs.tag_name }}
+          ASSET: ${{ matrix.asset }}
+        run: gh release upload "$TAG" "$ASSET" --clobber --repo "$GITHUB_REPOSITORY"
+
+  # The called workflow pushes to Docker Hub and GHCR and attests both (#592)
   build-docker:
     name: Build & Push Docker Images
     needs: create-release
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
     uses: ./.github/workflows/docker-publish.yml
     secrets: inherit
 
@@ -336,6 +430,7 @@ jobs:
         build-android,
         build-server-binaries,
         build-server-binaries-arm64,
+        sbom,
         build-docker,
       ]
     runs-on: ubuntu-24.04

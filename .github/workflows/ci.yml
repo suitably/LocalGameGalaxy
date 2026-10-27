@@ -38,6 +38,9 @@ jobs:
       - name: Unit tests for pipeline scripts
         run: npm run test:scripts
 
+      - name: Validate changelog and docs log fragments
+        run: npm run check:changelog
+
       - name: Lint workflows (actionlint)
         uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
 
@@ -75,6 +78,7 @@ jobs:
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
           PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
         run: npm run check:docs
 
   lint:
@@ -97,7 +101,7 @@ jobs:
       - name: ESLint warning budget (per-file ratchet)
         run: npm run check:lint-budget
 
-      - name: Production Security Audit (advisory, high severity)
+      - name: Production Security Audit (advisory here, blocking in release.yml)
         continue-on-error: true
         run: npm run check:security
 

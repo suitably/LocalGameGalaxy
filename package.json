@@ -24,12 +24,14 @@
     "check:hygiene": "node scripts/check-repo-hygiene.mjs",
     "test:scripts": "node --test scripts/pipeline/*.test.cjs scripts/lib/*.test.mjs",
     "check:docs": "node scripts/check-docs-sync.mjs",
+    "check:changelog": "node scripts/changelog.mjs check",
+    "changelog": "node scripts/changelog.mjs",
     "tokens": "node scripts/token-usage.mjs",
-    "check:security": "npm audit --omit=dev --audit-level=high",
+    "check:security": "node scripts/check-audit.mjs",
     "cleanup:previews": "node scripts/cleanup-cloudflare-previews.mjs",
     "prepare": "husky",
     "quality-gates": "npm run check:hygiene && npm run check:architecture:diff && npm run check:budget && npm run check:duplicates && npm run lint && npm run check:lint-budget && npm test",
-    "ci:gates": "npm run check:hygiene && npm run test:scripts && npm run check:architecture && npm run check:budget && npm run check:duplicates && npm run lint && npm run check:lint-budget && npm test",
+    "ci:gates": "npm run check:hygiene && npm run test:scripts && npm run check:changelog && npm run check:architecture && npm run check:budget && npm run check:duplicates && npm run lint && npm run check:lint-budget && npm test",
     "build:wordle-words": "node scripts/build-wordle-words.mjs"
   },
   "lint-staged": {
