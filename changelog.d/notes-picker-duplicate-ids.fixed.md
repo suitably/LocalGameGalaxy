@@ -1,0 +1,1 @@
+- **Melodiq Notes: song search no longer piles up cards** — songs the server gives the same id (e.g. several copies of one song) showed stale cards after a filter change, so the list grew each time a filter was toggled.

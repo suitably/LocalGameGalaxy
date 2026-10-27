@@ -31,7 +31,10 @@ export type CatalogItem =
   | { kind: 'karaoke'; song: CompanionSong; format: 'txt'; instruments: InstrumentKind[] };
 
 export interface CatalogEntry {
-  /** The song id. */
+  /**
+   * Unique within the catalog: the song id, plus `#2`, `#3` … for further songs with the same
+   * id (the server's ids can collide, e.g. copies of one song in several folders).
+   */
   key: string;
   title: string;
   artist: string;
@@ -120,10 +123,16 @@ export function catalogEntry(song: CompanionSong): CatalogEntry {
   };
 }
 
-/** One entry per song folder, sorted by artist and title. */
+/** One entry per song folder, sorted by artist and title; every entry has its own key. */
 export function buildScoreCatalog(songs: CompanionSong[]): CatalogEntry[] {
+  const seen = new Map<string, number>();
   return songs
-    .map(catalogEntry)
+    .map((song) => {
+      const n = (seen.get(song.id) ?? 0) + 1;
+      seen.set(song.id, n);
+      const entry = catalogEntry(song);
+      return n === 1 ? entry : { ...entry, key: `${song.id}#${n}` };
+    })
     .sort((a, b) => a.artist.localeCompare(b.artist) || a.title.localeCompare(b.title));
 }
 

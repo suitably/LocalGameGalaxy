@@ -85,6 +85,17 @@ describe('buildScoreCatalog (#568: one entry per song folder)', () => {
     expect(entry.karaoke?.id).toBe('k1');
   });
 
+  it('keys songs the server gave the same id apart, so a list can render each once', () => {
+    const entries = buildScoreCatalog([
+      song('dup', 'Mann im Mond', 'Die Prinzen'),
+      song('dup', 'Mann im Mond', 'Die Prinzen'),
+      song('dup', 'Mann im Mond', 'Die Prinzen'),
+      song('other', 'Etude', 'Chopin'),
+    ]);
+    expect(entries.map((e) => e.key).sort()).toEqual(['dup', 'dup#2', 'dup#3', 'other']);
+    expect(entries.filter((e) => e.song.id === 'dup')).toHaveLength(3);
+  });
+
   it('lists songs with the same artist and title on their own', () => {
     const entries = buildScoreCatalog([
       song('a', 'Hey Jude', 'The Beatles'),
