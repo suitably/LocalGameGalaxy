@@ -106,6 +106,10 @@ flowchart LR
 - Pushes to `main` trigger a full production release.
 - Pull requests deploy an isolated preview environment, and a bot comments on the PR with `https://${sanitized-branch}.nexumia.de/`.
 
+#### Missing secrets
+
+In `suitably/LocalGameGalaxy` a missing `DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN` (`docker-publish.yml`) or `CLOUDFLARE_API_TOKEN` (`deploy-push-relay.yml`) fails the run; forks skip with a notice (#590). A tag release without `ANDROID_KEYSTORE_BASE64` fails too.
+
 #### Runner and tool pinning
 
 - Every job runs on a concrete runner image: `ubuntu-24.04`, `ubuntu-24.04-arm` and `macos-15` (arm64 server binary). No `*-latest` labels, so an image switch never silently changes Node, Java or system tools. Docker `latest` tags are unrelated and stay.
@@ -145,7 +149,7 @@ flowchart LR
   1. **`gates`**: Runs hygiene, scripts unit tests, component budget check, architecture check, ESLint, vitest frontend tests, production web build, and companion server tests. If any gate fails, no release artifacts are produced.
   2. **`create-release`**: Atomically creates a single GitHub Release in `--draft` mode with generated release notes.
   3. **Parallel artifact build**:
-     - **Android APK (`build-android`)**: Compiles web bundle, runs `npx cap sync android`. If `ANDROID_KEYSTORE_BASE64` secret is configured, signs `nexumia.apk` with the production release keystore via `./gradlew assembleRelease`; otherwise falls back gracefully to `assembleDebug` with a notice. Uploads `nexumia.apk` to the draft release.
+     - **Android APK (`build-android`)**: Compiles web bundle, runs `npx cap sync android`. If `ANDROID_KEYSTORE_BASE64` secret is configured, signs `nexumia.apk` with the production release keystore via `./gradlew assembleRelease`; without it a tag release fails with an error, so no debug-signed APK is ever published; a manual run builds `nexumia-debug.apk` and keeps it as a workflow artifact (#590). Uploads the signed `nexumia.apk` to the draft release.
      - **Server Binaries (`build-server-binaries`)**: runs `npm run package` in `server/` and bundles Linux (`tar.gz`), Windows (`.zip`) and macOS (`tar.gz`) archives with the launchers from `server/release-scripts/`. Also ships `scripts/align_lyrics.py` per archive. (Broken between 2026-09-13 and PR #394, when `server/package.json` had no `package` script.)
      - **Docker Publishing (`build-docker`)**: Calls the reusable `.github/workflows/docker-publish.yml` to build and push `base` and `full` images to Docker Hub.
   4. **`publish-release`**: Once all three parallel packaging jobs succeed, undrafts the release via `gh release edit "$TAG" --draft=false`. Releases never appear in half-baked or corrupted states.

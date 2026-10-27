@@ -53,7 +53,7 @@ npx cap sync android
 cd android && ./gradlew assembleDebug        # local; needs Android SDK (android/local.properties → sdk.dir)
 ```
 
-Release signing (CI): secret `ANDROID_KEYSTORE_BASE64` is decoded to `android/app/release.jks`; `build.gradle` signs with it when `ANDROID_KEYSTORE_PASSWORD` is set (`ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` optional). Without the secret CI builds `assembleDebug`. Keystores (`*.jks`, `*.keystore`, `*.p12`, `keystore.properties`) are blocked by `scripts/check-repo-hygiene.mjs`. Runbook: [operations/android-release.md](../operations/android-release.md).
+Release signing (CI): secret `ANDROID_KEYSTORE_BASE64` is decoded to `android/app/release.jks`; `build.gradle` signs with it when `ANDROID_KEYSTORE_PASSWORD` is set (`ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` optional). Without the secret a tag release fails (#590); a manual run (`workflow_dispatch`) builds `nexumia-debug.apk` as a workflow artifact only, never as a release asset. Keystores (`*.jks`, `*.keystore`, `*.p12`, `keystore.properties`) are blocked by `scripts/check-repo-hygiene.mjs`. Runbook: [operations/android-release.md](../operations/android-release.md).
 
 ## 4. Companion server
 

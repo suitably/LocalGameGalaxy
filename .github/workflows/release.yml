@@ -144,12 +144,16 @@ jobs:
             echo "$KEYSTORE_BASE64" | base64 -d > android/app/release.jks
             echo "has_keystore=true" >> "$GITHUB_OUTPUT"
             echo "Release keystore configured and decoded."
+          elif [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            # a tag release never ships a debug-signed APK (#590): it could not be updated later
+            echo "::error::ANDROID_KEYSTORE_BASE64 is not configured; a tag release needs the release keystore."
+            exit 1
           else
             echo "has_keystore=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::ANDROID_KEYSTORE_BASE64 not configured. Falling back to assembleDebug."
+            echo "::warning::ANDROID_KEYSTORE_BASE64 not configured. Manual run: building nexumia-debug.apk as a workflow artifact only."
           fi
 
-      - name: Build APK (Release or Debug Fallback)
+      - name: Build APK (Release, or Debug on Manual Runs)
         working-directory: android
         env:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -161,15 +165,24 @@ jobs:
             cp app/build/outputs/apk/release/app-release.apk ../nexumia.apk
           else
             ./gradlew assembleDebug
-            cp app/build/outputs/apk/debug/app-debug.apk ../nexumia.apk
+            cp app/build/outputs/apk/debug/app-debug.apk ../nexumia-debug.apk
           fi
 
       - name: Upload APK to Draft Release
+        if: steps.setup_signing.outputs.has_keystore == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.create-release.outputs.tag_name }}
         run: |
           gh release upload "$TAG" nexumia.apk --clobber
+
+      # Debug builds never become a release asset; they stay on the workflow run.
+      - name: Upload Debug APK as Workflow Artifact
+        if: steps.setup_signing.outputs.has_keystore != 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: nexumia-debug-apk
+          path: nexumia-debug.apk
 
   build-server-binaries:
     name: Build & Attach Server Binaries

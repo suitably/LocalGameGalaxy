@@ -58,6 +58,11 @@ jobs:
           DOCKER_PASS: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
           if [ -z "$DOCKER_USER" ] || [ -z "$DOCKER_PASS" ]; then
+            # the main repository must publish (#590); forks skip
+            if [ "$GITHUB_REPOSITORY" = "suitably/LocalGameGalaxy" ]; then
+              echo "::error::DOCKERHUB_USERNAME or DOCKERHUB_TOKEN secret is not configured in suitably/LocalGameGalaxy."
+              exit 1
+            fi
             echo "has_creds=false" >> "$GITHUB_OUTPUT"
             echo "::notice::DOCKERHUB_USERNAME or DOCKERHUB_TOKEN secret is not configured. Skipping Docker image build and push."
           else

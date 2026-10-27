@@ -7,6 +7,7 @@ Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)
 - New `docs/reports/2026-10-27-maintainer-decisions.md` (listed in `docs/reports/index.md`): decisions for #547, #549, #551, #553, #565/#568, #571, #587, #590, #592, #593, #595 and Q17.
 - `docs/open-questions.md`: Q16, Q17, Q19 resolved; note that #568 will reverse Q18. `docs/tech/deployment.md`: `melodiq-server` alias ends at 1.2.0.
 - Outside `docs/`: `docker-publish.yml` no longer pushes `nexumia/melodiq-server` (Q17).
+- #590: `release.yml` fails a tag release without the keystore, manual runs keep `nexumia-debug.apk` as an artifact; `docker-publish.yml` / `deploy-push-relay.yml` fail on missing secrets in the main repository. Docs: `docs/tech/deployment.md`, `docs/workflows/ci-cd-pipelines.md` ("Missing secrets").
 
 ## 2026-10-27 — Clear open issues implemented (claude-code)
 
