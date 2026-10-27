@@ -10,7 +10,7 @@ import {
   parseMarksBody,
   uniqueFileName,
 } from '../../../utils/scoreFiles';
-import { getSongCache, refreshSongFolder, songCreationRoot } from '../services/scanner';
+import { getSongCache, refreshSongFolder } from '../services/scanner';
 import {
   MAX_RECORDING_BYTES,
   RECORDING_EXTENSIONS,
@@ -19,6 +19,7 @@ import {
   mergeSongMeta,
   parseSongMetaBody,
   readSongMeta,
+  songCreationRoot,
   writeSongMeta,
   type SongMeta,
 } from '../services/songFolder';

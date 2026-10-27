@@ -28,7 +28,10 @@ export const setUsdbSessionCookie = (val: string | null): void => {
   USDB_SESSION_COOKIE = val;
 };
 
-export async function usdbLogin(username?: string | null, password?: string | null): Promise<string> {
+export async function usdbLogin(
+  username?: string | null,
+  password?: string | null,
+): Promise<string> {
   if (!username || !password) {
     throw new Error('USDB credentials not set. Please provide username and password.');
   }
@@ -82,7 +85,7 @@ export function parseUsdbSearch(html: string): UsdbSearchResult {
 
   const starCount = (s: string): string => {
     const imgs = (s.match(/star(?:_on|_off)?\.(?:gif|png|jpg)/gi) || []).filter(
-      (x) => x.includes('on') || !x.includes('off')
+      (x) => x.includes('on') || !x.includes('off'),
     );
     if (imgs.length) return '★'.repeat(imgs.length);
     const stars = (s.match(/★/g) || []).length;
@@ -103,7 +106,11 @@ export function parseUsdbSearch(html: string): UsdbSearchResult {
   const buildSong = (usdbId: string, tds: string[]): UsdbSongResult | null => {
     let titleIdx = -1;
     for (let i = 0; i < tds.length; i++) {
-      if (/[?&]id=\d+/i.test(tds[i]) || /link=detail/i.test(tds[i]) || /view=detail/i.test(tds[i])) {
+      if (
+        /[?&]id=\d+/i.test(tds[i]) ||
+        /link=detail/i.test(tds[i]) ||
+        /view=detail/i.test(tds[i])
+      ) {
         titleIdx = i;
         break;
       }
@@ -164,7 +171,8 @@ export function parseUsdbSearch(html: string): UsdbSearchResult {
     m = anyRowRe.exec(html);
     while (m !== null) {
       const rowHtml = m[1];
-      const idMatch = rowHtml.match(/view=detail[^"']*[?&]id=(\d+)/i) || rowHtml.match(/[?&]id=(\d+)/);
+      const idMatch =
+        rowHtml.match(/view=detail[^"']*[?&]id=(\d+)/i) || rowHtml.match(/[?&]id=(\d+)/);
       if (idMatch) {
         const song = buildSong(idMatch[1], getTds(rowHtml));
         if (song) songs.push(song);
@@ -242,12 +250,16 @@ export async function searchUsdb(filters: UsdbSearchFilters): Promise<UsdbSearch
     ...(sc === '1' ? { songcheck: '1' } : {}),
   });
 
-  let res = await httpsPost('https://usdb.animux.de/?link=list', params.toString(), { Cookie: cookie });
+  let res = await httpsPost('https://usdb.animux.de/?link=list', params.toString(), {
+    Cookie: cookie,
+  });
 
   if (res.status === 200 && res.body.includes('You are not logged in')) {
     try {
       cookie = await getUsdbCookie(true);
-      res = await httpsPost('https://usdb.animux.de/?link=list', params.toString(), { Cookie: cookie });
+      res = await httpsPost('https://usdb.animux.de/?link=list', params.toString(), {
+        Cookie: cookie,
+      });
     } catch {
       throw new Error('USDB login failed. Please check your credentials.');
     }
@@ -268,7 +280,9 @@ export async function fetchUsdbTxt(usdbId: string, cookie?: string): Promise<str
 
   const match = res.body.match(/<textarea[^>]*>([\s\S]*?)<\/textarea>/i);
   if (!match) {
-    throw new Error('Could not find lyrics textarea in USDB response. Make sure you are logged in.');
+    throw new Error(
+      'Could not find lyrics textarea in USDB response. Make sure you are logged in.',
+    );
   }
   return stripHtml(match[1]).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 }

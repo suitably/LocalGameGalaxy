@@ -12,9 +12,10 @@ import {
   RECORDING_EXTENSIONS,
   createSongFolder,
   findRecordingFiles,
+  songCreationRoot,
   type SongRecordingFile,
 } from './songFolder';
-import { getSongCache, refreshSongFolder, songCreationRoot } from './scanner';
+import { getSongCache, refreshSongFolder } from './scanner';
 import type { Song } from '../../../core/types';
 
 /**

@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { cleanUploadName, isScoreFileName } from '../../../utils/scoreFiles';
+import { serverConfig } from '../../../config';
+import { cleanUploadName, findScoreFiles, isScoreFileName } from '../../../utils/scoreFiles';
+import type { Song } from '../../../core/types';
 
 /**
  * A song folder is the only store for Melodiq and Melodiq Notes (#568): the karaoke `.txt` with
@@ -192,4 +194,101 @@ export async function createSongFolder(
   };
   await writeSongMeta(folder, meta);
   return { folder, meta };
+}
+
+/** The configured library directory a path lies in, if any. */
+export function libraryFor(target: string): string | null {
+  const resolved = path.resolve(target);
+  return (
+    (serverConfig.directories || []).find((d) => {
+      const dir = path.resolve(d);
+      return resolved === dir || resolved.startsWith(dir + path.sep);
+    }) ?? null
+  );
+}
+
+/**
+ * A song folder without a karaoke `.txt` (#568): sheet music and/or `song.json`. Its id is stored
+ * in `song.json`, so it survives renaming the folder; a folder without one gets it written now.
+ */
+export async function readScoreOnlySong(dir: string, dirFiles: string[]): Promise<Song | null> {
+  const folderScores = await findScoreFiles(dir, dirFiles);
+  const stored = await readSongMeta(dir);
+  if (!stored && folderScores.length === 0) return null;
+  let meta: SongMeta = stored ?? {
+    version: 1,
+    id: '',
+    ...metaFromFolderName(path.basename(dir)),
+    labels: {},
+  };
+  if (!meta.title) meta = { ...meta, title: path.basename(dir) };
+  if (!meta.id) {
+    meta = { ...meta, id: newSongId() };
+    try {
+      await writeSongMeta(dir, meta);
+    } catch (e: unknown) {
+      console.warn(
+        `[Scanner] Could not write ${SONG_META_FILE} in ${dir}:`,
+        e instanceof Error ? e.message : e,
+      );
+    }
+  }
+  const recordings = await findRecordingFiles(dir, dirFiles);
+  return {
+    id: meta.id,
+    title: meta.title,
+    artist: meta.artist,
+    bpm: 0,
+    gap: 0,
+    video: null,
+    audio: null,
+    originalAudio: null,
+    instrumentalAudio: null,
+    vocalsAudio: null,
+    hasSeparation: false,
+    cover: null,
+    background: null,
+    txtPath: '',
+    txtContent: '',
+    duration: 0,
+    folder: dir,
+    karaoke: false,
+    folderScores,
+    recordings,
+    labels: meta.labels,
+    searchString: `${meta.title} ${meta.artist}`.toLowerCase(),
+  };
+}
+
+/** A copied folder carries the same `song.json` id: the later one (by path) gets a new id. */
+export async function dedupeSongIds(songs: Song[]): Promise<void> {
+  const seen = new Set<string>();
+  for (const song of [...songs].sort((a, b) => a.folder.localeCompare(b.folder))) {
+    if (!seen.has(song.id)) {
+      seen.add(song.id);
+      continue;
+    }
+    if (song.karaoke) continue;
+    const meta = await readSongMeta(song.folder);
+    song.id = newSongId();
+    seen.add(song.id);
+    if (meta) await writeSongMeta(song.folder, { ...meta, id: song.id }).catch(() => undefined);
+  }
+}
+
+/** Files that make a folder a song: a karaoke `.txt`, sheet music or `song.json` (#568). */
+export const SONG_FOLDER_GLOBS = [
+  '**/*.txt',
+  `**/${SONG_META_FILE}`,
+  '**/*.{mxl,musicxml,xml,mid,midi}',
+];
+
+/**
+ * Library directory new song folders go to (a new song from Notes, a migrated Notes piece): the
+ * download folder when it lies in a library directory, else the first library directory.
+ */
+export function songCreationRoot(): string | null {
+  const download = serverConfig.downloadDir;
+  if (download && libraryFor(download)) return download;
+  return serverConfig.directories?.[0] ?? null;
 }
