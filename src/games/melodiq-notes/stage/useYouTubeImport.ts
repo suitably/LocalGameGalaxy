@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { listCompanionSongs, type CompanionSong } from '../../../lib/companion/songScoresApi';
+import { listLibrarySongs, type CompanionSong } from '../../../lib/companion/songScoresApi';
 import { importRecording, type ImportProgress } from './logic/youtubeImport';
 import type { StageSongState } from './useStageSong';
 
@@ -11,8 +11,8 @@ export type ImportRun =
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 /**
- * Score on stage → recording from YouTube in a Melodiq song folder (server yt-dlp queue) →
- * the score's Notes piece linked to that song, on stage with the song's mix, aligned right away.
+ * Score on stage → recording from YouTube in its song folder (server yt-dlp queue) → the score in
+ * that folder, on stage with the song's mix, aligned right away (#568).
  */
 export function useYouTubeImport(state: StageSongState) {
   const [run, setRun] = useState<ImportRun>({ kind: 'idle' });
@@ -24,7 +24,7 @@ export function useYouTubeImport(state: StageSongState) {
   /** Song folders on the server, to show where the recording will go. */
   const refreshSongs = useCallback(() => {
     setSongsError(null);
-    listCompanionSongs()
+    listLibrarySongs()
       .then(setSongs)
       .catch((e: unknown) => setSongsError(errorText(e)));
   }, []);
@@ -42,9 +42,9 @@ export function useYouTubeImport(state: StageSongState) {
             ...meta,
             youtubeUrl,
             scoreFile: state.currentScoreFile(),
-            fromPiece:
+            fromSong:
               origin?.kind === 'notes'
-                ? { pieceId: origin.pieceId, scoreFile: origin.scoreFile, songId: origin.songId }
+                ? { songId: origin.songId, scoreFile: origin.scoreFile }
                 : null,
           },
           (progress) => {
@@ -54,7 +54,11 @@ export function useYouTubeImport(state: StageSongState) {
           controller.signal,
         );
         alignPending.current = true;
-        const ok = await state.loadCatalogScore({ file: result.score.file, ...result });
+        const ok = await state.loadCatalogScore({
+          file: result.score.file,
+          label: result.score.label ?? null,
+          ...result,
+        });
         if (!ok) {
           alignPending.current = false;
           throw new Error('the stored score could not be opened');
@@ -75,7 +79,7 @@ export function useYouTubeImport(state: StageSongState) {
     setRun({ kind: 'idle' });
   }, []);
 
-  // align once the linked piece and the song's mix are on stage, unless it brought marks
+  // align once the score and the song's mix are on stage, unless it brought marks
   const { recording, loading, marks, alignNow } = state;
   useEffect(() => {
     if (!alignPending.current || loading || !recording) return;

@@ -12,14 +12,11 @@ import {
 } from '../services/scanner';
 import type { HonoEnv, Song, ClientSong } from '../../../core/types';
 import { getRequestToken } from '../../../core/auth';
-import { piecesBySong, type NotesPiece } from '../../notes/services/library';
-import { clientSongScores } from './scores';
 
 export const songsRouter = new Hono<HonoEnv>();
 
 // `token` is the caller's own token; media URLs must never carry the master token.
-// `pieces` are the Notes library pieces linked to the song: its sheet music (Q18).
-const toClientSong = (s: Song, token: string, pieces: NotesPiece[] = []): ClientSong => {
+export const toClientSong = (s: Song, token: string): ClientSong => {
   const secureUrl = (absPath: string | null): string | null => {
     if (!absPath) return null;
     if (absPath.startsWith('http://') || absPath.startsWith('https://')) {
@@ -28,9 +25,8 @@ const toClientSong = (s: Song, token: string, pieces: NotesPiece[] = []): Client
     return `/media?path=${encodeURIComponent(absPath)}&token=${encodeURIComponent(token)}`;
   };
 
-  // song-folder scores are only the import source; clients get the linked Notes pieces' scores
-  const { folderScores, ...rest } = s;
-  void folderScores;
+  const { folderScores, folder, recordings, labels, ...rest } = s;
+  void folder;
   return {
     ...rest,
     video: secureUrl(s.video),
@@ -41,27 +37,34 @@ const toClientSong = (s: Song, token: string, pieces: NotesPiece[] = []): Client
     hasSeparation: Boolean(s.hasSeparation),
     cover: secureUrl(s.cover),
     background: secureUrl(s.background),
-    scores: clientSongScores(pieces, token),
+    scores: folderScores.map((score) => ({
+      file: score.file,
+      url: secureUrl(score.path),
+      hasMarks: !!score.marksPath,
+      label: labels[score.file] || null,
+    })),
+    recordings: recordings.map((r) => ({ file: r.file, url: secureUrl(r.path) })),
   };
 };
 
-// GET /api/songs — List / search songs with pagination
+// GET /api/songs — List / search songs with pagination. Songs without a karaoke `.txt` (sheet
+// music only, #568) are left out unless `?all=1` (Melodiq Notes) asks for them.
 songsRouter.get('/api/songs', async (c) => {
   const page = parseInt(c.req.query('page') || '1', 10) || 1;
   const limit = parseInt(c.req.query('limit') || '10000', 10) || 10000;
   const search = (c.req.query('search') || '').trim().toLowerCase();
+  const all = c.req.query('all') === '1';
 
-  let results = getSongCache();
+  let results = all ? getSongCache() : getSongCache().filter((s) => s.karaoke);
   if (search) {
     results = results.filter((s) => s.searchString.includes(search));
   }
 
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
-  const linked = await piecesBySong();
   const paginated = results
     .slice(startIndex, endIndex)
-    .map((s) => toClientSong(s, getRequestToken(c) ?? '', linked.get(s.id)));
+    .map((s) => toClientSong(s, getRequestToken(c) ?? ''));
 
   c.header('X-Total-Count', String(results.length));
   c.header('X-Page', String(page));
@@ -79,8 +82,8 @@ songsRouter.get('/api/songs/:id', async (c) => {
     return c.json({ error: 'Song not found' }, 404);
   }
 
-  const linked = (await piecesBySong()).get(song.id);
-  return c.json(toClientSong(song, getRequestToken(c) ?? '', linked));
+  c.header('Cache-Control', 'no-store');
+  return c.json(toClientSong(song, getRequestToken(c) ?? ''));
 });
 
 // DELETE /api/songs/:id — Delete song + cleanup
@@ -95,9 +98,8 @@ songsRouter.delete('/api/songs/:id', async (c) => {
   const songId = c.req.param('id');
   const song = getSongCache().find((s) => s.id === songId);
   if (!song) return c.json({ error: 'Song not found in cache' }, 404);
-  if (!song.txtPath) return c.json({ error: 'Song does not have a text path' }, 400);
 
-  const songFolder = path.dirname(song.txtPath);
+  const songFolder = song.folder;
   const safeFolder = resolveSecurePath(songFolder);
   if (!safeFolder) {
     return c.json({ error: 'Access denied or song directory not found' }, 403);
@@ -107,6 +109,9 @@ songsRouter.delete('/api/songs/:id', async (c) => {
     const isRootConfigDir = serverConfig.directories.some(
       (dir) => path.normalize(dir) === safeFolder,
     );
+    if (isRootConfigDir && !song.txtPath) {
+      return c.json({ error: 'A library root is not a song folder' }, 400);
+    }
     if (isRootConfigDir) {
       // Root config directory - delete individual files to avoid deleting the library root folder
       if (fs.existsSync(song.txtPath)) await fs.promises.unlink(song.txtPath);

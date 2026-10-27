@@ -1,123 +1,126 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { CompanionSong } from '../../../../../lib/companion/songScoresApi';
-import type { NotesPiece } from '../../../../../lib/companion/notesLibraryApi';
-import { buildScoreCatalog, catalogKey, filterCatalog, loadScoreCatalog } from '../scoreCatalog';
+import {
+  buildScoreCatalog,
+  catalogKey,
+  filterCatalog,
+  findSongFolder,
+  loadScoreCatalog,
+} from '../scoreCatalog';
 import { pickRecording } from '../../serverScoreLoad';
 
-const piece = (
+const song = (
   id: string,
   title: string,
   artist: string,
-  over: Partial<NotesPiece> = {},
-): NotesPiece => ({
+  over: Partial<CompanionSong> = {},
+): CompanionSong => ({
   id,
   title,
   artist,
-  updatedAt: 0,
-  scores: [{ file: 'a.mxl', url: `/notes/media/${id}/a.mxl`, hasMarks: false }],
-  recordings: [{ file: 'take.mp3', url: `/notes/media/${id}/take.mp3` }],
-  ...over,
-});
-
-const song = (id: string, title: string, artist: string, mix: string | null): CompanionSong => ({
-  id,
-  title,
-  artist,
-  originalAudio: mix,
+  originalAudio: null,
   audio: null,
   instrumentalAudio: null,
   cover: null,
+  scores: [],
+  recordings: [],
+  ...over,
 });
 
-describe('buildScoreCatalog', () => {
-  it('lists every Notes piece on its own, even with the same artist and title', () => {
-    const entries = buildScoreCatalog(
-      [piece('p1', 'Hey Jude', 'The Beatles'), piece('p2', 'hey  jude!', 'the beatles')],
-      [song('s1', 'Hey Jude', 'The Beatles', '/media?path=mix.mp3')],
-    );
-    expect(entries.map((e) => e.key).sort()).toEqual(['p1', 'p2']);
-    // no title heuristic: an unlinked piece gets no song
-    expect(entries.every((e) => e.song === null)).toBe(true);
-  });
+const media = (file: string) => `/media?path=${encodeURIComponent(`/songs/${file}`)}&token=t`;
+const score = (file: string, label: string | null = null) => ({
+  file,
+  url: media(file),
+  hasMarks: false,
+  label,
+});
+const karaokeTxt = '#BPM:120\n: 0 4 0 la\nE';
 
-  it('resolves the linked song and counts its mix as a recording', () => {
-    const [entry] = buildScoreCatalog(
-      [piece('p1', 'Hey Jude', 'The Beatles', { songId: 's1' })],
-      [song('s1', 'Hey Jude', 'The Beatles', '/media?path=mix.mp3')],
-    );
-    expect(entry.song?.id).toBe('s1');
+describe('buildScoreCatalog (#568: one entry per song folder)', () => {
+  it('lists a karaoke song with several scores, its mix and Notes recordings as one entry', () => {
+    const [entry, ...rest] = buildScoreCatalog([
+      song('s1', 'Mr. Brightside', 'The Killers', {
+        karaoke: true,
+        txtContent: karaokeTxt,
+        originalAudio: media('mix.mp3'),
+        scores: [score('Beginner.mxl'), score('Band.mxl', 'Full band')],
+        recordings: [{ file: 'Take.webm', url: media('Take.webm') }],
+      }),
+    ]);
+    expect(rest).toHaveLength(0);
+    expect(entry.key).toBe('s1');
+    expect(entry.karaoke?.id).toBe('s1');
     expect(entry.recordings).toBe(2);
-    expect(entry.scores[0]).toMatchObject({ file: 'a.mxl', song: { id: 's1' } });
+    expect(entry.scores.map((s) => [s.file, s.label])).toEqual([
+      ['Beginner.mxl', null],
+      ['Band.mxl', 'Full band'],
+    ]);
+    // every score plays with the same song (and so the same mix)
+    expect(entry.scores.every((s) => s.song.id === 's1')).toBe(true);
   });
 
-  it('keeps a piece whose linked song is gone', () => {
-    const [entry] = buildScoreCatalog([piece('p1', 'T', 'A', { songId: 'gone' })], []);
-    expect(entry.song).toBeNull();
-    expect(entry.recordings).toBe(1);
+  it('lists songs without .txt (sheet music only) without karaoke vocals', () => {
+    const [entry] = buildScoreCatalog([
+      song('n1', 'Etude', 'Chopin', { karaoke: false, scores: [score('Etude.mxl')] }),
+    ]);
+    expect(entry.karaoke).toBeNull();
+    expect(entry.recordings).toBe(0);
+    expect(entry.scores).toHaveLength(1);
+  });
+
+  it('keeps a karaoke song without scores, and copes with older servers (no lists)', () => {
+    const old: CompanionSong = {
+      id: 'k1',
+      title: 'Alone',
+      artist: 'A',
+      originalAudio: null,
+      audio: media('a.mp3'),
+      instrumentalAudio: null,
+      cover: null,
+      txtContent: karaokeTxt,
+    };
+    const [entry] = buildScoreCatalog([old]);
+    expect(entry).toMatchObject({ scores: [], recordings: 1 });
+    expect(entry.karaoke?.id).toBe('k1');
+  });
+
+  it('lists songs with the same artist and title on their own', () => {
+    const entries = buildScoreCatalog([
+      song('a', 'Hey Jude', 'The Beatles'),
+      song('b', 'hey  jude!', 'the beatles'),
+    ]);
+    expect(entries.map((e) => e.key).sort()).toEqual(['a', 'b']);
   });
 
   it('sorts by artist and title and ignores accents and case in the key', () => {
-    const entries = buildScoreCatalog([piece('p1', 'Zebra', 'B'), piece('p2', 'Alpha', 'B')], []);
+    const entries = buildScoreCatalog([song('1', 'Zebra', 'B'), song('2', 'Alpha', 'B')]);
     expect(entries.map((e) => e.title)).toEqual(['Alpha', 'Zebra']);
     expect(catalogKey('Café', 'Björk')).toBe(catalogKey('cafe', 'BJORK'));
   });
 
   it('filters by artist and title', () => {
-    const entries = buildScoreCatalog(
-      [piece('p1', 'Hey Jude', 'Beatles'), piece('p2', 'Yes', 'X')],
-      [],
-    );
+    const entries = buildScoreCatalog([song('1', 'Hey Jude', 'Beatles'), song('2', 'Yes', 'X')]);
     expect(filterCatalog(entries, 'beatles jude').map((e) => e.title)).toEqual(['Hey Jude']);
     expect(filterCatalog(entries, ' ')).toHaveLength(2);
   });
-});
 
-describe('karaoke songs in the catalog (#566)', () => {
-  const karaoke = (
-    id: string,
-    title: string,
-    linkedMix: string | null = '/media?path=mix.mp3',
-  ) => ({
-    ...song(id, title, 'A', linkedMix),
-    txtContent: '#BPM:120\n: 0 4 0 la\nE',
-  });
-
-  it('adds the vocals to the linked piece and lists unlinked karaoke songs on their own', () => {
-    const entries = buildScoreCatalog(
-      [piece('p1', 'Linked', 'A', { songId: 's1' })],
-      [karaoke('s1', 'Linked'), karaoke('s2', 'Alone', null), song('s3', 'No txt', 'A', null)],
-    );
-    expect(entries.map((e) => [e.key, e.karaoke?.id ?? null, e.piece?.id ?? null])).toEqual([
-      ['song:s2', 's2', null],
-      ['p1', 's1', 'p1'],
-    ]);
-    expect(entries[0]).toMatchObject({ scores: [], recordings: 0 });
+  it('finds the song folder with the same artist and title', () => {
+    const songs = [song('s1', 'Hey Jude', 'The Beatles')];
+    expect(findSongFolder(songs, 'HEY  jude', 'the beatles')?.id).toBe('s1');
+    expect(findSongFolder(songs, 'Let It Be', 'The Beatles')).toBeNull();
   });
 });
 
 describe('loadScoreCatalog', () => {
-  it('lists pieces when the song list fails and warns only if a piece is linked', async () => {
-    const failing = () => Promise.reject(new Error('404'));
-    const plain = await loadScoreCatalog({
-      listPieces: async () => [piece('p1', 'T', 'A')],
-      listSongs: failing,
-    });
-    expect(plain.errors).toEqual({});
-    expect(plain.entries).toHaveLength(1);
-    const linked = await loadScoreCatalog({
-      listPieces: async () => [piece('p1', 'T', 'A', { songId: 's1' })],
-      listSongs: failing,
-    });
-    expect(linked.errors).toEqual({ songs: '404' });
+  it('reads every song folder once', async () => {
+    const listSongs = vi.fn(async () => [song('s1', 'T', 'A')]);
+    const entries = await loadScoreCatalog(listSongs);
+    expect(listSongs).toHaveBeenCalledTimes(1);
+    expect(entries.map((e) => e.key)).toEqual(['s1']);
   });
 
-  it('reports an unreachable Notes library', async () => {
-    const catalog = await loadScoreCatalog({
-      listPieces: () => Promise.reject(new Error('down')),
-      listSongs: async () => [],
-    });
-    expect(catalog.errors).toEqual({ notes: 'down' });
-    expect(catalog.entries).toEqual([]);
+  it('passes a server error on', async () => {
+    await expect(loadScoreCatalog(() => Promise.reject(new Error('down')))).rejects.toThrow('down');
   });
 });
 
@@ -129,24 +132,27 @@ describe('pickRecording', () => {
     ],
     offsetSec: 0,
   };
-  const linked = piece('p1', 'T', 'A', { songId: 's1' });
-  const mixSong = song('s1', 'T', 'A', '/media?path=mix.mp3');
+  const withMix = song('s1', 'T', 'A', {
+    originalAudio: media('mix.mp3'),
+    recordings: [{ file: 'take.mp3', url: media('take.mp3') }],
+  });
 
-  it('plays an own recording the marks name', () => {
-    const r = pickRecording(linked, mixSong, { ...marks, audio: 'take.mp3' });
+  it('plays the song folder recording the marks name', () => {
+    const r = pickRecording(withMix, { ...marks, audio: 'take.mp3' });
     expect(r.recording?.name).toBe('take.mp3');
     expect(r.recording?.songMix).toBeUndefined();
     expect(r.marks?.audio).toBe('take.mp3');
   });
 
-  it('plays the linked song mix with marks that name no own recording', () => {
-    const r = pickRecording(linked, mixSong, { ...marks, audio: null });
+  it('plays the song mix with marks that name no other recording', () => {
+    const r = pickRecording(withMix, { ...marks, audio: null });
     expect(r.recording).toMatchObject({ songMix: true, local: false });
     expect(r.marks).not.toBeNull();
   });
 
-  it('falls back to the first own recording without marks', () => {
-    const r = pickRecording(piece('p1', 'T', 'A'), null, { ...marks, audio: 'gone.mp3' });
+  it('falls back to the first recording without marks when there is no mix', () => {
+    const noMix = { ...withMix, originalAudio: null };
+    const r = pickRecording(noMix, { ...marks, audio: 'gone.mp3' });
     expect(r.recording?.name).toBe('take.mp3');
     expect(r.marks).toBeNull();
   });

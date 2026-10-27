@@ -44,7 +44,7 @@ Decisions in [2026-10-27 maintainer decisions](reports/2026-10-27-maintainer-dec
 - Q16 tabletop hidden-zone leaks (#551) → close the UI leaks **and** redact hidden widgets per seat on the host.
 - Q17 Docker Hub namespace → the account owns `nexumia`; `nexumia/melodiq-server` is no longer published from 1.2.0 (`docker-publish.yml`).
 - Q19 local tabletop templates (#547) → a separate store keyed by game id, with "reset to original".
-- Q18 (resolved 2026-10-26) will be reversed by #568: the song folder becomes the only store, and `song.json` replaces `piece.json`.
+- Q18 reversed by #568 → the song folder is the only store for Melodiq and Melodiq Notes: scores, `<score>.marks.json` and Notes recordings live in it, `song.json` replaces `piece.json` (title, artist, score labels) and gives a song without `.txt` a stable id. `/api/notes/pieces…`, `/notes/media` and the deprecated `/api/songs/:id/scores` routes are replaced by song-folder routes (no aliases); the old Notes library moves into song folders once (non-destructive, marker file). [song-pipeline §4](tech/song-pipeline.md#4-sheet-music-for-melodiq-notes)
 
 ## Resolved 2026-10-26
 
@@ -54,7 +54,7 @@ Decisions in [2026-10-27 maintainer decisions](reports/2026-10-27-maintainer-dec
 
 ## Resolved 2026-10-25
 
-- Q18 one storage place for Melodiq Notes sheet music (#534, #486) → maintainer decision: (a) and (b) yes — the Notes library is the only score store; a piece links a Melodiq song with `songId` and plays with its mix, bar marks live in the piece; song-folder scores are imported once on startup (non-destructive, marker file). (c) `POST`/`DELETE /api/songs/:id/scores` answer `410`; reads and marks routes stay as deprecated aliases of the linked pieces. [song-pipeline §4](tech/song-pipeline.md#4-sheet-music-for-melodiq-notes)
+- Q18 one storage place for Melodiq Notes sheet music (#534, #486) → _reversed 2026-10-27 by #568 (see above)_; maintainer decision then: (a) and (b) yes — the Notes library is the only score store; a piece links a Melodiq song with `songId` and plays with its mix, bar marks live in the piece; song-folder scores are imported once on startup (non-destructive, marker file). (c) `POST`/`DELETE /api/songs/:id/scores` answer `410`; reads and marks routes stay as deprecated aliases of the linked pieces. [song-pipeline §4](tech/song-pipeline.md#4-sheet-music-for-melodiq-notes)
 
 ## Resolved 2026-10-18
 

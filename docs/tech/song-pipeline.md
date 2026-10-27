@@ -8,8 +8,8 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-25
-  method: 'read server/src/plugins/melodiq/{services/download.ts,services/queueManager.ts,services/separator.ts,services/usdb.ts,services/scoreMigration.ts,routes/*.ts}, server/src/scripts/align_lyrics.py'
+  at: 2026-10-27
+  method: 'read server/src/plugins/melodiq/{services/download.ts,services/queueManager.ts,services/separator.ts,services/usdb.ts,services/scanner.ts,services/songFolder.ts,services/notesMigration.ts,routes/*.ts}, server/src/scripts/align_lyrics.py'
 sources:
   - 'server/src/plugins/melodiq/services/download.ts'
   - 'server/src/plugins/melodiq/services/separator.ts'
@@ -26,7 +26,7 @@ yt-dlp lookup, install and spawning live in `services/ytdlp.ts`; `.txt` header p
 
 Started by `POST /api/usdb/download`; poll `GET /api/usdb/status/:jobId`; list `GET /api/usdb/jobs`; cancel/clear `DELETE /api/usdb/jobs/:jobId?`.
 
-1. **Target folder** — `downloadDir`, else the first configured directory, else cwd; one sub-folder per song (sanitised name). A request with `songId` downloads into that indexed song's folder instead (`queueManager.resolveDownloadRequest`; folder must lie in a library directory, unknown ids queue nothing → `400`); such a job keeps the folder's existing `#VIDEO` when `videoMode` is `none`.
+1. **Target folder** — `downloadDir`, else the first configured directory, else cwd; one sub-folder per song (sanitised name). A request with `songId` downloads into that indexed song's folder instead (`queueManager.resolveDownloadRequest`; folder must lie in a library directory, unknown ids queue nothing → `400`); such a job keeps the folder's existing `#VIDEO` when `videoMode` is `none`. A song without `.txt` (§4) is downloaded into its folder under the folder's name; the job writes a `.txt`, so the song turns into a karaoke song and keeps its `song.json` id.
 2. **Lyrics** — reuse an existing local `.txt` with notes, else log in to USDB (`usdb.animux.de`, credentials via `POST /api/config/usdb-credentials`) and fetch `?link=gettxt&id=<usdbId>`. Without credentials/ID a minimal `.txt` is generated.
 3. **YouTube URL** — taken from the request or resolved by search (`GET /api/youtube/search`).
 4. **Cover, audio, video** — via `yt-dlp`. Video either downloaded (`bestvideo[ext=mp4]+bestaudio[ext=m4a]/…`) or, in `stream` mode (`defaultDownloadMode`, default `stream`), only the stream URL is written to the `.txt` header.
@@ -51,44 +51,59 @@ ADR-0004 still describes Demucs; see [open-questions Q13](../open-questions.md#q
 
 ## 3. Library and media endpoints
 
-| Endpoint                               | Purpose                                                              |
-| -------------------------------------- | -------------------------------------------------------------------- |
-| `GET /api/songs`, `GET /api/songs/:id` | scanned library (UltraStar `*.txt` under the configured directories) |
-| `POST /api/songs/refresh`              | rescan                                                               |
-| `PUT /api/songs/:id/txt`               | overwrite the `.txt`                                                 |
-| `POST /api/songs/:id/video`            | set / download a video                                               |
-| `DELETE /api/songs/:id`                | delete (needs master token or API key with `allowSongDeletion`)      |
-| `GET /media?path=…`                    | file streaming with HTTP 206 range support                           |
-| `GET /api/browse`                      | directory browser for the config UI                                  |
-| `GET/POST/DELETE /api/playlists…`      | server playlists (`playlists.json`)                                  |
+| Endpoint                               | Purpose                                                                                     |
+| -------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `GET /api/songs`, `GET /api/songs/:id` | scanned library: karaoke songs (UltraStar `*.txt`); `?all=1` adds songs without `.txt` (§4) |
+| `POST /api/songs/refresh`              | rescan                                                                                      |
+| `PUT /api/songs/:id/txt`               | overwrite the `.txt`                                                                        |
+| `POST /api/songs/:id/video`            | set / download a video                                                                      |
+| `DELETE /api/songs/:id`                | delete (needs master token or API key with `allowSongDeletion`)                             |
+| `GET /media?path=…`                    | file streaming with HTTP 206 range support                                                  |
+| `GET /api/browse`                      | directory browser for the config UI                                                         |
+| `GET/POST/DELETE /api/playlists…`      | server playlists (`playlists.json`)                                                         |
 
 Auth for all of these: [server-security.md](server-security.md). Client side: `src/games/melodiq/api/` and the settings UI under `src/features/settings/components/server/`.
 
 ## 4. Sheet music for Melodiq Notes
 
-Since Q18 the **Notes library** (plugin `notes`, `NOTES_DIR`, `server/src/plugins/notes/services/library.ts`) is the only store for sheet music and bar marks. A Notes piece may carry `songId` (in its `piece.json`): it then belongs to that Melodiq song and plays with the song folder's mix instead of a copy, while its scores and `<score>.marks.json` stay in the piece folder. Marks whose `audio` names none of the piece's own recordings belong to the song's mix (the app saves them with `audio: null`).
+Since #568 (reversing Q18) the **song folder is the only store** for Melodiq and Melodiq Notes: the karaoke `.txt` with its mix, sheet music (`.mxl`, `.musicxml`, `.mid`/`.midi`, and `.xml` when it is MusicXML — sniffed for `<score-partwise>`/`<score-timewise>`, `server/src/utils/scoreFiles.ts`) with `<score>.marks.json` bar marks, Notes' own recordings as extra audio, and `song.json`. One model, not one file format: a `.txt` is never converted to MusicXML on disk or back.
 
-**Karaoke vocals (#566).** A Melodiq song with an UltraStar `.txt` (`txtContent` in `/api/songs`) also appears in the Notes library: on the piece linked to it, else as an entry of its own (`buildScoreCatalog` in `stage/logic/scoreCatalog.ts`). "Vocals (karaoke)" opens its singer tracks as vocal parts (`loadKaraokeVocals` in `stage/serverScoreLoad.ts`, `ultraStarToScore` in `modules/music-score`) with the song's mix. The `.txt` is timed to that mix, so the bar marks come from `#BPM` and `#GAP` and no alignment runs. Nothing is stored; it is read from the song folder every time.
+**Scanner** (`services/scanner.ts`, helpers in `services/songFolder.ts`). A folder is a song if it has a valid karaoke `.txt` **or** sheet music / `song.json` (`readSongFolder`); loose files in a library root are not a song. Each song carries `folder`, `karaoke`, `folderScores`, `recordings` (audio besides the mix and its stems) and `labels`.
+
+- **Id rule:** a valid `id` in the folder's `song.json` is the song's id, with or without `.txt` (it survives renaming the folder and a `.txt` being added later; with several `.txt` files only the first by name takes it). A folder without a `song.json` id keeps the id derived from the `.txt` (title, artist, path), so existing Melodiq ids do not change; a scan never writes `song.json` into a folder that has a `.txt`.
+- With `.txt`: one song per `.txt`.
+- Without `.txt` (`readScoreOnlySong`): title, artist and the id come from `song.json`. A folder without `song.json` gets one written on the first scan (title and artist from an "Artist - Title" folder name); a copied folder with a duplicate `song.json` id gets a new one (`dedupeSongIds`). These songs are listed only with `GET /api/songs?all=1` (Melodiq Notes), not in Melodiq's karaoke list.
 
 **Export as UltraStar `.txt` (#567).** With bar marks (aligned, or from a karaoke load), the stage's recording panel offers "Save as UltraStar .txt" (`UltraStarExport.tsx`, `buildUltraStarFile` in `stage/logic/ultraStarExport.ts`); a vocal-part picker appears when the song has several vocal parts, plus a duet entry for exactly two. `scoreToUltraStar` in `modules/music-score/scoreToUltraStar.ts` is the inverse of `ultraStarToScore`: score beat -> seconds (bar marks, plus the fine-tune offset) -> UltraStar beat on a grid of 15 / `#BPM` seconds. Default `#BPM` is the marks' average quarter tempo, doubled until it is at least 240 (grid of at most 62.5 ms); `#GAP` is the first note's time. Pitch 60 = 0; a syllable gets a leading space when it starts a new word (not the track's first), no space when the previous one ends in '-', and '~' when it has no lyric. Kinds come from `ScoreNote.ultrastar` (`*`/`F`/`R`/`G`), else every note is `:` (MusicXML has no kinds: lossy). Line breaks come from `ScorePart.phraseBreaks` when present, else from the pauses between notes (0.7 s, 0.28 s after a note ending in `.`, `!` or `?`). Two parts become `P1`/`P2` with `#DUETSINGERP1/P2`. Without bar marks it throws. Writing the file into the song folder is not built (#568). The MusicXML export with marks (`applyBarMarksToMusicXml`) stays next to it.
 
-**One-time import.** After the initial scan the melodiq plugin imports every score found in a song folder (`.mxl`, `.musicxml`, `.mid`/`.midi`, and `.xml` when it is MusicXML — sniffed for `<score-partwise>`/`<score-timewise>`; scanner field `Song.folderScores`, `server/src/utils/scoreFiles.ts`) into a Notes piece linked to that song, together with its `.marks.json` (`services/scoreMigration.ts`). Originals stay in the song folder. The marker file `.song-scores-imported.json` in the notes folder lists every imported source file, so a restart never imports one twice — not even after its piece was deleted; a score added to a song folder later is imported on the next start.
+**`song.json`** (replaces the Notes `piece.json`): `{ version: 1, id, title, artist, labels: { <score file>: <label> } }`. With a `.txt`, its headers win for title and artist. `PUT /api/songs/:id/meta` on a song without `song.json` writes the song's current id into it, so that id stays fixed from then on.
 
-| Endpoint (deprecated, `routes/scores.ts`) | Behaviour                                                                                          |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `GET /api/songs/:id/scores`               | scores of the Notes pieces linked to the song: `{ pieceId, file, url, hasMarks }` (`/notes/media`) |
-| `GET /api/songs/:id/scores/:file/marks`   | alias of the linked piece's marks                                                                  |
-| `PUT /api/songs/:id/scores/:file/marks`   | alias: stores the marks in the linked piece (never in the song folder)                             |
-| `POST /api/songs/:id/scores`              | `410` with `use`: create a piece with `songId` and upload into it                                  |
-| `DELETE /api/songs/:id/scores/:file`      | `410` with `use`: delete the file from its Notes piece                                             |
+| Endpoint (`routes/songFiles.ts`)        | Behaviour                                                                                                                                         |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/songs`                       | new song folder without `.txt` (`{ title, artist? }`) in `downloadDir` (when inside a library) or the first library directory; writes `song.json` |
+| `PUT /api/songs/:id/meta`               | `song.json`: `title`, `artist`, `labels` (merged; an empty label removes it; only existing score files)                                           |
+| `POST /api/songs/:id/files`             | upload a score or a recording (multipart `file`); never overwrites (`name (2)`)                                                                   |
+| `DELETE /api/songs/:id/files/:file`     | remove a score (with its marks and label) or an extra recording; the mix and its stems are not addressable; needs `allowSongDeletion`             |
+| `GET /api/songs/:id/scores/:file/marks` | the score's bar marks                                                                                                                             |
+| `PUT /api/songs/:id/scores/:file/marks` | store bar marks (`{ marks, offsetSec?, audio? }`) next to the score                                                                               |
 
-`GET /api/songs` and `/api/songs/:id` fill each song's `scores` the same way. Clients use the Notes routes (`/api/notes/pieces…`, `POST`/`PUT` accept `songId`; on `PUT` a missing `songId` keeps the link, `null` removes it).
+Clients get each song's `scores` (`{ file, url, hasMarks, label }`) and `recordings` (`{ file, url }`) with `/media` URLs in `GET /api/songs`. `DELETE /api/songs/:id` removes a song without `.txt` with its folder. Marks whose `audio` names none of the folder's recordings belong to the song's mix (the app saves them with `audio: null`). `/api/notes/pieces…`, `/notes/media/…` and the earlier `/api/songs/:id/scores` upload/delete routes are gone (no aliases).
+
+**Migration of the old Notes library** (`services/notesMigration.ts`, counterpart of the removed Q18 import). After the initial scan, every piece folder in `NOTES_DIR` moves into a song folder: a piece with `songId` into that song's folder, any other piece (or one whose song is gone) into a new song folder without `.txt` with `song.json`. Scores, their `.marks.json` and recordings are copied; name clashes go through `uniqueFileName`, a file the song folder already holds with the same content (from the Q18 import) is not copied twice, marks follow a renamed recording, and of two marks files for the same score the newer wins. The marker `.song-folders-migrated.json` in `NOTES_DIR` lists each migrated piece and, once a run had no failures, `completedAt`, after which startup skips the migration. It is non-destructive: the originals stay until confirmed.
+
+| Endpoint                            | Behaviour                                                              |
+| ----------------------------------- | ---------------------------------------------------------------------- |
+| `GET /api/notes/migration`          | `{ pending, migrated, completedAt, confirmedAt }`                      |
+| `POST /api/notes/migration/run`     | migrate pieces not migrated yet, without a restart (management rights) |
+| `POST /api/notes/migration/confirm` | remove the migrated originals from `NOTES_DIR` (management rights)     |
+
+**Karaoke vocals (#566).** A song with an UltraStar `.txt` (`txtContent`) offers "Vocals (karaoke)" in its Notes entry: its singer tracks as vocal parts (`loadKaraokeVocals` in `stage/serverScoreLoad.ts`, `ultraStarToScore` in `modules/music-score`) with the song's mix. The `.txt` is timed to that mix, so the bar marks come from `#BPM` and `#GAP` and no alignment runs; they are not stored. Saving with the vocals on stage only uploads a new recording into the song folder.
 
 The server does not search or download sheet music: users fetch MusicXML themselves (for example from musescore.com with their own account). Alignment runs in the client (`src/modules/music-score`), the server only stores the result.
 
-Melodiq Notes lists only Notes pieces (`src/games/melodiq-notes/stage/logic/scoreCatalog.ts`, one entry per piece, no title matching); a linked piece shows a "Melodiq song" badge and loads with the song's mix (`pickRecording` in `stage/serverScoreLoad.ts`). Saving always goes to the Notes library (`saveToNotesLibrary` in `stage/logic/notesLibrarySync.ts`).
+Melodiq Notes lists one entry per song folder (`buildScoreCatalog` in `src/games/melodiq-notes/stage/logic/scoreCatalog.ts`, from `listLibrarySongs` in `src/lib/companion/songScoresApi.ts`): its scores (shown by label, else file name), its recordings (mix plus Notes recordings) and its karaoke vocals. All scores of a song play with the same mix (`pickRecording` in `stage/serverScoreLoad.ts`). Songs with a `.txt` show a "Melodiq song" badge; only songs without `.txt` can be deleted from Notes. Saving (`saveToNotesLibrary` in `stage/logic/notesLibrarySync.ts`, client `src/lib/companion/notesLibraryApi.ts`) writes into the song the score came from; a score not on the server yet goes into the song folder with the same normalised artist + title, else into a new song folder (`POST /api/songs`).
 
-**Recording from YouTube (#486).** "Find on YouTube" in the Melodiq Notes recording panel (stage → Recording; `stage/components/YouTubeRecordingDialog.tsx`, `stage/useYouTubeImport.ts`, logic in `stage/logic/youtubeImport.ts`) starts from the score on stage: it uses the song the piece is linked to, else a song folder with the same normalised artist + title. A song **with** a recording is used as it is (its mix is never replaced); one without a recording, or no match, gets a §1 download job (`POST /api/usdb/download` with `youtubeUrl`, `videoMode: 'none'`, and `songId` for the existing folder), searched via `GET /api/youtube/search` (client: `src/lib/companion/songDownloadApi.ts`). After the job is done the piece on stage is linked to the song (`PUT /api/notes/pieces/:id` with `songId`), or — for a score not yet in the library — a new piece with `songId` is created and the score uploaded into it; it is opened with the song's mix and aligned right away.
+**Recording from YouTube (#486).** "Find on YouTube" in the Melodiq Notes recording panel (stage → Recording; `stage/components/YouTubeRecordingDialog.tsx`, `stage/useYouTubeImport.ts`, logic in `stage/logic/youtubeImport.ts`) starts from the score on stage: it uses the song the score came from, else a song folder with the same normalised artist + title. A song **with** a recording is used as it is (its mix is never replaced); one without a recording, or no match, gets a §1 download job (`POST /api/usdb/download` with `youtubeUrl`, `videoMode: 'none'`, and `songId` for the existing folder), searched via `GET /api/youtube/search` (client: `src/lib/companion/songDownloadApi.ts`). After the job is done the score is in that song folder — it already was when it came from there, else it is uploaded (`POST /api/songs/:id/files`) — and it is opened with the song's mix and aligned right away.
 
 `alignRecording` (`src/modules/music-score/alignment.ts`) produces one mark per bar in two stages: a coarse match, then `fitMarksToNotes` (whole-song Viterbi fit of the score's attacks to band and pitch-class onsets, ±0.6 s per bar). The coarse match depends on the score:
 
@@ -97,7 +112,7 @@ Melodiq Notes lists only Notes pieces (`src/games/melodiq-notes/stage/logic/scor
 
 ## 5. Song folder layout
 
-No fixed file names — whatever the `.txt` headers reference:
+No fixed file names — whatever the `.txt` headers reference. A song without `.txt` has only `song.json`, scores, marks and recordings:
 
 ```
 <library dir>/<Artist - Title>/
@@ -107,6 +122,8 @@ No fixed file names — whatever the `.txt` headers reference:
 ├── <… Instrumental …>.mp3     # stem (optional)
 ├── <video>.mp4                # optional (or stream URL in the .txt)
 ├── <cover>.jpg|png            # optional
-├── <score>.mxl|musicxml|mid   # legacy sheet music: imported into the Notes library once (Q18)
-└── <score>.marks.json         # legacy bar marks for that score (copied with it)
+├── <score>.mxl|musicxml|mid   # sheet music for Melodiq Notes (any number)
+├── <score>.marks.json         # bar marks aligning that score with a recording
+├── <take>.webm|mp3|…          # Notes recordings (extra audio besides the mix)
+└── song.json                  # title, artist, score labels; the id of a song without .txt
 ```

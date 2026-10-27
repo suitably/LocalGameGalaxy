@@ -67,3 +67,28 @@ export function buildMinimalTxt(song: { title: string; artist: string } & MediaH
     .filter(Boolean)
     .join('\n');
 }
+
+/** YouTube video id in a URL, a USDB `v=`/`a=` value or a bare 11-character id. */
+export function extractYouTubeId(str?: string | null): string | null {
+  if (!str || typeof str !== 'string') return null;
+  let decoded = str;
+  try {
+    if (str.includes('%')) decoded = decodeURIComponent(str);
+  } catch {
+    // ignore decode error
+  }
+
+  const urlMatch = decoded.match(
+    /(?:youtube(?:-nocookie)?\.com\/(?:[^/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+  );
+  if (urlMatch) return urlMatch[1];
+
+  const usdbMatch = decoded.match(/(?:^|[,\s])(?:v|a)=([a-zA-Z0-9_-]{11})(?:[,\s]|$)/);
+  if (usdbMatch) return usdbMatch[1];
+
+  const trimmed = decoded.trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) {
+    return trimmed;
+  }
+  return null;
+}

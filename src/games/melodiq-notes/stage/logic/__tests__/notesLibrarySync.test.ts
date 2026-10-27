@@ -1,23 +1,32 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { CompanionSong } from '../../../../../lib/companion/songScoresApi';
 import { saveToNotesLibrary, type NotesApi, type NotesSaveInput } from '../notesLibrarySync';
 
-function fakeApi() {
-  const uploads: string[] = [];
+const songFolder = (id: string, title: string, artist: string): CompanionSong => ({
+  id,
+  title,
+  artist,
+  originalAudio: null,
+  audio: null,
+  instrumentalAudio: null,
+  cover: null,
+  karaoke: false,
+});
+
+function fakeApi(existing: CompanionSong[] = []) {
+  const uploads: [string, string][] = [];
   const api = {
-    createPiece: vi.fn(async (meta: { title: string; artist: string }) => ({
-      id: 'p1',
-      ...meta,
-      updatedAt: 0,
-      scores: [],
-      recordings: [],
-    })),
-    upload: vi.fn(async (_id: string, file: File) => {
-      uploads.push(file.name);
-      return { file: `stored-${file.name}`, kind: 'score' as const };
+    listSongs: vi.fn(async () => existing),
+    createSong: vi.fn(async (meta: { title: string; artist: string }) =>
+      songFolder('new', meta.title, meta.artist),
+    ),
+    upload: vi.fn(async (songId: string, file: File) => {
+      uploads.push([songId, file.name]);
+      return { file: `stored-${file.name}` };
     }),
     saveMarks: vi.fn(async () => ({ success: true as const })),
   };
-  return { api: api as unknown as NotesApi & typeof api, uploads };
+  return { api: api as NotesApi & typeof api, uploads };
 }
 
 const base: NotesSaveInput = {
@@ -37,18 +46,26 @@ const marks = [
   { beat: 4, sec: 2.5 },
 ];
 
-describe('saveToNotesLibrary', () => {
-  it('creates a piece and stores the MusicXML text as a score file', async () => {
+describe('saveToNotesLibrary (#568: into song folders)', () => {
+  it('creates a song folder for a new song and stores the MusicXML text in it', async () => {
     const { api, uploads } = fakeApi();
     const result = await saveToNotesLibrary(base, api);
-    expect(api.createPiece).toHaveBeenCalledWith({ title: 'Prelude', artist: 'Bach' });
-    expect(uploads).toEqual(['Prelude.musicxml']);
+    expect(api.createSong).toHaveBeenCalledWith({ title: 'Prelude', artist: 'Bach' });
+    expect(uploads).toEqual([['new', 'Prelude.musicxml']]);
     expect(result).toEqual({
-      pieceId: 'p1',
+      songId: 'new',
       scoreFile: 'stored-Prelude.musicxml',
       recordingName: null,
     });
     expect(api.saveMarks).not.toHaveBeenCalled();
+  });
+
+  it('adds the score to the song folder with the same artist and title', async () => {
+    const { api, uploads } = fakeApi([songFolder('s1', 'prelude', 'BACH')]);
+    const result = await saveToNotesLibrary(base, api);
+    expect(api.createSong).not.toHaveBeenCalled();
+    expect(uploads).toEqual([['s1', 'Prelude.musicxml']]);
+    expect(result.songId).toBe('s1');
   });
 
   it('prefers the opened file and stores recording and marks with the stored names', async () => {
@@ -63,8 +80,8 @@ describe('saveToNotesLibrary', () => {
       },
       api,
     );
-    expect(uploads).toEqual(['Prelude.mxl', 'take.mp3']);
-    expect(api.saveMarks).toHaveBeenCalledWith('p1', 'stored-Prelude.mxl', {
+    expect(uploads.map(([, f]) => f)).toEqual(['Prelude.mxl', 'take.mp3']);
+    expect(api.saveMarks).toHaveBeenCalledWith('new', 'stored-Prelude.mxl', {
       marks,
       offsetSec: 0.2,
       audio: 'stored-take.mp3',
@@ -72,24 +89,36 @@ describe('saveToNotesLibrary', () => {
     expect(result.recordingName).toBe('stored-take.mp3');
   });
 
-  it('only adds what is missing to a stored piece', async () => {
+  it('only adds what is missing to a stored score', async () => {
     const { api, uploads } = fakeApi();
     await saveToNotesLibrary(
+      { ...base, stored: { songId: 's9', scoreFile: 'a.mxl' }, recordingName: 'old.mp3', marks },
+      api,
+    );
+    expect(api.listSongs).not.toHaveBeenCalled();
+    expect(api.createSong).not.toHaveBeenCalled();
+    expect(uploads).toEqual([]);
+    expect(api.saveMarks).toHaveBeenCalledWith(
+      's9',
+      'a.mxl',
+      expect.objectContaining({ audio: 'old.mp3' }),
+    );
+  });
+
+  it('stores only the recording for karaoke vocals (no score file, no marks)', async () => {
+    const { api, uploads } = fakeApi();
+    const result = await saveToNotesLibrary(
       {
         ...base,
-        stored: { pieceId: 'p9', scoreFile: 'a.mxl' },
-        recordingName: 'old.mp3',
+        stored: { songId: 'k1', scoreFile: null },
+        recordingFile: new File(['a'], 'sung.webm'),
         marks,
       },
       api,
     );
-    expect(api.createPiece).not.toHaveBeenCalled();
-    expect(uploads).toEqual([]);
-    expect(api.saveMarks).toHaveBeenCalledWith(
-      'p9',
-      'a.mxl',
-      expect.objectContaining({ audio: 'old.mp3' }),
-    );
+    expect(uploads).toEqual([['k1', 'sung.webm']]);
+    expect(api.saveMarks).not.toHaveBeenCalled();
+    expect(result).toEqual({ songId: 'k1', scoreFile: null, recordingName: 'stored-sung.webm' });
   });
 
   it('fails without any score', async () => {

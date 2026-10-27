@@ -6,6 +6,16 @@ import { serverConfig } from '../../../config';
 import { generateId } from '../../../utils/helpers';
 import type { Song, SongScore } from '../../../core/types';
 import { findScoreFiles } from '../../../utils/scoreFiles';
+import {
+  SONG_FOLDER_GLOBS,
+  dedupeSongIds,
+  findRecordingFiles,
+  libraryFor,
+  readScoreOnlySong,
+  readSongMeta,
+  storedSongId,
+} from './songFolder';
+import { extractYouTubeId } from './ultrastarTxt';
 
 let SONG_CACHE: Song[] = [];
 let IS_SCANNING = false;
@@ -61,30 +71,6 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
     return null;
   }
 
-  const extractYouTubeId = (str?: string | null): string | null => {
-    if (!str || typeof str !== 'string') return null;
-    let decoded = str;
-    try {
-      if (str.includes('%')) decoded = decodeURIComponent(str);
-    } catch {
-      // ignore decode error
-    }
-
-    const urlMatch = decoded.match(
-      /(?:youtube(?:-nocookie)?\.com\/(?:[^/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
-    );
-    if (urlMatch) return urlMatch[1];
-
-    const usdbMatch = decoded.match(/(?:^|[,\s])(?:v|a)=([a-zA-Z0-9_-]{11})(?:[,\s]|$)/);
-    if (usdbMatch) return usdbMatch[1];
-
-    const trimmed = decoded.trim();
-    if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) {
-      return trimmed;
-    }
-    return null;
-  };
-
   const getServeUrl = async (filename?: string | null): Promise<string | null> => {
     if (!filename) return null;
     const cleanFilename = filename.trim().replace(/^["']|["']$/g, '');
@@ -132,8 +118,9 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
   }
 
   let folderScores: SongScore[] = [];
+  let dirFiles: string[] = [];
   try {
-    const dirFiles = await fs.promises.readdir(dir);
+    dirFiles = await fs.promises.readdir(dir);
     folderScores = await findScoreFiles(dir, dirFiles);
     if (!vocalsPath) {
       const vFile = dirFiles.find(
@@ -173,6 +160,15 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
   }
 
   const hasSeparation = !!(vocalsPath && (instrumentalPath || audioPath));
+  // the mix and its stems are the song's audio; any other audio is an extra recording (Notes)
+  const recordings = await findRecordingFiles(dir, dirFiles, [
+    audioPath,
+    originalAudioPath,
+    instrumentalPath,
+    vocalsPath,
+    videoPath,
+  ]);
+  const meta = await readSongMeta(dir);
 
   // DURATION CALCULATION
   let duration = 0;
@@ -197,7 +193,9 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
   }
 
   return {
-    id: generateId(headers['TITLE'], headers['ARTIST'], relativePath),
+    id:
+      storedSongId(meta, dirFiles, txtPath) ||
+      generateId(headers['TITLE'], headers['ARTIST'], relativePath),
     title: headers['TITLE'],
     artist: headers['ARTIST'],
     bpm: parseFloat(headers['BPM']?.replace(',', '.') || '0'),
@@ -217,31 +215,78 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
     txtPath,
     txtContent: content,
     duration,
+    folder: dir,
+    karaoke: true,
     folderScores,
+    recordings,
+    labels: meta?.labels ?? {},
     searchString:
       `${headers['TITLE']} ${headers['ARTIST']} ${headers['GENRE']} ${headers['LANGUAGE']}`.toLowerCase(),
   };
 }
 
+const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+/**
+ * The songs of one folder: one per valid karaoke `.txt`; without one, a song of its sheet music
+ * and `song.json`, unless the folder is a library root (loose files there are not a song).
+ */
+export async function readSongFolder(dir: string, libraryPath?: string): Promise<Song[]> {
+  const dirFiles = await fs.promises.readdir(dir).catch(() => null);
+  if (!dirFiles) return [];
+  const library = libraryPath ?? libraryFor(dir) ?? undefined;
+  const songs: Song[] = [];
+  for (const txt of dirFiles.filter((f) => f.toLowerCase().endsWith('.txt')).sort()) {
+    try {
+      const song = await parseSongFile(path.join(dir, txt), library);
+      if (song) songs.push(song);
+    } catch {
+      // Ignore individual song parse error
+    }
+  }
+  if (songs.length > 0) return songs;
+  if (library && path.resolve(library) === path.resolve(dir)) return [];
+  const song = await readScoreOnlySong(dir, dirFiles);
+  return song ? [song] : [];
+}
+
+/** Re-reads one song folder into the cache (after an upload, a new song or a migration). */
+export async function refreshSongFolder(dir: string): Promise<Song[]> {
+  const folder = path.resolve(dir);
+  const songs = await readSongFolder(folder);
+  SONG_CACHE = [...SONG_CACHE.filter((s) => path.resolve(s.folder) !== folder), ...songs];
+  return songs;
+}
+
 /**
  * Instantly indexes or updates a single song in SONG_CACHE without waiting for a full scan.
+ * A folder that just got its `.txt` stops being a song without one.
  */
 export async function addOrUpdateSongInCache(txtPath: string): Promise<Song | null> {
   try {
     const song = await parseSongFile(txtPath);
     if (!song) return null;
-    SONG_CACHE = SONG_CACHE.filter((s) => s.id !== song.id && s.txtPath !== song.txtPath);
+    SONG_CACHE = SONG_CACHE.filter(
+      (s) =>
+        s.id !== song.id &&
+        s.txtPath !== song.txtPath &&
+        !(!s.karaoke && path.resolve(s.folder) === path.resolve(song.folder)),
+    );
     SONG_CACHE.push(song);
     console.log(
       `[Scanner] Instantly indexed song: ${song.artist} - ${song.title} (${SONG_CACHE.length} songs in cache)`,
     );
     return song;
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    console.warn(`[Scanner] Failed to index single song for ${txtPath}:`, msg);
+    console.warn(`[Scanner] Failed to index single song for ${txtPath}:`, errorText(e));
     return null;
   }
 }
+
+let initialScanPromise: Promise<void> | null = null;
+
+/** The first library scan, started once; plugins that need the song cache wait for it. */
+export const initialScan = (): Promise<void> => (initialScanPromise ??= scanSongs());
 
 export const scanSongs = async (): Promise<void> => {
   if (IS_SCANNING) {
@@ -263,22 +308,16 @@ export const scanSongs = async (): Promise<void> => {
 
   for (const libraryPath of serverConfig.directories) {
     try {
-      const txtFiles = await fg('**/*.txt', {
+      const files = await fg(SONG_FOLDER_GLOBS, {
         cwd: libraryPath,
         absolute: true,
         ignore: ['**/node_modules/**', '**/.*'],
         onlyFiles: true,
+        caseSensitiveMatch: false,
       });
-
-      for (const txtPath of txtFiles) {
-        try {
-          const song = await parseSongFile(txtPath, libraryPath);
-          if (song) {
-            newSongs.push(song);
-          }
-        } catch {
-          // Ignore individual song parse error
-        }
+      const folders = [...new Set(files.map((f) => path.dirname(f)))].sort();
+      for (const folder of folders) {
+        newSongs.push(...(await readSongFolder(folder, libraryPath)));
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -295,6 +334,7 @@ export const scanSongs = async (): Promise<void> => {
     }
   }
 
+  await dedupeSongIds(newSongs);
   SONG_CACHE = newSongs;
   IS_SCANNING = false;
   console.log(

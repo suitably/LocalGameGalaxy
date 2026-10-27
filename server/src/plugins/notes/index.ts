@@ -1,20 +1,17 @@
 import type { GalaxyPlugin } from '../../core/types';
-import { requireAuth } from '../../core/auth';
 import { serverConfig } from '../../config';
-import { notesPiecesRouter } from './routes/pieces';
-import { notesMediaRouter } from './routes/media';
 
+/**
+ * Melodiq Notes keeps its sheet music, marks and recordings in song folders (#568); the Melodiq
+ * plugin serves them and moves the old Notes library (`NOTES_DIR`) into song folders once. The
+ * plugin id stays so existing `PLUGINS` settings keep working.
+ */
 export const notesPlugin: GalaxyPlugin = {
   id: 'notes',
   name: 'Melodiq Notes Library',
-  version: '1.0.0',
-  description: 'Stores sheet music (MusicXML/MIDI), recordings and bar marks for Melodiq Notes',
-  init: (app) => {
-    app.use('/api/notes/*', requireAuth);
-    app.use('/notes/media/*', requireAuth);
-
-    app.route('/', notesPiecesRouter);
-    app.route('/', notesMediaRouter);
-    console.log(`[Notes] Library folder: ${serverConfig.notesDir}`);
+  version: '2.0.0',
+  description: 'Old Melodiq Notes library folder (NOTES_DIR), moved into song folders on startup',
+  init: () => {
+    console.log(`[Notes] Old library folder (migration source): ${serverConfig.notesDir}`);
   },
 };

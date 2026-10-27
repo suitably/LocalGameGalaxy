@@ -96,7 +96,9 @@ export async function runInstallJob(job: SeparatorJob): Promise<void> {
   };
 
   try {
-    job.log.push('Step 1/2: Installing CPU-only PyTorch dependencies (saves >1GB by avoiding CUDA)...');
+    job.log.push(
+      'Step 1/2: Installing CPU-only PyTorch dependencies (saves >1GB by avoiding CUDA)...',
+    );
     await runPip(
       [
         'install',
@@ -108,11 +110,15 @@ export async function runInstallJob(job: SeparatorJob): Promise<void> {
         'https://download.pytorch.org/whl/cpu',
       ],
       10,
-      50
+      50,
     );
 
     job.log.push('Step 2/2: Installing audio-separator[cpu] and whisper-timestamped...');
-    await runPip(['install', '--default-timeout=1000', 'audio-separator[cpu]', 'whisper-timestamped'], 50, 95);
+    await runPip(
+      ['install', '--default-timeout=1000', 'audio-separator[cpu]', 'whisper-timestamped'],
+      50,
+      95,
+    );
 
     job.progress = 100;
     job.status = 'done';
@@ -128,12 +134,14 @@ export async function runInstallJob(job: SeparatorJob): Promise<void> {
 export function findVocalsFile(
   songDir: string,
   txtPath?: string | null,
-  explicitVocals?: string | null
+  explicitVocals?: string | null,
 ): string | null {
   if (!songDir || !fs.existsSync(songDir)) return null;
 
   if (explicitVocals) {
-    const explicitPath = path.isAbsolute(explicitVocals) ? explicitVocals : path.join(songDir, explicitVocals);
+    const explicitPath = path.isAbsolute(explicitVocals)
+      ? explicitVocals
+      : path.join(songDir, explicitVocals);
     if (fs.existsSync(explicitPath)) return path.basename(explicitPath);
   }
 
@@ -200,7 +208,9 @@ export async function runFullSyncJob(job: SeparatorJob): Promise<void> {
       targetAudioPath = path.join(songDir, vocalsFile);
       job.progress = 30;
     } else {
-      job.log.push(`No separated vocals stem found. Using master audio track for AI lyrics alignment: ${audioFile}`);
+      job.log.push(
+        `No separated vocals stem found. Using master audio track for AI lyrics alignment: ${audioFile}`,
+      );
       targetAudioPath = audioPath;
       job.progress = 30;
     }
@@ -210,7 +220,9 @@ export async function runFullSyncJob(job: SeparatorJob): Promise<void> {
     }
 
     job.progress = 40;
-    job.log.push(`Running AI Forced Alignment with Whisper on: ${path.basename(targetAudioPath)}...`);
+    job.log.push(
+      `Running AI Forced Alignment with Whisper on: ${path.basename(targetAudioPath)}...`,
+    );
 
     await new Promise<void>((resolve, reject) => {
       const scriptPath = getAlignLyricsScriptPath();
@@ -381,7 +393,7 @@ export async function runSeparatorJob(job: SeparatorJob): Promise<void> {
           !l.toLowerCase().startsWith('#vocals:') &&
           !l.toLowerCase().startsWith('#instrumental:') &&
           !l.toLowerCase().startsWith('#original:') &&
-          !l.toLowerCase().startsWith('#originalaudio:')
+          !l.toLowerCase().startsWith('#originalaudio:'),
       );
 
       let lastHeader = 0;
