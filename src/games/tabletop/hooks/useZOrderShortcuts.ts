@@ -36,6 +36,7 @@ export function useZOrderShortcuts(
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+      if (e.defaultPrevented) return; // the editor already reordered its selection
       const op = zOrderOpForKey(e);
       if (!op) return;
       e.preventDefault();

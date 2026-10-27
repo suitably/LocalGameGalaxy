@@ -97,6 +97,14 @@ describe('tabletopReducer z-order', () => {
     expect(next.game.widgets.a.zIndex).toBe(1);
   });
 
+  it('MOVE_WIDGET leaves a keepZOrder widget on its layer (#548)', () => {
+    const s0 = state();
+    s0.game.widgets.a = { ...s0.game.widgets.a, keepZOrder: true };
+    const next = tabletopReducer(s0, { type: 'MOVE_WIDGET', payload: { id: 'a', x: 5, y: 5 } });
+    expect(next.game.widgets.a.zIndex).toBe(1);
+    expect(next.game.widgets.a.x).toBe(5);
+  });
+
   it('SET_Z_ORDER sends to back and sticks until the widget is moved again', () => {
     const back = tabletopReducer(state(), {
       type: 'SET_Z_ORDER',

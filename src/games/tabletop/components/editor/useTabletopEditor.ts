@@ -6,6 +6,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { generateUUID } from '../../../../lib/uuid';
+import { zOrderOpForKey } from '../../hooks/useZOrderShortcuts';
 import type { TabletopAction, TabletopGameState } from '../../logic/tabletopReducer';
 import type { TabletopTableConfig } from '../../logic/types';
 import {
@@ -122,13 +123,15 @@ export function useTabletopEditor(
     setSelectedId(null);
   };
 
-  // Keyboard: Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z or Ctrl+Y redo, Delete removes the selection.
+  // Keyboard: Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z or Ctrl+Y redo, Ctrl/Cmd+] / [ reorder,
+  // Delete removes the selection.
   useEffect(() => {
     if (!editMode) return;
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
       const mod = e.ctrlKey || e.metaKey;
+      const zOp = zOrderOpForKey(e);
       if (mod && e.key.toLowerCase() === 'z') {
         e.preventDefault();
         if (e.shiftKey) redo();
@@ -136,6 +139,10 @@ export function useTabletopEditor(
       } else if (mod && e.key.toLowerCase() === 'y') {
         e.preventDefault();
         redo();
+      } else if (zOp && selectedId && !e.defaultPrevented) {
+        // same Ctrl/Cmd+] / [ as the table selection (which handles it first when it has one)
+        e.preventDefault();
+        dispatch({ type: 'SET_Z_ORDER', payload: { widgetIds: [selectedId], op: zOp } });
       } else if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
         e.preventDefault();
         dispatch({ type: 'DELETE_WIDGETS', payload: { ids: [selectedId] } });

@@ -71,6 +71,8 @@ export interface BaseWidget {
   zIndex: number;
   ownerSeat?: number; // 0-indexed player seat if private
   pinned?: boolean;
+  /** Moving it does not raise it (labels that must stay above or below pieces). */
+  keepZOrder?: boolean;
   label?: string;
   clipPath?: string;
   borderRadius?: string | number;

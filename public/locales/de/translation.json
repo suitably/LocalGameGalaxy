@@ -1077,6 +1077,7 @@
         "image": "Bild-URL",
         "ownerSeat": "Besitzer-Platz",
         "pinned": "Fixiert",
+        "keepZOrder": "Ebene beim Verschieben behalten",
         "color": "Farbe",
         "value": "Wert",
         "step": "Schritt",

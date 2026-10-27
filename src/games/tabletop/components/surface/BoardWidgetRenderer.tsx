@@ -17,6 +17,7 @@ import type {
   DieWidget,
 } from '../../logic/types';
 import type { TabletopAction } from '../../logic/tabletopReducer';
+import { useTouchLongPress } from '../../hooks/useTouchLongPress';
 import { CardWidgetView } from '../widgets/CardWidgetView';
 import { DeckWidgetView } from '../widgets/DeckWidgetView';
 import { TokenWidgetView } from '../widgets/TokenWidgetView';
@@ -32,7 +33,10 @@ interface BoardWidgetRendererProps {
   widget: TabletopWidget;
   isDragging: boolean;
   onPointerDown: (e: React.PointerEvent) => void;
-  onContextMenu: (e: React.MouseEvent) => void;
+  /** Right click, native long press, or the touch long-press fallback (iOS sends no contextmenu). */
+  onContextMenu: (
+    e: Pick<React.MouseEvent, 'clientX' | 'clientY' | 'preventDefault' | 'stopPropagation'>,
+  ) => void;
   dispatch: React.Dispatch<TabletopAction>;
   /** Inside a hidden zone the viewer may not see: render an inert placeholder only. */
   obscured?: boolean;
@@ -46,6 +50,9 @@ export const BoardWidgetRenderer: React.FC<BoardWidgetRendererProps> = ({
   dispatch,
   obscured = false,
 }) => {
+  const longPress = useTouchLongPress(({ clientX, clientY }) =>
+    onContextMenu({ clientX, clientY, preventDefault: () => {}, stopPropagation: () => {} }),
+  );
   if (obscured) {
     return (
       <Box
@@ -72,6 +79,7 @@ export const BoardWidgetRenderer: React.FC<BoardWidgetRendererProps> = ({
       data-widget-id={w.id}
       data-widget-wrapper
       onContextMenu={onContextMenu}
+      {...longPress}
       sx={{ display: 'contents' }}
     >
       {(() => {

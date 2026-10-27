@@ -1077,6 +1077,7 @@
         "image": "Image URL",
         "ownerSeat": "Owner seat",
         "pinned": "Pinned",
+        "keepZOrder": "Keep layer when moved",
         "color": "Colour",
         "value": "Value",
         "step": "Step",

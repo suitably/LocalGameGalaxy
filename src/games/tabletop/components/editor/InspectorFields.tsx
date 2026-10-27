@@ -96,6 +96,7 @@ export const InspectorFields: React.FC<InspectorFieldsProps> = ({ widget, onPatc
         ))}
       </TextField>
       {bool('pinned')}
+      {bool('keepZOrder')}
 
       {(widget.type === 'token' || widget.type === 'die') && text('color')}
       {widget.type === 'counter' && (
