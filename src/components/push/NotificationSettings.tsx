@@ -82,6 +82,12 @@ export const NotificationSettings: React.FC = () => {
             t('settings.relay_no_vapid', 'Server erreichbar, aber kein VAPID-Key konfiguriert.'),
           );
         }
+      } else if (res?.status === 503) {
+        // relay without VAPID secrets and without KV: Web Push is off there
+        setRelayStatus('error');
+        setRelayStatusMsg(
+          t('settings.relay_no_vapid', 'Server erreichbar, aber kein VAPID-Key konfiguriert.'),
+        );
       } else if (res) {
         setRelayStatus('error');
         setRelayStatusMsg(

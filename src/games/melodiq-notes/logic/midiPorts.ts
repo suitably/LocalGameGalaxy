@@ -25,3 +25,18 @@ export function midiInstrument<T extends { id: string; name: string; state: stri
   const picked = inputs.find((i) => i.id === selectedId && i.state === 'connected');
   return picked && !isVirtualMidiPort(picked.name) ? picked : null;
 }
+
+/**
+ * Name of a real instrument that disappeared and has not sent a note since, else null. Firefox on
+ * Linux often lists a replugged port again without delivering its messages (#599), so this stays
+ * set until a note actually arrives (the caller clears it then), not merely until the port is
+ * listed again.
+ */
+export function lostMidiInstrument(
+  prevLost: string | null,
+  prevInstrument: string | null,
+  instrument: string | null,
+): string | null {
+  if (prevInstrument && !instrument) return prevInstrument;
+  return prevLost;
+}

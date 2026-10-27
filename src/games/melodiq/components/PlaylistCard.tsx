@@ -34,7 +34,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
     >
       <CardActionArea onClick={onSelect} sx={{ flexGrow: 1, p: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <PlaylistPlayIcon sx={{ mr: 1, color: 'primary.main' }} />
+          <PlaylistPlayIcon sx={{ mr: 1, color: 'primary.text' }} />
           <Typography variant="h6" noWrap sx={{ flexGrow: 1 }}>
             {playlist.name}
           </Typography>

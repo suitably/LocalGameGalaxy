@@ -151,9 +151,11 @@ export function tabletopReducer(
         ...(widget.type === 'card' ? { inPile: false, pileId: undefined } : {}),
       };
 
-      // A moved widget goes to the top unless the caller fixed a zIndex.
+      // A moved widget goes to the top unless the caller fixed a zIndex or it keeps its layer.
       const stacked =
-        action.payload.zIndex === undefined ? raiseWidget(widgets, action.payload.id) : widgets;
+        action.payload.zIndex === undefined && !widget.keepZOrder
+          ? raiseWidget(widgets, action.payload.id)
+          : widgets;
 
       return {
         ...state,

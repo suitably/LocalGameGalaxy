@@ -91,6 +91,15 @@ describe('tabletopReducer card handling', () => {
     flyingCards: [],
   };
 
+  it('SHUFFLE_DECK keeps the cards and counts the shuffle for the animation (#556)', () => {
+    const once = tabletopReducer(baseState, { type: 'SHUFFLE_DECK', payload: { deckId: 'deck1' } });
+    const twice = tabletopReducer(once, { type: 'SHUFFLE_DECK', payload: { deckId: 'deck1' } });
+    const deck = twice.game.widgets.deck1 as DeckWidget;
+    expect([...deck.cardIds].sort()).toEqual(['c1', 'c2', 'c3']);
+    expect((once.game.widgets.deck1 as DeckWidget).shuffleCount).toBe(1);
+    expect(deck.shuffleCount).toBe(2);
+  });
+
   it('draws card to player hand on click (no position provided)', () => {
     const nextState = tabletopReducer(baseState, {
       type: 'DRAW_CARD',

@@ -64,9 +64,9 @@ Melodiq follows a strict separation of concerns, divided into domains:
 
 ### 2.6 Duet part choice on the phone
 
-- Duet songs have several `parsedSong.tracks`. The host sends their names to each phone (`songInfo`, `useBroadcastSongInfo.ts`).
-- On a phone (`isClient`), `usePhoneTrackChoice.ts` shows `PhoneTrackPicker.tsx` (P1 / P2) for a duet when the phone is on the host's session list and sends `{ type: 'trackSelect', trackIndex }` (`gameplay/logic/trackChoice.ts`) through `sendClientData` of `PhoneClientEngine.tsx`.
-- The host maps it to the phone's singer by peer id (`usePeerSessionMessages.ts`) and calls `switchTrack`. The choice is re-sent after a reconnect. The host does not echo the part back to the phone.
+- Duet songs have several `parsedSong.tracks`. The host sends each phone that has a singer `songInfo` with the part names and that singer's `trackIndex` (`useBroadcastSongInfo.ts`); it is re-sent when players join or leave and whenever a remote singer's part changes, also when the host switched it itself.
+- On a phone (`isClient`), `usePhoneClientMessages.ts` reads it (`parseAssignedTrack` in `gameplay/logic/trackChoice.ts`) and hands it to `usePhoneTrackChoice.ts` (`reportTrackAssignment`). The hook shows `PhoneTrackPicker.tsx` (P1 / P2) for a duet once the host has reported a part (and, when a host session list exists, the phone is on it), and sends `{ type: 'trackSelect', trackIndex }` through `sendClientData` of `PhoneClientEngine.tsx`. The phone does not parse the song for this.
+- The host maps it to the phone's singer by peer id (`usePeerSessionMessages.ts`) and calls `switchTrack`, which triggers the next `songInfo`. The choice is re-sent after a reconnect.
 
 ### 2.7 Remote host settings (phone to host RPC)
 

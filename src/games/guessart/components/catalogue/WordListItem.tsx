@@ -45,7 +45,7 @@ export const WordListItem: React.FC<WordListItemProps> = ({
         <Box display="flex" justifyContent="space-between" alignItems="flex-start">
           <Box>
             <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
-              <Typography variant="subtitle2" fontWeight={800} color="primary.main">
+              <Typography variant="subtitle2" fontWeight={800} color="primary.text">
                 <LangTag code="DE" />
                 {de}
               </Typography>

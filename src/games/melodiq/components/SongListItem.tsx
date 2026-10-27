@@ -198,7 +198,7 @@ export const SongListItem: React.FC<SongListItemProps> = ({
       {!isDownloading && !isDownloaded && song.usdbId && onActionClick && (
         <IconButton
           size="small"
-          sx={{ ml: 1, color: 'primary.main' }}
+          sx={{ ml: 1, color: 'primary.text' }}
           onClick={(e) => {
             e.stopPropagation();
             onActionClick(e);

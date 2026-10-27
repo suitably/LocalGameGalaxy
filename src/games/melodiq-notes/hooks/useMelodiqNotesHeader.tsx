@@ -50,7 +50,7 @@ export function useMelodiqNotesHeader({
         }}
       >
         <MusicNoteIcon
-          sx={{ color: 'primary.main', fontSize: { xs: 20, sm: 24 }, flexShrink: 0 }}
+          sx={{ color: 'primary.text', fontSize: { xs: 20, sm: 24 }, flexShrink: 0 }}
         />
         <Box sx={{ minWidth: 0 }}>
           <Stack direction="row" spacing={1} alignItems="center">

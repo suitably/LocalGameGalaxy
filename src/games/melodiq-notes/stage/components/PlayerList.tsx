@@ -87,7 +87,7 @@ export function PlayerList({ engine, onInvite, onRemoveRemote }: PlayerListProps
                   size="small"
                   value={seat.partId}
                   inputProps={{ 'aria-label': k('player_part', { no: i + 1 }) }}
-                  onChange={(e) => engine.setSeat(i, { partId: e.target.value })}
+                  onChange={(e) => engine.setSeat(i, { partId: e.target.value, chosen: true })}
                   sx={{ gridColumn: '2 / 4', minWidth: 0 }}
                 >
                   {song.parts.map((part) => (
@@ -104,7 +104,9 @@ export function PlayerList({ engine, onInvite, onRemoveRemote }: PlayerListProps
                   size="small"
                   value={seat.inst}
                   inputProps={{ 'aria-label': k('player_view', { no: i + 1 }) }}
-                  onChange={(e) => engine.setSeat(i, { inst: e.target.value as InstrumentKind })}
+                  onChange={(e) =>
+                    engine.setSeat(i, { inst: e.target.value as InstrumentKind, chosen: true })
+                  }
                   sx={{ gridColumn: '2 / 4', minWidth: 0 }}
                 >
                   {INSTRUMENT_ORDER.map((kind) => (

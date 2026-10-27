@@ -1,10 +1,11 @@
 /**
- * Players of a party room in seat order, for games played in the room [ID: HOOK-PARTY-ROOM-PLAYERS]
+ * Players of a party room in seat order, for games played in the room; spectators are left out
+ * [ID: HOOK-PARTY-ROOM-PLAYERS]
  */
 import { useEffect, useState } from 'react';
 import { storage, STORAGE_PREFIXES } from '../../../lib/storage';
 import { universalPartyManager, type PartyRoomState } from '../logic/universalPartyManager';
-import { seatOf } from '../logic/partyRoster';
+import { seatedPlayers, seatOf } from '../logic/partyRoster';
 
 export interface RoomPlayer {
   id: string;
@@ -13,7 +14,7 @@ export interface RoomPlayer {
 
 const fromState = (state: PartyRoomState | null): RoomPlayer[] =>
   state
-    ? [...state.players]
+    ? seatedPlayers(state.players)
         .sort((a, b) => seatOf(state.players, a.id) - seatOf(state.players, b.id))
         .map((p) => ({ id: p.id, name: p.name }))
     : [];

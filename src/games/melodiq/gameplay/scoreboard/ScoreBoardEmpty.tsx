@@ -34,7 +34,7 @@ export const ScoreBoardEmpty: React.FC<ScoreBoardEmptyProps> = ({ next }) => (
         <Typography variant="h6" sx={{ color: 'text.secondary', mb: 2 }}>
           ALS NÄCHSTES
         </Typography>
-        <Typography variant="h2" sx={{ color: 'primary.main', mb: 1 }}>
+        <Typography variant="h2" sx={{ color: 'primary.text', mb: 1 }}>
           {next.title}
         </Typography>
         <Typography variant="h4" sx={{ color: 'text.primary' }}>

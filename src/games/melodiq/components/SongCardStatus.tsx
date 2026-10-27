@@ -71,7 +71,7 @@ export const SongCardCorner: React.FC<SongCardStatusProps> = ({
         onClick={onActionClick}
         aria-label={t('common.a11y.download', 'Download')}
       >
-        <CloudDownloadIcon sx={{ color: 'primary.main', fontSize: 20 }} />
+        <CloudDownloadIcon sx={{ color: 'primary.text', fontSize: 20 }} />
       </ButtonBase>
     );
   }

@@ -52,7 +52,7 @@ export const GameInfoDialog: React.FC<GameInfoDialogProps> = ({ open, onClose })
             ? rules.map((rule, idx) => (
                 <ListItem key={idx} alignItems="flex-start" sx={{ px: 0, py: 1 }}>
                   <ListItemIcon sx={{ minWidth: 28, mt: 0.5 }}>
-                    <CircleIcon sx={{ fontSize: 8, color: 'primary.main' }} />
+                    <CircleIcon sx={{ fontSize: 8, color: 'primary.text' }} />
                   </ListItemIcon>
                   <ListItemText
                     primary={rule}

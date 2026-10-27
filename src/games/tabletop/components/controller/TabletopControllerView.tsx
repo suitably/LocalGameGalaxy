@@ -156,7 +156,7 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
                 <Typography variant="caption" color="text.secondary" textTransform="uppercase">
                   {t('games.tabletop.current_table_card', 'Aktuelle Karte auf dem Tisch')}
                 </Typography>
-                <Typography variant="h4" fontWeight={900} color="primary.main" sx={{ mt: 0.5 }}>
+                <Typography variant="h4" fontWeight={900} color="primary.text" sx={{ mt: 0.5 }}>
                   {topDiscardCard.frontContent.value}
                 </Typography>
               </Box>

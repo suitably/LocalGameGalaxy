@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMidiInput } from '../useMidiInput';
-import { midiInstrument } from '../logic/midiPorts';
+import { lostMidiInstrument, midiInstrument } from '../logic/midiPorts';
 import { useMicPitch } from '../hooks/useMicPitch';
 import type { StageEngine } from './engine/StageEngine';
+import { GM_DRUM_CHANNEL } from './engine/players';
 
 export type StageInputSource = 'keys' | 'midi' | 'mic';
 
@@ -15,9 +16,19 @@ export function useStageInput(engine: StageEngine) {
   const [chosen, setChosen] = useState<StageInputSource | null>(null);
   const sourceRef = useRef<StageInputSource>(chosen ?? 'keys');
   // Hits go straight to the engine, without a render per note.
+  const [midiLost, setMidiLost] = useState<string | null>(null);
+  const midiLostRef = useRef<string | null>(null);
   const onNoteOn = useCallback(
-    (pitch: number) => {
-      if (sourceRef.current === 'midi') engine.hitPitch(pitch);
+    (pitch: number, _velocity: number, channel: number) => {
+      // a note proves the instrument works again; render only for that first note
+      if (midiLostRef.current) {
+        midiLostRef.current = null;
+        setMidiLost(null);
+      }
+      if (sourceRef.current !== 'midi') return;
+      // an e-drum kit (GM percussion channel) shows the focused player the drum view
+      if (channel === GM_DRUM_CHANNEL) engine.autoDrumView();
+      engine.hitPitch(pitch);
     },
     [engine],
   );
@@ -25,6 +36,15 @@ export function useStageInput(engine: StageEngine) {
   const midi = useMidiInput({ onNoteOn, rescan: chosen === null || chosen === 'midi' });
   const instrument = midiInstrument(midi.devices, midi.selectedDeviceId);
   const source: StageInputSource = chosen ?? (instrument ? 'midi' : 'keys');
+  const instrumentName = instrument?.name ?? null;
+  const lastInstrument = useRef<string | null>(instrumentName);
+  useEffect(() => {
+    const next = lostMidiInstrument(midiLostRef.current, lastInstrument.current, instrumentName);
+    lastInstrument.current = instrumentName;
+    if (next === midiLostRef.current) return;
+    midiLostRef.current = next;
+    setMidiLost(next);
+  }, [instrumentName]);
   useEffect(() => {
     sourceRef.current = source;
   }, [source]);
@@ -50,7 +70,9 @@ export function useStageInput(engine: StageEngine) {
     source,
     choose,
     midiDevices: midi.devices,
-    midiName: instrument?.name ?? null,
+    midiName: instrumentName,
+    /** A real instrument that went away and has sent nothing since (hint: restart the browser). */
+    midiLost,
     micActive: mic.isMicActive,
   };
 }

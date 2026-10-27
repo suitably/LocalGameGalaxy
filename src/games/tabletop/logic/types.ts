@@ -71,6 +71,8 @@ export interface BaseWidget {
   zIndex: number;
   ownerSeat?: number; // 0-indexed player seat if private
   pinned?: boolean;
+  /** Moving it does not raise it (labels that must stay above or below pieces). */
+  keepZOrder?: boolean;
   label?: string;
   clipPath?: string;
   borderRadius?: string | number;
@@ -136,6 +138,8 @@ export interface DeckWidget extends BaseWidget {
   activeFace?: number;
   faceObjects?: FaceObject[];
   backFaceObjects?: FaceObject[];
+  /** Counts shuffles; a change plays the shuffle animation on every device. */
+  shuffleCount?: number;
 }
 
 export interface HolderWidget extends BaseWidget {

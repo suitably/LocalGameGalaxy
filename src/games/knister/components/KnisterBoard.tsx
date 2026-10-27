@@ -163,7 +163,7 @@ export const KnisterBoard: React.FC<KnisterBoardProps> = ({
             fontFamily: fontFamilies.display,
             fontVariantNumeric: 'tabular-nums',
             fontWeight: 800,
-            color: 'primary.main',
+            color: 'primary.text',
           }}
         >
           {scores.totalScore}

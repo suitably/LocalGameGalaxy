@@ -56,12 +56,15 @@ export function useGarticGameState({ initialRoomId }: UseGarticGameStateOptions 
     );
 
     if (isParty && partyState && partyState.players.length > 0) {
-      const partyPlayers: GarticPlayer[] = partyState.players.map((p) => ({
-        id: p.id,
-        name: p.name,
-        isHost: p.isHost,
-        ready: true,
-      }));
+      // spectators watch; the host stays in, since the game state is keyed to it
+      const partyPlayers: GarticPlayer[] = partyState.players
+        .filter((p) => !p.spectator || p.id === partyState.hostId)
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          isHost: p.isHost,
+          ready: true,
+        }));
 
       return createInitialGarticState(
         partyState.hostId,

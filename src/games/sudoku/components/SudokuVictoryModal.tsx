@@ -20,6 +20,7 @@ import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import { useTranslation } from 'react-i18next';
 import { useShareOrCopy } from '../../../modules/sharing/useShareOrCopy';
+import { publicAppLink } from '../../../lib/publicAppUrl';
 import type { SudokuDifficulty } from '../logic/types';
 
 interface SudokuVictoryModalProps {
@@ -58,8 +59,13 @@ export const SudokuVictoryModal: React.FC<SudokuVictoryModalProps> = ({
 
   const handleShare = () =>
     share(
-      'Sudoku Result',
-      `🔢 Sudoku (${t(`sudoku.difficulty.${difficulty}`)}) gelöst in ${formatTime(timeElapsed)}!\nFehler: ${mistakes}, Hinweise: ${hintsUsed}\n\nhttps://localgamegalaxy.app/#/games/sudoku`,
+      t('sudoku.share.title'),
+      `${t('sudoku.share.text', {
+        difficulty: t(`sudoku.difficulty.${difficulty}`),
+        time: formatTime(timeElapsed),
+        mistakes,
+        hints: hintsUsed,
+      })}\n\n${publicAppLink('games/sudoku')}`,
     );
 
   return (

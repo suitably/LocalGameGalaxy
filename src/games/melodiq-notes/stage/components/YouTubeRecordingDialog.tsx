@@ -48,7 +48,18 @@ export function YouTubeRecordingDialog({
     [songs, title, artist, linked],
   );
   const needsDownload = plan?.kind !== 'reuse';
-  const ready = !!plan && !!title.trim() && !!artist.trim() && (!needsDownload || !!url);
+  // why the main button is still disabled (#562: it looked unclickable without a reason)
+  const blocker =
+    !title.trim() || !artist.trim()
+      ? 'yt_need_meta'
+      : !plan
+        ? songsError
+          ? null
+          : 'yt_need_songs'
+        : needsDownload && !url
+          ? 'yt_need_video'
+          : null;
+  const ready = !!plan && !blocker;
   const folder =
     plan && plan.kind !== 'download-new' ? `${plan.song.artist} – ${plan.song.title}` : '';
 
@@ -126,6 +137,11 @@ export function YouTubeRecordingDialog({
               />
               <Typography variant="caption">{progressText}</Typography>
             </Stack>
+          )}
+          {blocker && !busy && (
+            <Typography variant="caption" color="text.secondary" role="status">
+              {k(blocker)}
+            </Typography>
           )}
           {run.kind === 'failed' && (
             <Alert severity="error">{k('yt_failed', { error: run.error })}</Alert>

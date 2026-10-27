@@ -8,10 +8,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMultiChannelSync } from '../../../modules/sync/useMultiChannelSync';
 import { MqttMailboxService } from '../../../modules/sync/MqttMailboxService';
 import { generateUUID } from '../../../lib/uuid';
+import { universalPartyManager } from '../../../features/party/logic/universalPartyManager';
 import {
   acceptIntent,
   classifyDelta,
   isSyncedIntent,
+  senderIsSpectator,
+  type RosterEntry,
   type TabletopSyncEnvelope,
   type TabletopSyncAction,
 } from '../logic/syncProtocol';
@@ -31,6 +34,12 @@ interface UseTabletopSyncOptions {
   /** This device only watches: it sends no intents and the host would reject them anyway. */
   spectator?: boolean;
 }
+
+/** The host's party roster for this room, or null outside a party. */
+const partyRoster = (roomId: string | null): RosterEntry[] | null => {
+  const state = universalPartyManager.getRoomState();
+  return state && state.roomId === roomId ? state.players : null;
+};
 
 export function useTabletopSync({
   roomId,
@@ -74,7 +83,11 @@ export function useTabletopSync({
           if (
             isHost &&
             acceptIntent(action.action, {
-              spectator: action.spectator === true || spectatorsRef.current.has(envelope.senderId),
+              spectator: senderIsSpectator({
+                claimed: action.spectator === true || spectatorsRef.current.has(envelope.senderId),
+                playerId: action.playerId,
+                roster: partyRoster(roomId),
+              }),
             })
           ) {
             dispatch(action.action);
@@ -123,7 +136,7 @@ export function useTabletopSync({
           break;
       }
     },
-    [senderId, isHost, dispatch, onReturnToLobby, enqueue, hands, seat],
+    [senderId, isHost, roomId, dispatch, onReturnToLobby, enqueue, hands, seat],
   );
 
   const { publish } = useMultiChannelSync<TabletopSyncEnvelope>({
@@ -177,6 +190,7 @@ export function useTabletopSync({
         type: 'REQUEST_SNAPSHOT',
         ...(publicKey ? { seat: seat!, publicKey } : {}),
         ...(spectator ? { spectator: true } : {}),
+        playerId: universalPartyManager.getMyPlayerId(),
       });
     });
   }, [roomId, isHost, broadcastAction, enqueue, hands, seat, spectator]);
@@ -187,7 +201,12 @@ export function useTabletopSync({
       if (spectator && isSyncedIntent(action)) return;
       dispatch(action);
       if (roomId && !isHost && isSyncedIntent(action)) {
-        broadcastAction({ type: 'INTENT', action, ...(spectator ? { spectator } : {}) });
+        broadcastAction({
+          type: 'INTENT',
+          action,
+          ...(spectator ? { spectator } : {}),
+          playerId: universalPartyManager.getMyPlayerId(),
+        });
       }
     },
     [dispatch, roomId, isHost, broadcastAction, spectator],

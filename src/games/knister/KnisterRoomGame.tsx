@@ -116,7 +116,7 @@ export const KnisterRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
           </Box>
 
           {status && (
-            <Typography textAlign="center" fontWeight={700} color="primary.main">
+            <Typography textAlign="center" fontWeight={700} color="primary.text">
               {status}
             </Typography>
           )}

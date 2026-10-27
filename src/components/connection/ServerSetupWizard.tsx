@@ -60,33 +60,42 @@ export const ServerSetupWizard: React.FC<ServerSetupWizardProps> = ({ isDialog =
         overflow: 'hidden',
       }}
     >
-      {/* Header */}
-      <Box
-        sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <AutoFixHighIcon color="primary" sx={{ fontSize: 32 }} />
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-              {t('server.setup.title', 'Automatic Server Setup')}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {t(
-                'server.setup.subtitle',
-                'Wähle deine bevorzugte Methode, um deinen Nexumia Companion Server in Sekundenschnelle zu starten und zu verbinden.',
-              )}
-            </Typography>
-          </Box>
-        </Box>
-        <IconButton
-          onClick={() => setExpanded((v) => !v)}
-          size="small"
-          sx={{ color: 'text.secondary' }}
-          aria-label="toggle assistant"
+      {/* Header (the dialog brings its own title, so a second one would look like a second popup) */}
+      {isDialog ? (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {t(
+            'server.setup.subtitle',
+            'Wähle deine bevorzugte Methode, um deinen Nexumia Companion Server in Sekundenschnelle zu starten und zu verbinden.',
+          )}
+        </Typography>
+      ) : (
+        <Box
+          sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}
         >
-          {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-        </IconButton>
-      </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <AutoFixHighIcon color="primary" sx={{ fontSize: 32 }} />
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                {t('server.setup.title', 'Automatic Server Setup')}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {t(
+                  'server.setup.subtitle',
+                  'Wähle deine bevorzugte Methode, um deinen Nexumia Companion Server in Sekundenschnelle zu starten und zu verbinden.',
+                )}
+              </Typography>
+            </Box>
+          </Box>
+          <IconButton
+            onClick={() => setExpanded((v) => !v)}
+            size="small"
+            sx={{ color: 'text.secondary' }}
+            aria-label="toggle assistant"
+          >
+            {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </IconButton>
+        </Box>
+      )}
 
       <SetupScanBanner
         scanStatus={scanStatus}
@@ -95,7 +104,7 @@ export const ServerSetupWizard: React.FC<ServerSetupWizardProps> = ({ isDialog =
         onConnect={autoConnect}
       />
 
-      <Collapse in={expanded}>
+      <Collapse in={isDialog || expanded}>
         {/* Master Token Preview Bar */}
         <Box
           sx={{

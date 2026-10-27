@@ -60,6 +60,9 @@ export class PultEngine extends StageEngine {
   secPerBeat = () => 1 / this.rate;
 
   /** The part this pult plays; the stage builds the same chart for its seat. */
+  /** The stage assigns this device's part and view, so a drum kit does not switch it here. */
+  override autoDrumView() {}
+
   loadChart(chart: PackedChart, inst = chart.part.guess) {
     this.songKey = chart.songKey;
     this.marks = [];

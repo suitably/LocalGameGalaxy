@@ -31,7 +31,6 @@ export const PersistentSessionLayer = forwardRef<MelodiqSessionHandle, Persisten
       <MelodiqSession ref={ref} {...sessionProps} />
       {sessionProps.isClient && (
         <PhoneTrackChoiceOverlay
-          song={sessionProps.song}
           clientDeviceId={sessionProps.clientDeviceId}
           activeSessionOverride={sessionProps.activeSessionOverride}
         />

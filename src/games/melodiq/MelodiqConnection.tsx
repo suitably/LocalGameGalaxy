@@ -125,7 +125,7 @@ export const MelodiqConnection: React.FC<MelodiqConnectionProps> = ({ onBack }) 
               label={
                 <Box sx={{ ml: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <QrCode2Icon fontSize="small" sx={{ color: 'primary.main' }} />
+                    <QrCode2Icon fontSize="small" sx={{ color: 'primary.text' }} />
                     <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
                       {t(
                         'melodiq.settings_panel.show_scoreboard_qr',

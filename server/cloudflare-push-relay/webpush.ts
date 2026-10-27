@@ -52,11 +52,9 @@ function encodeLength(value: number, size: number): Uint8Array {
  * Generates an ECDSA P-256 VAPID keypair in base64url format.
  */
 export async function generateVapidKeys(): Promise<{ publicKey: string; privateKey: string }> {
-  const keyPair = await crypto.subtle.generateKey(
-    { name: 'ECDSA', namedCurve: 'P-256' },
-    true,
-    ['sign'],
-  );
+  const keyPair = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, [
+    'sign',
+  ]);
   const rawPublic = await crypto.subtle.exportKey('raw', keyPair.publicKey);
   const publicKey = base64UrlEncode(new Uint8Array(rawPublic));
 
@@ -64,6 +62,29 @@ export async function generateVapidKeys(): Promise<{ publicKey: string; privateK
   const privateKey = jwk.d!;
 
   return { publicKey, privateKey };
+}
+
+export type VapidKeys = { publicKey: string; privateKey: string };
+
+// Public half of the pair this relay once shipped in the repository (#587); its private key is
+// public too, so a KV store still holding it gets a fresh pair.
+const LEAKED_VAPID_PUBLIC_KEY =
+  'BHrLPvbicI8okK9MJHcncBp3JYl998H_ubF_3BYtmPuWnn0IVPIiv0ScLHQNjNdsZVT5sOZpjpRF4WMVOm2KhOA';
+
+/** The pair kept in KV, generated and stored on first use. Clients re-subscribe on a new key. */
+export async function loadOrCreateVapidKeys(kv: KVNamespace): Promise<VapidKeys> {
+  let stored: Partial<VapidKeys> | null = null;
+  try {
+    stored = JSON.parse((await kv.get('config:vapid_keys')) ?? 'null');
+  } catch {
+    // Corrupt KV, regenerate
+  }
+  if (stored?.publicKey && stored.privateKey && stored.publicKey !== LEAKED_VAPID_PUBLIC_KEY) {
+    return stored as VapidKeys;
+  }
+  const generated = await generateVapidKeys();
+  await kv.put('config:vapid_keys', JSON.stringify(generated));
+  return generated;
 }
 
 // ─── VAPID JWT Signing (RFC 8292) ────────────────────────────────────────────
@@ -113,7 +134,9 @@ export async function createVapidAuthHeader(
   );
 
   // Create JWT
-  const header = base64UrlEncode(new TextEncoder().encode(JSON.stringify({ typ: 'JWT', alg: 'ES256' })));
+  const header = base64UrlEncode(
+    new TextEncoder().encode(JSON.stringify({ typ: 'JWT', alg: 'ES256' })),
+  );
   const now = Math.floor(Date.now() / 1000);
   const payload = base64UrlEncode(
     new TextEncoder().encode(
@@ -189,7 +212,7 @@ interface PushSubscription {
   endpoint: string;
   keys: {
     p256dh: string; // Base64url: User agent's ECDH public key
-    auth: string;   // Base64url: 16-byte authentication secret
+    auth: string; // Base64url: 16-byte authentication secret
   };
 }
 
@@ -242,13 +265,9 @@ export async function encryptPayload(
 
   // 5. HKDF Step 1: Extract PRK from auth secret + ECDH shared secret
   //    PRK = HKDF-Extract(salt=authSecret, IKM=sharedSecret)
-  const prkKey = await crypto.subtle.importKey(
-    'raw',
-    sharedSecret,
-    { name: 'HKDF' },
-    false,
-    ['deriveBits'],
-  );
+  const prkKey = await crypto.subtle.importKey('raw', sharedSecret, { name: 'HKDF' }, false, [
+    'deriveBits',
+  ]);
 
   // info for IKM derivation: "WebPush: info\0" || ua_public (65) || as_public (65)
   const ikmInfo = concatBuffers(
@@ -258,13 +277,9 @@ export async function encryptPayload(
   );
 
   // Derive IKM using auth_secret as salt
-  const authHkdfKey = await crypto.subtle.importKey(
-    'raw',
-    authSecret,
-    { name: 'HKDF' },
-    false,
-    ['deriveBits'],
-  );
+  const authHkdfKey = await crypto.subtle.importKey('raw', authSecret, { name: 'HKDF' }, false, [
+    'deriveBits',
+  ]);
 
   // Actually: IKM = HKDF(salt=authSecret, IKM=sharedSecret, info=ikmInfo, len=32)
   // We need to use the shared secret as the input and auth as salt
@@ -283,13 +298,7 @@ export async function encryptPayload(
   );
 
   // 6. Derive Content Encryption Key (CEK) and Nonce from salt + IKM
-  const ikmKey = await crypto.subtle.importKey(
-    'raw',
-    ikm,
-    { name: 'HKDF' },
-    false,
-    ['deriveBits'],
-  );
+  const ikmKey = await crypto.subtle.importKey('raw', ikm, { name: 'HKDF' }, false, ['deriveBits']);
 
   const cekInfo = new TextEncoder().encode('Content-Encoding: aes128gcm\0');
   const cekBits = await crypto.subtle.deriveBits(
@@ -306,13 +315,9 @@ export async function encryptPayload(
   );
 
   // 7. Encrypt with AES-128-GCM
-  const cek = await crypto.subtle.importKey(
-    'raw',
-    cekBits,
-    { name: 'AES-GCM' },
-    false,
-    ['encrypt'],
-  );
+  const cek = await crypto.subtle.importKey('raw', cekBits, { name: 'AES-GCM' }, false, [
+    'encrypt',
+  ]);
 
   // Pad plaintext: payload || 0x02 (last record delimiter)
   const paddedPlaintext = concatBuffers(plaintext, new Uint8Array([2]));

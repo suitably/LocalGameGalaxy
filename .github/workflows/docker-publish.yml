@@ -17,7 +17,7 @@ permissions:
 jobs:
   test-server:
     name: Test Server Backend
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout repository
@@ -46,7 +46,7 @@ jobs:
 
   check-secrets:
     name: Check Docker Secrets
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       has_creds: ${{ steps.check.outputs.has_creds }}
@@ -58,6 +58,11 @@ jobs:
           DOCKER_PASS: ${{ secrets.DOCKERHUB_TOKEN }}
         run: |
           if [ -z "$DOCKER_USER" ] || [ -z "$DOCKER_PASS" ]; then
+            # the main repository must publish (#590); forks skip
+            if [ "$GITHUB_REPOSITORY" = "suitably/LocalGameGalaxy" ]; then
+              echo "::error::DOCKERHUB_USERNAME or DOCKERHUB_TOKEN secret is not configured in suitably/LocalGameGalaxy."
+              exit 1
+            fi
             echo "has_creds=false" >> "$GITHUB_OUTPUT"
             echo "::notice::DOCKERHUB_USERNAME or DOCKERHUB_TOKEN secret is not configured. Skipping Docker image build and push."
           else
@@ -68,7 +73,7 @@ jobs:
     name: Build & Push Docker Images
     needs: [test-server, check-secrets]
     if: github.repository == 'suitably/LocalGameGalaxy' && needs.check-secrets.outputs.has_creds == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - name: Checkout Code
@@ -87,14 +92,13 @@ jobs:
 
       # Docker Metadata for Base Image
       # Image names are fixed to the nexumia namespace that compose files and docs pull from.
-      # nexumia/melodiq-server is a deprecated alias kept for existing users; remove it once no one pulls it.
+      # nexumia/melodiq-server (deprecated alias) is no longer published from 1.2.0 (Q17).
       - name: Extract Docker metadata (Base Image)
         id: meta_base
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: |
             nexumia/nexumia-server
-            nexumia/melodiq-server
           flavor: |
             latest=auto
           tags: |
@@ -123,7 +127,6 @@ jobs:
         with:
           images: |
             nexumia/nexumia-server
-            nexumia/melodiq-server
           flavor: |
             suffix=-full
             latest=false
@@ -151,7 +154,7 @@ jobs:
     name: Build & Push Signaling Image
     needs: check-secrets
     if: github.repository == 'suitably/LocalGameGalaxy' && needs.check-secrets.outputs.has_creds == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - name: Checkout Code

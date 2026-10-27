@@ -17,7 +17,8 @@ interface MidiInputOptions {
    * note-on and note-off made busy passages stutter, and drum modules send note-off a few ms
    * after note-on, so a hit could come and go between two renders.
    */
-  onNoteOn?: (pitch: number, velocity: number) => void;
+  /** `channel` is 1–16 (10 is the General MIDI percussion channel e-drum modules send on). */
+  onNoteOn?: (pitch: number, velocity: number, channel: number) => void;
   /** Asks for the devices again while no real instrument is connected (see RESCAN_MS). */
   rescan?: boolean;
 }
@@ -42,7 +43,8 @@ export const useMidiInput = ({ onNoteOn, rescan = false }: MidiInputOptions = {}
     const command = status & 0xf0;
 
     // Note On command: 0x90 (velocity 0 means Note Off)
-    if (command === 0x90 && velocity > 0) onNoteOnRef.current?.(noteNumber, velocity);
+    if (command === 0x90 && velocity > 0)
+      onNoteOnRef.current?.(noteNumber, velocity, (status & 0x0f) + 1);
   }, []);
 
   /** Listens only on the selected input; re-run after hot-plug, since new ports start unbound. */

@@ -97,7 +97,7 @@ export const QwixxBonusLegend: React.FC<{ shields?: number }> = ({ shields }) =>
         <Typography
           variant="subtitle2"
           sx={{
-            color: 'primary.main',
+            color: 'primary.text',
             fontWeight: 'bold',
             display: 'flex',
             alignItems: 'center',
@@ -130,7 +130,7 @@ export const QwixxBonusLegend: React.FC<{ shields?: number }> = ({ shields }) =>
         }}
       >
         <LegendItem
-          icon={<ShieldIcon sx={{ color: 'primary.main', fontSize: '1.4rem' }} />}
+          icon={<ShieldIcon sx={{ color: 'primary.text', fontSize: '1.4rem' }} />}
           title={t('games.qwixx.bonus_shield_title', 'Schutzschild')}
           description={t(
             'games.qwixx.bonus_shield_desc',

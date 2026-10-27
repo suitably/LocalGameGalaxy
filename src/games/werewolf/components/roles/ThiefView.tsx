@@ -39,7 +39,7 @@ export const ThiefView: React.FC<RoleViewProps> = ({ players, onAction, onSkip, 
   if (stolenRoleData) {
     return (
       <Box textAlign="center" mt={4}>
-        <PersonSearchIcon sx={{ fontSize: 80, color: 'primary.main', mb: 2 }} />
+        <PersonSearchIcon sx={{ fontSize: 80, color: 'primary.text', mb: 2 }} />
         <Typography variant="h5" gutterBottom>
           {t('games.werewolf.roles.THIEF')}
         </Typography>

@@ -2,6 +2,28 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-27 — Maintainer decisions recorded (claude-code)
+
+- New `docs/reports/2026-10-27-maintainer-decisions.md` (listed in `docs/reports/index.md`): decisions for #547, #549, #551, #553, #565/#568, #571, #587, #590, #592, #593, #595 and Q17.
+- `docs/open-questions.md`: Q16, Q17, Q19 resolved; note that #568 will reverse Q18. `docs/tech/deployment.md`: `melodiq-server` alias ends at 1.2.0.
+- Outside `docs/`: `docker-publish.yml` no longer pushes `nexumia/melodiq-server` (Q17).
+- #590: `release.yml` fails a tag release without the keystore, manual runs keep `nexumia-debug.apk` as an artifact; `docker-publish.yml` / `deploy-push-relay.yml` fail on missing secrets in the main repository. Docs: `docs/tech/deployment.md`, `docs/workflows/ci-cd-pipelines.md` ("Missing secrets").
+
+## 2026-10-27 — Clear open issues implemented (claude-code)
+
+- `docs/workflows/ci-cd-pipelines.md`: new "Runner and tool pinning" (#589); `docs/tech/deployment.md`: arm64 macOS runner is `macos-15`.
+- `docs/tech/melodiq-architecture.md` §2.6: the host echoes the duet part in `songInfo`; the phone takes part names from it instead of parsing the song (#545).
+- `docs/tech/tabletop-engine.md`: the host takes the spectator role from its party roster (`senderIsSpectator`, #550).
+- `docs/tech/tabletop-engine.md`: `shuffleCount` and the shuffle animation (#556).
+- `docs/tech/tabletop-engine.md`: z-order — `keepZOrder`, editor shortcuts, touch long-press menu (#548).
+- Outside `docs/`: all workflows on `ubuntu-24.04` / `macos-15`, wrangler version from `tools/wrangler/package.json` (Dependabot entry) (#589); Melodiq `useBroadcastSongInfo`, `usePhoneTrackChoice`, `usePhoneClientMessages`, `trackChoice.ts` (+ test), `PhoneTrackChoiceOverlay`, `PhoneJoinPrompt` via i18n (#545); `seatedPlayers` in `features/party/logic/partyRoster.ts` used by `usePartyRoomPlayers` and Gartic Phone, tabletop `syncProtocol.ts` / `useTabletopSync.ts` (#550); tabletop `useTouchLongPress` (+ test), `BoardWidgetRenderer`, `useTabletopEditor`, `useZOrderShortcuts`, `keepZOrder` in `types.ts` / `tabletopReducer.ts` / `InspectorFields`, locales (#548); Melodiq Notes `lostMidiInstrument` in `logic/midiPorts.ts` (+ test), `useStageInput`, `InputMenu` hint, locales (#599); Melodiq Notes `useMidiInput` passes the channel, `autoDrumSeat` / `StageEngine.autoDrumView` (+ tests), `PlayerSeat.chosen` set by `PlayerList`, no-op in `PultEngine` (#601 step 1); 31 text/icon `primary.main` → `primary.text` in game components (#552, first part); tabletop `DeckShuffleOverlay`, `DeckWidget.shuffleCount` (+ reducer test) (#556).
+
+## 2026-10-26 — M1: CHANGELOG consolidated, feedback fixes (claude-code)
+
+- `docs/open-questions.md`: Q12 resolved — `CHANGELOG.md` has one `[Unreleased]` section again (entries from the four merge-artefact sections and from below `[1.1.0]` merged per category, exact duplicates dropped, second `# Changelog` header removed). Entries whose release is unknown stay under `[Unreleased]`.
+- `docs/tech/sync-protocol.md`: push relay `/vapid-public-key` without secrets and KV answers 503 (#587).
+- Outside `docs/`: `server/cloudflare-push-relay/` without the shipped VAPID pair (`wrangler.toml`, `worker.ts`, README; #587), `NotificationSettings` names a relay without keys, `src/lib/publicAppUrl.ts` (share links to https://games.nexumia.de, #588) used by Wordle and Sudoku (Sudoku share text via `t()`), `ServerSetupWizard` without its own header inside the setup dialog (#559), Melodiq Notes `YouTubeRecordingDialog` says why the download button is disabled (#562), locales.
+
 ## 2026-10-26 — Settings unification implemented (claude-code)
 
 - `docs/tech/architecture.md`: new §3.8 (app vs. game settings, routes, registry sections, sheet), reuse catalog gains the settings UI kit and `useStoredSettings`, §3.4 lists `GameSettingsContext`.

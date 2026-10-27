@@ -37,7 +37,7 @@ export const DetectiveView: React.FC<RoleViewProps> = ({
   if (result !== null) {
     return (
       <Box textAlign="center">
-        <SearchIcon sx={{ fontSize: 80, color: 'primary.main', mb: 2 }} />
+        <SearchIcon sx={{ fontSize: 80, color: 'primary.text', mb: 2 }} />
         <Typography variant="h4" color={result ? 'success.main' : 'error.main'}>
           {result
             ? t('games.werewolf.ui.detective.same_camp')
@@ -56,7 +56,7 @@ export const DetectiveView: React.FC<RoleViewProps> = ({
 
   return (
     <Box textAlign="center">
-      <SearchIcon sx={{ fontSize: 80, color: 'primary.main', mb: 2 }} />
+      <SearchIcon sx={{ fontSize: 80, color: 'primary.text', mb: 2 }} />
       <Typography variant="h5">{t('games.werewolf.roles.DETECTIVE')}</Typography>
       <Typography variant="body1" sx={{ mb: 3 }}>
         {instruction || t('games.werewolf.ui.detective.instruction')}

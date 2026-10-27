@@ -19,6 +19,9 @@ export const sudokuTranslations = {
     'sudoku.notes_off': 'Notizen',
     'sudoku.victory.title': 'Gelöst!',
     'sudoku.victory.new_record': 'Neue persönliche Bestzeit!',
+    'sudoku.share.title': 'Sudoku-Ergebnis',
+    'sudoku.share.text':
+      '🔢 Sudoku ({{difficulty}}) gelöst in {{time}}!\nFehler: {{mistakes}}, Hinweise: {{hints}}',
     'sudoku.game_over.title': 'Game Over',
     'sudoku.stats.title': 'Sudoku Statistiken',
     'sudoku.stats.played': 'Gespielt',
@@ -52,6 +55,9 @@ export const sudokuTranslations = {
     'sudoku.notes_off': 'Notes',
     'sudoku.victory.title': 'Solved!',
     'sudoku.victory.new_record': 'New personal best time!',
+    'sudoku.share.title': 'Sudoku result',
+    'sudoku.share.text':
+      '🔢 Sudoku ({{difficulty}}) solved in {{time}}!\nMistakes: {{mistakes}}, hints: {{hints}}',
     'sudoku.game_over.title': 'Game Over',
     'sudoku.stats.title': 'Sudoku Statistics',
     'sudoku.stats.played': 'Played',

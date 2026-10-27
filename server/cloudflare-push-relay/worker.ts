@@ -8,7 +8,7 @@
  * - In-Memory and Cloudflare KV persistent subscription storage
  */
 
-import { sendWebPush, type WebPushOptions } from './webpush';
+import { loadOrCreateVapidKeys, sendWebPush, type VapidKeys, type WebPushOptions } from './webpush';
 
 export interface Env {
   VAPID_PUBLIC_KEY?: string;
@@ -32,44 +32,19 @@ export interface StoredRegistration {
   ntfyTopic?: string;
 }
 
-let cachedVapidKeys: { publicKey: string; privateKey: string } | null = null;
+let cachedVapidKeys: VapidKeys | null = null;
 
 // In-memory subscription store fallback (lost on worker restart without KV)
 const memorySubscriptions = new Map<string, Map<string, StoredRegistration>>();
-const DEFAULT_VAPID_KEYS = {
-  publicKey: 'BHrLPvbicI8okK9MJHcncBp3JYl998H_ubF_3BYtmPuWnn0IVPIiv0ScLHQNjNdsZVT5sOZpjpRF4WMVOm2KhOA',
-  privateKey: 'myZY4l9wcTu2pSg_txF-kQpSa3N_T0nyUqzExPraEFM',
-};
-
-async function getOrInitVapidKeys(env: Env): Promise<{ publicKey: string; privateKey: string }> {
-  if (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY) {
-    return { publicKey: env.VAPID_PUBLIC_KEY.trim(), privateKey: env.VAPID_PRIVATE_KEY.trim() };
-  }
-
-  if (cachedVapidKeys) {
-    return cachedVapidKeys;
-  }
-
-  if (env.PUSH_KV) {
-    const stored = await env.PUSH_KV.get('config:vapid_keys');
-    if (stored) {
-      try {
-        cachedVapidKeys = JSON.parse(stored);
-        return cachedVapidKeys!;
-      } catch {
-        // Corrupt KV, regenerate
-      }
-    }
-  }
-
-  // Stable default keys guarantee identical VAPID key across all isolates/cold starts
-  cachedVapidKeys = DEFAULT_VAPID_KEYS;
-
-  if (env.PUSH_KV) {
-    await env.PUSH_KV.put('config:vapid_keys', JSON.stringify(DEFAULT_VAPID_KEYS));
-  }
-
-  return DEFAULT_VAPID_KEYS;
+/**
+ * VAPID keys of this deployment: Worker secrets, else a pair generated once and kept in KV.
+ * Without either there is no stable key across isolates, so Web Push is off (ntfy still works).
+ */
+async function getOrInitVapidKeys(env: Env): Promise<VapidKeys | null> {
+  const { VAPID_PUBLIC_KEY: pub, VAPID_PRIVATE_KEY: priv, PUSH_KV: kv } = env;
+  if (pub && priv) return { publicKey: pub.trim(), privateKey: priv.trim() };
+  if (kv) cachedVapidKeys ??= await loadOrCreateVapidKeys(kv);
+  return kv ? cachedVapidKeys : null;
 }
 
 const corsHeaders = {
@@ -105,7 +80,9 @@ export default {
         status: 'ok',
         service: 'LocalGameGalaxy Push Relay',
         kvBound: Boolean(env.PUSH_KV),
-        storageType: env.PUSH_KV ? 'Cloudflare KV (persistent)' : 'In-Memory (ephemeral, cold starts lose state)',
+        storageType: env.PUSH_KV
+          ? 'Cloudflare KV (persistent)'
+          : 'In-Memory (ephemeral, cold starts lose state)',
         ntfyServer: env.NTFY_SERVER || 'https://ntfy.sh',
         hybridSupported: true,
       });
@@ -114,6 +91,8 @@ export default {
     // 1. GET VAPID Public Key (auto-generated or configured)
     if (path === '/vapid-public-key' || path === '/api/push/vapid-public-key') {
       const keys = await getOrInitVapidKeys(env);
+      if (!keys)
+        return jsonResponse({ error: 'No VAPID secrets and no PUSH_KV: Web Push is off' }, 503);
       return jsonResponse({ publicKey: keys.publicKey });
     }
 
@@ -167,7 +146,10 @@ export default {
     }
 
     // 3. POST Unsubscribe
-    if ((path === '/unsubscribe' || path === '/api/push/unsubscribe') && request.method === 'POST') {
+    if (
+      (path === '/unsubscribe' || path === '/api/push/unsubscribe') &&
+      request.method === 'POST'
+    ) {
       const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
       const { gameId, playerId } = body as { gameId?: string; playerId?: string };
 
@@ -214,7 +196,7 @@ export default {
 
       // Obtain VAPID keys for Web Push
       const keys = await getOrInitVapidKeys(env);
-      const pushOptions: WebPushOptions = {
+      const pushOptions: WebPushOptions | null = keys && {
         vapidPublicKey: keys.publicKey,
         vapidPrivateKey: keys.privateKey,
         vapidSubject: env.VAPID_SUBJECT || 'https://github.com/suitably/LocalGameGalaxy',
@@ -267,14 +249,19 @@ export default {
       let webPushFailed = 0;
       const expiredPlayerIds: string[] = [];
 
-      const webPushTargets = targets.filter(
-        (t) => t.reg.subscription?.endpoint && t.reg.method !== 'ntfy',
-      );
+      // Without VAPID keys only ntfy is delivered.
+      const webPushTargets = pushOptions
+        ? targets.filter((t) => t.reg.subscription?.endpoint && t.reg.method !== 'ntfy')
+        : [];
 
       const webPushResults = await Promise.allSettled(
         webPushTargets.map(async (target) => {
           try {
-            const result = await sendWebPush(target.reg.subscription!, webPushPayload, pushOptions);
+            const result = await sendWebPush(
+              target.reg.subscription!,
+              webPushPayload,
+              pushOptions!,
+            );
             if (result.success) {
               webPushSent++;
             } else {
@@ -286,7 +273,12 @@ export default {
             return { playerId: target.playerId, channel: 'webpush', ...result };
           } catch (err) {
             webPushFailed++;
-            return { playerId: target.playerId, channel: 'webpush', success: false, error: String(err) };
+            return {
+              playerId: target.playerId,
+              channel: 'webpush',
+              success: false,
+              error: String(err),
+            };
           }
         }),
       );
@@ -353,15 +345,20 @@ export default {
 
       const allDetails = [
         ...webPushResults.map((r) =>
-          r.status === 'fulfilled' ? r.value : { channel: 'webpush', success: false, error: String(r.reason) },
+          r.status === 'fulfilled'
+            ? r.value
+            : { channel: 'webpush', success: false, error: String(r.reason) },
         ),
         ...ntfyResults.map((r) =>
-          r.status === 'fulfilled' ? r.value : { channel: 'ntfy', success: false, error: String(r.reason) },
+          r.status === 'fulfilled'
+            ? r.value
+            : { channel: 'ntfy', success: false, error: String(r.reason) },
         ),
       ];
 
       return jsonResponse({
-        success: webPushSent > 0 || ntfySent > 0 || (webPushTargets.length === 0 && ntfyTopics.size > 0),
+        success:
+          webPushSent > 0 || ntfySent > 0 || (webPushTargets.length === 0 && ntfyTopics.size > 0),
         webPushSent,
         webPushFailed,
         ntfySent,

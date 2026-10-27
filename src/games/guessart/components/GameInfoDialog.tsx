@@ -28,7 +28,7 @@ export const GameInfoDialog: React.FC<GameInfoDialogProps> = ({ open, onClose })
       }}
     >
       <DialogContent sx={{ p: { xs: 2.5, sm: 3.5 } }}>
-        <Typography variant="h5" fontWeight={800} color="primary.main" gutterBottom>
+        <Typography variant="h5" fontWeight={800} color="primary.text" gutterBottom>
           {t('guessart.rulesTitle', 'Spielregeln: GuessArt')}
         </Typography>
         <Typography variant="body2" color="text.secondary" paragraph>

@@ -70,7 +70,7 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({
           sx={{
             textAlign: 'center',
             mb: 3,
-            color: 'primary.main',
+            color: 'primary.text',
             fontSize: { xs: '2rem', md: '3.5rem' },
           }}
         >
