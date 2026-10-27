@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { useMidiInput } from '../useMidiInput';
 import { lostMidiInstrument, midiInstrument } from '../logic/midiPorts';
 import { useMicPitch } from '../hooks/useMicPitch';
@@ -10,11 +11,22 @@ export type StageInputSource = 'keys' | 'midi' | 'mic';
 /**
  * Routes a MIDI device or the microphone to the highlighted player (the computer keyboard always
  * works). Until the player picks an input, MIDI is used whenever a real instrument is connected.
+ * Sung or played microphone notes never sound again through the speakers; MIDI notes do unless
+ * the player turns that off (an instrument with its own sound).
  */
 export function useStageInput(engine: StageEngine) {
   // null: automatic (MIDI with an instrument, else the computer keys)
   const [chosen, setChosen] = useState<StageInputSource | null>(null);
   const sourceRef = useRef<StageInputSource>(chosen ?? 'keys');
+  const [midiSound, setMidiSoundState] = useState(
+    () => storage.get(STORAGE_KEYS.MELODIQ_NOTES_MIDI_SOUND) !== '0',
+  );
+  const midiSoundRef = useRef(midiSound);
+  const setMidiSound = (on: boolean) => {
+    midiSoundRef.current = on;
+    setMidiSoundState(on);
+    storage.set(STORAGE_KEYS.MELODIQ_NOTES_MIDI_SOUND, on ? '1' : '0');
+  };
   // Hits go straight to the engine, without a render per note.
   const [midiLost, setMidiLost] = useState<string | null>(null);
   const midiLostRef = useRef<string | null>(null);
@@ -28,7 +40,7 @@ export function useStageInput(engine: StageEngine) {
       if (sourceRef.current !== 'midi') return;
       // an e-drum kit (GM percussion channel) shows the focused player the drum view
       if (channel === GM_DRUM_CHANNEL) engine.autoDrumView();
-      engine.hitPitch(pitch);
+      engine.hitPitch(pitch, !midiSoundRef.current);
     },
     [engine],
   );
@@ -57,7 +69,7 @@ export function useStageInput(engine: StageEngine) {
     const focus = engine.focus;
     if (focus?.instrument.view === 'pitch')
       engine.setVoice(pitch ?? focus.voice.pitch, pitch !== null);
-    else if (pitch !== null && pitch !== lastMic.current) engine.hitPitch(pitch);
+    else if (pitch !== null && pitch !== lastMic.current) engine.hitPitch(pitch, true);
     lastMic.current = pitch;
   }, [engine, source, mic.micPitch]);
 
@@ -74,5 +86,7 @@ export function useStageInput(engine: StageEngine) {
     /** A real instrument that went away and has sent nothing since (hint: restart the browser). */
     midiLost,
     micActive: mic.isMicActive,
+    midiSound,
+    setMidiSound,
   };
 }

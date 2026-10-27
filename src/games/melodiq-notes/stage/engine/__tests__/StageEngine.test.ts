@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { createAudioMap } from '../../../../../modules/music-score';
 import { StageEngine } from '../StageEngine';
-import { fakeSound, run, song } from './fixtures';
+import { fakeRecording, fakeSound, run, song } from './fixtures';
 import { buildBandEvents, nextSeat } from '../players';
 import { nothingLeftToPlay } from '../transport';
 import { playerResults, weakestSection } from '../results';
@@ -180,29 +180,41 @@ describe('StageEngine', () => {
     expect(e.beat).toBeCloseTo(5, 1);
   });
 
-  it('starts the recording after the count-in at the mapped position', () => {
+  it('keeps the count-in over a short intro and plays the recording from its 0:00 within it', () => {
     const e = new StageEngine(fakeSound());
     e.loadSong(song());
-    const rec: StageRecording = {
-      map: createAudioMap(song(), null, 1.5),
-      duration: 30,
-      time: () => 0,
-      isPlaying: () => false,
-      play: vi.fn(),
-      pause: vi.fn(),
-      setRate: vi.fn(),
-      setVolume: vi.fn(),
-    };
+    // 1.5 s intro = 3 beats, shorter than the 4-beat count-in
+    const rec = fakeRecording(createAudioMap(song(), null, 1.5));
     e.setRecording(rec);
+    expect(e.beat).toBe(-e.countIn);
     e.setMode('perform');
     e.start();
-    run(e, 1.9);
+    run(e, 0.4);
     expect(rec.play).not.toHaveBeenCalled();
     run(e, 0.2);
-    expect(rec.play).toHaveBeenCalled();
     const [from] = (rec.play as ReturnType<typeof vi.fn>).mock.calls[0];
-    expect(from).toBeGreaterThanOrEqual(1.5);
-    expect(from).toBeLessThan(1.6);
+    expect(from).toBeGreaterThanOrEqual(0);
+    expect(from).toBeLessThan(0.1);
+  });
+
+  it('plays a long intro from the 0:00 of the recording instead of the count-in', () => {
+    const sound = fakeSound();
+    const e = new StageEngine(sound);
+    e.loadSong(song());
+    // 4.5 s intro = 9 beats at 120 bpm
+    const rec = fakeRecording(createAudioMap(song(), null, 4.5));
+    e.setRecording(rec);
+    expect(e.firstBeat).toBeCloseTo(-9);
+    expect(e.beat).toBeCloseTo(-9);
+    e.setMode('perform');
+    e.start();
+    run(e, 0.1);
+    const [from] = (rec.play as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(from).toBeLessThan(0.1);
+    run(e, 4.5);
+    expect(sound.clicks).toBe(0);
+    e.seekTo(-100);
+    expect(e.beat).toBeCloseTo(-9);
   });
 
   it('leaves out bars before the recording starts (an intro it lacks)', () => {

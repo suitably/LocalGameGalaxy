@@ -135,9 +135,9 @@ export class PultEngine extends StageEngine {
     this.onInput?.({ kind: 'lane', lane });
   }
 
-  hitPitch(midi: number) {
+  hitPitch(midi: number, silent = false) {
     const view = this.focus?.instrument.view;
-    playPitch(this, midi, this.inputAt());
+    playPitch(this, midi, { ...this.inputAt(), silent });
     this.onTap?.(this.now());
     if (view === 'keys') this.onInput?.({ kind: 'lane', lane: midi });
     else if (view === 'drums') this.onInput?.({ kind: 'lane', lane: drumLaneOf(midi) });

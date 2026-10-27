@@ -1,0 +1,1 @@
+- **Melodiq Notes: the recording starts at 0:00** — a recording whose intro comes before the first bar of the score now plays that intro (instead of a click count-in) and no longer jumps into the song at bar 1.

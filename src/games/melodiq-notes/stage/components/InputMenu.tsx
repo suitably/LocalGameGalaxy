@@ -8,6 +8,7 @@ import {
   ListItemText,
   Menu,
   MenuItem,
+  Switch,
 } from '@mui/material';
 import CheckIcon from '@mui/icons-material/CheckRounded';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
@@ -15,6 +16,7 @@ import KeyboardIcon from '@mui/icons-material/KeyboardRounded';
 import MicIcon from '@mui/icons-material/MicRounded';
 import PianoIcon from '@mui/icons-material/PianoRounded';
 import TimerIcon from '@mui/icons-material/TimerOutlined';
+import VolumeIcon from '@mui/icons-material/VolumeUpRounded';
 import { useTranslation } from 'react-i18next';
 import { TOUCH_TARGET } from '../../../../lib/touchTarget';
 import type { StageEngine } from '../engine/StageEngine';
@@ -32,6 +34,9 @@ interface InputMenuProps {
   midiName: string | null;
   /** An instrument that disappeared and has sent nothing since. */
   midiLost: string | null;
+  /** Whether MIDI notes sound through the browser (microphone notes never do). */
+  midiSound: boolean;
+  onMidiSound: (on: boolean) => void;
   onChange: (source: StageInputSource) => void;
   /** Plays the calibration clicks; resolves with their times. */
   schedule: () => Promise<number[] | null>;
@@ -44,6 +49,8 @@ export function InputMenu({
   midiCount,
   midiName,
   midiLost,
+  midiSound,
+  onMidiSound,
   onChange,
   schedule,
 }: InputMenuProps) {
@@ -109,6 +116,21 @@ export function InputMenu({
               <Alert severity="warning" sx={{ mx: 1, my: 0.5, maxWidth: 320 }}>
                 {k('midi_lost', { name: midiLost })}
               </Alert>
+            )}
+            {source === 'midi' && (
+              <MenuItem onClick={() => onMidiSound(!midiSound)}>
+                <ListItemIcon>
+                  <VolumeIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary={k('midi_sound')} />
+                <Switch
+                  edge="end"
+                  size="small"
+                  checked={midiSound}
+                  tabIndex={-1}
+                  inputProps={{ 'aria-label': k('midi_sound') }}
+                />
+              </MenuItem>
             )}
             <Divider />
             <MenuItem

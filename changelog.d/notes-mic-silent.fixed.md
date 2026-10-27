@@ -1,0 +1,1 @@
+- **Melodiq Notes: the microphone no longer plays notes back** — pitches heard by the microphone are judged without sounding through the speakers; MIDI notes still sound and can be turned off in the input menu ("Play MIDI notes through the speakers").

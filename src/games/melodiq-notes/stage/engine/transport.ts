@@ -1,6 +1,8 @@
-import { bpmAt } from '../../../../modules/music-score';
+import { bpmAt, type ScoreSong } from '../../../../modules/music-score';
 import { firstNoteBeat, leadInBeat, noNotesAhead } from '../logic/seek';
+import { buildBandEvents } from './players';
 import type { StageEngine } from './StageEngine';
+import type { BandMode } from './types';
 
 /** How far the recording may drift from the song clock before it is moved (scaled by speed). */
 const RESEEK_SEC = 0.25;
@@ -14,13 +16,24 @@ export function secPerBeatAt(e: StageEngine, beat: number) {
   return (recorded > 0 ? recorded : 60 / bpmAt(e.song.tempoMap, beat)) / e.speed;
 }
 
-/** Keeps the recording on the song clock: starts after the count-in, waits with learn mode, seeks after loops. */
+/** Score beat at the recording's 0:00 when its intro (sound before `startBeat`) covers the count-in, else null. */
+export function introBeat(e: StageEngine): number | null {
+  const at = e.recording?.map.beatAt(0);
+  return at !== undefined && at <= e.startBeat - e.countIn ? at : null;
+}
+
+/** What the synth plays for the song; a recording's intro counts in by itself, so it gets no clicks. */
+export function stageBandEvents(e: StageEngine, song: ScoreSong, mode: BandMode) {
+  const clicks = introBeat(e) === null ? e.countIn : 0;
+  return buildBandEvents(song, e.seats, mode, clicks, e.startBeat);
+}
+
+/** Keeps the recording on the song clock: plays wherever it has sound (its intro too), waits with learn mode, seeks after loops. */
 export function syncRecording(e: StageEngine) {
   const rec = e.recording;
   if (!rec) return;
   const target = rec.map.secAt(e.beat);
-  const shouldPlay =
-    e.state === 'playing' && e.beat >= 0 && !e.waitingFor && target >= 0 && target < rec.duration;
+  const shouldPlay = e.state === 'playing' && !e.waitingFor && target >= 0 && target < rec.duration;
   if (!shouldPlay) rec.pause();
   else if (!rec.isPlaying() || Math.abs(rec.time() - target) > RESEEK_SEC * e.speed)
     rec.play(target, e.speed);
@@ -30,7 +43,7 @@ export function syncRecording(e: StageEngine) {
 export function seekStage(e: StageEngine, beat: number, loopLeadBeats: number) {
   const song = e.song;
   if (!song || !e.players.length) return;
-  const target = Math.min(song.end, Math.max(e.startBeat - e.countIn, beat));
+  const target = Math.min(song.end, Math.max(e.firstBeat, beat));
   if (e.loop && (target >= e.loop.to || target < e.loop.from - loopLeadBeats)) e.loop = null;
   e.sound.stopAll();
   e.waitingFor = null;
@@ -44,11 +57,7 @@ export function seekStage(e: StageEngine, beat: number, loopLeadBeats: number) {
 export function seekToFirstNote(e: StageEngine, leadInSec: number, loopLeadBeats: number) {
   const first = firstNoteBeat(e.players.map((p) => p.notes));
   if (first === null) return;
-  seekStage(
-    e,
-    leadInBeat(first, leadInSec, e.secPerBeat(first), e.startBeat - e.countIn),
-    loopLeadBeats,
-  );
+  seekStage(e, leadInBeat(first, leadInSec, e.secPerBeat(first), e.firstBeat), loopLeadBeats);
 }
 
 /** Running without a loop, before the song's end, and every player is past their last note. */

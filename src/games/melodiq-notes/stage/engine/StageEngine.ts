@@ -3,16 +3,18 @@ import { lowerBound, type Judgement, type StageNote } from '../logic/charts';
 import { recordJudgement, type BeatRange } from '../logic/judging';
 import { buildSections, sectionIndexAt, type Section } from '../logic/sections';
 import { advancePlayer, learnWait, resetRange } from './advance';
-import { playLane, playPitch } from './input';
+import { focused, playLane, playPitch } from './input';
 import {
+  introBeat,
   loopSections,
   secPerBeatAt,
   seekStage,
   seekToFirstNote,
   skipRest,
+  stageBandEvents,
   syncRecording,
 } from './transport';
-import { autoDrumSeat, buildBandEvents, createPlayers, defaultSeats, nextSeat } from './players';
+import { autoDrumSeat, createPlayers, defaultSeats, nextSeat } from './players';
 import type {
   BandEvent,
   BandMode,
@@ -161,9 +163,9 @@ export class StageEngine {
     this.focus = this.players.find((p) => !p.remoteId) ?? null;
     if (this.mode === 'learn' && this.players.length > 1) this.mode = 'practice';
     this.countIn = Math.min(6, Math.max(2, this.song.measureLengths[0] ?? 4));
-    this.bandEvents = this.bandFor(this.song, this.band);
+    this.bandEvents = stageBandEvents(this, this.song, this.band);
     this.bandIdx = 0;
-    this.beat = this.startBeat - this.countIn;
+    this.beat = this.firstBeat;
     this.waitingFor = null;
     if (this.loop) this.restartAt(this.loop.from);
     this.emit();
@@ -189,7 +191,7 @@ export class StageEngine {
   setBand(mode: BandMode) {
     this.band = mode;
     if (this.song) {
-      this.bandEvents = this.bandFor(this.song, mode);
+      this.bandEvents = stageBandEvents(this, this.song, mode);
       this.bandIdx = lowerBound(this.bandEvents, this.beat);
     }
     this.emit();
@@ -206,13 +208,17 @@ export class StageEngine {
     return this.recording?.startBeat ?? 0;
   }
 
+  /** Where the song starts: the recording's 0:00 when its intro replaces the count-in, else the count-in. */
+  get firstBeat() {
+    return introBeat(this) ?? this.startBeat - this.countIn;
+  }
+
   setRecording(recording: StageRecording | null) {
     const from = this.startBeat;
     this.recording?.pause();
     this.recording = recording;
     recording?.setVolume(this.recordingAudible ? 1 : 0);
-    // other bars are played now: back to the count-in
-    if (this.startBeat !== from) this.reset();
+    if (this.startBeat !== from || this.state === 'idle') this.reset();
     else this.emit();
   }
 
@@ -279,10 +285,6 @@ export class StageEngine {
       this.notifyLive();
   }
 
-  private bandFor(song: ScoreSong, mode: BandMode) {
-    return buildBandEvents(song, this.seats, mode, this.countIn, this.startBeat);
-  }
-
   private playBand(until: number) {
     while (this.bandIdx < this.bandEvents.length && this.bandEvents[this.bandIdx].t <= until) {
       const e = this.bandEvents[this.bandIdx++];
@@ -346,9 +348,9 @@ export class StageEngine {
     this.onTap?.(performance.now());
   }
 
-  /** A pitch from MIDI or microphone, mapped to what the focused player's instrument plays. */
-  hitPitch(midi: number) {
-    playPitch(this, midi);
+  /** A pitch from MIDI or microphone, mapped to what the focused player's instrument plays; `silent` plays no sound. */
+  hitPitch(midi: number, silent = false) {
+    playPitch(this, midi, { ...focused(this), silent });
     this.onTap?.(performance.now());
   }
 

@@ -90,6 +90,8 @@ export const STORAGE_KEYS = {
   MELODIQ_NOTES_SEEK_LEAD_IN: 'melodiq_notes_seek_lead_in',
   /** This device's input latency as a pult (ms, calibrated against the stage). */
   MELODIQ_NOTES_INPUT_LATENCY: 'melodiq_notes_input_latency',
+  /** Whether notes played on a MIDI instrument sound through the browser ('0' = off, default on). */
+  MELODIQ_NOTES_MIDI_SOUND: 'melodiq_notes_midi_sound',
 
   // Werewolf game state
   WEREWOLF_STATE: 'werewolf-game-state',

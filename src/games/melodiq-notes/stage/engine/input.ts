@@ -28,7 +28,7 @@ export function flashLane(p: StagePlayer, lane: number) {
 }
 
 /** The focused player now, at the beat the sound was that they followed (input latency removed). */
-const focused = (e: StageEngine): PlayAt => ({
+export const focused = (e: StageEngine): PlayAt => ({
   player: e.focus,
   beat: e.beat - e.inputLatencyMs / 1000 / e.secPerBeat(Math.max(0, e.beat)),
   silent: false,
