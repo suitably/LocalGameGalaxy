@@ -99,3 +99,16 @@ export function buildBandEvents(
   }
   return events.sort((a, b) => a.t - b.t);
 }
+
+/** General MIDI percussion channel; e-drum modules send on it almost always. */
+export const GM_DRUM_CHANNEL = 10;
+
+/**
+ * The seat an e-drum kit switches a player to: the drum view, on the song's drum part if it has
+ * one. Null when the player chose part or view themselves, or already sees drums.
+ */
+export function autoDrumSeat(seat: PlayerSeat, song: ScoreSong): PlayerSeat | null {
+  if (seat.chosen || seat.remoteId || seat.inst === 'drums') return null;
+  const drumPart = song.parts.find((p) => p.guess === 'drums');
+  return { ...seat, partId: drumPart?.id ?? seat.partId, inst: 'drums' };
+}

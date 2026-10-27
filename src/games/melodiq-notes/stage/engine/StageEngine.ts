@@ -12,7 +12,7 @@ import {
   skipRest,
   syncRecording,
 } from './transport';
-import { buildBandEvents, createPlayers, defaultSeats, nextSeat } from './players';
+import { autoDrumSeat, buildBandEvents, createPlayers, defaultSeats, nextSeat } from './players';
 import type {
   BandEvent,
   BandMode,
@@ -133,6 +133,22 @@ export class StageEngine {
     const inst = change.inst ?? (part ? part.guess : seat.inst);
     this.seats = this.seats.map((s, i) => (i === index ? { ...s, ...change, inst } : s));
     this.reset();
+  }
+
+  /**
+   * A note on the drum channel: the focused player switches to the drum view (#601). Only before
+   * playing, since a new seat restarts the count-in; never over the player's own choice.
+   */
+  autoDrumView() {
+    const focus = this.focus;
+    if (this.state !== 'idle' || !this.song || !focus) return;
+    const seat = this.seats[focus.no - 1];
+    const next = seat && autoDrumSeat(seat, this.song);
+    if (!next) return;
+    this.seats = this.seats.map((s, i) => (i === focus.no - 1 ? next : s));
+    this.reset();
+    const same = this.players.find((p) => p.no === focus.no && !p.remoteId);
+    if (same) this.setFocus(same);
   }
 
   /** Back to the count-in with fresh players; keeps song, seats and loop. */

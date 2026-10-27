@@ -18,6 +18,8 @@ export interface PlayerSeat {
   remoteId?: string;
   /** The pult's player name. */
   name?: string;
+  /** The player picked part or view in the players panel; automatic choices leave it alone. */
+  chosen?: boolean;
 }
 
 /**

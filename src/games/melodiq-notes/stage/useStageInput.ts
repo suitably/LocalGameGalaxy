@@ -3,6 +3,7 @@ import { useMidiInput } from '../useMidiInput';
 import { lostMidiInstrument, midiInstrument } from '../logic/midiPorts';
 import { useMicPitch } from '../hooks/useMicPitch';
 import type { StageEngine } from './engine/StageEngine';
+import { GM_DRUM_CHANNEL } from './engine/players';
 
 export type StageInputSource = 'keys' | 'midi' | 'mic';
 
@@ -18,13 +19,16 @@ export function useStageInput(engine: StageEngine) {
   const [midiLost, setMidiLost] = useState<string | null>(null);
   const midiLostRef = useRef<string | null>(null);
   const onNoteOn = useCallback(
-    (pitch: number) => {
+    (pitch: number, _velocity: number, channel: number) => {
       // a note proves the instrument works again; render only for that first note
       if (midiLostRef.current) {
         midiLostRef.current = null;
         setMidiLost(null);
       }
-      if (sourceRef.current === 'midi') engine.hitPitch(pitch);
+      if (sourceRef.current !== 'midi') return;
+      // an e-drum kit (GM percussion channel) shows the focused player the drum view
+      if (channel === GM_DRUM_CHANNEL) engine.autoDrumView();
+      engine.hitPitch(pitch);
     },
     [engine],
   );

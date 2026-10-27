@@ -289,4 +289,29 @@ describe('StageEngine', () => {
     e.seekTo(12);
     expect(e.loop).toBeNull();
   });
+
+  it('an e-drum kit switches the focused player to the drum part before playing (#601)', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song(), [
+      { partId: 'piano', inst: 'keyboard' },
+      { partId: 'bass', inst: 'bass' },
+    ]);
+    e.setFocus(e.players[1]);
+    e.autoDrumView();
+    expect(e.seats[1]).toMatchObject({ partId: 'drums', inst: 'drums' });
+    expect(e.seats[0]).toMatchObject({ partId: 'piano', inst: 'keyboard' });
+    expect(e.focus?.no).toBe(2);
+  });
+
+  it('the drum kit never overrides a chosen seat or a running song (#601)', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song(), [{ partId: 'piano', inst: 'keyboard', chosen: true }]);
+    e.autoDrumView();
+    expect(e.seats[0].inst).toBe('keyboard');
+
+    e.loadSong(song(), [{ partId: 'piano', inst: 'keyboard' }]);
+    e.start();
+    e.autoDrumView();
+    expect(e.seats[0].inst).toBe('keyboard');
+  });
 });
