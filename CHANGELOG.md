@@ -178,6 +178,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Light mode inside games** (#552): primary-coloured headings, scores and icons in Guess Art, Knister, Imposter, Melodiq, Melodiq Notes, Qwixx, Werewolf and the tabletop controller use the readable dark amber (`primary.text`) instead of yellow on paper. Dark mode looks the same.
 - **Melodiq Notes: replugged MIDI instrument** (#599): when an instrument disconnects, the input menu says so and, until it sends notes again, suggests restarting the browser. Firefox on Linux lists a replugged device again but delivers none of its notes until it restarts.
 - **Party spectators** (#550): spectators no longer appear as players in Knister and Gartic Phone rounds. On the tabletop, the host decides from its own party roster who may play, so a phone cannot leave the spectator role by omitting its flag.
 - **Melodiq: duet part on the phone** (#545): the phone shows the part its singer really has, also when the host switched it; the picker appears only for phones the host has a singer for, and the phone no longer parses the song a second time for it. The "Session in progress" prompt on phones is translated (de/en).

@@ -15,7 +15,7 @@ export const WolfdogView: React.FC<RoleViewProps> = ({ onAction, instruction }) 
   const { t } = useTranslation();
   return (
     <Box textAlign="center">
-      <PetsIcon sx={{ fontSize: 80, color: 'primary.main', mb: 2 }} />
+      <PetsIcon sx={{ fontSize: 80, color: 'primary.text', mb: 2 }} />
       <Typography variant="h5">{t('games.werewolf.roles.WOLFDOG')}</Typography>
       <Typography variant="body1" sx={{ mb: 3 }}>
         {instruction || t('games.werewolf.ui.wolfdog.instruction')}

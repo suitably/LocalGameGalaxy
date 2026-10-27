@@ -137,7 +137,7 @@ export const QwixxSheetCard: React.FC<QwixxSheetCardProps> = ({
                   e.stopPropagation();
                   onShowRules();
                 }}
-                sx={{ color: 'primary.main', p: 0.5 }}
+                sx={{ color: 'primary.text', p: 0.5 }}
               >
                 <InfoOutlinedIcon sx={{ fontSize: 20 }} />
               </IconButton>

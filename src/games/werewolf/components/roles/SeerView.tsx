@@ -19,7 +19,7 @@ export const SeerView: React.FC<RoleViewProps> = ({ players, onAction, onSkip, i
   if (revealedPlayer) {
     return (
       <Box textAlign="center">
-        <VisibilityIcon sx={{ fontSize: 80, color: 'primary.main', mb: 2 }} />
+        <VisibilityIcon sx={{ fontSize: 80, color: 'primary.text', mb: 2 }} />
         <Typography variant="h4">{revealedPlayer.name}</Typography>
         <Box sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 2 }}>
           <Typography variant="h6" color="primary">

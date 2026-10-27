@@ -18,7 +18,7 @@ export const VotingPhase: React.FC<VotingPhaseProps> = ({ players, round, onVote
 
   return (
     <PlayerSelectionView
-      icon={<HowToVoteIcon sx={{ fontSize: 60, color: 'primary.main' }} />}
+      icon={<HowToVoteIcon sx={{ fontSize: 60, color: 'primary.text' }} />}
       title={t('games.werewolf.voting.title', { round })}
       instruction={t('games.werewolf.voting.select_player')}
       players={alivePlayers}

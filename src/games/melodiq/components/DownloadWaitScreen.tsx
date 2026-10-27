@@ -30,7 +30,7 @@ export const DownloadWaitScreen: React.FC<DownloadWaitScreenProps> = ({
         overflow: 'auto',
       }}
     >
-      <CircularProgress size={70} thickness={4} sx={{ color: 'primary.main' }} />
+      <CircularProgress size={70} thickness={4} sx={{ color: 'primary.text' }} />
 
       <Box sx={{ textAlign: 'center' }}>
         <Typography variant="h4" fontWeight="bold" gutterBottom>

@@ -129,7 +129,7 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
                 value={scores.stairsBonus}
                 color={palette.primary.main}
                 minWidth={52}
-                icon={<EmojiEventsIcon sx={{ fontSize: '0.85rem', color: 'primary.main' }} />}
+                icon={<EmojiEventsIcon sx={{ fontSize: '0.85rem', color: 'primary.text' }} />}
               />
             </>
           )}

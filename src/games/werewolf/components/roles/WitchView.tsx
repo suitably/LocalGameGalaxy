@@ -65,7 +65,7 @@ export const WitchView: React.FC<RoleViewProps> = ({
 
   return (
     <Box textAlign="center">
-      <AutoFixHighIcon sx={{ fontSize: 80, color: 'primary.main', mb: 2 }} />
+      <AutoFixHighIcon sx={{ fontSize: 80, color: 'primary.text', mb: 2 }} />
       <Typography variant="h5" gutterBottom>
         {t('games.werewolf.roles.WITCH')}
       </Typography>

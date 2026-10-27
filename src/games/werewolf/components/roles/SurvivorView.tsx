@@ -21,7 +21,7 @@ export const SurvivorView: React.FC<RoleViewProps> = ({
   const { t } = useTranslation();
   return (
     <Box textAlign="center">
-      <SecurityIcon sx={{ fontSize: 80, color: 'primary.main', mb: 2 }} />
+      <SecurityIcon sx={{ fontSize: 80, color: 'primary.text', mb: 2 }} />
       <Typography variant="h5">{t('games.werewolf.roles.SURVIVOR')}</Typography>
       <Typography variant="body1" sx={{ mb: 3 }}>
         {instruction || t('games.werewolf.ui.survivor.instruction')}

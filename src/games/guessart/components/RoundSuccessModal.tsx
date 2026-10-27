@@ -83,7 +83,7 @@ export const RoundSuccessModal: React.FC<RoundSuccessModalProps> = ({
             <Typography variant="body2" color="text.secondary">
               {t('guessart.searchedWord', 'Gesuchtes Wort:')}
             </Typography>
-            <Typography variant="h4" fontWeight={800} color="primary.main" sx={{ mt: 0.5 }}>
+            <Typography variant="h4" fontWeight={800} color="primary.text" sx={{ mt: 0.5 }}>
               {word}
             </Typography>
             {originalWord && originalWord.trim().toLowerCase() !== word.trim().toLowerCase() && (

@@ -149,7 +149,7 @@ export const QwixxRulesDialog: React.FC<QwixxRulesDialogProps> = ({
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-            <EmojiEventsIcon sx={{ fontSize: 20, mt: 0.2, color: 'primary.main' }} />
+            <EmojiEventsIcon sx={{ fontSize: 20, mt: 0.2, color: 'primary.text' }} />
             <Box>
               <Typography variant="subtitle2" fontWeight="bold">
                 {t('games.qwixx.rules_scoring_title', 'Wertung & Besonderheiten')}

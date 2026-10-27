@@ -38,7 +38,7 @@ const MelodiqTVScreen: React.FC = () => {
           gap: 4,
         }}
       >
-        <CircularProgress size={100} thickness={4} sx={{ color: 'primary.main' }} />
+        <CircularProgress size={100} thickness={4} sx={{ color: 'primary.text' }} />
         <Typography variant="h3" fontWeight="bold">
           {t('melodiq.waiting_for_download')}
         </Typography>

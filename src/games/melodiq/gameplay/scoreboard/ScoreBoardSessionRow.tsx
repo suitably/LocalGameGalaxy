@@ -43,7 +43,7 @@ export const ScoreBoardSessionRow: React.FC<ScoreBoardSessionRowProps> = ({ play
         }}
       >
         {isWinner ? (
-          <EmojiEventsIcon sx={{ fontSize: 48, color: 'primary.main' }} />
+          <EmojiEventsIcon sx={{ fontSize: 48, color: 'primary.text' }} />
         ) : (
           <Typography variant="h4" sx={{ color: 'text.secondary', ...tabularNums }}>
             #{rank}
