@@ -9,12 +9,14 @@ import {
 import type { TabletopGameDefinition, TabletopGameSummary } from './types';
 
 const DB_NAME = 'galaxy_tabletop_db';
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 const STORE_GAMES = 'custom_games';
 /** Running games, keyed by `sessionKey()`; v3. */
 const STORE_SESSIONS = 'sessions';
 /** Named table states the player saved to resume later (#538), keyed by `id`; v4. */
 const STORE_NAMED_SAVES = 'named_saves';
+/** This device's default template per device-only or starter game (#547), keyed by `gameId`; v5. */
+const STORE_LOCAL_TEMPLATES = 'local_templates';
 
 let dbInstance: IDBDatabase | null = null;
 
@@ -38,6 +40,9 @@ export async function openTabletopDb(): Promise<IDBDatabase> {
         db.createObjectStore(STORE_NAMED_SAVES, { keyPath: 'id' }).createIndex('gameId', 'gameId', {
           unique: false,
         });
+      }
+      if (!db.objectStoreNames.contains(STORE_LOCAL_TEMPLATES)) {
+        db.createObjectStore(STORE_LOCAL_TEMPLATES, { keyPath: 'gameId' });
       }
     };
 
@@ -110,9 +115,11 @@ export async function listTabletopGames(): Promise<TabletopGameSummary[]> {
 }
 
 export async function deleteTabletopGame(id: string): Promise<void> {
-  return runWithStore(openTabletopDb, STORE_GAMES, 'readwrite', (store) => {
+  await runWithStore(openTabletopDb, STORE_GAMES, 'readwrite', (store) => {
     store.delete(id);
   });
+  // a template without its game would shadow a later game with the same id
+  await deleteLocalTemplate(id);
 }
 
 export interface TabletopSessionRecord {
@@ -197,5 +204,37 @@ export async function putNamedSave(
 export async function deleteNamedSave(id: string): Promise<void> {
   return runWithStore(openTabletopDb, STORE_NAMED_SAVES, 'readwrite', (store) => {
     store.delete(id);
+  });
+}
+
+/**
+ * This device's default template of a device-only or starter game (#547). Kept apart from
+ * `custom_games`, so removing it brings back the original game.
+ */
+export interface TabletopLocalTemplate {
+  gameId: string;
+  savedAt: number;
+  game: TabletopGameDefinition;
+}
+
+export async function getLocalTemplate(gameId: string): Promise<TabletopLocalTemplate | null> {
+  return runWithStore(openTabletopDb, STORE_LOCAL_TEMPLATES, 'readonly', async (store) => {
+    const res = await requestToPromise<TabletopLocalTemplate | undefined>(store.get(gameId));
+    return res ?? null;
+  });
+}
+
+/** Stores the table (kept whole, like a session) as the state new tables of this game start from. */
+export async function putLocalTemplate(game: TabletopGameDefinition): Promise<void> {
+  const record: TabletopLocalTemplate = { gameId: game.id, savedAt: Date.now(), game };
+  return runWithStore(openTabletopDb, STORE_LOCAL_TEMPLATES, 'readwrite', (store) => {
+    store.put(record);
+  });
+}
+
+/** "Reset to original": new tables of this game start from the starter or device game again. */
+export async function deleteLocalTemplate(gameId: string): Promise<void> {
+  return runWithStore(openTabletopDb, STORE_LOCAL_TEMPLATES, 'readwrite', (store) => {
+    store.delete(gameId);
   });
 }

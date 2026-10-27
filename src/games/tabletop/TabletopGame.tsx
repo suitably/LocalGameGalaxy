@@ -7,14 +7,9 @@ import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
 import { tabletopReducer } from './logic/tabletopReducer';
 import { validateAndSanitizeGame } from './logic/gameValidator';
-import {
-  deleteTabletopSession,
-  getTabletopGame,
-  getTabletopSession,
-  sessionKey,
-} from './logic/tabletopStorage';
-import { loadServerGame } from './logic/tabletopServerApi';
-import { storage } from '../../lib/storage';
+import { deleteTabletopSession, sessionKey } from './logic/tabletopStorage';
+import { resolveTableGame, type TableOrigin } from './logic/gameSource';
+import { createGameSourceLoaders } from './logic/gameSourceLoaders';
 import { TabletopEditor } from './components/editor/TabletopEditor';
 import { HandDockStrip } from './components/surface/HandDockStrip';
 import { TabletopControllerView } from './components/controller/TabletopControllerView';
@@ -46,6 +41,7 @@ export function TabletopGame() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [restartCount, setRestartCount] = useState(0);
+  const [origin, setOrigin] = useState<TableOrigin | null>(null);
   const isHost = role === 'tv';
   /** Host and local play own the state, so they save and resume it; phones get snapshots. */
   const ownsState = isLocal || isHost;
@@ -70,31 +66,14 @@ export function TabletopGame() {
 
     const fetchGame = async () => {
       try {
-        // 0. Resume a running game
-        const session = ownsState ? await getTabletopSession(saveKey) : null;
-        if (session && session.game.id === gameId) {
-          dispatch({ type: 'LOAD_GAME', payload: session.game });
-          return;
-        }
-
-        // 1. Try local IndexedDB
-        const localCustom = await getTabletopGame(gameId);
-        if (localCustom) {
-          dispatch({ type: 'LOAD_GAME', payload: validateAndSanitizeGame(localCustom) });
-          return;
-        }
-
-        // 2. Try public starter game json
-        const res = await fetch(`/games/tabletop/${gameId}.json`);
-        if (res.ok) {
-          const json = await res.json();
-          dispatch({ type: 'LOAD_GAME', payload: validateAndSanitizeGame(json) });
-          return;
-        }
-
-        // 3. Try BYOG server if active
-        if (storage.isHelperActive()) {
-          dispatch({ type: 'LOAD_GAME', payload: await loadServerGame(gameId) });
+        // session → device game → starter JSON → server; a local template replaces the original
+        const resolved = await resolveTableGame(
+          gameId,
+          createGameSourceLoaders(gameId, ownsState ? saveKey : null),
+        );
+        if (resolved) {
+          setOrigin(resolved.origin);
+          dispatch({ type: 'LOAD_GAME', payload: resolved.game });
           return;
         }
 
@@ -182,7 +161,7 @@ export function TabletopGame() {
             {t('party.backToLobby')}
           </Button>
           <RestartGameButton onRestart={restartGame} />
-          <SaveStateButton game={gameState.game} onLoad={loadSavedTable} />
+          <SaveStateButton game={gameState.game} origin={origin} onLoad={loadSavedTable} />
           <TabletopEditor state={gameState} dispatch={syncedDispatch} isTvMode={true} />
         </Box>
       </TvThemeProvider>
@@ -216,7 +195,7 @@ export function TabletopGame() {
       <Box display="flex" flexDirection="column" width="100%" height="100%" overflow="hidden">
         <Box flex={1} position="relative" minHeight={0}>
           <RestartGameButton onRestart={restartGame} />
-          <SaveStateButton game={gameState.game} onLoad={loadSavedTable} />
+          <SaveStateButton game={gameState.game} origin={origin} onLoad={loadSavedTable} />
           <TabletopEditor state={gameState} dispatch={syncedDispatch} hideSeatSelector />
           <TabletopPassAndPlay state={gameState} dispatch={syncedDispatch} />
         </Box>

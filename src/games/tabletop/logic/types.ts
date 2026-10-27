@@ -71,6 +71,8 @@ export interface BaseWidget {
   zIndex: number;
   ownerSeat?: number; // 0-indexed player seat if private
   pinned?: boolean;
+  /** Set on a copy blanked for a device outside its hidden zone (#551); never in the host's state. */
+  redacted?: true;
   /** Moving it does not raise it (labels that must stay above or below pieces). */
   keepZOrder?: boolean;
   label?: string;

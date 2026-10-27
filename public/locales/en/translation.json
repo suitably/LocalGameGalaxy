@@ -725,6 +725,9 @@
         "later_ms": "{{ms}} ms later",
         "saved": "Saved",
         "export_score": "Download score in the recording's tempo",
+        "export_ultrastar": "Save as UltraStar .txt",
+        "ultrastar_part": "Vocal part",
+        "ultrastar_duet": "Duet (both vocal parts)",
         "align_failed": "Alignment failed: {{error}}",
         "tab_library": "Library",
         "song_meta": "{{bars}} bars · {{parts}} tracks",
@@ -1057,7 +1060,13 @@
         "confirm_delete_title": "Delete save",
         "confirm_delete": "Delete this save for good?",
         "confirm_template_title": "Save as default template",
-        "confirm_template": "Every new table of this server game will then start from the current table, for all users."
+        "confirm_template": "Every new table of this server game will then start from the current table, for all users.",
+        "saveLocalTemplate": "Save as default (this device)",
+        "resetTemplate": "Reset to original",
+        "confirm_localTemplate_title": "Save as default (this device)",
+        "confirm_localTemplate": "Every new table of this game will then start from the current table on this device. The original game is kept.",
+        "confirm_resetTemplate_title": "Reset to original",
+        "confirm_resetTemplate": "Delete the default template on this device? New tables then start from the original game again. The running table stays as it is."
       },
       "editor": {
         "edit": "Edit table",

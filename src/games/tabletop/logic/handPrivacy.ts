@@ -95,17 +95,28 @@ export function redactDelta(
   return { delta: { ...delta, widgets }, secrets };
 }
 
-/** Puts this seat's real faces back into received widgets. */
+/**
+ * What a seat may restore for one widget: a card face (private hand) or the whole widget (a hidden
+ * zone the seat may see through, see `hiddenZoneRedaction.ts`).
+ */
+export type WidgetSecret = CardSecret | TabletopWidget;
+
+/** Puts this seat's real faces (and hidden-zone widgets) back into received widgets. */
 export function restoreCards<T extends Record<string, TabletopWidget | null>>(
   widgets: T,
-  secrets: Record<string, CardSecret> | undefined,
+  secrets: Record<string, WidgetSecret> | undefined,
 ): T {
   if (!secrets) return widgets;
   const out: Record<string, TabletopWidget | null> = { ...widgets };
   for (const [id, secret] of Object.entries(secrets)) {
     const w = out[id];
-    if (w && w.type === 'card') {
-      out[id] = { ...(w as CardWidget), ...secret, faceObjects: secret.faceObjects } as CardWidget;
+    if (!w) continue;
+    if ('type' in secret && secret.type === w.type) {
+      // a whole widget (hidden zone, #551) replaces the blanked copy, marker included
+      out[id] = { ...secret } as TabletopWidget;
+    } else if (w.type === 'card') {
+      const faceObjects = 'faceObjects' in secret ? secret.faceObjects : undefined;
+      out[id] = { ...w, ...secret, faceObjects } as CardWidget;
     }
   }
   return out as T;

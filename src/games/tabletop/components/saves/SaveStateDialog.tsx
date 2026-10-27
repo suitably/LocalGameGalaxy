@@ -2,7 +2,8 @@
  * Save the running table under a name and resume saved tables (#538) [ID: COMP-TABLETOP-SAVE-DIALOG]
  *
  * Saving on this device is always possible; on the companion server it needs the API key
- * permission `allowTabletopSaves`, the default template `allowTabletopTemplates`.
+ * permission `allowTabletopSaves`, the default template `allowTabletopTemplates`. Device-only
+ * and starter games keep their default template on this device (#547).
  */
 import React, { useMemo, useState } from 'react';
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
@@ -12,9 +13,16 @@ import { checkSaveName, suggestUniqueName } from '../../logic/saveNames';
 import type { SaveTarget, TableSaves } from '../../hooks/useTableSaves';
 import { SaveStateForm } from './SaveStateForm';
 import { SaveStateList } from './SaveStateList';
+import { TemplateActions, type TemplateAction } from './TemplateActions';
 
 type Pending =
-  { kind: 'load' | 'delete'; target: SaveTarget; id: string } | { kind: 'template' } | null;
+  { kind: 'load' | 'delete'; target: SaveTarget; id: string } | { kind: TemplateAction } | null;
+
+const TEMPLATE_RUNNERS: Record<TemplateAction, (saves: TableSaves) => Promise<boolean>> = {
+  template: (saves) => saves.saveTemplate(),
+  localTemplate: (saves) => saves.saveLocalTemplate(),
+  resetTemplate: (saves) => saves.resetLocalTemplate(),
+};
 
 interface Props {
   open: boolean;
@@ -55,7 +63,7 @@ export const SaveStateDialog: React.FC<Props> = ({ open, onClose, gameName, save
     const action = pending;
     setPending(null);
     if (!action) return;
-    if (action.kind === 'template') await saves.saveTemplate();
+    if (!('target' in action)) await TEMPLATE_RUNNERS[action.kind](saves);
     else if (action.kind === 'delete') await saves.remove(action.target, action.id);
     else if (await saves.load(action.target, action.id)) onClose();
   };
@@ -106,16 +114,7 @@ export const SaveStateDialog: React.FC<Props> = ({ open, onClose, gameName, save
           )}
         </DialogContent>
         <DialogActions sx={{ flexWrap: 'wrap' }}>
-          {saves.serverAvailable && saves.permissions.saveTemplates && (
-            <Button
-              color="warning"
-              disabled={saves.busy}
-              onClick={() => setPending({ kind: 'template' })}
-              sx={{ mr: 'auto' }}
-            >
-              {t('games.tabletop.saves.saveTemplate')}
-            </Button>
-          )}
+          <TemplateActions saves={saves} onPick={(kind) => setPending({ kind })} />
           <Button onClick={onClose}>{t('common.cancel')}</Button>
           <Button
             variant="contained"

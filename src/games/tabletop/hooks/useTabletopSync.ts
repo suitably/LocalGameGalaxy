@@ -177,7 +177,11 @@ export function useTabletopSync({
     if (!delta) return;
     seqRef.current = seq;
     enqueue(async () => {
-      broadcastAction({ type: 'STATE_DELTA', ...(await hands.outgoingDelta(delta, game)), seq });
+      broadcastAction({
+        type: 'STATE_DELTA',
+        ...(await hands.outgoingDelta(delta, game, prev)),
+        seq,
+      });
     });
   }, [game, isHost, roomId, broadcastAction, enqueue, hands]);
 

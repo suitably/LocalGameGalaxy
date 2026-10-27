@@ -28,6 +28,7 @@ import { LabelWidgetView } from '../widgets/LabelWidgetView';
 import { TimerWidgetView } from '../widgets/TimerWidgetView';
 import { SpinnerWidgetView } from '../widgets/SpinnerWidgetView';
 import { ButtonWidgetView } from '../widgets/ButtonWidgetView';
+import { ObscuredPlaceholder } from './ObscuredPlaceholder';
 
 interface BoardWidgetRendererProps {
   widget: TabletopWidget;
@@ -55,8 +56,7 @@ export const BoardWidgetRenderer: React.FC<BoardWidgetRendererProps> = ({
   );
   if (obscured) {
     return (
-      <Box
-        aria-hidden
+      <ObscuredPlaceholder
         sx={{
           position: 'absolute',
           left: w.x,
@@ -64,12 +64,6 @@ export const BoardWidgetRenderer: React.FC<BoardWidgetRendererProps> = ({
           width: w.width,
           height: w.height,
           zIndex: w.zIndex,
-          bgcolor: 'background.paper',
-          border: 1,
-          borderColor: 'divider',
-          borderRadius: 1,
-          opacity: 0.95,
-          userSelect: 'none',
         }}
       />
     );

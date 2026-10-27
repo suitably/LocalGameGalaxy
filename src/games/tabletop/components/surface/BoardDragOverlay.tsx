@@ -8,12 +8,15 @@ import type { CardWidget, TokenWidget, DieWidget, TabletopWidget } from '../../l
 import { CardWidgetView } from '../widgets/CardWidgetView';
 import { TokenWidgetView } from '../widgets/TokenWidgetView';
 import { DieWidgetView } from '../widgets/DieWidgetView';
+import { ObscuredPlaceholder } from './ObscuredPlaceholder';
 
 interface BoardDragOverlayProps {
   widget: TabletopWidget | null;
   pointerPos: { x: number; y: number } | null;
   grabOffset: { x: number; y: number };
   scale: number;
+  /** Inside a hidden zone the viewer may not see: show a placeholder only (#551). */
+  obscured?: boolean;
 }
 
 export const BoardDragOverlay: React.FC<BoardDragOverlayProps> = ({
@@ -21,6 +24,7 @@ export const BoardDragOverlay: React.FC<BoardDragOverlayProps> = ({
   pointerPos,
   grabOffset,
   scale,
+  obscured = false,
 }) => {
   if (!widget || !pointerPos) return null;
 
@@ -29,9 +33,10 @@ export const BoardDragOverlay: React.FC<BoardDragOverlayProps> = ({
   const left = pointerPos.x - grabOffset.x * (effectiveScale / (scale || 1));
   const top = pointerPos.y - grabOffset.y * (effectiveScale / (scale || 1));
 
-  const rotation = 'rotation' in widget && typeof (widget as { rotation?: number }).rotation === 'number'
-    ? (widget as { rotation?: number }).rotation || 0
-    : 0;
+  const rotation =
+    'rotation' in widget && typeof (widget as { rotation?: number }).rotation === 'number'
+      ? (widget as { rotation?: number }).rotation || 0
+      : 0;
 
   return createPortal(
     <Box
@@ -57,26 +62,18 @@ export const BoardDragOverlay: React.FC<BoardDragOverlayProps> = ({
           position: 'relative',
         }}
       >
-        {widget.type === 'card' && (
-          <CardWidgetView
-            widget={{ ...(widget as CardWidget), x: 0, y: 0 }}
-            isDragging={false}
-          />
+        {obscured && <ObscuredPlaceholder sx={{ position: 'absolute', inset: 0 }} />}
+        {!obscured && widget.type === 'card' && (
+          <CardWidgetView widget={{ ...(widget as CardWidget), x: 0, y: 0 }} isDragging={false} />
         )}
-        {widget.type === 'token' && (
-          <TokenWidgetView
-            widget={{ ...(widget as TokenWidget), x: 0, y: 0 }}
-            isDragging={true}
-          />
+        {!obscured && widget.type === 'token' && (
+          <TokenWidgetView widget={{ ...(widget as TokenWidget), x: 0, y: 0 }} isDragging={true} />
         )}
-        {widget.type === 'die' && (
-          <DieWidgetView
-            widget={{ ...(widget as DieWidget), x: 0, y: 0 }}
-            isDragging={true}
-          />
+        {!obscured && widget.type === 'die' && (
+          <DieWidgetView widget={{ ...(widget as DieWidget), x: 0, y: 0 }} isDragging={true} />
         )}
       </Box>
     </Box>,
-    document.body
+    document.body,
   );
 };

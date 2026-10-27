@@ -7,6 +7,8 @@ import type { StageSongState } from '../useStageSong';
 import { useYouTubeImport } from '../useYouTubeImport';
 import { YouTubeRecordingDialog } from './YouTubeRecordingDialog';
 import { OffsetControls } from './OffsetControls';
+import { UltraStarExport } from './UltraStarExport';
+import { ultraStarChoices } from '../logic/ultraStarExport';
 
 const signed = (n: number) => (n > 0 ? '+' : '−') + Math.abs(n);
 
@@ -52,7 +54,8 @@ export function RecordingPanel({ state }: { state: StageSongState }) {
       info += ` · ${k('tuning_cents', { cents: signed(tuning.cents) })}`;
     if (pins.length) info += ` · ${k('pinned', { count: pins.length })}`;
   }
-  const canKeep = state.canSaveToServer || state.canExport;
+  const canExportUltraStar = !!marks && ultraStarChoices(state.song).parts.length > 0;
+  const canKeep = state.canSaveToServer || state.canExport || canExportUltraStar;
 
   return (
     <>
@@ -134,6 +137,7 @@ export function RecordingPanel({ state }: { state: StageSongState }) {
                 </Button>
               )}
             </Stack>
+            <UltraStarExport state={state} />
           </Section>
         )}
       </Stack>

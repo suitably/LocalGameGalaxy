@@ -3,6 +3,7 @@ import { Box } from '@mui/material';
 import type { CardWidget, TabletopWidget } from '../../logic/types';
 import type { FlyingCardAnimation } from '../../logic/tabletopReducer';
 import { PlayingCardFace } from '../widgets/PlayingCardFace';
+import { ObscuredPlaceholder } from './ObscuredPlaceholder';
 
 interface FlyingCardsLayerProps {
   flyingCards: FlyingCardAnimation[];
@@ -10,6 +11,8 @@ interface FlyingCardsLayerProps {
   tableWidth: number;
   tableHeight: number;
   onFinishAnimation: (animationId: string) => void;
+  /** Widgets in hidden zones the viewer may not see: their flight shows no face (#551). */
+  obscuredIds?: ReadonlySet<string>;
 }
 
 export const FlyingCardsLayer: React.FC<FlyingCardsLayerProps> = ({
@@ -18,6 +21,7 @@ export const FlyingCardsLayer: React.FC<FlyingCardsLayerProps> = ({
   tableWidth,
   tableHeight,
   onFinishAnimation,
+  obscuredIds,
 }) => {
   if (flyingCards.length === 0) return null;
 
@@ -26,6 +30,7 @@ export const FlyingCardsLayer: React.FC<FlyingCardsLayerProps> = ({
       {flyingCards.map((f) => {
         const card = widgets[f.cardId] as CardWidget | undefined;
         const holder = widgets[f.targetHolderId];
+        const hidden = obscuredIds?.has(f.cardId) || obscuredIds?.has(f.targetHolderId);
         const targetX =
           holder && holder.x > -90000 ? holder.x + holder.width / 2 - 40 : tableWidth / 2;
         const targetY =
@@ -54,15 +59,19 @@ export const FlyingCardsLayer: React.FC<FlyingCardsLayerProps> = ({
               bgcolor: 'text.primary',
             }}
           >
-            {card && (
-              <PlayingCardFace
-                frontContent={card.frontContent}
-                backContent={card.backContent}
-                isFaceUp={true}
-                label={card.label}
-                width={80}
-                height={120}
-              />
+            {hidden ? (
+              <ObscuredPlaceholder sx={{ width: '100%', height: '100%' }} />
+            ) : (
+              card && (
+                <PlayingCardFace
+                  frontContent={card.frontContent}
+                  backContent={card.backContent}
+                  isFaceUp={true}
+                  label={card.label}
+                  width={80}
+                  height={120}
+                />
+              )
             )}
           </Box>
         );

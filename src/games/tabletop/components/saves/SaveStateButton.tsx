@@ -6,18 +6,21 @@ import { IconButton, Tooltip } from '@mui/material';
 import SaveIcon from '@mui/icons-material/SaveRounded';
 import { useTranslation } from 'react-i18next';
 import { useTableSaves } from '../../hooks/useTableSaves';
+import type { TableOrigin } from '../../logic/gameSource';
 import type { TabletopGameDefinition } from '../../logic/types';
 import { SaveStateDialog } from './SaveStateDialog';
 
 interface Props {
   game: TabletopGameDefinition;
+  /** Where the game comes from; device-only and starter games get local default templates. */
+  origin: TableOrigin | null;
   onLoad: (game: TabletopGameDefinition) => void;
 }
 
-export const SaveStateButton: React.FC<Props> = ({ game, onLoad }) => {
+export const SaveStateButton: React.FC<Props> = ({ game, origin, onLoad }) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const saves = useTableSaves(game, onLoad, open);
+  const saves = useTableSaves(game, origin, onLoad, open);
 
   return (
     <>
