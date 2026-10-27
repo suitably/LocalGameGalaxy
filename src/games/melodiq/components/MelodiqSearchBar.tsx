@@ -14,7 +14,8 @@ import CloseIcon from '@mui/icons-material/CloseRounded';
 import PublicIcon from '@mui/icons-material/PublicRounded';
 import FilterListIcon from '@mui/icons-material/FilterListRounded';
 import { useTranslation } from 'react-i18next';
-import { SortMenuButton, MultiFilterSelect } from './MelodiqSearchControls';
+import { MultiFilterSelect } from '../../../components/common/MultiFilterSelect';
+import { SortMenuButton } from './MelodiqSearchControls';
 import { type ActiveFilters, type SortOption } from '../hooks/useSearchFilters';
 
 interface MelodiqSearchBarProps {

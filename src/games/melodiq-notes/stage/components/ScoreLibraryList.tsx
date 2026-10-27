@@ -1,15 +1,4 @@
-import {
-  Alert,
-  Box,
-  Button,
-  Chip,
-  IconButton,
-  Link,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
-import DeleteIcon from '@mui/icons-material/DeleteOutlineRounded';
+import { Alert, Button, Link, Stack } from '@mui/material';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '../../../../components/common/ConfirmDialog';
@@ -23,32 +12,38 @@ import {
 } from '../../../../lib/companion/songScoresApi';
 import { deleteLibrarySong } from '../../../../lib/companion/notesLibraryApi';
 import {
-  filterCatalog,
+  activeFilterCount,
+  catalogFacets,
+  searchCatalog,
+  type CatalogMatch,
+} from '../logic/catalogSearch';
+import {
   loadScoreCatalog,
   type CatalogEntry,
+  type CatalogItem,
   type CatalogScore,
 } from '../logic/scoreCatalog';
-
-const MAX_LISTED = 80;
+import type { CatalogSearchState } from '../useCatalogSearch';
+import { CatalogEntryCard } from './CatalogEntryCard';
+import { CatalogSearchBar } from './CatalogSearchBar';
 
 interface ScoreLibraryListProps {
+  search: CatalogSearchState;
   onPlay: (item: CatalogScore) => void;
   /** Plays a Melodiq song's karaoke `.txt` as a vocal part (#566). */
   onPlayKaraoke: (song: CompanionSong) => void;
 }
 
 /**
- * The sheet-music library of Melodiq Notes: one entry per song folder, the only store (#568).
- * Songs with a karaoke `.txt` carry a badge, play with their mix and also offer their vocals
- * (#566); only songs without `.txt` can be deleted here (Melodiq songs are deleted in Melodiq).
+ * The sheet-music library of Melodiq Notes on the server: one entry per song folder, the only
+ * store (#568), searchable by text, format, instrument, language and genre.
  */
-export function ScoreLibraryList({ onPlay, onPlayKaraoke }: ScoreLibraryListProps) {
+export function ScoreLibraryList({ search, onPlay, onPlayKaraoke }: ScoreLibraryListProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
     t(`games.melodiq_notes.stage.${key}`, opts);
   const [catalog, setCatalog] = useState<CatalogEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [query, setQuery] = useState('');
   const [deleting, setDeleting] = useState<CatalogEntry | null>(null);
   const enabled = isCompanionEnabled();
 
@@ -64,9 +59,19 @@ export function ScoreLibraryList({ onPlay, onPlayKaraoke }: ScoreLibraryListProp
     if (enabled) reload();
   }, [enabled, reload]);
 
-  const shown = useMemo(
-    () => filterCatalog(catalog ?? [], query).slice(0, MAX_LISTED),
-    [catalog, query],
+  const facets = useMemo(() => catalogFacets(catalog ?? []), [catalog]);
+  // translated instrument and format names are searchable too ("Gitarre", "midi")
+  const terms = useCallback(
+    (item: CatalogItem) =>
+      [
+        ...item.instruments.map((i) => t(`games.melodiq_notes.stage.instruments.${i}`)),
+        t(`games.melodiq_notes.stage.formats.${item.format}`),
+      ].join(' '),
+    [t],
+  );
+  const matches: CatalogMatch[] = useMemo(
+    () => searchCatalog(catalog ?? [], search.filters, terms),
+    [catalog, search.filters, terms],
   );
 
   const remove = async (entry: CatalogEntry) => {
@@ -81,17 +86,33 @@ export function ScoreLibraryList({ onPlay, onPlayKaraoke }: ScoreLibraryListProp
   };
 
   if (!enabled) return <Alert severity="info">{k('server_off')}</Alert>;
+  const hidden = matches.length - search.limit;
   return (
     <Stack spacing={1.5}>
       {error && <ErrorState dense message={k('server_error', { error })} onRetry={reload} />}
-      <TextField
-        size="small"
-        label={k('search')}
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-      />
+      <CatalogSearchBar search={search} facets={facets} resultCount={matches.length} />
+      {!catalog && !error && <ListSkeleton rows={3} />}
+      {catalog?.length === 0 && <EmptyState dense message={k('notes_empty')} />}
+      {!!catalog?.length && matches.length === 0 && (
+        <EmptyState
+          dense
+          message={k('no_results')}
+          actionLabel={activeFilterCount(search.filters) > 0 ? k('filters_reset') : undefined}
+          onAction={search.reset}
+        />
+      )}
+      {matches.slice(0, search.limit).map((match) => (
+        <CatalogEntryCard
+          key={match.entry.key}
+          match={match}
+          onPlay={onPlay}
+          onPlayKaraoke={onPlayKaraoke}
+          onDelete={() => setDeleting(match.entry)}
+        />
+      ))}
+      {hidden > 0 && <Button onClick={search.showMore}>{k('show_more', { count: hidden })}</Button>}
       <Link
-        href={scoreSearchUrl('', query)}
+        href={scoreSearchUrl('', search.filters.query)}
         target="_blank"
         rel="noopener noreferrer"
         variant="body2"
@@ -99,66 +120,6 @@ export function ScoreLibraryList({ onPlay, onPlayKaraoke }: ScoreLibraryListProp
       >
         {k('find_scores')}
       </Link>
-      {!catalog && !error && <ListSkeleton rows={3} />}
-      {catalog?.length === 0 && <EmptyState dense message={k('notes_empty')} />}
-      {shown.map((entry) => (
-        <Box key={entry.key} sx={{ border: 1, borderColor: 'divider', borderRadius: 2, p: 1.25 }}>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Typography variant="body2" fontWeight={700} noWrap sx={{ flexGrow: 1 }}>
-              {entry.artist ? `${entry.artist} – ${entry.title}` : entry.title}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {k('notes_recordings', { count: entry.recordings })}
-            </Typography>
-            {entry.song.karaoke !== false && (
-              <Chip
-                size="small"
-                variant="outlined"
-                label={k('source_song')}
-                title={k('source_song_hint')}
-              />
-            )}
-            {!entry.karaoke && entry.song.karaoke === false && (
-              <IconButton
-                size="small"
-                aria-label={k('notes_delete')}
-                onClick={() => setDeleting(entry)}
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
-            )}
-          </Stack>
-          <Stack
-            direction="row"
-            spacing={1}
-            flexWrap="wrap"
-            useFlexGap
-            alignItems="center"
-            sx={{ mt: 0.75 }}
-          >
-            {entry.scores.length === 0 && !entry.karaoke && (
-              <Typography variant="caption" color="text.secondary">
-                {k('no_scores')}
-              </Typography>
-            )}
-            {entry.scores.map((item) => (
-              <Button key={item.file} size="small" variant="contained" onClick={() => onPlay(item)}>
-                {k('play_score')}: {item.label ?? item.file}
-              </Button>
-            ))}
-            {entry.karaoke && (
-              <Button
-                size="small"
-                variant="outlined"
-                title={k('play_karaoke_hint')}
-                onClick={() => entry.karaoke && onPlayKaraoke(entry.karaoke)}
-              >
-                {k('play_karaoke')}
-              </Button>
-            )}
-          </Stack>
-        </Box>
-      ))}
       <ConfirmDialog
         open={!!deleting}
         title={k('notes_delete')}

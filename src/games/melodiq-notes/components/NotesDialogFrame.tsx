@@ -17,6 +17,8 @@ interface NotesDialogFrameProps {
   onClose: () => void;
   title: React.ReactNode;
   maxWidth: 'xs' | 'sm';
+  /** Covers the whole screen (on a phone); the close button stays in the title. */
+  fullScreen?: boolean;
   titleSx?: SxProps<Theme>;
   children: React.ReactNode;
 }
@@ -26,6 +28,7 @@ export const NotesDialogFrame: React.FC<NotesDialogFrameProps> = ({
   onClose,
   title,
   maxWidth,
+  fullScreen = false,
   titleSx = { pb: 1 },
   children,
 }) => (
@@ -34,6 +37,7 @@ export const NotesDialogFrame: React.FC<NotesDialogFrameProps> = ({
     onClose={onClose}
     maxWidth={maxWidth}
     fullWidth
+    fullScreen={fullScreen}
     PaperProps={{
       sx: {},
     }}

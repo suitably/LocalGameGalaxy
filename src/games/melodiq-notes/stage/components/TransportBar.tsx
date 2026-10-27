@@ -1,4 +1,13 @@
-import { IconButton, Stack, ToggleButton, ToggleButtonGroup, Tooltip } from '@mui/material';
+import {
+  Box,
+  Button,
+  IconButton,
+  Stack,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
+} from '@mui/material';
+import BarsIcon from '@mui/icons-material/ViewWeekRounded';
 import FullscreenIcon from '@mui/icons-material/FullscreenRounded';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExitRounded';
 import PauseIcon from '@mui/icons-material/PauseRounded';
@@ -19,6 +28,8 @@ interface TransportBarProps {
   onDisplay: (d: StageDisplay) => void;
   onTogglePause: () => void;
   fullscreen: { active: boolean; enter: () => void; exit: () => void };
+  /** The "Bars & loop" panel above the bar. */
+  bars: { open: boolean; toggle: () => void };
 }
 
 const VIEWS = [
@@ -27,8 +38,8 @@ const VIEWS = [
 ] as const;
 
 /**
- * Player controls in one row, like a video or music player: play/pause, timeline, first note,
- * speed, view, backing and full screen. The same bar floats over the stage in full screen.
+ * Player controls, like a video or music player: play/pause, timeline, first note, then speed,
+ * backing, bars & loop, view and full screen (a second row on phones). Docked below the stage.
  */
 export function TransportBar({
   engine,
@@ -36,6 +47,7 @@ export function TransportBar({
   onDisplay,
   onTogglePause,
   fullscreen,
+  bars,
 }: TransportBarProps) {
   const { t } = useTranslation();
   const k = (key: string) => t(`games.melodiq_notes.stage.${key}`);
@@ -63,6 +75,26 @@ export function TransportBar({
       <Stack direction="row" alignItems="center" spacing={0.5} sx={{ ml: 'auto' }}>
         <SpeedButton engine={engine} />
         <BackingMenu engine={engine} />
+        <Tooltip title={k('sections_label')}>
+          <Button
+            color={engine.loop ? 'primary' : 'inherit'}
+            startIcon={<BarsIcon />}
+            aria-expanded={bars.open}
+            aria-label={k('sections_label')}
+            onClick={bars.toggle}
+            sx={{
+              minHeight: TOUCH_TARGET,
+              minWidth: TOUCH_TARGET,
+              textTransform: 'none',
+              // icon only on phones
+              '& .MuiButton-startIcon': { mr: { xs: 0, md: 1 }, ml: { xs: 0, md: -0.5 } },
+            }}
+          >
+            <Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
+              {k('sections_label')}
+            </Box>
+          </Button>
+        </Tooltip>
         <ToggleButtonGroup
           size="small"
           exclusive

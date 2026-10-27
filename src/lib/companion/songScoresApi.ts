@@ -38,6 +38,10 @@ export interface CompanionSong {
   txtContent?: string;
   /** False for a song without karaoke `.txt` (sheet music only); absent on older servers. */
   karaoke?: boolean;
+  /** Header fields of the karaoke `.txt`; absent for songs without one. */
+  genre?: string;
+  language?: string;
+  year?: string;
   /** Sheet music in the song folder. */
   scores?: SongScore[];
   /** Audio in the song folder besides the mix (Notes recordings). */

@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { alpha, Box, Stack, Typography, Chip } from '@mui/material';
-import LibraryMusicIcon from '@mui/icons-material/LibraryMusicRounded';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
 import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle, useHeaderLayout } from '../../../context/LayoutContext';
@@ -11,6 +11,8 @@ interface UseMelodiqNotesHeaderOptions {
   currentArtist: string | null;
   effectiveBpm: number;
   onOpenSongSelect: () => void;
+  /** The recording behind the song: its state as label and icon, and its sheet. */
+  recording: { label: string; icon: ReactNode; onOpen: () => void };
 }
 
 export function useMelodiqNotesHeader({
@@ -18,6 +20,7 @@ export function useMelodiqNotesHeader({
   currentArtist,
   effectiveBpm,
   onOpenSongSelect,
+  recording,
 }: UseMelodiqNotesHeaderOptions) {
   const { t } = useTranslation();
   const { setMenuItems, setCustomHeaderTitle } = useHeaderLayout();
@@ -28,13 +31,18 @@ export function useMelodiqNotesHeader({
       : t('games.melodiq_notes.title'),
   );
 
-  // 1. Clickable Song Title in GlobalHeader
+  // 1. The song title opens the song picker (the only way to it, the chevron says so)
   useEffect(() => {
     setCustomHeaderTitle(
       <Box
         onClick={onOpenSongSelect}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') onOpenSongSelect();
+        }}
         role="button"
         tabIndex={0}
+        aria-haspopup="dialog"
+        aria-label={`${t('games.melodiq_notes.stage.song_pick')}: ${currentTitle ?? ''}`}
         sx={{
           display: 'flex',
           alignItems: 'center',
@@ -67,7 +75,14 @@ export function useMelodiqNotesHeader({
                 label={`${effectiveBpm} BPM`}
                 size="small"
                 variant="outlined"
-                sx={{ height: 18, fontSize: '0.75rem', color: 'text.secondary', flexShrink: 0 }}
+                sx={{
+                  height: 18,
+                  fontSize: '0.75rem',
+                  color: 'text.secondary',
+                  flexShrink: 0,
+                  // phones need the room for the title
+                  display: { xs: 'none', sm: 'inline-flex' },
+                }}
               />
             ) : null}
           </Stack>
@@ -82,6 +97,7 @@ export function useMelodiqNotesHeader({
             </Typography>
           )}
         </Box>
+        <ExpandMoreIcon fontSize="small" sx={{ color: 'text.secondary', flexShrink: 0 }} />
       </Box>,
     );
 
@@ -90,21 +106,10 @@ export function useMelodiqNotesHeader({
     };
   }, [currentTitle, currentArtist, effectiveBpm, onOpenSongSelect, setCustomHeaderTitle, t]);
 
-  // 2. Settings & Actions in GlobalHeader
+  // 2. The recording behind the song sits next to it; mode, input and players are on the stage
+  const { label, icon, onOpen } = recording;
   useEffect(() => {
-    const items = [
-      {
-        label: t('games.melodiq_notes.song', 'Song wechseln'),
-        icon: <LibraryMusicIcon fontSize="small" />,
-        action: onOpenSongSelect,
-        showAlways: true,
-      },
-    ];
-
-    setMenuItems(items);
-
-    return () => {
-      setMenuItems([]);
-    };
-  }, [onOpenSongSelect, setMenuItems, t]);
+    setMenuItems([{ label, icon, action: onOpen, showAlways: true }]);
+  }, [label, icon, onOpen, setMenuItems]);
+  useEffect(() => () => setMenuItems([]), [setMenuItems]);
 }

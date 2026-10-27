@@ -3,9 +3,10 @@ import type { CompanionSong } from '../../../../../lib/companion/songScoresApi';
 import {
   buildScoreCatalog,
   catalogKey,
-  filterCatalog,
   findSongFolder,
   loadScoreCatalog,
+  matchesQuery,
+  scoreFormatOf,
 } from '../scoreCatalog';
 import { pickRecording } from '../../serverScoreLoad';
 
@@ -98,10 +99,41 @@ describe('buildScoreCatalog (#568: one entry per song folder)', () => {
     expect(catalogKey('Café', 'Björk')).toBe(catalogKey('cafe', 'BJORK'));
   });
 
-  it('filters by artist and title', () => {
-    const entries = buildScoreCatalog([song('1', 'Hey Jude', 'Beatles'), song('2', 'Yes', 'X')]);
-    expect(filterCatalog(entries, 'beatles jude').map((e) => e.title)).toEqual(['Hey Jude']);
-    expect(filterCatalog(entries, ' ')).toHaveLength(2);
+  it('matches every query word, ignoring case, accents and an empty query', () => {
+    expect(matchesQuery('The Beatles Hey Jude', 'beatles JUDE')).toBe(true);
+    expect(matchesQuery('Björk Army of Me', 'bjork army')).toBe(true);
+    expect(matchesQuery('The Beatles Hey Jude', 'beatles yes')).toBe(false);
+    expect(matchesQuery('anything', ' ')).toBe(true);
+  });
+
+  it('tells the format by the file extension', () => {
+    expect(['a.mxl', 'a.musicxml', 'a.XML'].map(scoreFormatOf)).toEqual([
+      'musicxml',
+      'musicxml',
+      'musicxml',
+    ]);
+    expect(['a.mid', 'a.MIDI'].map(scoreFormatOf)).toEqual(['midi', 'midi']);
+    expect(scoreFormatOf('a.GP')).toBe('guitarpro');
+  });
+
+  it('lists scores, then the karaoke vocals, as playable items with format and instruments', () => {
+    const [entry] = buildScoreCatalog([
+      song('s1', 'Arctic Song', 'Arctic Monkeys', {
+        txtContent: karaokeTxt,
+        scores: [
+          score('Arctic_Monkeys_Bass_Guitar.mid'),
+          score('x.mxl', 'Piano Vocal'),
+          score('Full.gp'),
+        ],
+      }),
+    ]);
+    expect(entry.items.map((i) => [i.kind, i.format, i.instruments])).toEqual([
+      ['score', 'midi', ['bass']],
+      ['score', 'musicxml', ['vocals', 'keyboard']],
+      // "Monkeys" in the artist is no keyboard ("keys")
+      ['score', 'guitarpro', []],
+      ['karaoke', 'txt', ['vocals']],
+    ]);
   });
 
   it('finds the song folder with the same artist and title', () => {
