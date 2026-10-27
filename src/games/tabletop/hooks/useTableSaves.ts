@@ -1,13 +1,17 @@
 /**
  * Named table states: save, list, load and delete them on this device or the companion
- * server, and store the table as a server game's default template (#538) [ID: HOOK-TABLETOP-SAVES]
+ * server, and store the table as a server game's default template (#538) or, for device-only
+ * and starter games, as this device's default template (#547) [ID: HOOK-TABLETOP-SAVES]
  */
 import { useCallback, useEffect, useState } from 'react';
 import { storage } from '../../../lib/storage';
 import {
+  deleteLocalTemplate,
   deleteNamedSave,
+  getLocalTemplate,
   getNamedSave,
   listNamedSaves,
+  putLocalTemplate,
   putNamedSave,
   type TabletopNamedSaveMeta,
 } from '../logic/tabletopStorage';
@@ -20,6 +24,7 @@ import {
   type ServerSaveEntry,
   type ServerSavePermissions,
 } from '../logic/tabletopServerApi';
+import { supportsLocalTemplate, type TableOrigin } from '../logic/gameSource';
 import type { TabletopGameDefinition } from '../logic/types';
 
 export type SaveTarget = 'local' | 'server';
@@ -36,6 +41,8 @@ interface SaveLists {
   local: Result<TabletopNamedSaveMeta[]>;
   /** null when no companion server is configured. */
   server: Result<Awaited<ReturnType<typeof listServerSaves>>> | null;
+  /** Whether this device has a default template; null for games without local templates. */
+  localTemplate: Result<boolean> | null;
 }
 
 const settle = <T>(promise: Promise<T>): Promise<Result<T>> =>
@@ -44,21 +51,31 @@ const settle = <T>(promise: Promise<T>): Promise<Result<T>> =>
     (e: unknown) => ({ ok: false as const, error: message(e) }),
   );
 
-const loadLists = async (gameId: string, withServer: boolean): Promise<SaveLists> => {
-  const [local, server] = await Promise.all([
+const loadLists = async (
+  gameId: string,
+  withServer: boolean,
+  withTemplate: boolean,
+): Promise<SaveLists> => {
+  const [local, server, localTemplate] = await Promise.all([
     settle(listNamedSaves(gameId)),
     withServer ? settle(listServerSaves(gameId)) : Promise.resolve(null),
+    withTemplate
+      ? settle(getLocalTemplate(gameId).then((tpl) => tpl !== null))
+      : Promise.resolve(null),
   ]);
-  return { local, server };
+  return { local, server, localTemplate };
 };
 
 export function useTableSaves(
   game: TabletopGameDefinition,
+  origin: TableOrigin | null,
   onLoad: (game: TabletopGameDefinition) => void,
   active: boolean,
 ) {
   const gameId = game.id;
   const serverAvailable = storage.isHelperActive();
+  const localTemplateAllowed = supportsLocalTemplate(origin);
+  const [hasLocalTemplate, setHasLocalTemplate] = useState(false);
   const [localSaves, setLocalSaves] = useState<TabletopNamedSaveMeta[]>([]);
   const [serverSaves, setServerSaves] = useState<ServerSaveEntry[]>([]);
   const [permissions, setPermissions] = useState<ServerSavePermissions>(NO_RIGHTS);
@@ -70,6 +87,7 @@ export function useTableSaves(
   const applyLists = useCallback((lists: SaveLists) => {
     if (lists.local.ok) setLocalSaves(lists.local.value);
     else setError(lists.local.error);
+    if (lists.localTemplate?.ok) setHasLocalTemplate(lists.localTemplate.value);
     if (lists.server === null) return;
     if (lists.server.ok) {
       setServerSaves(lists.server.value.saves);
@@ -84,20 +102,20 @@ export function useTableSaves(
   }, []);
 
   const refresh = useCallback(
-    () => loadLists(gameId, serverAvailable).then(applyLists),
-    [gameId, serverAvailable, applyLists],
+    () => loadLists(gameId, serverAvailable, localTemplateAllowed).then(applyLists),
+    [gameId, serverAvailable, localTemplateAllowed, applyLists],
   );
 
   useEffect(() => {
     if (!active) return;
     let cancelled = false;
-    loadLists(gameId, serverAvailable).then((lists) => {
+    loadLists(gameId, serverAvailable, localTemplateAllowed).then((lists) => {
       if (!cancelled) applyLists(lists);
     });
     return () => {
       cancelled = true;
     };
-  }, [active, gameId, serverAvailable, applyLists]);
+  }, [active, gameId, serverAvailable, localTemplateAllowed, applyLists]);
 
   /** Runs one action with busy/error handling; resolves true on success. */
   const run = async (action: () => Promise<unknown>): Promise<boolean> => {
@@ -134,6 +152,8 @@ export function useTableSaves(
     run(() => (target === 'local' ? deleteNamedSave(id) : deleteServerSave(id)));
 
   const saveTemplate = () => run(() => saveTemplateOnServer(game));
+  const saveLocalTemplate = () => run(() => putLocalTemplate(game));
+  const resetLocalTemplate = () => run(() => deleteLocalTemplate(gameId));
 
   return {
     serverAvailable,
@@ -147,6 +167,10 @@ export function useTableSaves(
     load,
     remove,
     saveTemplate,
+    localTemplateAllowed,
+    hasLocalTemplate,
+    saveLocalTemplate,
+    resetLocalTemplate,
   };
 }
 

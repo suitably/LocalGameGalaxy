@@ -1057,7 +1057,13 @@
         "confirm_delete_title": "Spielstand löschen",
         "confirm_delete": "Diesen Spielstand endgültig löschen?",
         "confirm_template_title": "Als Standard-Vorlage speichern",
-        "confirm_template": "Jedes neue Spiel dieses Server-Spiels beginnt dann mit dem aktuellen Tisch – für alle Nutzer."
+        "confirm_template": "Jedes neue Spiel dieses Server-Spiels beginnt dann mit dem aktuellen Tisch – für alle Nutzer.",
+        "saveLocalTemplate": "Als Standard speichern (dieses Gerät)",
+        "resetTemplate": "Auf Original zurücksetzen",
+        "confirm_localTemplate_title": "Als Standard speichern (dieses Gerät)",
+        "confirm_localTemplate": "Jedes neue Spiel dieses Spiels beginnt auf diesem Gerät dann mit dem aktuellen Tisch. Das Original bleibt erhalten.",
+        "confirm_resetTemplate_title": "Auf Original zurücksetzen",
+        "confirm_resetTemplate": "Die Standard-Vorlage auf diesem Gerät löschen? Neue Spiele beginnen dann wieder mit dem Original. Der laufende Tisch bleibt unverändert."
       },
       "editor": {
         "edit": "Tisch bearbeiten",
