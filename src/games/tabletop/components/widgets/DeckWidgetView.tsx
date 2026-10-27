@@ -3,6 +3,7 @@ import { alpha, Box, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { DeckWidget, CardWidget } from '../../logic/types';
 import { CardFaceContent } from './CardFaceContent';
+import { DeckShuffleOverlay } from './DeckShuffleOverlay';
 
 interface DeckWidgetViewProps {
   widget: DeckWidget;
@@ -26,103 +27,115 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
   const rot = widget.rotation || 0;
 
   return (
-    <Box
-      onPointerDown={onPointerDown}
-      onClick={!onPointerDown && !isEmpty ? onDraw : undefined}
-      sx={{
-        position: 'absolute',
-        left: widget.x,
-        top: widget.y,
-        width: widget.width,
-        height: widget.height,
-        zIndex: widget.zIndex,
-        borderRadius: widget.clipPath ? 0 : 2,
-        clipPath: widget.clipPath,
-        boxShadow: widget.clipPath
-          ? 'none'
-          : isDragging
-            ? '0 10px 25px rgba(0,0,0,0.5)'
-            : isEmpty
-              ? 1
-              : '1px 1px 0 rgba(255,255,255,0.8), 2px 2px 0 #1e3a8a, 3px 3px 0 rgba(255,255,255,0.8), 4px 4px 0 #1e3a8a, 6px 6px 14px rgba(0,0,0,0.45)',
-        filter: widget.clipPath
-          ? isDragging
-            ? 'drop-shadow(0 8px 16px rgba(0,0,0,0.55))'
-            : 'drop-shadow(0 4px 8px rgba(0,0,0,0.45))'
-          : undefined,
-        cursor: widget.movable !== false ? 'grab' : isEmpty ? 'default' : 'pointer',
-        userSelect: 'none',
-        bgcolor: isEmpty ? 'rgba(0,0,0,0.1)' : widget.clipPath ? 'transparent' : '#fff',
-        border: widget.clipPath ? 'none' : '1.5px solid rgba(0,0,0,0.2)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transition: isDragging ? 'none' : 'transform 0.1s ease',
-        transform: isDragging
-          ? `rotate(${rot}deg) scale(1.05)`
-          : rot
-            ? `rotate(${rot}deg)`
+    <>
+      <Box
+        onPointerDown={onPointerDown}
+        onClick={!onPointerDown && !isEmpty ? onDraw : undefined}
+        sx={{
+          position: 'absolute',
+          left: widget.x,
+          top: widget.y,
+          width: widget.width,
+          height: widget.height,
+          zIndex: widget.zIndex,
+          borderRadius: widget.clipPath ? 0 : 2,
+          clipPath: widget.clipPath,
+          boxShadow: widget.clipPath
+            ? 'none'
+            : isDragging
+              ? '0 10px 25px rgba(0,0,0,0.5)'
+              : isEmpty
+                ? 1
+                : '1px 1px 0 rgba(255,255,255,0.8), 2px 2px 0 #1e3a8a, 3px 3px 0 rgba(255,255,255,0.8), 4px 4px 0 #1e3a8a, 6px 6px 14px rgba(0,0,0,0.45)',
+          filter: widget.clipPath
+            ? isDragging
+              ? 'drop-shadow(0 8px 16px rgba(0,0,0,0.55))'
+              : 'drop-shadow(0 4px 8px rgba(0,0,0,0.45))'
             : undefined,
-        overflow: 'hidden',
-        '&:active': {
+          cursor: widget.movable !== false ? 'grab' : isEmpty ? 'default' : 'pointer',
+          userSelect: 'none',
+          bgcolor: isEmpty ? 'rgba(0,0,0,0.1)' : widget.clipPath ? 'transparent' : '#fff',
+          border: widget.clipPath ? 'none' : '1.5px solid rgba(0,0,0,0.2)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: isDragging ? 'none' : 'transform 0.1s ease',
           transform: isDragging
             ? `rotate(${rot}deg) scale(1.05)`
-            : isEmpty
-              ? rot
-                ? `rotate(${rot}deg)`
-                : 'none'
-              : `rotate(${rot}deg) scale(0.97)`,
-        },
-      }}
-    >
-      {!isEmpty ? (
-        <Box position="relative" width="100%" height="100%" sx={{ clipPath: widget.clipPath }}>
-          <CardFaceContent
-            card={
-              {
-                ...widget,
-                type: 'card',
-                faceUp: hasFront,
-                clipPath: widget.clipPath,
-                frontContent: widget.frontContent || { type: 'text', value: '' },
-                backContent: widget.backContent || { type: 'text', value: '🂠', color: '#0d47a1' },
-                faceObjects: widget.faceObjects,
-                backFaceObjects: widget.backFaceObjects,
-                rotation: 0,
-              } as unknown as CardWidget
-            }
-            isFaceUp={hasFront}
-          />
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 6,
-              right: widget.clipPath ? 36 : 6,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              minWidth: 24,
-              height: 24,
-              px: 0.5,
-              borderRadius: '50%',
-              bgcolor: 'rgba(0, 0, 0, 0.8)',
-              color: 'text.primary',
-              border: (theme) => `1.5px solid ${alpha(theme.palette.text.primary, 0.6)}`,
-              fontSize: '0.8rem',
-              fontWeight: 800,
-              boxShadow: 2,
-              pointerEvents: 'none',
-            }}
-          >
-            {count}
+            : rot
+              ? `rotate(${rot}deg)`
+              : undefined,
+          overflow: 'hidden',
+          '&:active': {
+            transform: isDragging
+              ? `rotate(${rot}deg) scale(1.05)`
+              : isEmpty
+                ? rot
+                  ? `rotate(${rot}deg)`
+                  : 'none'
+                : `rotate(${rot}deg) scale(0.97)`,
+          },
+        }}
+      >
+        {!isEmpty ? (
+          <Box position="relative" width="100%" height="100%" sx={{ clipPath: widget.clipPath }}>
+            <CardFaceContent
+              card={
+                {
+                  ...widget,
+                  type: 'card',
+                  faceUp: hasFront,
+                  clipPath: widget.clipPath,
+                  frontContent: widget.frontContent || { type: 'text', value: '' },
+                  backContent: widget.backContent || { type: 'text', value: '🂠', color: '#0d47a1' },
+                  faceObjects: widget.faceObjects,
+                  backFaceObjects: widget.backFaceObjects,
+                  rotation: 0,
+                } as unknown as CardWidget
+              }
+              isFaceUp={hasFront}
+            />
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 6,
+                right: widget.clipPath ? 36 : 6,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minWidth: 24,
+                height: 24,
+                px: 0.5,
+                borderRadius: '50%',
+                bgcolor: 'rgba(0, 0, 0, 0.8)',
+                color: 'text.primary',
+                border: (theme) => `1.5px solid ${alpha(theme.palette.text.primary, 0.6)}`,
+                fontSize: '0.8rem',
+                fontWeight: 800,
+                boxShadow: 2,
+                pointerEvents: 'none',
+              }}
+            >
+              {count}
+            </Box>
           </Box>
-        </Box>
-      ) : (
-        <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 600 }}>
-          {t('games.tabletop.empty')}
-        </Typography>
-      )}
-    </Box>
+        ) : (
+          <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 600 }}>
+            {t('games.tabletop.empty')}
+          </Typography>
+        )}
+      </Box>
+      <DeckShuffleOverlay
+        shuffleCount={widget.shuffleCount}
+        box={{
+          left: widget.x,
+          top: widget.y,
+          width: widget.width,
+          height: widget.height,
+          zIndex: widget.zIndex,
+        }}
+      />
+    </>
   );
 };

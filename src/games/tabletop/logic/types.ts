@@ -138,6 +138,8 @@ export interface DeckWidget extends BaseWidget {
   activeFace?: number;
   faceObjects?: FaceObject[];
   backFaceObjects?: FaceObject[];
+  /** Counts shuffles; a change plays the shuffle animation on every device. */
+  shuffleCount?: number;
 }
 
 export interface HolderWidget extends BaseWidget {

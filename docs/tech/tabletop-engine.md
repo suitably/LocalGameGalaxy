@@ -29,13 +29,15 @@ Roadmap and comparison with VirtualTabletop: [2026-10-21 plan](../reports/2026-1
 
 | File                  | Actions                                                                                                                                                       |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `deckReducer.ts`      | `SHUFFLE_DECK`, `DRAW_CARD`, `RETURN_CARD_TO_DECK`                                                                                                            |
+| `deckReducer.ts`      | `SHUFFLE_DECK`¹, `DRAW_CARD`, `RETURN_CARD_TO_DECK`                                                                                                           |
 | `bagReducer.ts`       | `DRAW_FROM_BAG`                                                                                                                                               |
 | `pieceReducer.ts`     | `TAKE_PIECE_FROM_SUPPLY`, `PLAY_CARD_FROM_HAND`                                                                                                               |
 | `viewReducer.ts`      | `SCALE_WIDGETS`, `RESET_WIDGET_SCALE`, `SET_WIDGET_SHOW_ALWAYS`, `SET_Z_ORDER`, hidden zones (`MOVE_HIDDEN_ZONE`, `RESIZE_HIDDEN_ZONE`, `TOGGLE_ZONE_REVEAL`) |
 | `tableToolReducer.ts` | `TOGGLE_TIMER`, `RESET_TIMER`, `SPIN_SPINNER`, `NEXT_STATE` (rules in `logic/tableTools.ts`)                                                                  |
 | `editReducer.ts`      | `PATCH_WIDGETS`, `ADD_WIDGET`, `DELETE_WIDGETS`, `UPDATE_TABLE`                                                                                               |
 | `holderMembership.ts` | helper `removeFromHolderAndUpdateHand`                                                                                                                        |
+
+¹ `SHUFFLE_DECK` also counts `DeckWidget.shuffleCount`; the change syncs like any delta and `components/widgets/DeckShuffleOverlay.tsx` plays a short riffle above the deck on every device (none with reduced motion, #556).
 
 Holder positions (hand, stack, fan, grid) come from `logic/holderLayout.ts`.
 

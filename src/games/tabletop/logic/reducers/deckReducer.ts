@@ -70,6 +70,7 @@ export function deckReducer(state: TabletopGameState, action: DeckAction): Table
             [deck.id]: {
               ...deck,
               cardIds: newIds,
+              shuffleCount: (deck.shuffleCount ?? 0) + 1,
             },
           },
         },
