@@ -1,0 +1,1 @@
+- **Server: Notes migration marks itself complete only after the song list is updated** — the moved Notes pieces are already listed when the migration reports it is done (this also made a server test flaky in CI).

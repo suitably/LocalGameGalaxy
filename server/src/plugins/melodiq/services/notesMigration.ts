@@ -247,11 +247,12 @@ export async function migrateNotesPieces(
       console.warn(`[Notes] Could not move piece "${name}" into a song folder:`, errorText(e));
     }
   }
+  // the cache knows the new folders before the marker says the migration is complete
+  for (const folder of touched) await refreshSongFolder(folder);
   if (result.failed === 0 && !marker.completedAt) {
     marker.completedAt = new Date().toISOString();
     await writeMarker(notesDir, marker);
   }
-  for (const folder of touched) await refreshSongFolder(folder);
   result.songFolders = [...touched].sort();
   if (result.migrated > 0) {
     console.log(
