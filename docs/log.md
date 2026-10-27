@@ -18,6 +18,11 @@ Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)
 - `docs/tech/architecture.md` §3.1 Wordle row: validation also uses the lazily loaded full lists (`logic/fullDictionary.ts`, `data/words-{de,en}.ts`, regenerate with `npm run build:wordle-words`).
 - Outside `docs/`: `scripts/build-wordle-words.mjs`, `src/games/wordle/data/` (generated lists + licence README), `logic/fullDictionary.ts` + tests, `useWordle` preload, devDependencies `dictionary-de` / `dictionary-en`.
 
+## 2026-10-27 — Tabletop hidden zones stay hidden, #551 (claude-code)
+
+- `docs/tech/tabletop-engine.md` §4 "Hidden zones" (drag overlays, flying cards, selection) and new §5 "Hidden zones on the wire" (host redacts hidden widgets per seat); `verified.at` updated.
+- Outside `docs/`: tabletop `logic/hiddenZoneRedaction.ts` (+ test), `privateHandChannel.ts`, `handPrivacy.ts` (`restoreCards` takes whole widgets), `useTabletopSync.ts`, `useTabletopSelection.ts`, `ObscuredPlaceholder.tsx`, `BoardWidgetRenderer`, `BoardDragOverlay`, `DockDragOverlay`, `FlyingCardsLayer`, `HandDockStrip`, `TabletopSurface`.
+
 ## 2026-10-27 — One model for Melodiq and Melodiq Notes, #566 slice 1–2 (claude-code)
 
 - `docs/reports/2026-10-27-maintainer-decisions.md`: direction "one model, not one file format" (#565, new #604).

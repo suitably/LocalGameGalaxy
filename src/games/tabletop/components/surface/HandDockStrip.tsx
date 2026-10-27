@@ -14,6 +14,7 @@ import { handSlots } from '../../logic/handFan';
 import { getPlayerSupplyPieces } from '../../logic/seatLogic';
 import { useDockDragDrop } from '../../hooks/useDockDragDrop';
 import { useSeatView } from '../../hooks/useSeatView';
+import { useObscuredWidgetIds } from '../../hooks/useObscuredWidgetIds';
 import { DockDragOverlay } from './DockDragOverlay';
 import { SupplyPieceItem } from './SupplyPieceItem';
 import { HandFan } from './HandFan';
@@ -35,6 +36,8 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
     useDockDragDrop({ tableWidth: table.width, tableHeight: table.height, dispatch });
 
   const { activeSeat, isSpectator, handHolder } = useSeatView(state);
+  const obscuredIds = useObscuredWidgetIds(state.game, activeSeat?.index);
+  const draggedId = draggingItem?.type === 'card' ? draggingItem.card.id : draggingItem?.piece.id;
 
   const supplyPieces = useMemo(() => {
     if (!activeSeat) return {};
@@ -85,6 +88,7 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
         pointerPos={pointerPos}
         grabOffset={grabOffset}
         scale={boardScale}
+        obscured={draggedId !== undefined && obscuredIds.has(draggedId)}
       />
 
       <HandDockHeader
