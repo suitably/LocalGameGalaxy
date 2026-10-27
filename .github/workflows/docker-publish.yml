@@ -106,6 +106,8 @@ jobs:
       # Image names are fixed to the nexumia namespace that compose files and docs pull from;
       # the same tags also go to GHCR (ghcr.io/suitably/…) (#592).
       # nexumia/melodiq-server (deprecated alias) is no longer published from 1.2.0 (Q17).
+      # Moving tags (latest, base, full) follow main only, so a release tag build never moves
+      # them back; releases add version tags. metadata-action's latest=auto only fires on semver tags.
       - name: Extract Docker metadata (Base Image)
         id: meta_base
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
@@ -114,11 +116,12 @@ jobs:
             nexumia/nexumia-server
             ghcr.io/suitably/nexumia-server
           flavor: |
-            latest=auto
+            latest=false
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=base
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=base,enable={{is_default_branch}}
             type=sha,prefix=sha-
 
       # 1. Build & Push Lightweight Base Image (~200MB)
@@ -163,7 +166,7 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=full
+            type=raw,value=full,suffix=,enable={{is_default_branch}}
             type=sha,prefix=sha-
 
       # 2. Build & Push Full Image with PyTorch & AI Vocal Separation (~2GB)

@@ -1,0 +1,1 @@
+- **Server Docker images: `:latest` and `:full` are current again** — both now follow every server change on main (like `:base`), so a compose file with `nexumia/nexumia-server:full` or `:latest` gets the current server instead of an old release. The misnamed `:full-full` tag is no longer published.
