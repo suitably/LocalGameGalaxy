@@ -1,70 +1,59 @@
 /**
- * Melodiq Notes library on the companion server (`notes` plugin) [ID: LIB-COMPANION-NOTES]
+ * Writing to song folders on the companion server, as Melodiq Notes does [ID: LIB-COMPANION-NOTES]
+ *
+ * A song folder is the only store (#568): scores, their bar marks and Notes recordings are files
+ * of the song; a new song without karaoke `.txt` gets a folder with `song.json`.
  */
 import { companionRequest as request, jsonBody } from './companionHttp';
-import type { StoredBarMarks } from './songScoresApi';
+import type { CompanionSong, StoredBarMarks } from './songScoresApi';
 
-export interface NotesPieceScore {
-  file: string;
-  /** Server-relative media URL with token; resolve with companionUrl(). */
-  url: string;
-  hasMarks: boolean;
-}
-
-export interface NotesPiece {
-  id: string;
-  title: string;
-  artist: string;
-  /** Melodiq song the piece plays with (its mix instead of a copy); absent on older servers. */
-  songId?: string | null;
-  updatedAt: number;
-  scores: NotesPieceScore[];
-  recordings: { file: string; url: string }[];
-}
-
-export interface StoredNotesFile {
+export interface StoredSongFile {
   file: string;
   kind: 'score' | 'recording';
+  song?: CompanionSong;
 }
 
-const piecePath = (id: string) => `/api/notes/pieces/${encodeURIComponent(id)}`;
+export interface SongMetaInput {
+  title?: string;
+  artist?: string;
+  /** Label per score file; an empty string removes it. */
+  labels?: Record<string, string>;
+}
+
+const songPath = (id: string) => `/api/songs/${encodeURIComponent(id)}`;
 const marksPath = (id: string, file: string) =>
-  `${piecePath(id)}/scores/${encodeURIComponent(file)}/marks`;
+  `${songPath(id)}/scores/${encodeURIComponent(file)}/marks`;
 
-export const listNotesPieces = () => request<NotesPiece[]>('/api/notes/pieces');
+/** A new song folder without `.txt` (title, artist in `song.json`). */
+export const createLibrarySong = (meta: { title: string; artist: string }) =>
+  request<CompanionSong>('/api/songs', jsonBody('POST', meta));
 
-export interface NotesPieceMeta {
-  title: string;
-  artist: string;
-  /** Left out keeps the stored link; null removes it. */
-  songId?: string | null;
-}
-
-export const getNotesPiece = (id: string) => request<NotesPiece>(piecePath(id));
-
-export const createNotesPiece = (meta: NotesPieceMeta) =>
-  request<NotesPiece>('/api/notes/pieces', jsonBody('POST', meta));
-
-export const updateNotesPiece = (id: string, meta: NotesPieceMeta) =>
-  request<NotesPiece>(piecePath(id), jsonBody('PUT', meta));
+export const updateSongMeta = (id: string, meta: SongMetaInput) =>
+  request<CompanionSong>(`${songPath(id)}/meta`, jsonBody('PUT', meta));
 
 /** Stores a score or a recording; the server picks a free file name and says which it used. */
-export async function uploadNotesFile(pieceId: string, file: File): Promise<StoredNotesFile> {
+export async function uploadSongFile(songId: string, file: File): Promise<StoredSongFile> {
   const form = new FormData();
   form.append('file', file);
-  return request<StoredNotesFile>(`${piecePath(pieceId)}/files`, { method: 'POST', body: form });
+  return request<StoredSongFile>(`${songPath(songId)}/files`, { method: 'POST', body: form });
 }
 
-export async function getNotesMarks(pieceId: string, file: string): Promise<StoredBarMarks | null> {
+export const deleteSongFile = (songId: string, file: string) =>
+  request<{ success: true }>(`${songPath(songId)}/files/${encodeURIComponent(file)}`, {
+    method: 'DELETE',
+  });
+
+export async function getSongMarks(songId: string, file: string): Promise<StoredBarMarks | null> {
   try {
-    return await request<StoredBarMarks>(marksPath(pieceId, file));
+    return await request<StoredBarMarks>(marksPath(songId, file));
   } catch {
     return null;
   }
 }
 
-export const saveNotesMarks = (pieceId: string, file: string, marks: StoredBarMarks) =>
-  request<{ success: true }>(marksPath(pieceId, file), jsonBody('PUT', marks));
+export const saveSongMarks = (songId: string, file: string, marks: StoredBarMarks) =>
+  request<{ success: true }>(marksPath(songId, file), jsonBody('PUT', marks));
 
-export const deleteNotesPiece = (pieceId: string) =>
-  request<{ success: true }>(piecePath(pieceId), { method: 'DELETE' });
+/** Removes the whole song folder (the UI offers it only for songs without karaoke `.txt`). */
+export const deleteLibrarySong = (songId: string) =>
+  request<{ success: true }>(songPath(songId), { method: 'DELETE' });
