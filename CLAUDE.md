@@ -25,7 +25,7 @@ Run gates only after code changes, not while researching. Prefer the narrowest c
 
 ## Working rules for Claude
 
-- Code is the source of truth. When docs and code disagree, fix the doc in the same change (front matter `verified`, entry in `docs/log.md`) or add an open question — never leave a known-wrong statement behind.
+- Code is the source of truth. When docs and code disagree, fix the doc in the same change (front matter `verified`, fragment in `docs/log.d/`) or add an open question — never leave a known-wrong statement behind.
 - Before naming a file, symbol, key or route in a doc, confirm it exists with `grep`.
 - Keep changes to the requested scope; refactors, dependency bumps and formatting passes are separate PRs.
 - Secrets: never read or print any `config.json`, `.env*` or keystore.

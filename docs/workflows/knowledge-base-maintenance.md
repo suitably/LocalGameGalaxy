@@ -8,11 +8,12 @@ generated:
   at: 2026-10-21T12:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-21
-  method: 'moved verbatim from AGENTS.md §9; checked against docs/ layout and scripts/check-docs-sync.mjs'
+  at: 2026-10-27
+  method: 'moved verbatim from AGENTS.md §9; checked against docs/ layout and scripts/check-docs-sync.mjs; #593: log fragments checked against scripts/lib/changelog.mjs'
 sources:
   - 'AGENTS.md'
   - 'scripts/check-docs-sync.mjs'
+  - 'scripts/changelog.mjs'
 ---
 
 # Maintaining the knowledge base (OKF v0.2)
@@ -53,8 +54,11 @@ Only the root `docs/index.md` carries `okf_version`. Directory `index.md` files 
 
 ## 3. Lifecycle
 
-- Contradiction you cannot resolve → add it to [open-questions.md](../open-questions.md); resolved → move the answer into the owning doc, delete the item, note it in [log.md](../log.md).
-- Every change to the bundle → an entry at the top of [log.md](../log.md) (`## YYYY-MM-DD — summary (agent)`; say whether code outside `docs/` changed).
+- Contradiction you cannot resolve → add it to [open-questions.md](../open-questions.md); resolved → move the answer into the owning doc, delete the item, note it in a log fragment (next bullet).
+- Every change to the bundle → a log fragment, never a direct edit of [log.md](../log.md) (#593: parallel PRs conflicted at its top):
+  - File `docs/log.d/YYYY-MM-DD-<slug>.md` (lowercase slug, e.g. `2026-10-27-592-supply-chain-hardening.md`), one entry per file.
+  - First line `## YYYY-MM-DD — summary (agent)` with the same date as the file name, then a blank line and `- ` bullets; say whether code outside `docs/` changed. No further `#`/`##` headings.
+  - `npm run check:changelog` validates it (CI precheck); `node scripts/changelog.mjs collect-log` (run by the release PR) moves fragments to the top of `log.md`, newest file name first, and deletes them. Until then, read `docs/log.d/` for unreleased entries.
 - One-off investigations, audits, evaluations → `docs/reports/YYYY-MM-DD-topic.md`, never updated later except for corrections.
 - Finished task specs and retired setups → `status: deprecated`, move to `docs/archive/`, fix incoming links. Open task specs live in `docs/tasks/` and mirror GitHub issues.
 - New file → add it to its directory `index.md` and, if top-level relevant, to the table in [docs/index.md](../index.md).

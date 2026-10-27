@@ -1,7 +1,7 @@
 ---
 type: Reference
 title: 'CI/CD pipelines'
-description: 'All five GitHub Actions workflows (CI gate + Cloudflare deploy, preview cleanup, gated release, push relay, Docker images), the local Husky hooks, repository secrets, branch protection and the GitLab mirror.'
+description: 'All six GitHub Actions workflows (CI gate + Cloudflare deploy, preview cleanup, gated release, changelog release PR and tag, push relay, Docker images), changelog fragments, the local Husky hooks, repository secrets, branch protection and the GitLab mirror.'
 tags: [ci, cd, github-actions, gitlab, release, cloudflare, docker]
 status: stable
 generated:
@@ -9,7 +9,7 @@ generated:
   by: claude-code
 verified:
   at: 2026-10-27
-  method: '#592: read release.yml, docker-publish.yml, ci.yml after the supply-chain change; earlier: read .github/workflows/*.yml, .github/rulesets/main.json, .husky/*, .gitlab-ci.yml, .jscpd.json, scripts/check-*.mjs'
+  method: '#592/#593: read release.yml, docker-publish.yml, ci.yml, changelog-release.yml, scripts/changelog.mjs after the change; earlier: read .github/workflows/*.yml, .github/rulesets/main.json, .husky/*, .gitlab-ci.yml, .jscpd.json, scripts/check-*.mjs'
 sources:
   - '.github/workflows/'
   - '.github/rulesets/main.json'
@@ -25,7 +25,7 @@ This document serves as the Single Source of Truth (SSoT) for all continuous int
 
 ## 1. High-Level Pipelines Overview
 
-The repository operates **7 automated GitHub Actions workflows** organized into three distinct tiers:
+The repository operates **6 GitHub Actions workflows** in two tiers:
 
 ```mermaid
 flowchart TD
@@ -36,24 +36,28 @@ flowchart TD
 
     subgraph Releases["Tier 2: Gated Release & Packaging"]
         Release["Consolidated Release Workflow<br/>(release.yml)"]
-        DockerPublish["Docker Hub Publishing<br/>(docker-publish.yml)"]
+        DockerPublish["Docker Hub + GHCR Publishing<br/>(docker-publish.yml)"]
+        ReleasePR["Changelog Release PR & Tag<br/>(changelog-release.yml)"]
     end
 
     CodePush["Git Push / PR to main"] --> CI
     RelayCode["Push to server/cloudflare-push-relay/**"] --> CF_Relay
+    Weekly["Weekly / manual"] --> ReleasePR
+    ReleasePR -->|"merged release PR: tag v*"| TagPush
     TagPush["Git Tag v*"] --> Release
     Release -.->|Reusable Workflow Call| DockerPublish
 ```
 
 ### Complete Pipeline Inventory
 
-| Workflow File                                                                              | Pipeline Name                      | Trigger(s)                                                              | Target / Output                                                                                                                                                                                                                                                |
-| :----------------------------------------------------------------------------------------- | :--------------------------------- | :---------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)                               | **CI Quality Gate**                | `push` (main), `pull_request` (main)                                    | 7 Quality Gates + Cloudflare Production / Preview Deploy                                                                                                                                                                                                       |
-| [`.github/workflows/cleanup-preview.yml`](../../.github/workflows/cleanup-preview.yml)     | **Cleanup Cloudflare Preview**     | `pull_request` (`closed`), `workflow_dispatch`                          | Deletes obsolete preview branches & environments from Cloudflare                                                                                                                                                                                               |
-| [`.github/workflows/release.yml`](../../.github/workflows/release.yml)                     | **Release (Consolidated & Gated)** | `push` tags (`v*`), `workflow_dispatch`                                 | Gated draft release, signed Android APK, server binaries (Linux/Win/macOS), Docker publish, and auto-undraft                                                                                                                                                   |
-| [`.github/workflows/deploy-push-relay.yml`](../../.github/workflows/deploy-push-relay.yml) | **Deploy Cloudflare Push Relay**   | `push` (main on `server/cloudflare-push-relay/**`), `workflow_dispatch` | Deploys serverless Web Push & ntfy relay worker to Cloudflare                                                                                                                                                                                                  |
-| [`.github/workflows/docker-publish.yml`](../../.github/workflows/docker-publish.yml)       | **Build and Push Docker Images**   | `push` (main on `server/**`), `workflow_call`, `workflow_dispatch`      | Multi-target build: `base` and `full` (with `audio-separator` + `whisper-timestamped`) as `nexumia/nexumia-server` (Docker Hub) and `ghcr.io/suitably/nexumia-server` (GHCR), plus `galaxy-signaling`; every pushed digest gets a build provenance attestation |
+| Workflow File                                                                              | Pipeline Name                      | Trigger(s)                                                                                  | Target / Output                                                                                                                                                                                                                                                |
+| :----------------------------------------------------------------------------------------- | :--------------------------------- | :------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)                               | **CI Quality Gate**                | `push` (main), `pull_request` (main)                                                        | 7 Quality Gates + Cloudflare Production / Preview Deploy                                                                                                                                                                                                       |
+| [`.github/workflows/cleanup-preview.yml`](../../.github/workflows/cleanup-preview.yml)     | **Cleanup Cloudflare Preview**     | `pull_request` (`closed`), `workflow_dispatch`                                              | Deletes obsolete preview branches & environments from Cloudflare                                                                                                                                                                                               |
+| [`.github/workflows/release.yml`](../../.github/workflows/release.yml)                     | **Release (Consolidated & Gated)** | `push` tags (`v*`), `workflow_dispatch`                                                     | Gated draft release, signed Android APK, server binaries (Linux/Win/macOS), Docker publish, and auto-undraft                                                                                                                                                   |
+| [`.github/workflows/changelog-release.yml`](../../.github/workflows/changelog-release.yml) | **Changelog Release PR & Tag**     | `schedule` (Mondays), `workflow_dispatch` (bump / version), `push` (main on `package.json`) | Release PR `release/vX.Y.Z` from the fragments; tag `vX.Y.Z` after it is merged                                                                                                                                                                                |
+| [`.github/workflows/deploy-push-relay.yml`](../../.github/workflows/deploy-push-relay.yml) | **Deploy Cloudflare Push Relay**   | `push` (main on `server/cloudflare-push-relay/**`), `workflow_dispatch`                     | Deploys serverless Web Push & ntfy relay worker to Cloudflare                                                                                                                                                                                                  |
+| [`.github/workflows/docker-publish.yml`](../../.github/workflows/docker-publish.yml)       | **Build and Push Docker Images**   | `push` (main on `server/**`), `workflow_call`, `workflow_dispatch`                          | Multi-target build: `base` and `full` (with `audio-separator` + `whisper-timestamped`) as `nexumia/nexumia-server` (Docker Hub) and `ghcr.io/suitably/nexumia-server` (GHCR), plus `galaxy-signaling`; every pushed digest gets a build provenance attestation |
 
 ---
 
@@ -93,8 +97,8 @@ flowchart LR
    - Uses `jscpd` with `.jscpd.json` configuration.
    - Fails when total duplication exceeds the 2.5 % threshold; clones are counted from 12 lines / 60 tokens (`minLines`, `minTokens`). Ignores tests, `server/`, `public/`, JSON.
 4. **Documentation & Translation Sync Gate (`check:docs`)**:
-   - Executed on PRs. If core logic in `src/games/`, `src/modules/`, or `src/lib/` is modified, the PR must also update at least one of: `CHANGELOG.md`, `docs/tech/`, `AGENTS.md`, `README.md`, or `public/locales/`.
-   - Bypassed by `[skip docs]` / `[skip changelog]` in PR title or body, by PR titles starting with `chore|refactor|style|test|docs|perf`, and for `fix:` PRs touching ≤ 3 core files / ≤ 50 lines.
+   - Executed on PRs. If core logic in `src/games/`, `src/modules/`, or `src/lib/` is modified, the PR must also update at least one of: a changelog fragment `changelog.d/*.md` (or `CHANGELOG.md`), `docs/tech/`, `AGENTS.md`, `README.md`, or `public/locales/`.
+   - Bypassed by `[skip docs]` / `[skip changelog]` in PR title or body, by the label `no-changelog` (read from `PR_LABELS` when the job runs; adding it later needs a re-run), by PR titles starting with `chore|refactor|style|test|docs|perf`, and for `fix:` PRs touching ≤ 3 core files / ≤ 50 lines.
 5. **ESLint (`npm run lint`)**: Zero errors allowed. The same job runs the production dependency audit (`npm run check:security`) with `continue-on-error` — advisory on PRs, blocking only in `release.yml` ([Supply chain](#supply-chain-provenance-sbom-dependency-audit)).
 6. **Vitest (`npm test`)**: All unit tests must pass.
 7. **Production Build (`npm run build`)**: `tsc -b && vite build` verifies zero TypeScript compiler errors and produces production bundles.
@@ -108,7 +112,7 @@ flowchart LR
 
 #### Missing secrets
 
-In `suitably/LocalGameGalaxy` a missing `DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN` (`docker-publish.yml`) or `CLOUDFLARE_API_TOKEN` (`deploy-push-relay.yml`) fails the run; forks skip with a notice (#590). A tag release without `ANDROID_KEYSTORE_BASE64` fails too.
+In `suitably/LocalGameGalaxy` a missing `DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN` (`docker-publish.yml`), `CLOUDFLARE_API_TOKEN` (`deploy-push-relay.yml`) or `RELEASE_TOKEN` (`changelog-release.yml`, both jobs; the tag job only when the version changed) fails the run; forks skip with a notice (#590). A tag release without `ANDROID_KEYSTORE_BASE64` fails too.
 
 #### Runner and tool pinning
 
@@ -166,6 +170,23 @@ Added for #592. How users verify an artefact: [operations/verify-release-artifac
 - **Dependency audit:** `scripts/check-audit.mjs` (`npm run check:security`) runs `npm audit --omit=dev --json` in the root, `server/` and `signaling/` and fails on high or critical advisories. Pure logic: `scripts/lib/audit.mjs` (tests in `scripts/lib/audit.test.mjs`). Blocking in the `release.yml` `gates` job (tag and manual runs), advisory in `ci.yml`.
 - **Allow-list:** `scripts/audit-allowlist.json` → `advisories: [{ id, package?, reason, expires }]`. `id` is the GHSA id (or the npm advisory number), `package` narrows it, `reason` says why the risk is accepted, `expires` (`YYYY-MM-DD`) is the last day the entry counts. Expired entries block again and print a warning; entries that match nothing print a warning so they get removed. Add an entry only by maintainer decision, in its own PR.
 
+### 2.6 Changelog Release PR & Tag (`changelog-release.yml`)
+
+Added for #593. Replaces hand-cut releases; the pattern follows phosh-toolkit's weekly release PR.
+
+**Fragments.** PRs never edit `CHANGELOG.md` or `docs/log.md`; they add `changelog.d/<slug>.<type>.md` ([format](../../changelog.d/README.md)) and `docs/log.d/YYYY-MM-DD-<slug>.md` ([format](knowledge-base-maintenance.md#3-lifecycle)). `npm run check:changelog` validates both in the CI `precheck` job and in `ci:gates`. Entries written under `## [Unreleased]` before #593 stay there and are folded into the next release section.
+
+**Version rule.** `scripts/changelog.mjs next-version` takes the root `package.json` version and bumps by the largest fragment type: `added`, `changed`, `deprecated`, `removed` → minor; `fixed`, `security` → patch (hand-written `[Unreleased]` headings count the same way, `Refactored` as patch). Major only by hand. No fragments and no `[Unreleased]` entries → nothing to release.
+
+**Jobs:**
+
+1. **`release-pr`** (schedule Mondays 04:23 UTC, or `workflow_dispatch` with `bump` = `auto|patch|minor|major` and an optional exact `version` that overrides it): checks `RELEASE_TOKEN`, computes the version, runs `node scripts/changelog.mjs release <version>` (collect `changelog.d/` → `## [X.Y.Z] - date`, collect `docs/log.d/` → top of `docs/log.md`, delete the fragments, bump the root, `server/` and `signaling/` `package.json` and `package-lock.json` and `android/app/build.gradle` `versionName` / `versionCode` + 1), force-pushes `release/vX.Y.Z` and opens or updates the PR `chore(release): vX.Y.Z` with the changelog section as body. An open release PR for another version is closed as superseded. Server and signaling share the app version from then on.
+2. **`tag-release`** (push to `main` touching `package.json`): when the root version differs from the parent commit, `node scripts/changelog.mjs verify <version>` checks every version field and the changelog section, then pushes tag `vX.Y.Z` with `RELEASE_TOKEN` (a tag pushed with `GITHUB_TOKEN` starts no workflow). An existing tag is left alone.
+
+**In `release.yml`:** `gates` runs `verify` on tag pushes, so a hand-pushed tag whose versions disagree fails before anything is built; `create-release` uses `node scripts/changelog.mjs notes <version>` as the release text and falls back to `--generate-notes` (with a warning) for tags without a section.
+
+**`RELEASE_TOKEN`:** fine-grained personal access token for this repository with **Contents** and **Pull requests** read/write, stored as an Actions secret. Not configured yet: both jobs fail with an error until the maintainer creates it. Without it, a release can still be cut by running the commands locally and pushing the tag by hand.
+
 ### 2.7 Local Git Hooks & Quality Gate Lifecycle
 
 The project divides developer validation by cost into tiered stages to ensure rapid local iteration:
@@ -196,17 +217,18 @@ Removed on 2026-10-21; see [archive/jules-pipeline-workflow.md](../archive/jules
 
 The following secrets are used across repository pipelines. Configure them under **GitHub Repository Settings $\rightarrow$ Secrets and variables $\rightarrow$ Actions**:
 
-| Secret Name                 | Consumed By                       | Description                                                      | Mandatory?                                 |
-| :-------------------------- | :-------------------------------- | :--------------------------------------------------------------- | :----------------------------------------- |
-| `CLOUDFLARE_API_TOKEN`      | `ci.yml`, `deploy-push-relay.yml` | API token with Cloudflare Pages & Workers deployment permissions | Required for web preview/prod & push relay |
-| `CLOUDFLARE_ACCOUNT_ID`     | `ci.yml`, `deploy-push-relay.yml` | Cloudflare Account Identifier                                    | Required for Cloudflare deployment         |
-| `DOCKERHUB_USERNAME`        | `docker-publish.yml`              | Docker Hub account username                                      | Required for Docker Hub image publishing   |
-| `DOCKERHUB_TOKEN`           | `docker-publish.yml`              | Docker Hub personal access token                                 | Required for Docker Hub image publishing   |
-| `ANDROID_KEYSTORE_BASE64`   | `release.yml`                     | Base64-encoded release `.jks` Android signing keystore           | Required for tag releases (#590)           |
-| `ANDROID_KEYSTORE_PASSWORD` | `release.yml`                     | Keystore password for Android release signing                    | Optional                                   |
-| `ANDROID_KEY_ALIAS`         | `release.yml`                     | Key alias in Android keystore (defaults to `nexumia`)            | Optional                                   |
-| `ANDROID_KEY_PASSWORD`      | `release.yml`                     | Key password for Android release signing                         | Optional                                   |
-| `GITHUB_TOKEN`              | All workflows                     | Automatically provided; also pushes images to GHCR               | Automatic                                  |
+| Secret Name                 | Consumed By                       | Description                                                                                                       | Mandatory?                                 |
+| :-------------------------- | :-------------------------------- | :---------------------------------------------------------------------------------------------------------------- | :----------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`      | `ci.yml`, `deploy-push-relay.yml` | API token with Cloudflare Pages & Workers deployment permissions                                                  | Required for web preview/prod & push relay |
+| `CLOUDFLARE_ACCOUNT_ID`     | `ci.yml`, `deploy-push-relay.yml` | Cloudflare Account Identifier                                                                                     | Required for Cloudflare deployment         |
+| `DOCKERHUB_USERNAME`        | `docker-publish.yml`              | Docker Hub account username                                                                                       | Required for Docker Hub image publishing   |
+| `DOCKERHUB_TOKEN`           | `docker-publish.yml`              | Docker Hub personal access token                                                                                  | Required for Docker Hub image publishing   |
+| `ANDROID_KEYSTORE_BASE64`   | `release.yml`                     | Base64-encoded release `.jks` Android signing keystore                                                            | Required for tag releases (#590)           |
+| `ANDROID_KEYSTORE_PASSWORD` | `release.yml`                     | Keystore password for Android release signing                                                                     | Optional                                   |
+| `ANDROID_KEY_ALIAS`         | `release.yml`                     | Key alias in Android keystore (defaults to `nexumia`)                                                             | Optional                                   |
+| `ANDROID_KEY_PASSWORD`      | `release.yml`                     | Key password for Android release signing                                                                          | Optional                                   |
+| `RELEASE_TOKEN`             | `changelog-release.yml`           | Fine-grained token (contents + pull-requests write): pushes the release branch, opens the release PR, pushes tags | Required for the release PR flow (#593)    |
+| `GITHUB_TOKEN`              | All workflows                     | Automatically provided; also pushes images to GHCR                                                                | Automatic                                  |
 
 ---
 

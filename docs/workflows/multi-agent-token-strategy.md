@@ -61,7 +61,7 @@ Never use `subagent_type: "fork"` for reading: a fork inherits the full main con
 4. **Spec only when it pays.** Write `docs/tasks/ISSUE-<n>-<slug>.md` when the work is delegated or will span sessions; inline single-session tickets skip it (the PR description holds the decisions).
 5. **Implement** in AGENTS.md §3 order (logic → state hook → UI). Inline: narrowest check per step (one test file). Delegated: one slice-implementer for all slices, reviewed with `git diff --stat` plus the logic diffs.
 6. **Gates.** One gate-runner. Fix failures, re-run only the failing gate.
-7. **Close.** Owning docs, `docs/log.md`, commit, `npm run tokens`, PR with the table.
+7. **Close.** Owning docs, a `docs/log.d/` and a `changelog.d/` fragment, commit, `npm run tokens`, PR with the table.
 
 Fewer main-session turns is the main lever: batch independent tool calls in one turn, no progress commits or spec ticks between slices, no re-reading files you already have.
 
@@ -94,7 +94,7 @@ The agents, skills and `.claude/settings.json` live in the repository, so every 
 - **Triage once:** `/triage` skips issues that already carry a triage label or comment; `--force` re-triages and edits the existing comment.
 - **Rights:** labelling and assigning need triage rights on the repository; from a fork, `/triage` cannot label.
 - **Models:** the labels name the model class; a contributor whose plan lacks Opus uses the strongest available model. **Unverified:** how Claude Code handles an agent whose pinned model is not available on the plan.
-- **`docs/log.md`:** every PR adds an entry at the top, so parallel PRs conflict there; resolve by keeping both entries.
+- **`docs/log.md` and `CHANGELOG.md`:** PRs no longer edit them; each adds a fragment (`docs/log.d/`, `changelog.d/`), which the release PR collects (#593), so parallel PRs do not conflict there.
 
 ## 7. Measuring
 

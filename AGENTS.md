@@ -17,6 +17,7 @@ Knowledge base: [`docs/`](docs/index.md) (Open Knowledge Format v0.2).
 - GitHub is primary; `main` is protected (PR required; required checks "Deterministic Prechecks (no install)" and "CI Quality Gate (Aggregator)"). GitLab (`gitlab` remote) mirrors it and runs the same `npm run ci:gates`.
 - Branches `feature/…`, `bugfix/…`, `docs/…`, `refactor/…`, `chore/…`; Conventional Commits ([CONTRIBUTING.md](CONTRIBUTING.md)). PR title prefix `chore|refactor|style|test|docs|perf:` bypasses the doc-sync gate.
 - Husky runs gates on commit and push. Never bypass with `--no-verify`.
+- Changelog: add a fragment `changelog.d/<slug>.<added|changed|fixed|removed|…>.md`, never edit `CHANGELOG.md`; releases are cut by the release PR (`changelog-release.yml`) — [`changelog.d/README.md`](changelog.d/README.md).
 - Never edit generated or local-only paths: `dist/`, `dev-dist/`, `server/dist/`, `node_modules/`, `android/app/build/`, `android/local.properties`, `server/music/`.
 - **Secrets — never read, print or commit:** any `config.json` (server token, USDB password, GitHub token), `.env*`, keystores (`*.jks`, `*.keystore`, `*.p12`), `android/app/release.jks`. Use `server/config.example.json` for examples. Claude Code: these reads (plus generated folders) are blocked in `.claude/settings.json`.
 
@@ -65,7 +66,8 @@ Run **after code changes**, before calling a task done. Never during research or
 npm run check:architecture:diff # boundaries on changed files (fails on new violations)
 npm run check:budget            # 250-line budget + legacy ratchet
 npm run check:duplicates        # jscpd
-npm run check:docs              # doc-sync gate: core changes in src/games|modules|lib need CHANGELOG/docs/tech/AGENTS/README/locales
+npm run check:docs              # doc-sync gate: core changes in src/games|modules|lib need a changelog.d fragment/docs/tech/AGENTS/README/locales
+npm run check:changelog         # validates changelog.d/ and docs/log.d/ fragments
 npm run lint                    # ESLint, 0 errors
 npm run check:lint-budget       # per-file warning ratchet (lower baselines with -- --update)
 npm test                        # Vitest
@@ -83,7 +85,7 @@ Before editing `docs/`, read [`docs/workflows/knowledge-base-maintenance.md`](do
 - Code wins over docs. Name only files and symbols confirmed with `grep`; mark guesses `**Unverified:**`.
 - One topic, one home — link, don't copy.
 - Architecture, data model, storage key, sync message, server route or game changes → update the owning doc in the same PR.
-- Every change to `docs/` → entry at the top of [`docs/log.md`](docs/log.md). Unresolvable contradiction → [`docs/open-questions.md`](docs/open-questions.md).
+- Every change to `docs/` → a fragment `docs/log.d/YYYY-MM-DD-<slug>.md` (one `## YYYY-MM-DD — summary (agent)` entry, never edit [`docs/log.md`](docs/log.md) directly; format in the maintenance doc §3). Unresolvable contradiction → [`docs/open-questions.md`](docs/open-questions.md).
 - Docs in **English**.
 
 ## 10. Quick facts (read-only)

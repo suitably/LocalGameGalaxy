@@ -42,6 +42,11 @@ jobs:
       - name: Run Repository Hygiene
         run: npm run check:hygiene
 
+      # Tag pushes only: tag, every package.json / lockfile, Android versionName and CHANGELOG agree (#593)
+      - name: Verify Release Version Consistency
+        if: github.event_name == 'push'
+        run: node scripts/changelog.mjs verify "${GITHUB_REF_NAME#v}"
+
       - name: Run Pipeline Scripts Tests
         run: npm run test:scripts
 
@@ -95,15 +100,23 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "Release tag: $TAG"
 
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      # The release text is the CHANGELOG section (#593); tags from before the fragments fall back to generated notes
       - name: Create Draft Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.resolve_tag.outputs.tag }}
         run: |
-          gh release create "$TAG" \
-            --draft \
-            --title "$TAG" \
-            --generate-notes
+          if node scripts/changelog.mjs notes "${TAG#v}" > "$RUNNER_TEMP/notes.md"; then
+            gh release create "$TAG" --draft --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md"
+          else
+            echo "::warning::CHANGELOG.md has no section for ${TAG#v}; using generated release notes."
+            gh release create "$TAG" --draft --title "$TAG" --generate-notes
+          fi
 
   build-android:
     name: Build & Attach Android APK
