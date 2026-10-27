@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { wordleEngine } from '../logic/wordleEngine';
 import { isDictionaryWord } from '../logic/dictionary';
+import { loadFullDictionary } from '../logic/fullDictionary';
 import {
   getTodayDateKey,
   loadDailyGameState,
@@ -26,6 +27,11 @@ export function useWordle(
 
   // The settings sheet writes the stored value; re-read it when the sheet closes.
   const reloadDictionaryOnly = useCallback(() => setDictionaryOnly(loadDictionaryOnly()), []);
+
+  // Warm the lazy full word list while the dictionary check is on (chunk is precached offline).
+  useEffect(() => {
+    if (dictionaryOnly) loadFullDictionary(language).catch(() => undefined);
+  }, [dictionaryOnly, language]);
 
   // Cached state for practice mode so switching between modes doesn't lose practice progress
   const practiceStateRef = useRef<WordleState | null>(null);

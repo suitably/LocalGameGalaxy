@@ -1,8 +1,10 @@
 /**
- * dictionary.ts - Guess validation against the word lists (targets + allowed guesses).
+ * dictionary.ts - Guess validation: targets + curated guesses, plus the lazily loaded full
+ * Hunspell list once available (see fullDictionary.ts).
  */
 
 import { ENGLISH_ALLOWED_GUESSES, GERMAN_ALLOWED_GUESSES } from './allowedGuesses';
+import { getLoadedFullDictionary } from './fullDictionary';
 import { ENGLISH_TARGET_WORDS, GERMAN_TARGET_WORDS } from './wordLists';
 
 const buildSet = (...lists: readonly (readonly string[])[]): ReadonlySet<string> =>
@@ -20,5 +22,6 @@ const DICTIONARIES = {
 export function isDictionaryWord(guess: string, lang: string, targetWord?: string): boolean {
   const word = guess.trim().toUpperCase();
   if (targetWord && word === targetWord.toUpperCase()) return true;
-  return DICTIONARIES[lang.startsWith('de') ? 'de' : 'en'].has(word);
+  if (DICTIONARIES[lang.startsWith('de') ? 'de' : 'en'].has(word)) return true;
+  return getLoadedFullDictionary(lang)?.has(word) ?? false;
 }

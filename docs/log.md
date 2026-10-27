@@ -13,6 +13,11 @@ Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)
 - `docs/tech/song-pipeline.md` §4: "Export as UltraStar .txt" (`scoreToUltraStar`, quantization, line breaks, duet, lossy kinds).
 - Outside `docs/`: `modules/music-score/scoreToUltraStar.ts` + tests, `stage/logic/ultraStarExport.ts`, `UltraStarExport.tsx` in the recording panel, locales (`export_ultrastar`, `ultrastar_part`, `ultrastar_duet`).
 
+## 2026-10-27 — Wordle: Hunspell word lists for guess validation, #549 (claude-code)
+
+- `docs/tech/architecture.md` §3.1 Wordle row: validation also uses the lazily loaded full lists (`logic/fullDictionary.ts`, `data/words-{de,en}.ts`, regenerate with `npm run build:wordle-words`).
+- Outside `docs/`: `scripts/build-wordle-words.mjs`, `src/games/wordle/data/` (generated lists + licence README), `logic/fullDictionary.ts` + tests, `useWordle` preload, devDependencies `dictionary-de` / `dictionary-en`.
+
 ## 2026-10-27 — One model for Melodiq and Melodiq Notes, #566 slice 1–2 (claude-code)
 
 - `docs/reports/2026-10-27-maintainer-decisions.md`: direction "one model, not one file format" (#565, new #604).
