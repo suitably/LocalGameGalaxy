@@ -25,7 +25,7 @@ To prevent "spaghetti code" and enforce our Anti-God-Component Architecture, we 
 
 ### Documentation Enforcement
 
-- **Doc-Sync Check (`check-docs-sync.mjs`)**: This script acts as a guardrail. If core logic (in `src/games/`, `src/modules/`, or `src/lib/`) is modified, the script verifies that corresponding documentation (`CHANGELOG.md`, `docs/tech/`, `AGENTS.md`) or translations (`public/locales/`) have been updated in the same PR. This ensures that documentation never falls behind the actual code implementation.
+- **Doc-Sync Check (`check-docs-sync.mjs`)**: This script acts as a guardrail. If core logic (in `src/games/`, `src/modules/`, or `src/lib/`) is modified, the script verifies that corresponding documentation (a `changelog.d/` fragment or `CHANGELOG.md`, `docs/tech/`, `AGENTS.md`) or translations (`public/locales/`) have been updated in the same PR. This ensures that documentation never falls behind the actual code implementation.
 
 ### Security
 

@@ -77,6 +77,11 @@ console.log(
 
 const prBody = process.env.PR_BODY || '';
 const prTitle = process.env.PR_TITLE || '';
+// comma-separated PR label names (ci.yml passes them)
+const prLabels = (process.env.PR_LABELS || '')
+  .split(',')
+  .map((l) => l.trim())
+  .filter(Boolean);
 
 // 1. Check for skip marker in PR_BODY or PR_TITLE
 if (
@@ -86,6 +91,11 @@ if (
   prTitle.includes('[skip changelog]')
 ) {
   console.log('✔ Doc-sync gate bypassed by [skip docs] marker.\n');
+  process.exit(0);
+}
+
+if (prLabels.includes('no-changelog')) {
+  console.log("✔ Doc-sync gate bypassed by the 'no-changelog' label.\n");
   process.exit(0);
 }
 
@@ -104,10 +114,14 @@ const matchedCodeFiles = changedFiles.filter(
     !f.includes('.spec.'),
 );
 
-// Check if documentation, changelog, or translations were touched
+// Check if documentation, changelog, or translations were touched.
+// A changelog fragment (changelog.d/<slug>.<type>.md, #593) counts like a CHANGELOG.md edit.
+const isChangelogFragment = (f) =>
+  /^changelog\.d\/[^/]+\.md$/.test(f) && f !== 'changelog.d/README.md';
 const matchedDocFiles = changedFiles.filter(
   (f) =>
     f === 'CHANGELOG.md' ||
+    isChangelogFragment(f) ||
     f.startsWith('docs/tech/') ||
     f === 'AGENTS.md' ||
     f === 'README.md' ||
@@ -142,11 +156,15 @@ if (matchedCodeFiles.length > 0 && matchedDocFiles.length === 0) {
   console.error(
     '\n👉 Rule: PRs modifying core architecture or game logic must update at least one of:',
   );
-  console.error('   1. CHANGELOG.md (under [Unreleased])');
+  console.error(
+    '   1. a changelog fragment changelog.d/<slug>.<added|changed|fixed|removed|…>.md (see changelog.d/README.md)',
+  );
   console.error('   2. docs/tech/architecture.md (or relevant tech doc in docs/tech/)');
   console.error('   3. AGENTS.md');
   console.error('   4. public/locales/de/ and public/locales/en/ (if UI strings changed)');
-  console.error('\nOr add [skip docs] to the PR description/title for chore-only changes.\n');
+  console.error(
+    "\nOr add [skip docs] to the PR description/title (or the 'no-changelog' label) for chore-only changes.\n",
+  );
   process.exit(1);
 }
 

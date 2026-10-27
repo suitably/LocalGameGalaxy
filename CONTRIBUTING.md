@@ -61,7 +61,8 @@ Before pushing your branch or opening a pull request, you **must** run the follo
    ```bash
    npm run quality-gates
    ```
-5. **Docs**: if you change architecture, a game, storage keys, sync messages or server routes, update the owning doc in `docs/` and add a line to `docs/log.md` (rules in [docs/workflows/knowledge-base-maintenance.md](docs/workflows/knowledge-base-maintenance.md)).
+5. **Docs**: if you change architecture, a game, storage keys, sync messages or server routes, update the owning doc in `docs/` and add a fragment `docs/log.d/YYYY-MM-DD-<slug>.md` (rules in [docs/workflows/knowledge-base-maintenance.md](docs/workflows/knowledge-base-maintenance.md)).
+6. **Changelog**: user-facing changes add a fragment `changelog.d/<slug>.<type>.md` (types and format: [changelog.d/README.md](changelog.d/README.md)); never edit `CHANGELOG.md` directly. `npm run check:changelog` validates fragments. PRs titled `chore|refactor|style|test|docs|perf:` or labelled `no-changelog` need none.
 
 ---
 
@@ -75,3 +76,7 @@ Before pushing your branch or opening a pull request, you **must** run the follo
    - Describe the changes in the PR body.
    - Link any related issues (e.g., `Closes #78`).
 5. **Review**: Address review feedback and update the branch as needed.
+
+## 5. Releases
+
+Releases are not cut by hand. `.github/workflows/changelog-release.yml` runs weekly (or via **Run workflow**, with an optional bump or exact version): it computes the next version from the fragment types (`added`/`changed`/`deprecated`/`removed` → minor, `fixed`/`security` → patch), collects `changelog.d/` into `CHANGELOG.md` and `docs/log.d/` into `docs/log.md`, bumps every `package.json`, `package-lock.json` and the Android `versionName`/`versionCode`, and opens the PR `release/vX.Y.Z`. Merging it tags `vX.Y.Z`, and `release.yml` publishes the release with the changelog section as its text. Details: [docs/workflows/ci-cd-pipelines.md §2.6](docs/workflows/ci-cd-pipelines.md#26-changelog-release-pr--tag-changelog-releaseyml).

@@ -1,0 +1,5 @@
+## 2026-10-27 — Changelog and log fragments, release PR, #593 (claude-code)
+
+- `docs/log.md` moves to fragments: new `docs/log.d/` (format in `docs/workflows/knowledge-base-maintenance.md` §3), header note in `docs/log.md`, `docs/index.md` row. This entry is itself a fragment.
+- `docs/workflows/ci-cd-pipelines.md`: new §2.6 (fragments, version rule, `release-pr` / `tag-release` jobs, `RELEASE_TOKEN`), inventory, overview, doc-sync gate (fragment, `no-changelog` label), secrets table. `docs/workflows/multi-agent-token-strategy.md` §4/§6a, `docs/tech/pipeline-quality-gates.md`: fragments instead of direct edits.
+- Outside `docs/`: `scripts/changelog.mjs` + `scripts/lib/changelog.mjs` (+ tests), `.github/workflows/changelog-release.yml`, `release.yml` (`verify` in `gates`, changelog section as release text), `ci.yml` (`check:changelog` in precheck, `PR_LABELS`), `scripts/check-docs-sync.mjs` (fragment counts, `no-changelog`), `changelog.d/README.md`, `package.json` scripts, `AGENTS.md` §2/§8/§9, `CLAUDE.md`, `CONTRIBUTING.md` (§3, new §5 Releases), `.claude/skills/issue/SKILL.md`, intro note in `CHANGELOG.md`.

@@ -1,0 +1,194 @@
+name: Changelog Release PR & Tag
+
+# #593: collects changelog.d/ and docs/log.d/ fragments into a "release/vX.Y.Z" pull request
+# (weekly or by hand) and tags vX.Y.Z when that PR lands on main; release.yml then builds.
+# Pushes, PRs and tags use RELEASE_TOKEN: anything GITHUB_TOKEN creates starts no workflow.
+
+on:
+  schedule:
+    - cron: '23 4 * * 1' # Mondays 04:23 UTC
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump: auto (from the fragment types), patch, minor or major'
+        type: choice
+        options: [auto, patch, minor, major]
+        default: auto
+      version:
+        description: 'Exact version X.Y.Z (overrides bump)'
+        required: false
+        type: string
+  push:
+    branches:
+      - main
+    paths:
+      - 'package.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: changelog-release-${{ github.event_name == 'push' && 'tag' || 'pr' }}
+  cancel-in-progress: false
+
+jobs:
+  release-pr:
+    name: Open or Update Release PR
+    if: github.event_name != 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      # Same pattern as the Docker/keystore checks (#590): the main repository fails, forks skip.
+      - name: Check RELEASE_TOKEN
+        id: token
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          if [ -n "$RELEASE_TOKEN" ]; then
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+          elif [ "$GITHUB_REPOSITORY" = "suitably/LocalGameGalaxy" ]; then
+            echo "::error::RELEASE_TOKEN secret is not configured in suitably/LocalGameGalaxy (fine-grained token, contents and pull-requests write). See docs/workflows/ci-cd-pipelines.md."
+            exit 1
+          else
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::RELEASE_TOKEN is not configured in this fork. Skipping the release PR."
+          fi
+
+      - name: Checkout repository
+        if: steps.token.outputs.has_token == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Setup Node.js
+        if: steps.token.outputs.has_token == 'true'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Compute Next Version
+        id: version
+        if: steps.token.outputs.has_token == 'true'
+        env:
+          BUMP: ${{ inputs.bump || 'auto' }}
+          OVERRIDE: ${{ inputs.version }}
+        run: |
+          args=(--bump "$BUMP")
+          if [ -n "$OVERRIDE" ]; then args+=(--version "${OVERRIDE#v}"); fi
+          NEXT=$(node scripts/changelog.mjs next-version "${args[@]}")
+          if [ -z "$NEXT" ]; then
+            echo "::notice::No changelog fragments or [Unreleased] entries on main: nothing to release."
+          else
+            echo "Next version: $NEXT"
+          fi
+          echo "version=$NEXT" >> "$GITHUB_OUTPUT"
+
+      - name: Collect Fragments and Bump Versions
+        if: steps.version.outputs.version != ''
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: node scripts/changelog.mjs release "$VERSION"
+
+      - name: Push Release Branch
+        if: steps.version.outputs.version != ''
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          BRANCH="release/v$VERSION"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add -A
+          git commit -m "chore(release): v$VERSION"
+          git push --force "https://x-access-token:${RELEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/$BRANCH"
+
+      - name: Open or Update Pull Request
+        if: steps.version.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          export BRANCH="release/v$VERSION"
+          BODY="$RUNNER_TEMP/release-body.md"
+          {
+            echo "Release v$VERSION, prepared by \`changelog-release.yml\` from the changelog fragments."
+            echo
+            echo "Merging tags \`v$VERSION\` and starts \`release.yml\`. The versions in every \`package.json\`, \`package-lock.json\` and \`android/app/build.gradle\` are bumped; \`docs/log.d/\` is collected into \`docs/log.md\`."
+            echo
+            echo "---"
+            echo
+            node scripts/changelog.mjs notes "$VERSION"
+          } > "$BODY"
+          EXISTING=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            gh pr edit "$EXISTING" --repo "$GITHUB_REPOSITORY" --title "chore(release): v$VERSION" --body-file "$BODY"
+          else
+            gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$BRANCH" --title "chore(release): v$VERSION" --body-file "$BODY"
+          fi
+          # a release PR for another version (e.g. 1.2.1 before an "added" fragment made it 1.3.0) is superseded
+          gh pr list --repo "$GITHUB_REPOSITORY" --state open --json number,headRefName \
+            --jq '.[] | select(.headRefName | startswith("release/v")) | select(.headRefName != env.BRANCH) | .number' |
+            while read -r n; do
+              gh pr close "$n" --repo "$GITHUB_REPOSITORY" --delete-branch --comment "Superseded by $BRANCH."
+            done
+
+  tag-release:
+    name: Tag Release on Version Change
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Detect Version Change
+        id: detect
+        run: |
+          NEW=$(node -p "require('./package.json').version")
+          OLD=$(git show HEAD^:package.json | node -e 'let s="";process.stdin.on("data",(d)=>(s+=d)).on("end",()=>console.log(JSON.parse(s).version))')
+          if [ "$NEW" = "$OLD" ]; then
+            echo "::notice::package.json version unchanged ($NEW): nothing to tag."
+            echo "version=" >> "$GITHUB_OUTPUT"
+          else
+            echo "Version changed: $OLD -> $NEW"
+            echo "version=$NEW" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify Version Fields and Changelog
+        if: steps.detect.outputs.version != ''
+        env:
+          VERSION: ${{ steps.detect.outputs.version }}
+        run: node scripts/changelog.mjs verify "$VERSION"
+
+      - name: Create and Push Tag
+        if: steps.detect.outputs.version != ''
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          VERSION: ${{ steps.detect.outputs.version }}
+        run: |
+          if [ -z "$RELEASE_TOKEN" ]; then
+            if [ "$GITHUB_REPOSITORY" = "suitably/LocalGameGalaxy" ]; then
+              echo "::error::RELEASE_TOKEN secret is not configured in suitably/LocalGameGalaxy, so v$VERSION cannot be tagged (a GITHUB_TOKEN tag would not start release.yml). Configure it and re-run this job, or push the tag by hand."
+              exit 1
+            fi
+            echo "::notice::RELEASE_TOKEN is not configured in this fork. Skipping the tag."
+            exit 0
+          fi
+          REMOTE="https://x-access-token:${RELEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git ls-remote --exit-code --tags "$REMOTE" "refs/tags/v$VERSION" > /dev/null; then
+            echo "::notice::Tag v$VERSION already exists."
+            exit 0
+          fi
+          git tag "v$VERSION" "$GITHUB_SHA"
+          git push "$REMOTE" "refs/tags/v$VERSION"
+          echo "Tagged v$VERSION; release.yml takes over."

@@ -7,6 +7,7 @@ This directory contains production operations runbooks, troubleshooting guides, 
 - [Server Runbook](server-runbook.md) - Start/stop/update, file locations, token and API-key rotation, CORS, HTTPS via tunnel or proxy.
 - [Android App (Capacitor) Packaging & Release Runbook](android-release.md) - Building, syncing, signing, and releasing the Android app via Capacitor.
 - [Standalone WebRTC Tracker Deployment Runbook](webrtc-tracker.md) - Deployment, process management, and security constraints for the standalone BitTorrent WebRTC tracker.
+- [Verifying release artefacts](verify-release-artifacts.md) - `gh attestation verify` for APK, server archives, SBOMs and Docker images (Docker Hub, GHCR).
 
 ## Reliability & Incident Response
 
