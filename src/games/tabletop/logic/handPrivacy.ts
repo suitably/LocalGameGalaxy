@@ -111,11 +111,12 @@ export function restoreCards<T extends Record<string, TabletopWidget | null>>(
   for (const [id, secret] of Object.entries(secrets)) {
     const w = out[id];
     if (!w) continue;
-    if (w.type === 'card') {
+    if ('type' in secret && secret.type === w.type) {
+      // a whole widget (hidden zone, #551) replaces the blanked copy, marker included
+      out[id] = { ...secret } as TabletopWidget;
+    } else if (w.type === 'card') {
       const faceObjects = 'faceObjects' in secret ? secret.faceObjects : undefined;
       out[id] = { ...w, ...secret, faceObjects } as CardWidget;
-    } else if ('type' in secret && secret.type === w.type) {
-      out[id] = { ...w, ...secret } as TabletopWidget;
     }
   }
   return out as T;

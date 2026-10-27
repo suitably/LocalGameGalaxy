@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import type { TabletopAction } from '../tabletopReducer';
-import { acceptIntent, classifyDelta, isSyncedIntent, senderIsSpectator } from '../syncProtocol';
+import {
+  acceptIntent,
+  classifyDelta,
+  containsRedactedWidget,
+  isSyncedIntent,
+  senderIsSpectator,
+} from '../syncProtocol';
 
 describe('syncProtocol (#449)', () => {
   it('applies the next delta, ignores duplicates and waits for the first snapshot', () => {
@@ -60,5 +66,23 @@ describe('syncProtocol (#449)', () => {
     // no party: the claim decides
     expect(senderIsSpectator({ claimed: false, roster: null })).toBe(false);
     expect(senderIsSpectator({ claimed: true, roster: null })).toBe(true);
+  });
+
+  it('rejects intents that carry a blanked hidden-zone copy (#551)', () => {
+    const blank = {
+      id: 'c',
+      type: 'card',
+      x: 0,
+      y: 0,
+      width: 1,
+      height: 1,
+      zIndex: 1,
+      redacted: true,
+    };
+    const add = { type: 'ADD_WIDGETS', payload: { widgets: [blank] } } as unknown as TabletopAction;
+    expect(containsRedactedWidget(add)).toBe(true);
+    expect(acceptIntent(add, { spectator: false })).toBe(false);
+    const move: TabletopAction = { type: 'MOVE_WIDGET', payload: { id: 'c', x: 1, y: 2 } };
+    expect(acceptIntent(move, { spectator: false })).toBe(true);
   });
 });

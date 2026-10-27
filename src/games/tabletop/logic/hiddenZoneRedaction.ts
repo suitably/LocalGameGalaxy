@@ -105,6 +105,8 @@ export function redactHiddenWidget(widget: TabletopWidget): TabletopWidget {
   for (const key of STRUCTURE_KEYS) {
     if (source[key] !== undefined) out[key] = source[key];
   }
+  // marks the blank copy, so the host never takes it back as real data (containsRedactedWidget)
+  out.redacted = true;
   return out as unknown as TabletopWidget;
 }
 

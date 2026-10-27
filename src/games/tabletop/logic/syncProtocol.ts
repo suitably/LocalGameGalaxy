@@ -58,9 +58,22 @@ export const isSyncedIntent = (action: TabletopAction): boolean =>
 /**
  * Whether the host applies an intent. Spectators are read-only: every synced intent (move, flip,
  * draw, shuffle, roll, edit …) is rejected, only device-local actions pass (and are never sent).
+ * Intents carrying a blanked hidden-zone copy are rejected too.
  */
 export const acceptIntent = (action: TabletopAction, sender: { spectator: boolean }): boolean =>
-  isSyncedIntent(action) && !sender.spectator;
+  isSyncedIntent(action) && !sender.spectator && !containsRedactedWidget(action);
+
+/**
+ * Whether an action carries a widget copy blanked for a hidden zone (#551), e.g. a duplicate or an
+ * undo replayed on a device that only knows the blank copy. The host rejects such intents, so a
+ * hidden card never loses its real face.
+ */
+export function containsRedactedWidget(value: unknown, depth = 0): boolean {
+  if (depth > 6 || value === null || typeof value !== 'object') return false;
+  if ((value as { redacted?: unknown }).redacted === true) return true;
+  const children = Array.isArray(value) ? value : Object.values(value);
+  return children.some((child) => containsRedactedWidget(child, depth + 1));
+}
 
 /** A party member as the host's roster knows it. */
 export interface RosterEntry {

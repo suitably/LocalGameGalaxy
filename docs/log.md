@@ -2,6 +2,10 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-27 — Host guard against blanked hidden-zone copies, #551 follow-up (claude-code)
+
+- `docs/tech/tabletop-engine.md` "Hidden zones on the wire": `redacted` marker, `containsRedactedWidget`. Outside `docs/`: `types.ts`, `hiddenZoneRedaction.ts`, `syncProtocol.ts` (+ test), `handPrivacy.ts` `restoreCards`.
+
 ## 2026-10-27 — Local tabletop default templates, #547 (claude-code)
 
 - `docs/tech/tabletop-engine.md` §6: game loading order (`resolveTableGame`, `TableOrigin`) and local default templates with "Reset to original".
