@@ -3,7 +3,7 @@ import { lowerBound, type Judgement, type StageNote } from '../logic/charts';
 import { recordJudgement, type BeatRange } from '../logic/judging';
 import { buildSections, sectionIndexAt, type Section } from '../logic/sections';
 import { advancePlayer, learnWait, resetRange } from './advance';
-import { playLane, playPitch } from './input';
+import { focused, playLane, playPitch } from './input';
 import {
   introBeat,
   loopSections,
@@ -348,9 +348,9 @@ export class StageEngine {
     this.onTap?.(performance.now());
   }
 
-  /** A pitch from MIDI or microphone, mapped to what the focused player's instrument plays. */
-  hitPitch(midi: number) {
-    playPitch(this, midi);
+  /** A pitch from MIDI or microphone, mapped to what the focused player's instrument plays; `silent` plays no sound. */
+  hitPitch(midi: number, silent = false) {
+    playPitch(this, midi, { ...focused(this), silent });
     this.onTap?.(performance.now());
   }
 

@@ -25,6 +25,8 @@ interface SessionBarProps {
     midiName: string | null;
     /** An instrument that disappeared and has sent nothing since. */
     midiLost: string | null;
+    midiSound: boolean;
+    setMidiSound: (on: boolean) => void;
     choose: (s: StageInputSource) => void;
   };
   scheduleClicks: () => Promise<number[] | null>;
@@ -89,6 +91,8 @@ export function SessionBar(props: SessionBarProps) {
         midiCount={input.midiCount}
         midiName={input.midiName}
         midiLost={input.midiLost}
+        midiSound={input.midiSound}
+        onMidiSound={input.setMidiSound}
         onChange={input.choose}
         schedule={scheduleClicks}
       />
