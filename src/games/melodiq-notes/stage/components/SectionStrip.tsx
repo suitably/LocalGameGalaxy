@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Box, Button, Chip, Collapse, Stack, Typography } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
+import { Box, Chip, Collapse, Stack, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { StageEngine } from '../engine/StageEngine';
 import { useStageLive } from '../useStage';
@@ -47,9 +46,10 @@ function loopBars(engine: StageEngine): BarSpan | null {
 /**
  * The song as rows of at most five cells, coloured by how sure the highlighted player was. Tap a
  * group to open its bars in the next row, down to single bars. Outside perform mode, two taps
- * pick a loop's first and last bar or group; the loop chip turns it on and off.
+ * pick a loop's first and last bar or group; the loop chip turns it on and off. It opens above
+ * the transport bar (its "Bars & loop" button), so the stage comes first.
  */
-export function SectionStrip({ engine }: { engine: StageEngine }) {
+export function SectionStrip({ engine, open }: { engine: StageEngine; open: boolean }) {
   useStageLive(engine);
   const { t } = useTranslation();
   const sectionName = useSectionName(engine);
@@ -57,8 +57,6 @@ export function SectionStrip({ engine }: { engine: StageEngine }) {
     t(`games.melodiq_notes.stage.${key}`, opts);
   const { sections, song, focus, mode } = engine;
   const [state, setState] = useState<StripState>({ song: null, path: [], pick: null });
-  // closed by default: the stage comes first, the bars are opened to pick a loop or check them
-  const [open, setOpen] = useState(false);
   // a new song starts with closed rows and no pick
   const { path, pick } = state.song === song ? state : { path: [], pick: null };
   const rows = useMemo(() => stripRows(sections, path), [sections, path]);
@@ -105,66 +103,49 @@ export function SectionStrip({ engine }: { engine: StageEngine }) {
   const chipSpan = looped ?? pickSpan;
 
   return (
-    <Stack spacing={0.75}>
-      <Stack direction="row" alignItems="center" flexWrap="wrap" gap={1}>
-        <Button
-          color="inherit"
-          size="small"
-          aria-expanded={open}
-          endIcon={
-            <ExpandMoreIcon
-              sx={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}
-            />
-          }
-          onClick={() => setOpen(!open)}
-          sx={{ textTransform: 'none', minHeight: 40 }}
-        >
-          {k('sections_label')}
-        </Button>
-        <Box sx={{ flex: '1 1 auto' }} />
-        <Chip
-          size="small"
-          color={looped ? 'primary' : 'default'}
-          variant={looped ? 'filled' : 'outlined'}
-          disabled={!picking || !chipSpan}
-          aria-pressed={!!looped}
-          label={chipSpan ? k('loop_chip', { bars: spanName(chipSpan) }) : k('loop_chip_none')}
-          onClick={toggleLoop}
-        />
-      </Stack>
-      <Collapse in={open} unmountOnExit>
-        <Stack spacing={0.75}>
-          <Typography variant="caption" color="text.secondary">
+    <Collapse in={open} unmountOnExit>
+      <Stack spacing={0.75} sx={{ maxHeight: '35dvh', overflowY: 'auto', pt: 0.5 }}>
+        <Stack direction="row" alignItems="center" gap={1}>
+          <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
             {hint}
           </Typography>
-          {rows.map((row, r) => {
-            const head = rowProgress(row, engine.beat);
-            return (
-              <Box key={`${r}-${row[0].first}`} sx={gridOf(row.length)}>
-                {row.map((g, gi) => {
-                  const anyNotes = hasNotes.slice(g.first, g.last + 1).some(Boolean);
-                  const merged = mergeStats(focus?.stats.sections.slice(g.first, g.last + 1) ?? []);
-                  const single = g.first === g.last;
-                  return (
-                    <SectionCell
-                      key={g.first}
-                      label={single ? g.firstBar : `${g.firstBar}–${g.lastBar}`}
-                      ariaLabel={spanName(g)}
-                      score={anyNotes ? sectionScore(merged) : null}
-                      empty={!anyNotes}
-                      active={!!marked && g.first <= marked.last && g.last >= marked.first}
-                      expanded={single ? undefined : path[r] === gi}
-                      disabled={single && !picking}
-                      onClick={() => tap(r, gi, g)}
-                    />
-                  );
-                })}
-                <Playhead progress={head ?? (r === 0 && engine.beat < row[0].from ? 0 : null)} />
-              </Box>
-            );
-          })}
+          <Chip
+            size="small"
+            color={looped ? 'primary' : 'default'}
+            variant={looped ? 'filled' : 'outlined'}
+            disabled={!picking || !chipSpan}
+            aria-pressed={!!looped}
+            label={chipSpan ? k('loop_chip', { bars: spanName(chipSpan) }) : k('loop_chip_none')}
+            onClick={toggleLoop}
+          />
         </Stack>
-      </Collapse>
-    </Stack>
+        {rows.map((row, r) => {
+          const head = rowProgress(row, engine.beat);
+          return (
+            <Box key={`${r}-${row[0].first}`} sx={gridOf(row.length)}>
+              {row.map((g, gi) => {
+                const anyNotes = hasNotes.slice(g.first, g.last + 1).some(Boolean);
+                const merged = mergeStats(focus?.stats.sections.slice(g.first, g.last + 1) ?? []);
+                const single = g.first === g.last;
+                return (
+                  <SectionCell
+                    key={g.first}
+                    label={single ? g.firstBar : `${g.firstBar}–${g.lastBar}`}
+                    ariaLabel={spanName(g)}
+                    score={anyNotes ? sectionScore(merged) : null}
+                    empty={!anyNotes}
+                    active={!!marked && g.first <= marked.last && g.last >= marked.first}
+                    expanded={single ? undefined : path[r] === gi}
+                    disabled={single && !picking}
+                    onClick={() => tap(r, gi, g)}
+                  />
+                );
+              })}
+              <Playhead progress={head ?? (r === 0 && engine.beat < row[0].from ? 0 : null)} />
+            </Box>
+          );
+        })}
+      </Stack>
+    </Collapse>
   );
 }

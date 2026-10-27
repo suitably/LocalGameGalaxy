@@ -1,23 +1,17 @@
-import { useState } from 'react';
-import { Box, Button, Stack, ToggleButton, ToggleButtonGroup } from '@mui/material';
-import ErrorIcon from '@mui/icons-material/ErrorOutlineRounded';
+import { useState, type ReactNode } from 'react';
+import { Box, Button, Stack } from '@mui/material';
 import GroupIcon from '@mui/icons-material/GroupRounded';
-import GraphicEqIcon from '@mui/icons-material/GraphicEqRounded';
 import { useTranslation } from 'react-i18next';
 import { TOUCH_TARGET } from '../../../../lib/touchTarget';
 import { NotesSheet } from '../../components/NotesSheet';
 import type { StageEngine } from '../engine/StageEngine';
-import type { StageMode } from '../engine/types';
-import { recordingStatus } from '../logic/recordingStatus';
 import type { StageInputSource } from '../useStageInput';
-import type { StageSongState } from '../useStageSong';
 import { InputMenu } from './InputMenu';
 import { PlayerList } from './PlayerList';
-import { RecordingPanel } from './RecordingPanel';
+import { ModeSwitch } from './ModeSwitch';
 
 interface SessionBarProps {
   engine: StageEngine;
-  songState: StageSongState;
   input: {
     source: StageInputSource;
     midiCount: number;
@@ -32,99 +26,79 @@ interface SessionBarProps {
   scheduleClicks: () => Promise<number[] | null>;
   onInvite: () => void;
   onRemoveRemote: ((remoteId: string) => void) | null;
+  /** Before the controls while the app header is hidden: the song. */
+  lead?: ReactNode;
+  /** After them: the recording. */
+  trail?: ReactNode;
 }
 
-type Sheet = 'players' | 'recording' | null;
-const MODES: StageMode[] = ['learn', 'practice', 'perform'];
 const chipSx = { minHeight: TOUCH_TARGET, textTransform: 'none' } as const;
 
 /**
- * What is set once per session, above the stage: mode, input with its latency, players and the
- * recording. Players and recording open in a side sheet so the stage stays in view.
+ * The stage's top bar: what is set once per session (mode, input with its latency, players).
+ * One row that scrolls sideways when it does not fit; players open in a side sheet so the stage
+ * stays in view. The song and its recording live in the app header, or in `lead` / `trail`
+ * while the header is hidden.
  */
 export function SessionBar(props: SessionBarProps) {
-  const { engine, songState, input, scheduleClicks, onInvite, onRemoveRemote } = props;
+  const { engine, input, scheduleClicks, onInvite, onRemoveRemote, lead, trail } = props;
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
     t(`games.melodiq_notes.stage.${key}`, opts);
-  const [sheet, setSheet] = useState<Sheet>(null);
+  const [playersOpen, setPlayersOpen] = useState(false);
   const song = engine.song;
-  const several = engine.players.length > 1;
-  const rec = recordingStatus(!!songState.recording, songState.align, !!songState.marks);
-  const recLabel =
-    rec.kind === 'running'
-      ? k('rec_chip_running', { percent: rec.percent })
-      : k(`rec_chip_${rec.kind}`);
 
+  // while the header is hidden its items (song, recording) take a row of their own on phones
+  const headerItems = (lead || trail) && (
+    <Stack direction="row" alignItems="center" gap={1} sx={{ width: { xs: '100%', sm: 'auto' } }}>
+      {lead}
+      <Box sx={{ flex: 1, display: { sm: 'none' } }} />
+      <Box sx={{ display: { xs: 'flex', sm: 'none' } }}>{trail}</Box>
+    </Stack>
+  );
   return (
-    <Stack direction="row" alignItems="center" flexWrap="wrap" useFlexGap gap={1}>
-      <ToggleButtonGroup
-        exclusive
-        value={engine.mode}
-        aria-label={k('mode')}
-        onChange={(_, v: StageMode | null) => v && engine.setMode(v)}
-        sx={{
-          width: { xs: '100%', sm: 'auto' },
-          '& .MuiToggleButton-root': {
-            minHeight: TOUCH_TARGET,
-            px: 1.5,
-            flex: { xs: 1, sm: 'none' },
-          },
-        }}
+    <Stack direction="row" alignItems="center" flexWrap="wrap" gap={1} sx={{ px: 1, py: 0.75 }}>
+      {headerItems}
+      <Stack
+        direction="row"
+        alignItems="center"
+        gap={1}
+        sx={{ flex: 1, minWidth: 0, overflowX: 'auto', '& > *': { flexShrink: 0 } }}
       >
-        {MODES.map((m) => (
-          <ToggleButton
-            key={m}
-            value={m}
-            // learn mode waits for its player: for practising alone
-            disabled={m === 'learn' && several}
-            title={m === 'learn' && several ? k('learn_solo') : undefined}
+        <ModeSwitch engine={engine} />
+        <InputMenu
+          engine={engine}
+          source={input.source}
+          midiCount={input.midiCount}
+          midiName={input.midiName}
+          midiLost={input.midiLost}
+          midiSound={input.midiSound}
+          onMidiSound={input.setMidiSound}
+          onChange={input.choose}
+          schedule={scheduleClicks}
+        />
+        {song && (
+          <Button
+            variant="outlined"
+            color="inherit"
+            startIcon={<GroupIcon />}
+            aria-label={k('players_count', { count: engine.seats.length })}
+            onClick={() => setPlayersOpen(true)}
+            sx={chipSx}
           >
-            {k(`modes.${m}`)}
-          </ToggleButton>
-        ))}
-      </ToggleButtonGroup>
-      <Box sx={{ flex: '1 1 0', display: { xs: 'none', md: 'block' } }} />
-      <InputMenu
-        engine={engine}
-        source={input.source}
-        midiCount={input.midiCount}
-        midiName={input.midiName}
-        midiLost={input.midiLost}
-        midiSound={input.midiSound}
-        onMidiSound={input.setMidiSound}
-        onChange={input.choose}
-        schedule={scheduleClicks}
-      />
-      {song && (
-        <Button
-          variant="outlined"
-          color="inherit"
-          startIcon={<GroupIcon />}
-          aria-label={k('players_count', { count: engine.seats.length })}
-          onClick={() => setSheet('players')}
-          sx={chipSx}
-        >
-          <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-            {engine.seats.length}
-          </Box>
-          <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-            {k('players_count', { count: engine.seats.length })}
-          </Box>
-        </Button>
-      )}
-      <Button
-        variant="outlined"
-        color={rec.kind === 'failed' ? 'error' : rec.kind === 'aligned' ? 'primary' : 'inherit'}
-        startIcon={rec.kind === 'failed' ? <ErrorIcon /> : <GraphicEqIcon />}
-        onClick={() => setSheet('recording')}
-        sx={chipSx}
-      >
-        {recLabel}
-      </Button>
+            <Box component="span" sx={{ display: { xs: 'inline', md: 'none' } }}>
+              {engine.seats.length}
+            </Box>
+            <Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
+              {k('players_count', { count: engine.seats.length })}
+            </Box>
+          </Button>
+        )}
+      </Stack>
+      {trail && <Box sx={{ display: { xs: 'none', sm: 'flex' } }}>{trail}</Box>}
       <NotesSheet
-        open={sheet === 'players'}
-        onClose={() => setSheet(null)}
+        open={playersOpen}
+        onClose={() => setPlayersOpen(false)}
         title={k('players_title')}
         subtitle={
           song
@@ -133,13 +107,6 @@ export function SessionBar(props: SessionBarProps) {
         }
       >
         <PlayerList engine={engine} onInvite={onInvite} onRemoveRemote={onRemoveRemote} />
-      </NotesSheet>
-      <NotesSheet
-        open={sheet === 'recording'}
-        onClose={() => setSheet(null)}
-        title={k('audio_title')}
-      >
-        <RecordingPanel state={songState} />
       </NotesSheet>
     </Stack>
   );

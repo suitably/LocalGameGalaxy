@@ -515,7 +515,6 @@
       "beta": "Beta",
       "score": "SCORE",
       "hits": "HITS",
-      "song": "Song",
       "custom_song": "Uploaded Custom Song",
       "upload_xml": "Upload MusicXML",
       "mode": "Mode",

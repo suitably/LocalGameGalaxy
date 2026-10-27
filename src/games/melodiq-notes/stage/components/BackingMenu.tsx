@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, ListItemText, Menu, MenuItem } from '@mui/material';
+import { Box, Button, ListItemText, Menu, MenuItem } from '@mui/material';
 import VolumeOffIcon from '@mui/icons-material/VolumeOffRounded';
 import VolumeUpIcon from '@mui/icons-material/VolumeUpRounded';
 import { useTranslation } from 'react-i18next';
@@ -31,9 +31,18 @@ export function BackingMenu({ engine }: { engine: StageEngine }) {
         aria-haspopup="menu"
         aria-label={`${k('backing')}: ${label}`}
         onClick={(e) => setAnchor(e.currentTarget)}
-        sx={{ minHeight: TOUCH_TARGET, textTransform: 'none' }}
+        sx={{
+          minHeight: TOUCH_TARGET,
+          minWidth: TOUCH_TARGET,
+          textTransform: 'none',
+          whiteSpace: 'nowrap',
+          // icon only on phones; the label is in the menu and the button's name
+          '& .MuiButton-startIcon': { mr: { xs: 0, sm: 1 }, ml: { xs: 0, sm: -0.5 } },
+        }}
       >
-        {label}
+        <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+          {label}
+        </Box>
       </Button>
       <Menu container={overlayContainer} anchorEl={anchor} open={!!anchor} onClose={close}>
         {recording

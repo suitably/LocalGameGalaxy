@@ -21,7 +21,7 @@ export function SpeedButton({ engine }: { engine: StageEngine }) {
         disabled={engine.mode === 'perform'}
         aria-label={`${k('speed')} ${percent} %`}
         onClick={(e) => setAnchor(e.currentTarget)}
-        sx={{ minHeight: TOUCH_TARGET, fontFamily: 'monospace' }}
+        sx={{ minHeight: TOUCH_TARGET, fontFamily: 'monospace', whiteSpace: 'nowrap' }}
       >
         {percent} %
       </Button>
