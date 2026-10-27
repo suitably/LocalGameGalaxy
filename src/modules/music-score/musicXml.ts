@@ -2,7 +2,7 @@ import { DRUM_VOICE_KEY, parseSticking, resolveDrumVoice, type DrumVoice } from 
 import { guessInstrument } from './instruments';
 import { playOrder, readBars } from './musicXmlBars';
 import { kid, kids, num, text } from './xmlDom';
-import type { ScoreNote, ScorePart, ScoreSong, TempoEvent, XmlParser } from './types';
+import type { ScoreNote, ScorePart, ScoreSong, TabPosition, TempoEvent, XmlParser } from './types';
 
 const STEP: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 export class ScoreImportError extends Error {}
@@ -53,6 +53,7 @@ export interface BarEvent {
   syl: string;
   drum?: DrumVoice;
   hand?: 'R' | 'L';
+  tab?: TabPosition;
 }
 
 function readPartBars(pe: Element, info: PartInfo) {
@@ -165,6 +166,7 @@ export function writeOutNotes(bars: BarEvent[][], order: number[], starts: numbe
       if (ev.syl) note.syl = ev.syl;
       if (ev.drum) note.drum = ev.drum;
       if (ev.hand) note.hand = ev.hand;
+      if (ev.tab) note.tab = ev.tab;
       notes.push(note);
       if (ev.tieStart) open.set(key, note);
       else open.delete(key);

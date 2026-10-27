@@ -4,7 +4,7 @@ import { guessInstrument } from './instruments';
 import { ScoreImportError, writeOutNotes, type BarEvent } from './musicXml';
 import { playOrder } from './musicXmlBars';
 import { kid, kids, num, text } from './xmlDom';
-import type { ScorePart, ScoreSong, TempoEvent, XmlParser } from './types';
+import type { ScorePart, ScoreSong, TabPosition, TempoEvent, XmlParser } from './types';
 
 const STEP: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 const NOTE_VALUES: Record<string, number> = {
@@ -95,13 +95,18 @@ function readTrack(tr: Element): TrackInfo {
   };
 }
 
-function notePitch(note: Element, track: TrackInfo): number | null {
+/** Written string and fret; `Tuning` lists the strings from the lowest, so string 0 is the bottom line. */
+function noteTab(note: Element, track: TrackInfo): TabPosition | null {
   const string = prop(note, 'String');
   const fret = prop(note, 'Fret');
-  if (string && fret && track.tuning.length) {
-    const open = track.tuning[num(string, 'String')];
-    if (open !== undefined) return open + num(fret, 'Fret') + track.capo;
-  }
+  if (!string || !fret) return null;
+  const s = num(string, 'String', -1);
+  if (track.tuning[s] === undefined) return null;
+  return { string: track.tuning.length - 1 - s, fret: num(fret, 'Fret') + track.capo };
+}
+
+function notePitch(note: Element, track: TrackInfo, tab: TabPosition | null): number | null {
+  if (tab) return track.tuning[track.tuning.length - 1 - tab.string] + tab.fret;
   const midi = prop(note, 'Midi');
   if (midi) return num(midi, 'Number');
   const p = prop(note, 'ConcertPitch');
@@ -187,7 +192,8 @@ export function parseGuitarPro(gpif: string, fileName: string, parseXml: XmlPars
             for (const nid of ids(beat, 'Notes')) {
               const note = notes.get(nid);
               if (!note || prop(note, 'Muted')) continue;
-              let pitch = notePitch(note, track);
+              const tab = track.isDrum ? null : noteTab(note, track);
+              let pitch = notePitch(note, track, tab);
               let drum: DrumVoice | undefined;
               if (track.isDrum) {
                 const art = track.articulations[num(note, 'InstrumentArticulation', -1)];
@@ -206,6 +212,7 @@ export function parseGuitarPro(gpif: string, fileName: string, parseXml: XmlPars
                 tieStop: tie?.getAttribute('destination') === 'true',
                 syl: '',
                 drum,
+                tab: tab ?? undefined,
               });
             }
             pos += dur;

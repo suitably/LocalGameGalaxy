@@ -126,6 +126,17 @@ describe('parseGuitarPro', () => {
     ]);
   });
 
+  it('keeps the written string and fret, string 0 being the highest', () => {
+    expect(song.parts[0].notes.map((n) => n.tab)).toEqual([
+      { string: 5, fret: 3 },
+      undefined,
+      { string: 5, fret: 3 },
+      undefined,
+      undefined,
+      undefined,
+    ]);
+  });
+
   it('names drum voices from the kit articulations', () => {
     expect(notesOf(1)).toEqual([
       [0, 1, 36],

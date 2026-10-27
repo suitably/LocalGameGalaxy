@@ -204,6 +204,17 @@ function timeline(): ScoreSong {
         guess: 'keyboard',
       },
       {
+        id: 'g',
+        name: 'Guitar',
+        notes: [
+          { t: 0, dur: 1, pitch: 64, tab: { string: 2, fret: 9 } },
+          { t: 0, dur: 1, pitch: 45 },
+        ],
+        isDrum: false,
+        program: 25,
+        guess: 'guitar',
+      },
+      {
         id: 'd',
         name: 'Drums',
         notes: [{ t: 0, dur: 0.25, pitch: 42, drum: 'hihatClosed', hand: 'R' }],
@@ -224,8 +235,11 @@ describe('pult chart', () => {
     expect(back.parts.map((p) => p.id)).toEqual(['p']);
     expect(back.end).toBe(4);
     expect(buildChart(back.parts[0], 'keyboard')).toEqual(buildChart(song.parts[0], 'keyboard'));
+    const guitar = unpackChart(JSON.parse(JSON.stringify(packChart(song, 'g'))));
+    expect(guitar.parts[0].notes).toEqual(song.parts[1].notes);
+    expect(buildChart(guitar.parts[0], 'guitar')).toEqual(buildChart(song.parts[1], 'guitar'));
     const drums = unpackChart(JSON.parse(JSON.stringify(packChart(song, 'd'))));
-    expect(drums.parts[0].notes).toEqual(song.parts[1].notes);
+    expect(drums.parts[0].notes).toEqual(song.parts[2].notes);
     expect(packChart(song, 'x')).toBeNull();
   });
 
