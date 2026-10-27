@@ -2,6 +2,11 @@
 
 Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)`, then bullets. Say whether code or configuration outside `docs/` changed.
 
+## 2026-10-27 — Clear open issues implemented (claude-code)
+
+- `docs/workflows/ci-cd-pipelines.md`: new "Runner and tool pinning" (#589); `docs/tech/deployment.md`: arm64 macOS runner is `macos-15`.
+- Outside `docs/`: all workflows on `ubuntu-24.04` / `macos-15`, wrangler version from `tools/wrangler/package.json` (Dependabot entry) (#589).
+
 ## 2026-10-26 — M1: CHANGELOG consolidated, feedback fixes (claude-code)
 
 - `docs/open-questions.md`: Q12 resolved — `CHANGELOG.md` has one `[Unreleased]` section again (entries from the four merge-artefact sections and from below `[1.1.0]` merged per category, exact duplicates dropped, second `# Changelog` header removed). Entries whose release is unknown stay under `[Unreleased]`.

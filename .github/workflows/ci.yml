@@ -18,7 +18,7 @@ concurrency:
 jobs:
   precheck:
     name: Deterministic Prechecks (no install)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Checkout repository
@@ -44,7 +44,7 @@ jobs:
   static-analysis:
     name: Architecture, Budget & Duplicates
     needs: precheck
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout repository
@@ -80,7 +80,7 @@ jobs:
   lint:
     name: ESLint & Security Audit
     needs: precheck
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout repository
@@ -104,7 +104,7 @@ jobs:
   test:
     name: Unit & Integration Tests (Vitest)
     needs: precheck
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout repository
@@ -121,7 +121,7 @@ jobs:
   build:
     name: Production Web Build
     needs: precheck
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout repository
@@ -145,7 +145,7 @@ jobs:
   server-validate:
     name: Server Build & Tests
     needs: precheck
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout repository
@@ -171,7 +171,7 @@ jobs:
     name: CI Quality Gate (Aggregator)
     needs: [precheck, static-analysis, lint, test, build, server-validate]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Evaluate Check Results
@@ -189,7 +189,7 @@ jobs:
     needs: [build, ci-ok]
     # Fork PRs and bot PRs have no access to secrets -> skip instead of failing.
     if: (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && github.actor != 'dependabot[bot]' && github.actor != 'dependabot'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -208,13 +208,17 @@ jobs:
           name: dist
           path: dist
 
+      - name: Read pinned wrangler version
+        id: wrangler
+        run: echo "version=$(node -p "require('./tools/wrangler/package.json').devDependencies.wrangler")" >> "$GITHUB_OUTPUT"
+
       - name: Deploy to Cloudflare
         id: cloudflare
         uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          wranglerVersion: '4'
+          wranglerVersion: ${{ steps.wrangler.outputs.version }}
           command: ${{ github.ref == 'refs/heads/main' && 'deploy' || 'preview' }}
 
       - name: Comment PR with Preview Link

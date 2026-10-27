@@ -17,7 +17,7 @@ permissions:
 jobs:
   test-server:
     name: Test Server Backend
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout repository
@@ -46,7 +46,7 @@ jobs:
 
   check-secrets:
     name: Check Docker Secrets
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       has_creds: ${{ steps.check.outputs.has_creds }}
@@ -68,7 +68,7 @@ jobs:
     name: Build & Push Docker Images
     needs: [test-server, check-secrets]
     if: github.repository == 'suitably/LocalGameGalaxy' && needs.check-secrets.outputs.has_creds == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - name: Checkout Code
@@ -151,7 +151,7 @@ jobs:
     name: Build & Push Signaling Image
     needs: check-secrets
     if: github.repository == 'suitably/LocalGameGalaxy' && needs.check-secrets.outputs.has_creds == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - name: Checkout Code

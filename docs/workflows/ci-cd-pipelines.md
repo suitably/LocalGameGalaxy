@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-24
+  at: 2026-10-27
   method: 'read .github/workflows/*.yml, .github/rulesets/main.json, .husky/*, .gitlab-ci.yml, .jscpd.json, scripts/check-*.mjs'
 sources:
   - '.github/workflows/'
@@ -102,9 +102,15 @@ flowchart LR
 #### Cloudflare Deployment Step
 
 - Runs after `build` and the `ci-ok` aggregator succeed.
-- Uses `cloudflare/wrangler-action` (pinned by SHA) with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+- Uses `cloudflare/wrangler-action` (pinned by SHA) with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The wrangler version is read from `tools/wrangler/package.json` (see [Runner and tool pinning](#runner-and-tool-pinning)).
 - Pushes to `main` trigger a full production release.
 - Pull requests deploy an isolated preview environment, and a bot comments on the PR with `https://${sanitized-branch}.nexumia.de/`.
+
+#### Runner and tool pinning
+
+- Every job runs on a concrete runner image: `ubuntu-24.04`, `ubuntu-24.04-arm` and `macos-15` (arm64 server binary). No `*-latest` labels, so an image switch never silently changes Node, Java or system tools. Docker `latest` tags are unrelated and stay.
+- `tools/wrangler/package.json` holds the exact wrangler version (with its lockfile, installed by nothing). `ci.yml` and `deploy-push-relay.yml` read it into `wranglerVersion`; Dependabot updates it (`/tools/wrangler` entry), and a bump redeploys the push relay.
+- Actions are pinned by commit SHA (Dependabot keeps them current).
 
 ---
 
