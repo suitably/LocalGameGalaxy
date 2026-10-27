@@ -7,9 +7,8 @@ import { usdbRouter } from './routes/usdb';
 import { separatorRouter } from './routes/separator';
 import { configRouter } from './routes/config';
 import { playlistsRouter } from './routes/playlists';
-import { scoresRouter } from './routes/scores';
-import { getSongCache, scanSongs } from './services/scanner';
-import { migrateSongFolderScores } from './services/scoreMigration';
+import { songFilesRouter } from './routes/songFiles';
+import { initialScan } from './services/scanner';
 
 export const melodiqPlugin: GalaxyPlugin = {
   id: 'melodiq',
@@ -51,21 +50,16 @@ export const melodiqPlugin: GalaxyPlugin = {
 
     // Mount sub-routers
     app.route('/', songsRouter);
-    app.route('/', scoresRouter);
+    app.route('/', songFilesRouter);
     app.route('/', mediaRouter);
     app.route('/', usdbRouter);
     app.route('/', separatorRouter);
     app.route('/', configRouter);
     app.route('/', playlistsRouter);
 
-    // Initial song library scan, then the one-time import of song-folder scores into Notes (Q18)
-    scanSongs()
-      .then(() => migrateSongFolderScores(getSongCache()))
-      .catch((e: unknown) =>
-        console.warn(
-          '[Notes] Song-folder score import failed:',
-          e instanceof Error ? e.message : e,
-        ),
-      );
+    // Initial song library scan (the notes plugin waits for it to migrate its old library)
+    initialScan().catch((e: unknown) =>
+      console.warn('[Scanner] Initial scan failed:', e instanceof Error ? e.message : e),
+    );
   },
 };

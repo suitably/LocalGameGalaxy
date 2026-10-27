@@ -6,6 +6,15 @@ import { serverConfig } from '../../../config';
 import { generateId } from '../../../utils/helpers';
 import type { Song, SongScore } from '../../../core/types';
 import { findScoreFiles } from '../../../utils/scoreFiles';
+import {
+  SONG_META_FILE,
+  findRecordingFiles,
+  metaFromFolderName,
+  newSongId,
+  readSongMeta,
+  writeSongMeta,
+  type SongMeta,
+} from './songFolder';
 
 let SONG_CACHE: Song[] = [];
 let IS_SCANNING = false;
@@ -132,8 +141,9 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
   }
 
   let folderScores: SongScore[] = [];
+  let dirFiles: string[] = [];
   try {
-    const dirFiles = await fs.promises.readdir(dir);
+    dirFiles = await fs.promises.readdir(dir);
     folderScores = await findScoreFiles(dir, dirFiles);
     if (!vocalsPath) {
       const vFile = dirFiles.find(
@@ -173,6 +183,15 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
   }
 
   const hasSeparation = !!(vocalsPath && (instrumentalPath || audioPath));
+  // the mix and its stems are the song's audio; any other audio is an extra recording (Notes)
+  const recordings = await findRecordingFiles(dir, dirFiles, [
+    audioPath,
+    originalAudioPath,
+    instrumentalPath,
+    vocalsPath,
+    videoPath,
+  ]);
+  const meta = await readSongMeta(dir);
 
   // DURATION CALCULATION
   let duration = 0;
@@ -217,31 +236,165 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
     txtPath,
     txtContent: content,
     duration,
+    folder: dir,
+    karaoke: true,
     folderScores,
+    recordings,
+    labels: meta?.labels ?? {},
     searchString:
       `${headers['TITLE']} ${headers['ARTIST']} ${headers['GENRE']} ${headers['LANGUAGE']}`.toLowerCase(),
   };
 }
 
+/** The configured library directory a path lies in, if any. */
+export function libraryFor(target: string): string | null {
+  const resolved = path.resolve(target);
+  return (
+    (serverConfig.directories || []).find((d) => {
+      const dir = path.resolve(d);
+      return resolved === dir || resolved.startsWith(dir + path.sep);
+    }) ?? null
+  );
+}
+
+/**
+ * A song folder without a karaoke `.txt` (#568): sheet music and/or `song.json`. Its id is stored
+ * in `song.json`, so it survives renaming the folder; a folder without one gets it written now.
+ */
+export async function readScoreOnlySong(dir: string, dirFiles: string[]): Promise<Song | null> {
+  const folderScores = await findScoreFiles(dir, dirFiles);
+  const stored = await readSongMeta(dir);
+  if (!stored && folderScores.length === 0) return null;
+  let meta: SongMeta = stored ?? {
+    version: 1,
+    id: '',
+    ...metaFromFolderName(path.basename(dir)),
+    labels: {},
+  };
+  if (!meta.title) meta = { ...meta, title: path.basename(dir) };
+  if (!meta.id) {
+    meta = { ...meta, id: newSongId() };
+    try {
+      await writeSongMeta(dir, meta);
+    } catch (e: unknown) {
+      console.warn(`[Scanner] Could not write ${SONG_META_FILE} in ${dir}:`, errorText(e));
+    }
+  }
+  const recordings = await findRecordingFiles(dir, dirFiles);
+  return {
+    id: meta.id,
+    title: meta.title,
+    artist: meta.artist,
+    bpm: 0,
+    gap: 0,
+    video: null,
+    audio: null,
+    originalAudio: null,
+    instrumentalAudio: null,
+    vocalsAudio: null,
+    hasSeparation: false,
+    cover: null,
+    background: null,
+    txtPath: '',
+    txtContent: '',
+    duration: 0,
+    folder: dir,
+    karaoke: false,
+    folderScores,
+    recordings,
+    labels: meta.labels,
+    searchString: `${meta.title} ${meta.artist}`.toLowerCase(),
+  };
+}
+
+const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
+/**
+ * The songs of one folder: one per valid karaoke `.txt`; without one, a song of its sheet music
+ * and `song.json`, unless the folder is a library root (loose files there are not a song).
+ */
+export async function readSongFolder(dir: string, libraryPath?: string): Promise<Song[]> {
+  let dirFiles: string[];
+  try {
+    dirFiles = await fs.promises.readdir(dir);
+  } catch {
+    return [];
+  }
+  const library = libraryPath ?? libraryFor(dir) ?? undefined;
+  const songs: Song[] = [];
+  for (const txt of dirFiles.filter((f) => f.toLowerCase().endsWith('.txt')).sort()) {
+    try {
+      const song = await parseSongFile(path.join(dir, txt), library);
+      if (song) songs.push(song);
+    } catch {
+      // Ignore individual song parse error
+    }
+  }
+  if (songs.length > 0) return songs;
+  if (library && path.resolve(library) === path.resolve(dir)) return [];
+  const song = await readScoreOnlySong(dir, dirFiles);
+  return song ? [song] : [];
+}
+
+/** Re-reads one song folder into the cache (after an upload, a new song or a migration). */
+export async function refreshSongFolder(dir: string): Promise<Song[]> {
+  const folder = path.resolve(dir);
+  const songs = await readSongFolder(folder);
+  SONG_CACHE = [...SONG_CACHE.filter((s) => path.resolve(s.folder) !== folder), ...songs];
+  return songs;
+}
+
 /**
  * Instantly indexes or updates a single song in SONG_CACHE without waiting for a full scan.
+ * A folder that just got its `.txt` stops being a song without one.
  */
 export async function addOrUpdateSongInCache(txtPath: string): Promise<Song | null> {
   try {
     const song = await parseSongFile(txtPath);
     if (!song) return null;
-    SONG_CACHE = SONG_CACHE.filter((s) => s.id !== song.id && s.txtPath !== song.txtPath);
+    SONG_CACHE = SONG_CACHE.filter(
+      (s) =>
+        s.id !== song.id &&
+        s.txtPath !== song.txtPath &&
+        !(!s.karaoke && path.resolve(s.folder) === path.resolve(song.folder)),
+    );
     SONG_CACHE.push(song);
     console.log(
       `[Scanner] Instantly indexed song: ${song.artist} - ${song.title} (${SONG_CACHE.length} songs in cache)`,
     );
     return song;
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    console.warn(`[Scanner] Failed to index single song for ${txtPath}:`, msg);
+    console.warn(`[Scanner] Failed to index single song for ${txtPath}:`, errorText(e));
     return null;
   }
 }
+
+/** A copied folder carries the same `song.json` id: the later one (by path) gets a new id. */
+async function dedupeSongIds(songs: Song[]): Promise<void> {
+  const seen = new Set<string>();
+  for (const song of [...songs].sort((a, b) => a.folder.localeCompare(b.folder))) {
+    if (!seen.has(song.id)) {
+      seen.add(song.id);
+      continue;
+    }
+    if (song.karaoke) continue;
+    const meta = await readSongMeta(song.folder);
+    song.id = newSongId();
+    seen.add(song.id);
+    if (meta) await writeSongMeta(song.folder, { ...meta, id: song.id }).catch(() => undefined);
+  }
+}
+
+let initialScanPromise: Promise<void> | null = null;
+
+/** The first library scan, started once; plugins that need the song cache wait for it. */
+export function initialScan(): Promise<void> {
+  initialScanPromise ??= scanSongs();
+  return initialScanPromise;
+}
+
+/** Files that make a folder a song: a karaoke `.txt`, sheet music or `song.json` (#568). */
+const SONG_FOLDER_GLOBS = ['**/*.txt', `**/${SONG_META_FILE}`, '**/*.{mxl,musicxml,xml,mid,midi}'];
 
 export const scanSongs = async (): Promise<void> => {
   if (IS_SCANNING) {
@@ -263,22 +416,16 @@ export const scanSongs = async (): Promise<void> => {
 
   for (const libraryPath of serverConfig.directories) {
     try {
-      const txtFiles = await fg('**/*.txt', {
+      const files = await fg(SONG_FOLDER_GLOBS, {
         cwd: libraryPath,
         absolute: true,
         ignore: ['**/node_modules/**', '**/.*'],
         onlyFiles: true,
+        caseSensitiveMatch: false,
       });
-
-      for (const txtPath of txtFiles) {
-        try {
-          const song = await parseSongFile(txtPath, libraryPath);
-          if (song) {
-            newSongs.push(song);
-          }
-        } catch {
-          // Ignore individual song parse error
-        }
+      const folders = [...new Set(files.map((f) => path.dirname(f)))].sort();
+      for (const folder of folders) {
+        newSongs.push(...(await readSongFolder(folder, libraryPath)));
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -295,6 +442,7 @@ export const scanSongs = async (): Promise<void> => {
     }
   }
 
+  await dedupeSongIds(newSongs);
   SONG_CACHE = newSongs;
   IS_SCANNING = false;
   console.log(
@@ -306,3 +454,13 @@ export const scanSongs = async (): Promise<void> => {
     setTimeout(scanSongs, 500);
   }
 };
+
+/**
+ * Library directory new song folders go to (a new song from Notes, a migrated Notes piece): the
+ * download folder when it lies in a library directory, else the first library directory.
+ */
+export function songCreationRoot(): string | null {
+  const download = serverConfig.downloadDir;
+  if (download && libraryFor(download)) return download;
+  return serverConfig.directories?.[0] ?? null;
+}

@@ -114,15 +114,21 @@ export interface Song {
   hasSeparation: boolean;
   cover: string | null;
   background: string | null;
+  /** The karaoke `.txt`; empty for a song without one (sheet music only, #568). */
   txtPath: string;
   txtContent: string;
   duration: number;
   searchString: string;
-  /**
-   * Sheet music (MusicXML/MIDI) found in the song folder. Only the source of the one-time import
-   * into the Notes library (Q18); clients get the song's scores from the Notes library.
-   */
+  /** Absolute path of the song folder, the only store for Melodiq and Melodiq Notes (#568). */
+  folder: string;
+  /** True when the song has a karaoke `.txt`; songs without one are listed only for Notes. */
+  karaoke: boolean;
+  /** Sheet music (MusicXML/MIDI) in the song folder, with `<score>.marks.json` bar marks. */
   folderScores: SongScore[];
+  /** Audio in the song folder besides the mix and its stems (e.g. Notes recordings). */
+  recordings: SongRecording[];
+  /** Label per score file, from `song.json`. */
+  labels: Record<string, string>;
 }
 
 export interface SongScore {
@@ -132,16 +138,26 @@ export interface SongScore {
   mtimeMs: number;
 }
 
-/** A score of a Notes library piece linked to the song (`songId`). */
+export interface SongRecording {
+  file: string;
+  path: string;
+  mtimeMs: number;
+}
+
+/** A score in the song folder as clients see it. */
 export interface ClientSongScore {
-  pieceId: string;
   file: string;
   /** Media URL of the score file. */
   url: string | null;
   hasMarks: boolean;
+  /** Free text shown instead of the file name (`song.json`), or null. */
+  label: string | null;
 }
 
-export type ClientSong = Omit<Song, 'folderScores'> & { scores: ClientSongScore[] };
+export type ClientSong = Omit<Song, 'folderScores' | 'folder' | 'recordings' | 'labels'> & {
+  scores: ClientSongScore[];
+  recordings: { file: string; url: string | null }[];
+};
 
 export interface DownloadJob {
   jobId: string;

@@ -25,25 +25,33 @@ export interface DownloadJobRequest {
   songId?: string | null;
 }
 
-/** Folder and file base name of an indexed song, or null when its folder is not in a library directory. */
+/**
+ * Folder and file base name of an indexed song, or null when its folder is not in a library
+ * directory. A song without `.txt` (#568) uses its folder name; the download then writes the `.txt`.
+ */
 export function songFolderTarget(
-  song: Pick<Song, 'txtPath'>,
+  song: Pick<Song, 'txtPath'> & Partial<Pick<Song, 'folder'>>,
   allowedDirs?: string[],
 ): { targetDir: string; safeName: string } | null {
-  const targetDir = resolveSecurePath(path.dirname(song.txtPath), allowedDirs);
+  const folder = song.txtPath ? path.dirname(song.txtPath) : song.folder;
+  if (!folder) return null;
+  const targetDir = resolveSecurePath(folder, allowedDirs);
   if (!targetDir) return null;
-  return { targetDir, safeName: path.basename(song.txtPath).replace(/\.txt$/i, '') };
+  const safeName = song.txtPath
+    ? path.basename(song.txtPath).replace(/\.txt$/i, '')
+    : path.basename(targetDir);
+  return { targetDir, safeName };
 }
 
 /** The request with an existing song's folder filled in; null for an unknown or inaccessible song. */
 export function resolveDownloadRequest(
   req: DownloadJobRequest,
-  songs: Pick<Song, 'id' | 'txtPath' | 'artist' | 'title'>[],
+  songs: (Pick<Song, 'id' | 'txtPath' | 'artist' | 'title'> & Partial<Pick<Song, 'folder'>>)[],
   allowedDirs?: string[],
 ): DownloadJobRequest | null {
   if (!req.songId) return req;
   const song = songs.find((s) => s.id === req.songId);
-  const target = song?.txtPath ? songFolderTarget(song, allowedDirs) : null;
+  const target = song ? songFolderTarget(song, allowedDirs) : null;
   if (!song || !target) return null;
   return {
     ...req,

@@ -28,6 +28,15 @@ test('Song download into an existing song folder (#486)', async (t) => {
     });
   });
 
+  await t.test('a song without .txt (#568) downloads into its folder, named after it', () => {
+    const scoreOnly = path.join(library, 'Composer - Etude');
+    fs.mkdirSync(scoreOnly);
+    assert.deepStrictEqual(songFolderTarget({ txtPath: '', folder: scoreOnly }, [library]), {
+      targetDir: scoreOnly,
+      safeName: 'Composer - Etude',
+    });
+  });
+
   await t.test('songFolderTarget refuses folders outside the library directories', () => {
     assert.strictEqual(songFolderTarget(song, [path.join(os.tmpdir(), 'elsewhere')]), null);
   });
