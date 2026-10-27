@@ -22,7 +22,8 @@ export function songKeyOf(song: ScoreSong): string {
   add(song.end);
   for (const p of song.parts) {
     add(p.id);
-    for (const n of p.notes) add(`${n.t}:${n.dur}:${n.pitch}`);
+    for (const n of p.notes)
+      add(`${n.t}:${n.dur}:${n.pitch}${n.tab ? `@${n.tab.string}:${n.tab.fret}` : ''}`);
   }
   return (h >>> 0).toString(36);
 }
@@ -42,8 +43,16 @@ export function pultSongOf(song: ScoreSong): PultSong {
   };
 }
 
-/** `[t, dur, pitch]`, plus syllable, drum voice and hand only when the note has them. */
-type PackedNote = [number, number, number, string?, ScoreNote['drum']?, ScoreNote['hand']?];
+/** `[t, dur, pitch]`, plus syllable, drum voice, hand and `[string, fret]` only when the note has them. */
+type PackedNote = [
+  number,
+  number,
+  number,
+  string?,
+  ScoreNote['drum']?,
+  ScoreNote['hand']?,
+  [number, number]?,
+];
 
 export interface PackedChart {
   songKey: string;
@@ -52,18 +61,25 @@ export interface PackedChart {
 }
 
 function packNote(n: ScoreNote): PackedNote {
-  const out: PackedNote = [n.t, n.dur, n.pitch];
-  if (n.syl !== undefined || n.drum !== undefined || n.hand !== undefined) out.push(n.syl ?? '');
-  if (n.drum !== undefined || n.hand !== undefined) out.push(n.drum);
-  if (n.hand !== undefined) out.push(n.hand);
+  const out: PackedNote = [
+    n.t,
+    n.dur,
+    n.pitch,
+    n.syl ?? '',
+    n.drum,
+    n.hand,
+    n.tab && [n.tab.string, n.tab.fret],
+  ];
+  while (out.length > 3 && !out[out.length - 1]) out.pop();
   return out;
 }
 
-function unpackNote([t, dur, pitch, syl, drum, hand]: PackedNote): ScoreNote {
+function unpackNote([t, dur, pitch, syl, drum, hand, tab]: PackedNote): ScoreNote {
   const n: ScoreNote = { t, dur, pitch };
   if (syl) n.syl = syl;
   if (drum) n.drum = drum;
   if (hand) n.hand = hand;
+  if (tab) n.tab = { string: tab[0], fret: tab[1] };
   return n;
 }
 

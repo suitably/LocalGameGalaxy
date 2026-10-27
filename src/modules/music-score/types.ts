@@ -18,6 +18,14 @@ export interface ScoreNote {
   hand?: Hand;
   /** Vocal notes from an UltraStar `.txt`: its scoring kind (MusicXML has none of these). */
   ultrastar?: UltraStarKind;
+  /** Fretted parts: the position the score writes, so the stage shows the tab as written. */
+  tab?: TabPosition;
+}
+
+/** String (0 = highest, the top line of a tab) and fret counted from the nut, capo included. */
+export interface TabPosition {
+  string: number;
+  fret: number;
 }
 
 /** UltraStar note kinds besides a normal note (`:`): `*` golden, `F` freestyle, `R` rap, `G` golden rap. */

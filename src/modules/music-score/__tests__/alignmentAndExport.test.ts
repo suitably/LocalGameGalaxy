@@ -161,6 +161,29 @@ describe('instruments', () => {
     for (const n of tabbed) expect(guitar.tuning[n.lane] + n.fret).toBe(n.pitch);
   });
 
+  it('keeps written tab positions that fit the tuning', () => {
+    const guitar = STRING_TUNINGS.guitar!;
+    const tabbed = assignTab(
+      [
+        { t: 0, dur: 1, pitch: 67, tab: { string: 1, fret: 8 } },
+        { t: 0, dur: 1, pitch: 64, tab: { string: 2, fret: 9 } },
+        { t: 0, dur: 1, pitch: 45, tab: { string: 4, fret: 0 } },
+        // written for another tuning: placed by the heuristic instead
+        { t: 1, dur: 1, pitch: 64, tab: { string: 1, fret: 3 } },
+        // above maxFret, still as written
+        { t: 2, dur: 1, pitch: 83, tab: { string: 0, fret: 19 } },
+      ],
+      guitar,
+    );
+    expect(tabbed.map((n) => [n.t, n.lane, n.fret, n.pitch])).toEqual([
+      [0, 1, 8, 67],
+      [0, 2, 9, 64],
+      [0, 4, 0, 45],
+      [1, 0, 0, 64],
+      [2, 0, 19, 83],
+    ]);
+  });
+
   it('reduces chords to their top line', () => {
     expect(
       topLine([

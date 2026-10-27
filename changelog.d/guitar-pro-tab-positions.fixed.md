@@ -1,0 +1,1 @@
+- **Melodiq Notes: Guitar Pro tabs show the written strings and frets** — guitar and bass parts from a `.gp` file now use the string and fret positions from the file instead of re-guessing them from the pitch, so the stage matches the tab in Guitar Pro or Songsterr, and chord notes that did not fit the guessed positions are no longer dropped.

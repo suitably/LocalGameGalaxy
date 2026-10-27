@@ -74,23 +74,36 @@ export interface TabbedNote extends ScoreNote {
 }
 
 /**
- * Picks string and fret for every note: chords get distinct strings, and the
- * hand position drifts smoothly instead of jumping along the neck.
+ * Picks string and fret for every note. A position the score writes (Guitar Pro) is kept when it
+ * fits the tuning; otherwise chords get distinct strings, and the hand position drifts smoothly
+ * instead of jumping along the neck.
  * Notes outside the range are moved by octaves; notes that do not fit a chord are dropped.
  */
 export function assignTab(notes: ScoreNote[], tuning: StringTuning): TabbedNote[] {
   const low = Math.min(...tuning.tuning);
   const high = Math.max(...tuning.tuning) + tuning.maxFret;
+  const written = (n: ScoreNote) =>
+    n.tab && n.tab.fret >= 0 && tuning.tuning[n.tab.string] + n.tab.fret === n.pitch ? n.tab : null;
   const out: TabbedNote[] = [];
   let hand = 3;
   let i = 0;
   while (i < notes.length) {
     let j = i;
     while (j < notes.length && Math.abs(notes[j].t - notes[i].t) < 1e-6) j++;
-    const chord = notes.slice(i, j).sort((a, b) => b.pitch - a.pitch);
+    // written positions claim their strings first
+    const chord = notes
+      .slice(i, j)
+      .sort((a, b) => Number(!!written(b)) - Number(!!written(a)) || b.pitch - a.pitch);
     const used = new Set<number>();
     const frets: number[] = [];
     for (const n of chord) {
+      const tab = written(n);
+      if (tab && !used.has(tab.string)) {
+        used.add(tab.string);
+        if (tab.fret > 0) frets.push(tab.fret);
+        out.push({ ...n, lane: tab.string, fret: tab.fret });
+        continue;
+      }
       let pitch = n.pitch;
       while (pitch < low) pitch += 12;
       while (pitch > high) pitch -= 12;
