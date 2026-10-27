@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Melodiq Notes: save a vocal part as an UltraStar `.txt`** (#567): a score aligned to a recording (or opened as karaoke) can be saved as an UltraStar file with timing, pitches, syllables and line breaks; pick the vocal part, or both parts as a duet. Golden, freestyle and rap notes are kept for karaoke songs and written as normal notes for MusicXML scores. The MusicXML export stays.
 - **Melodiq Notes plays karaoke songs** (#566): every Melodiq song with an UltraStar `.txt` appears in the Notes library. "Vocals (karaoke)" opens its singing line (both parts of a duet) as a vocal score that plays with the song's mix, with no alignment step, because the `.txt` is already timed to the mix. The UltraStar parser moved into the shared music-score module.
 - **Tabletop: shuffle animation** (#556): a shuffled deck briefly riffles its two halves, on every device at the table, so everyone sees that it was shuffled. It is skipped when the device asks for reduced motion.
 - **Melodiq Notes: e-drum kits switch to the drum view** (#601): before the song starts, the first hit from an e-drum kit (MIDI channel 10) switches the highlighted player to the drum highway, on the song's drum part if it has one. A part or view the player picked in the players panel is never changed. Players on their own device keep the part the stage gave them.
