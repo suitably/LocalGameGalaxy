@@ -90,7 +90,7 @@ songFilesRouter.put('/api/songs/:id/meta', async (c) => {
   if (unknown) return c.json({ error: `Unknown score file: ${unknown}` }, 400);
   const current: SongMeta = (await readSongMeta(song.folder)) ?? {
     version: 1,
-    id: song.karaoke ? '' : song.id,
+    id: song.id,
     title: song.title,
     artist: song.artist,
     labels: {},

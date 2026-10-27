@@ -260,6 +260,15 @@ export async function readScoreOnlySong(dir: string, dirFiles: string[]): Promis
   };
 }
 
+/**
+ * A valid `song.json` id is the song's id, with or without `.txt` (it survives a `.txt` being
+ * added or the folder renamed); only the folder's first `.txt` takes it, so ids stay unique.
+ */
+export function storedSongId(meta: SongMeta | null, dirFiles: string[], txtPath: string): string {
+  const firstTxt = dirFiles.filter((f) => f.toLowerCase().endsWith('.txt')).sort()[0];
+  return meta?.id && firstTxt === path.basename(txtPath) ? meta.id : '';
+}
+
 /** A copied folder carries the same `song.json` id: the later one (by path) gets a new id. */
 export async function dedupeSongIds(songs: Song[]): Promise<void> {
   const seen = new Set<string>();
@@ -268,11 +277,12 @@ export async function dedupeSongIds(songs: Song[]): Promise<void> {
       seen.add(song.id);
       continue;
     }
-    if (song.karaoke) continue;
+    // only a `song.json` id can repeat (a copied folder); `.txt`-derived ids are left alone
     const meta = await readSongMeta(song.folder);
+    if (!meta || meta.id !== song.id) continue;
     song.id = newSongId();
     seen.add(song.id);
-    if (meta) await writeSongMeta(song.folder, { ...meta, id: song.id }).catch(() => undefined);
+    await writeSongMeta(song.folder, { ...meta, id: song.id }).catch(() => undefined);
   }
 }
 

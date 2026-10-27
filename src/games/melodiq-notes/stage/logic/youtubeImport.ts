@@ -99,8 +99,8 @@ async function waitForDownload(
 
 /**
  * Brings score and recording together in one song folder (#568): downloads the recording into
- * the matching folder with the server's yt-dlp queue if needed (a folder without `.txt` gets one),
- * and uploads the score into that folder unless it already is there.
+ * the matching folder with the server's yt-dlp queue if needed (a folder without `.txt` gets one
+ * and keeps its id from `song.json`), and uploads the score into that folder unless it already is there.
  */
 export async function importRecording(
   input: ImportInput,
@@ -112,8 +112,7 @@ export async function importRecording(
   const plan = planImport(
     matchSong(await api.listSongs(), input.title, input.artist, from?.songId ?? null),
   );
-  const folderId: string | null = plan.kind === 'download-new' ? null : plan.song.id;
-  let songId = folderId;
+  let songId: string | null = plan.kind === 'download-new' ? null : plan.song.id;
   if (plan.kind !== 'reuse') {
     if (!input.youtubeUrl) throw new Error('no recording chosen');
     const jobId = await api.startDownload({
@@ -122,7 +121,6 @@ export async function importRecording(
       youtubeUrl: input.youtubeUrl,
       ...(songId ? { songId } : {}),
     });
-    // a folder that got its `.txt` now has the id derived from it
     songId = (await waitForDownload(jobId, api, onProgress, signal)) ?? songId;
   }
   if (signal?.aborted) throw aborted();
@@ -134,7 +132,7 @@ export async function importRecording(
 
   onProgress({ stage: 'score' });
   let file: string;
-  if (from && folderId && from.songId === folderId) {
+  if (from && from.songId === songId) {
     file = from.scoreFile;
   } else {
     if (!input.scoreFile) throw new Error('no score to store');

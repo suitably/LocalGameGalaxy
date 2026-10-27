@@ -13,6 +13,7 @@ import {
   libraryFor,
   readScoreOnlySong,
   readSongMeta,
+  storedSongId,
 } from './songFolder';
 import { extractYouTubeId } from './ultrastarTxt';
 
@@ -192,7 +193,9 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
   }
 
   return {
-    id: generateId(headers['TITLE'], headers['ARTIST'], relativePath),
+    id:
+      storedSongId(meta, dirFiles, txtPath) ||
+      generateId(headers['TITLE'], headers['ARTIST'], relativePath),
     title: headers['TITLE'],
     artist: headers['ARTIST'],
     bpm: parseFloat(headers['BPM']?.replace(',', '.') || '0'),
@@ -283,10 +286,7 @@ export async function addOrUpdateSongInCache(txtPath: string): Promise<Song | nu
 let initialScanPromise: Promise<void> | null = null;
 
 /** The first library scan, started once; plugins that need the song cache wait for it. */
-export function initialScan(): Promise<void> {
-  initialScanPromise ??= scanSongs();
-  return initialScanPromise;
-}
+export const initialScan = (): Promise<void> => (initialScanPromise ??= scanSongs());
 
 export const scanSongs = async (): Promise<void> => {
   if (IS_SCANNING) {

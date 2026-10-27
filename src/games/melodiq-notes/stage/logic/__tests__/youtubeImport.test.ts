@@ -125,11 +125,11 @@ describe('importRecording (#568: score and recording in one song folder)', () =>
     expect(result.score.file).toBe('old.mxl');
   });
 
-  it('follows a folder without .txt to the id its downloaded .txt gives it', async () => {
+  it('downloads into a folder without .txt and keeps its score there (same id)', async () => {
     const { api } = fakeApi(
       [song('n1', null, 'Hey Jude', ['old.mxl'])],
-      [song('txt1', '/media?path=mix.mp3', 'Hey Jude', ['old.mxl'])],
-      [{ status: 'done', progress: 100, error: null, songId: 'txt1' }],
+      [song('n1', '/media?path=mix.mp3', 'Hey Jude', ['old.mxl'])],
+      [{ status: 'done', progress: 100, error: null, songId: 'n1' }],
     );
     const result = await importRecording(
       input({ fromSong: { songId: 'n1', scoreFile: 'old.mxl' } }),
@@ -138,7 +138,7 @@ describe('importRecording (#568: score and recording in one song folder)', () =>
     );
     expect(api.startDownload).toHaveBeenCalledWith(expect.objectContaining({ songId: 'n1' }));
     expect(api.uploadScore).not.toHaveBeenCalled();
-    expect(result.song.id).toBe('txt1');
+    expect(result.song.id).toBe('n1');
     expect(result.score.file).toBe('old.mxl');
   });
 

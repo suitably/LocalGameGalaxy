@@ -13,7 +13,9 @@ test('Song folders: scanner with and without .txt, song.json, song-folder routes
     getSongCache,
     scanSongs,
     initialScan,
+    addOrUpdateSongInCache,
   } = require('../dist/plugins/melodiq/services/scanner.js');
+  const { generateId } = require('../dist/utils/helpers.js');
   const {
     classifyUpload,
     songFolderName,
@@ -123,6 +125,39 @@ test('Song folders: scanner with and without .txt, song.json, song-folder routes
     fs.rmSync(copy, { recursive: true, force: true });
     await scanSongs();
   });
+
+  await t.test('a .txt folder without song.json keeps its .txt id and gets no song.json', () => {
+    assert.strictEqual(byTitle('Song').id, generateId('Song', 'Band', 'Band - Song'));
+    assert.ok(!fs.existsSync(path.join(songDir, 'song.json')));
+  });
+
+  await t.test(
+    'a song.json id stays when a .txt is added later; copies still get new ids',
+    async () => {
+      const txt = path.join(etudeDir, 'Composer - Etude.txt');
+      fs.writeFileSync(txt, '#TITLE:Etude\n#ARTIST:Composer\n: 0 4 60 La\nE\n');
+      const song = await addOrUpdateSongInCache(txt);
+      assert.strictEqual(song.id, etudeId);
+      assert.strictEqual(song.karaoke, true);
+      assert.strictEqual(getSongCache().filter((s) => s.title === 'Etude').length, 1);
+      await scanSongs();
+      assert.strictEqual(byTitle('Etude').id, etudeId);
+      const copy = path.join(library, 'Composer - Etude copy');
+      fs.cpSync(etudeDir, copy, { recursive: true });
+      await scanSongs();
+      const ids = getSongCache()
+        .filter((s) => s.title === 'Etude')
+        .map((s) => s.id);
+      assert.strictEqual(ids.length, 2);
+      assert.notStrictEqual(ids[0], ids[1]);
+      assert.ok(ids.includes(etudeId));
+      fs.rmSync(copy, { recursive: true, force: true });
+      fs.rmSync(txt);
+      await scanSongs();
+      assert.strictEqual(byTitle('Etude').id, etudeId);
+      assert.strictEqual(byTitle('Etude').karaoke, false);
+    },
+  );
 
   await t.test('Melodiq lists only karaoke songs; ?all=1 adds songs without .txt', async () => {
     const karaoke = await (await app.request('/api/songs', { headers: auth })).json();

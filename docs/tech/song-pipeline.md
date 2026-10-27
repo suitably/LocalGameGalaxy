@@ -26,7 +26,7 @@ yt-dlp lookup, install and spawning live in `services/ytdlp.ts`; `.txt` header p
 
 Started by `POST /api/usdb/download`; poll `GET /api/usdb/status/:jobId`; list `GET /api/usdb/jobs`; cancel/clear `DELETE /api/usdb/jobs/:jobId?`.
 
-1. **Target folder** — `downloadDir`, else the first configured directory, else cwd; one sub-folder per song (sanitised name). A request with `songId` downloads into that indexed song's folder instead (`queueManager.resolveDownloadRequest`; folder must lie in a library directory, unknown ids queue nothing → `400`); such a job keeps the folder's existing `#VIDEO` when `videoMode` is `none`. A song without `.txt` (§4) is downloaded into its folder under the folder's name; the job writes a `.txt`, so the song turns into a karaoke song with an id derived from that `.txt`, which the job status reports.
+1. **Target folder** — `downloadDir`, else the first configured directory, else cwd; one sub-folder per song (sanitised name). A request with `songId` downloads into that indexed song's folder instead (`queueManager.resolveDownloadRequest`; folder must lie in a library directory, unknown ids queue nothing → `400`); such a job keeps the folder's existing `#VIDEO` when `videoMode` is `none`. A song without `.txt` (§4) is downloaded into its folder under the folder's name; the job writes a `.txt`, so the song turns into a karaoke song and keeps its `song.json` id.
 2. **Lyrics** — reuse an existing local `.txt` with notes, else log in to USDB (`usdb.animux.de`, credentials via `POST /api/config/usdb-credentials`) and fetch `?link=gettxt&id=<usdbId>`. Without credentials/ID a minimal `.txt` is generated.
 3. **YouTube URL** — taken from the request or resolved by search (`GET /api/youtube/search`).
 4. **Cover, audio, video** — via `yt-dlp`. Video either downloaded (`bestvideo[ext=mp4]+bestaudio[ext=m4a]/…`) or, in `stream` mode (`defaultDownloadMode`, default `stream`), only the stream URL is written to the `.txt` header.
@@ -70,10 +70,11 @@ Since #568 (reversing Q18) the **song folder is the only store** for Melodiq and
 
 **Scanner** (`services/scanner.ts`, helpers in `services/songFolder.ts`). A folder is a song if it has a valid karaoke `.txt` **or** sheet music / `song.json` (`readSongFolder`); loose files in a library root are not a song. Each song carries `folder`, `karaoke`, `folderScores`, `recordings` (audio besides the mix and its stems) and `labels`.
 
-- With `.txt`: one song per `.txt`, id derived from title, artist and path as before.
-- Without `.txt` (`readScoreOnlySong`): title, artist and a stable `id` come from `song.json`, so the id survives renaming the folder. A folder without `song.json` gets one written on the first scan (title and artist from an "Artist - Title" folder name); a copied folder with a duplicate id gets a new one. These songs are listed only with `GET /api/songs?all=1` (Melodiq Notes), not in Melodiq's karaoke list.
+- **Id rule:** a valid `id` in the folder's `song.json` is the song's id, with or without `.txt` (it survives renaming the folder and a `.txt` being added later; with several `.txt` files only the first by name takes it). A folder without a `song.json` id keeps the id derived from the `.txt` (title, artist, path), so existing Melodiq ids do not change; a scan never writes `song.json` into a folder that has a `.txt`.
+- With `.txt`: one song per `.txt`.
+- Without `.txt` (`readScoreOnlySong`): title, artist and the id come from `song.json`. A folder without `song.json` gets one written on the first scan (title and artist from an "Artist - Title" folder name); a copied folder with a duplicate `song.json` id gets a new one (`dedupeSongIds`). These songs are listed only with `GET /api/songs?all=1` (Melodiq Notes), not in Melodiq's karaoke list.
 
-**`song.json`** (replaces the Notes `piece.json`): `{ version: 1, id, title, artist, labels: { <score file>: <label> } }`. With a `.txt`, its headers win for title and artist and the stored id is not used; the labels apply either way.
+**`song.json`** (replaces the Notes `piece.json`): `{ version: 1, id, title, artist, labels: { <score file>: <label> } }`. With a `.txt`, its headers win for title and artist. `PUT /api/songs/:id/meta` on a song without `song.json` writes the song's current id into it, so that id stays fixed from then on.
 
 | Endpoint (`routes/songFiles.ts`)        | Behaviour                                                                                                                                         |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
