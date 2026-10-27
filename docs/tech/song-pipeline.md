@@ -66,7 +66,7 @@ Auth for all of these: [server-security.md](server-security.md). Client side: `s
 
 ## 4. Sheet music for Melodiq Notes
 
-Since #568 (reversing Q18) the **song folder is the only store** for Melodiq and Melodiq Notes: the karaoke `.txt` with its mix, sheet music (`.mxl`, `.musicxml`, `.mid`/`.midi`, and `.xml` when it is MusicXML — sniffed for `<score-partwise>`/`<score-timewise>`, `server/src/utils/scoreFiles.ts`) with `<score>.marks.json` bar marks, Notes' own recordings as extra audio, and `song.json`. One model, not one file format: a `.txt` is never converted to MusicXML on disk or back.
+Since #568 (reversing Q18) the **song folder is the only store** for Melodiq and Melodiq Notes: the karaoke `.txt` with its mix, sheet music (`.mxl`, `.musicxml`, `.mid`/`.midi`, Guitar Pro 7/8 `.gp`, and `.xml` when it is MusicXML — sniffed for `<score-partwise>`/`<score-timewise>`, `server/src/utils/scoreFiles.ts`) with `<score>.marks.json` bar marks, Notes' own recordings as extra audio, and `song.json`. One model, not one file format: a `.txt` is never converted to MusicXML on disk or back.
 
 **Scanner** (`services/scanner.ts`, helpers in `services/songFolder.ts`). A folder is a song if it has a valid karaoke `.txt` **or** sheet music / `song.json` (`readSongFolder`); loose files in a library root are not a song. Each song carries `folder`, `karaoke`, `folderScores`, `recordings` (audio besides the mix and its stems) and `labels`.
 
@@ -99,7 +99,7 @@ Clients get each song's `scores` (`{ file, url, hasMarks, label }`) and `recordi
 
 **Karaoke vocals (#566).** A song with an UltraStar `.txt` (`txtContent`) offers "Vocals (karaoke)" in its Notes entry: its singer tracks as vocal parts (`loadKaraokeVocals` in `stage/serverScoreLoad.ts`, `ultraStarToScore` in `modules/music-score`) with the song's mix. The `.txt` is timed to that mix, so the bar marks come from `#BPM` and `#GAP` and no alignment runs; they are not stored. Saving with the vocals on stage only uploads a new recording into the song folder.
 
-The server does not search or download sheet music: users fetch MusicXML themselves (for example from musescore.com with their own account). Alignment runs in the client (`src/modules/music-score`), the server only stores the result.
+The server does not search or download sheet music: users fetch MusicXML or Guitar Pro files themselves (for example from musescore.com with their own account). Alignment runs in the client (`src/modules/music-score`), the server only stores the result.
 
 Melodiq Notes lists one entry per song folder (`buildScoreCatalog` in `src/games/melodiq-notes/stage/logic/scoreCatalog.ts`, from `listLibrarySongs` in `src/lib/companion/songScoresApi.ts`): its scores (shown by label, else file name), its recordings (mix plus Notes recordings) and its karaoke vocals. All scores of a song play with the same mix (`pickRecording` in `stage/serverScoreLoad.ts`). Songs with a `.txt` show a "Melodiq song" badge; only songs without `.txt` can be deleted from Notes. Saving (`saveToNotesLibrary` in `stage/logic/notesLibrarySync.ts`, client `src/lib/companion/notesLibraryApi.ts`) writes into the song the score came from; a score not on the server yet goes into the song folder with the same normalised artist + title, else into a new song folder (`POST /api/songs`).
 
@@ -122,7 +122,7 @@ No fixed file names — whatever the `.txt` headers reference. A song without `.
 ├── <… Instrumental …>.mp3     # stem (optional)
 ├── <video>.mp4                # optional (or stream URL in the .txt)
 ├── <cover>.jpg|png            # optional
-├── <score>.mxl|musicxml|mid   # sheet music for Melodiq Notes (any number)
+├── <score>.mxl|musicxml|mid|gp # sheet music for Melodiq Notes (any number)
 ├── <score>.marks.json         # bar marks aligning that score with a recording
 ├── <take>.webm|mp3|…          # Notes recordings (extra audio besides the mix)
 └── song.json                  # title, artist, score labels; the id of a song without .txt

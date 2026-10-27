@@ -114,7 +114,9 @@ songFilesRouter.post('/api/songs/:id/files', async (c) => {
     const kind = classifyUpload(upload.name);
     if (!kind) {
       return c.json(
-        { error: 'Only sheet music (.mxl, .musicxml, .xml, .mid) or audio files are accepted' },
+        {
+          error: 'Only sheet music (.mxl, .musicxml, .xml, .mid, .gp) or audio files are accepted',
+        },
         400,
       );
     }

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 /** Sheet-music files a song folder may hold next to its UltraStar .txt. */
-export const SCORE_EXTENSIONS = ['.mxl', '.musicxml', '.xml', '.mid', '.midi'];
+export const SCORE_EXTENSIONS = ['.mxl', '.musicxml', '.xml', '.mid', '.midi', '.gp'];
 /** Bar marks (score ↔ recording alignment) are stored next to the score as `<score file>.marks.json`. */
 export const MARKS_SUFFIX = '.marks.json';
 export const MAX_SCORE_BYTES = 20 * 1024 * 1024;

@@ -27,6 +27,7 @@ const MIME_MAP: Record<string, string> = {
   '.xml': 'application/xml',
   '.mid': 'audio/midi',
   '.midi': 'audio/midi',
+  '.gp': 'application/octet-stream',
 };
 
 mediaRouter.get('/media', async (c) => {

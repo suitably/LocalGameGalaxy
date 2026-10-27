@@ -3,6 +3,7 @@ export * from './timing';
 export * from './instruments';
 export * from './musicXml';
 export * from './mxl';
+export * from './guitarPro';
 export * from './midi';
 export * from './tempoExport';
 export * from './dsp';

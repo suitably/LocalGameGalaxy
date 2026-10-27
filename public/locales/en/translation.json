@@ -693,7 +693,7 @@
         "no_scores": "No sheet music yet",
         "find_scores": "Find sheet music",
         "find_scores_hint": "Opens the MuseScore search. Download the score there as MusicXML (.mxl), open it under \"File\" and save it to the Notes library.",
-        "open_file": "Open MusicXML or MIDI",
+        "open_file": "Open MusicXML, MIDI or Guitar Pro",
         "file_hint": "A file from this device; it is not stored.",
         "loading": "Loading …",
         "load_error": "The file could not be read ({{error}}).",

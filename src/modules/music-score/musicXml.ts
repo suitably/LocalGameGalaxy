@@ -42,7 +42,8 @@ function readPartList(root: Element): Record<string, PartInfo> {
   return out;
 }
 
-interface BarEvent {
+/** One note of a written bar; `rel` is its beat within the bar. Shared with the Guitar Pro reader. */
+export interface BarEvent {
   rel: number;
   dur: number;
   pitch: number;
@@ -146,7 +147,8 @@ function readPartBars(pe: Element, info: PartInfo) {
   return { bars, hasLyrics, isDrum };
 }
 
-function writeOutNotes(bars: BarEvent[][], order: number[], starts: number[]): ScoreNote[] {
+/** Lays written bars out in play order and merges tied notes. */
+export function writeOutNotes(bars: BarEvent[][], order: number[], starts: number[]): ScoreNote[] {
   const notes: ScoreNote[] = [];
   const open = new Map<string, ScoreNote>();
   order.forEach((k, idx) => {
