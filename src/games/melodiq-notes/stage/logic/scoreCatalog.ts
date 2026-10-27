@@ -1,3 +1,4 @@
+import { instrumentsInName, type InstrumentKind } from '../../../../modules/music-score';
 import {
   hasKaraoke,
   listLibrarySongs,
@@ -20,15 +21,30 @@ export interface CatalogScore {
   song: CompanionSong;
 }
 
+/** File formats the library search filters by; `txt` is a song's karaoke file. */
+export const SCORE_FORMATS = ['musicxml', 'midi', 'guitarpro', 'txt'] as const;
+export type ScoreFormat = (typeof SCORE_FORMATS)[number];
+
+/** One playable thing of a song: a score file, or the vocals of its karaoke `.txt`. */
+export type CatalogItem =
+  | { kind: 'score'; score: CatalogScore; format: ScoreFormat; instruments: InstrumentKind[] }
+  | { kind: 'karaoke'; song: CompanionSong; format: 'txt'; instruments: InstrumentKind[] };
+
 export interface CatalogEntry {
   /** The song id. */
   key: string;
   title: string;
   artist: string;
+  /** From the karaoke `.txt` header; empty for songs without one. */
+  genre: string;
+  language: string;
+  year: string;
   song: CompanionSong;
   scores: CatalogScore[];
   /** The song itself when its karaoke `.txt` plays as a vocal part. */
   karaoke: CompanionSong | null;
+  /** The scores, then the karaoke vocals. */
+  items: CatalogItem[];
   /** The song's mix plus its other recordings. */
   recordings: number;
 }
@@ -56,19 +72,50 @@ export function findSongFolder(
   return songs.find((s) => catalogKey(s.title, s.artist) === key) ?? null;
 }
 
+/** The format of a score file, by its extension (what `readScoreFile` accepts). */
+export function scoreFormatOf(file: string): ScoreFormat {
+  const ext = file.toLowerCase().split('.').pop() ?? '';
+  if (ext === 'mid' || ext === 'midi') return 'midi';
+  if (ext === 'gp') return 'guitarpro';
+  return 'musicxml';
+}
+
+/**
+ * The instruments a score's label or file name mentions ("Bass.mxl", "Piano Vocal").
+ * Song title and artist are left out first, so "Arctic Monkeys" is no keyboard.
+ */
+export function scoreInstruments(score: CatalogScore, title: string, artist: string) {
+  const name = normaliseCatalogText(score.label ?? score.file.replace(/\.[^.]+$/, ''));
+  const unrelated = [title, artist].map(normaliseCatalogText).filter(Boolean);
+  return instrumentsInName(unrelated.reduce((n, words) => n.split(words).join(' '), name));
+}
+
 export function catalogEntry(song: CompanionSong): CatalogEntry {
+  const scores: CatalogScore[] = (song.scores ?? []).map((score) => ({
+    file: score.file,
+    label: score.label || null,
+    score,
+    song,
+  }));
+  const karaoke = hasKaraoke(song) ? song : null;
+  const items: CatalogItem[] = scores.map((item) => ({
+    kind: 'score',
+    score: item,
+    format: scoreFormatOf(item.file),
+    instruments: scoreInstruments(item, song.title, song.artist),
+  }));
+  if (karaoke) items.push({ kind: 'karaoke', song, format: 'txt', instruments: ['vocals'] });
   return {
     key: song.id,
     title: song.title,
     artist: song.artist,
+    genre: song.genre?.trim() ?? '',
+    language: song.language?.trim() ?? '',
+    year: song.year?.trim() ?? '',
     song,
-    scores: (song.scores ?? []).map((score) => ({
-      file: score.file,
-      label: score.label || null,
-      score,
-      song,
-    })),
-    karaoke: hasKaraoke(song) ? song : null,
+    scores,
+    karaoke,
+    items,
     recordings: (song.recordings ?? []).length + (songRecording(song) ? 1 : 0),
   };
 }
@@ -80,14 +127,11 @@ export function buildScoreCatalog(songs: CompanionSong[]): CatalogEntry[] {
     .sort((a, b) => a.artist.localeCompare(b.artist) || a.title.localeCompare(b.title));
 }
 
-/** Every word of the query must appear in artist or title. */
-export function filterCatalog(entries: CatalogEntry[], query: string): CatalogEntry[] {
+/** Every word of the query appears in the text (case, accents and punctuation aside). */
+export function matchesQuery(text: string, query: string): boolean {
   const words = normaliseCatalogText(query).split(' ').filter(Boolean);
-  if (words.length === 0) return entries;
-  return entries.filter((e) => {
-    const text = normaliseCatalogText(`${e.artist} ${e.title}`);
-    return words.every((w) => text.includes(w));
-  });
+  const haystack = normaliseCatalogText(text);
+  return words.every((w) => haystack.includes(w));
 }
 
 /** Reads every song folder of the server (also those without `.txt`). */

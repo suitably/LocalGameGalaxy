@@ -45,6 +45,15 @@ const NAME_RULES: Array<[RegExp, InstrumentKind]> = [
   [/piano|klavier|keys|keyboard|organ|orgel|synth/, 'keyboard'],
 ];
 
+/**
+ * Every instrument family a name mentions, most specific first ("Piano Vocal" names two).
+ * A bass guitar is a bass, not also a guitar.
+ */
+export function instrumentsInName(name: string): InstrumentKind[] {
+  const n = name.toLowerCase().replace(/bass\s*-?\s*(guitar|gitarre)|e-bass/g, 'bass');
+  return NAME_RULES.filter(([re]) => re.test(n)).map(([, kind]) => kind);
+}
+
 /** Best guess of the instrument family from part name, GM program and content. */
 export function guessInstrument(
   name: string,
@@ -53,10 +62,8 @@ export function guessInstrument(
   hasLyrics: boolean,
 ): InstrumentKind {
   if (isDrum) return 'drums';
-  const n = name.toLowerCase();
-  for (const [re, kind] of NAME_RULES) {
-    if (re.test(n)) return kind;
-  }
+  const [named] = instrumentsInName(name);
+  if (named) return named;
   if (hasLyrics) return 'vocals';
   if (program !== null) {
     if (program <= 23) return 'keyboard';
