@@ -11,8 +11,17 @@ import type { GameDelta } from './stateDelta';
 import type { SealedSecrets } from './privateHandChannel';
 
 export type TabletopSyncAction =
-  /** `seat` + `publicKey` let the host seal that seat's private hand for this device. */
-  | { type: 'REQUEST_SNAPSHOT'; seat?: number; publicKey?: JsonWebKey; spectator?: boolean }
+  /**
+   * `seat` + `publicKey` let the host seal that seat's private hand for this device. `playerId`
+   * is the sender's party player id; the host decides from its own roster whether it may play.
+   */
+  | {
+      type: 'REQUEST_SNAPSHOT';
+      seat?: number;
+      publicKey?: JsonWebKey;
+      spectator?: boolean;
+      playerId?: string;
+    }
   | {
       type: 'STATE_SNAPSHOT';
       state: TabletopGameDefinition;
@@ -21,8 +30,8 @@ export type TabletopSyncAction =
       sealed?: SealedSecrets;
     }
   | { type: 'STATE_DELTA'; delta: GameDelta; seq: number; sealed?: SealedSecrets }
-  /** `spectator` is the sender's own claim; the host also remembers it from the snapshot request. */
-  | { type: 'INTENT'; action: TabletopAction; spectator?: boolean }
+  /** `spectator` is the sender's own claim; it can only make the sender read-only, never a player. */
+  | { type: 'INTENT'; action: TabletopAction; spectator?: boolean; playerId?: string }
   | { type: 'FLICK_CARD_TO_TABLE'; cardId: string; targetHolderId: string; senderSeat?: number }
   | { type: 'RETURN_TO_LOBBY' };
 
@@ -52,6 +61,28 @@ export const isSyncedIntent = (action: TabletopAction): boolean =>
  */
 export const acceptIntent = (action: TabletopAction, sender: { spectator: boolean }): boolean =>
   isSyncedIntent(action) && !sender.spectator;
+
+/** A party member as the host's roster knows it. */
+export interface RosterEntry {
+  id: string;
+  spectator?: boolean;
+}
+
+/**
+ * Whether the host treats a sender as a spectator. With a party roster for the room, only a listed
+ * member without the spectator role may play, so a client cannot opt out by leaving the flag off.
+ * Without a roster (no party), the sender's own claim decides.
+ */
+export function senderIsSpectator(sender: {
+  claimed: boolean;
+  playerId?: string;
+  roster: RosterEntry[] | null;
+}): boolean {
+  if (sender.claimed) return true;
+  if (!sender.roster || sender.roster.length === 0) return false;
+  const member = sender.roster.find((p) => p.id === sender.playerId);
+  return !member || Boolean(member.spectator);
+}
 
 /** How a device handles a delta: apply it, or ask for a snapshot because one was missed. */
 export function classifyDelta(lastSeq: number | null, seq: number): 'apply' | 'ignore' | 'resync' {

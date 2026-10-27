@@ -124,6 +124,10 @@ export function seatOf(players: PartyPlayer[], playerId: string): number {
   return typeof slot === 'number' ? slot : Math.max(0, index);
 }
 
+/** Players who take part in a game: everyone except spectators. */
+export const seatedPlayers = (players: PartyPlayer[]): PartyPlayer[] =>
+  players.filter((p) => !p.spectator);
+
 /** Whether this player watches table games instead of taking a seat. */
 export const isSpectatorPlayer = (players: PartyPlayer[], playerId: string): boolean =>
   Boolean(players.find((p) => p.id === playerId)?.spectator);

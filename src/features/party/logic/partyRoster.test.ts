@@ -13,6 +13,7 @@ import {
   seatOf,
   upsertHost,
   upsertJoiningPlayer,
+  seatedPlayers,
 } from './partyRoster';
 import type { PartyPlayer, PartyRoomState } from './universalPartyManager';
 
@@ -328,5 +329,24 @@ describe('party spectators', () => {
     expect(isSpectatorPlayer(players, 'a')).toBe(false);
     expect(isSpectatorPlayer(players, 'b')).toBe(true);
     expect(isSpectatorPlayer(players, 'x')).toBe(false);
+  });
+});
+
+describe('seatedPlayers (#550)', () => {
+  it('leaves spectators out of game rosters', () => {
+    const players = [
+      { id: 'a', name: 'A', avatarColor: '#000', isHost: true, score: 0, joinedAt: 0 },
+      {
+        id: 'b',
+        name: 'B',
+        avatarColor: '#000',
+        isHost: false,
+        score: 0,
+        joinedAt: 0,
+        spectator: true,
+      },
+      { id: 'c', name: 'C', avatarColor: '#000', isHost: false, score: 0, joinedAt: 0 },
+    ];
+    expect(seatedPlayers(players).map((p) => p.id)).toEqual(['a', 'c']);
   });
 });

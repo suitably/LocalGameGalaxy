@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { TabletopAction } from '../tabletopReducer';
-import { acceptIntent, classifyDelta, isSyncedIntent } from '../syncProtocol';
+import { acceptIntent, classifyDelta, isSyncedIntent, senderIsSpectator } from '../syncProtocol';
 
 describe('syncProtocol (#449)', () => {
   it('applies the next delta, ignores duplicates and waits for the first snapshot', () => {
@@ -45,5 +45,20 @@ describe('syncProtocol (#449)', () => {
         { spectator: false },
       ),
     ).toBe(false);
+  });
+
+  it('takes the spectator role from the host roster, not from the sender (#550)', () => {
+    const roster = [{ id: 'p1' }, { id: 'p2', spectator: true }];
+    expect(senderIsSpectator({ claimed: false, playerId: 'p1', roster })).toBe(false);
+    // a spectator cannot opt out by leaving the flag off
+    expect(senderIsSpectator({ claimed: false, playerId: 'p2', roster })).toBe(true);
+    // unknown or missing player id with a roster: read-only
+    expect(senderIsSpectator({ claimed: false, playerId: 'x', roster })).toBe(true);
+    expect(senderIsSpectator({ claimed: false, roster })).toBe(true);
+    // the own claim can only restrict
+    expect(senderIsSpectator({ claimed: true, playerId: 'p1', roster })).toBe(true);
+    // no party: the claim decides
+    expect(senderIsSpectator({ claimed: false, roster: null })).toBe(false);
+    expect(senderIsSpectator({ claimed: true, roster: null })).toBe(true);
   });
 });
