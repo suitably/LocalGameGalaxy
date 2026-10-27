@@ -17,3 +17,4 @@ export * from './onsetAlign';
 export * from './drumVoices';
 export * from './ultrastar';
 export * from './ultrastarScore';
+export * from './scoreToUltraStar';

@@ -8,6 +8,11 @@ Changes to this bundle, newest first. Format: `## YYYY-MM-DD — summary (agent)
 - `docs/tech/persistence.md`: `galaxy_tabletop_db` v5 store `local_templates`.
 - Outside `docs/`: `logic/gameSource.ts` (+ tests), `logic/gameSourceLoaders.ts`, `tabletopStorage.ts` (v5, `getLocalTemplate`/`putLocalTemplate`/`deleteLocalTemplate`), `useTableSaves`, `components/saves/TemplateActions.tsx`, `TabletopGame.tsx`, locales.
 
+## 2026-10-27 — Score vocal part to UltraStar .txt, #567 (claude-code)
+
+- `docs/tech/song-pipeline.md` §4: "Export as UltraStar .txt" (`scoreToUltraStar`, quantization, line breaks, duet, lossy kinds).
+- Outside `docs/`: `modules/music-score/scoreToUltraStar.ts` + tests, `stage/logic/ultraStarExport.ts`, `UltraStarExport.tsx` in the recording panel, locales (`export_ultrastar`, `ultrastar_part`, `ultrastar_duet`).
+
 ## 2026-10-27 — One model for Melodiq and Melodiq Notes, #566 slice 1–2 (claude-code)
 
 - `docs/reports/2026-10-27-maintainer-decisions.md`: direction "one model, not one file format" (#565, new #604).
