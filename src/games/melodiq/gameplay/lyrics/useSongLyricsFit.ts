@@ -25,7 +25,12 @@ function createMeasureEm(fontFamily: string): MeasureEm | null {
  * between lines, and duet lanes match because all tracks are measured together.
  * `reservedRows` keeps the layout still when only some lines wrap.
  */
-export function useSongLyricsFit(tracks: Note[][], rows: LyricsRows, scale: number) {
+export function useSongLyricsFit(
+  tracks: Note[][],
+  rows: LyricsRows,
+  minFit: number,
+  scale: number,
+) {
   const theme = useTheme();
   const isLg = useMediaQuery(theme.breakpoints.up('lg'));
   const isMd = useMediaQuery(theme.breakpoints.up('md'));
@@ -68,8 +73,8 @@ export function useSongLyricsFit(tracks: Note[][], rows: LyricsRows, scale: numb
   const rem = isLg ? ACTIVE_LINE_REM.lg : isMd ? ACTIVE_LINE_REM.md : ACTIVE_LINE_REM.xs;
   const rootPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
   const fontPx = rem * scale * rootPx;
-  const fit = lyricsFitFactor(widest.chosen, laneWidth, fontPx, rows);
-  const anyLineWraps = rows === 2 && laneWidth > 0 && widest.oneRow * fontPx * fit > laneWidth;
+  const fit = lyricsFitFactor(widest.chosen, laneWidth, fontPx, minFit);
+  const anyLineWraps = laneWidth > 0 && widest.oneRow * fontPx * fit > laneWidth;
 
   return { laneRef, fit, reservedRows: (anyLineWraps ? 2 : 1) as LyricsRows };
 }
