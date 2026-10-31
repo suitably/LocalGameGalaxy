@@ -2,8 +2,8 @@ import React from 'react';
 import { alpha, Box, Typography } from '@mui/material';
 import type { Note } from '../parser';
 import { transitionOf } from '../../../lib/motion';
-import { useFitToWidth } from './lyrics/useFitToWidth';
-import { FLEX_ALIGN } from './lyrics/flexAlign';
+import { LineWords } from './lyrics/LineWords';
+import { ACTIVE_LINE_REM, type LyricsRows } from './logic/lyricsFit';
 
 export interface LineGroup {
   notes: Note[];
@@ -107,6 +107,7 @@ export interface LyricsLineProps {
   primaryColor: string;
   align: 'left' | 'center' | 'right';
   scale: number;
+  rows: LyricsRows;
   enableZoom: boolean;
 }
 
@@ -114,38 +115,28 @@ export interface LyricsLineProps {
  * Renders the active singing line with real-time syllable highlighting.
  */
 export const LyricsLine: React.FC<LyricsLineProps> = React.memo(
-  ({ line, currentBeat, primaryColor, align, scale, enableZoom }) => {
-    const { containerRef, contentRef, fit } = useFitToWidth<HTMLDivElement, HTMLDivElement>();
-    const fitScale = scale * fit;
+  ({ line, currentBeat, primaryColor, align, scale, rows, enableZoom }) => {
     return (
-      <Box
-        ref={containerRef}
+      <Typography
+        component="div"
         sx={{
-          display: 'flex',
-          justifyContent: FLEX_ALIGN[align],
+          textAlign: align,
+          lineHeight: 1.3,
+          fontSize: {
+            xs: `${ACTIVE_LINE_REM.xs * scale}rem`,
+            md: `${ACTIVE_LINE_REM.md * scale}rem`,
+            lg: `${ACTIVE_LINE_REM.lg * scale}rem`,
+          },
+          fontWeight: 700, // Constant weight guarantees zero font metric layout shift
+          whiteSpace: rows === 1 ? 'nowrap' : 'normal',
+          textWrap: 'balance',
           width: '100%',
           minWidth: 0,
-          overflow: 'hidden',
         }}
       >
-        <Typography
-          ref={contentRef}
-          component="div"
-          sx={{
-            textAlign: align,
-            lineHeight: 1.3,
-            fontSize: {
-              xs: `${1.35 * fitScale}rem`,
-              md: `${1.75 * fitScale}rem`,
-              lg: `${2.25 * fitScale}rem`,
-            },
-            fontWeight: 700, // Constant weight guarantees zero font metric layout shift
-            whiteSpace: 'nowrap',
-            width: 'max-content',
-            flexShrink: 0,
-          }}
-        >
-          {line.notes.map((note, idx) => {
+        <LineWords
+          notes={line.notes}
+          renderNote={(note, key) => {
             const noteEnd = note.start + note.duration;
             const isPast = currentBeat >= noteEnd;
             const isActive = currentBeat >= note.start && currentBeat < noteEnd;
@@ -158,7 +149,7 @@ export const LyricsLine: React.FC<LyricsLineProps> = React.memo(
 
             return (
               <Box
-                key={idx}
+                key={key}
                 component="span"
                 sx={{
                   display: 'inline-block',
@@ -173,9 +164,9 @@ export const LyricsLine: React.FC<LyricsLineProps> = React.memo(
                 {note.text}
               </Box>
             );
-          })}
-        </Typography>
-      </Box>
+          }}
+        />
+      </Typography>
     );
   },
 );

@@ -1,0 +1,1 @@
+- **Melodiq setting "Rows per Lyric"**: choose whether a lyric stays on 1 row or long lines may wrap onto 2 rows, which keeps the text larger (default). Lines only wrap between words. Also available in the remote host settings, and it reaches a cast TV.

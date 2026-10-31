@@ -56,6 +56,20 @@ export const LyricsSettingsSection: React.FC<LyricsSettingsSectionProps> = ({
       />
 
       <SettingToggleGroup
+        title={t('melodiq.settings_panel.lyrics_rows', 'Rows per Lyric')}
+        value={settings.lyricsRows ?? 2}
+        options={[
+          { value: 1, label: t('melodiq.settings_panel.lyrics_rows_one', '1 row') },
+          { value: 2, label: t('melodiq.settings_panel.lyrics_rows_two', '2 rows') },
+        ]}
+        onChange={(val) => onUpdateSetting('lyricsRows', val)}
+        description={t(
+          'melodiq.settings_panel.lyrics_rows_desc',
+          'Lyrics are sized to fit automatically. With 2 rows, long lines wrap and the text stays larger.',
+        )}
+      />
+
+      <SettingToggleGroup
         title={t('melodiq.settings_panel.lyrics_position', 'Lyrics Position (No Singers)')}
         value={settings.lyricsPosition ?? 'bottom'}
         options={[

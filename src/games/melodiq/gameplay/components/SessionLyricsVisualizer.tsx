@@ -3,6 +3,8 @@ import { alpha, Box, Button } from '@mui/material';
 import { LyricsDisplay } from '../LyricsDisplay';
 import { PitchVisualizer, type SongWithNotes } from '../PitchVisualizer';
 import { type PlayerRuntime } from '../hooks/PlayerRuntime';
+import { useMelodiqSettings } from '../../hooks/SettingsContext';
+import type { LyricsRows } from '../logic/lyricsFit';
 
 /** Wide enough that each duet lane keeps a readable font on a 1080p TV. */
 const LYRICS_MAX_WIDTH = '1800px';
@@ -32,6 +34,7 @@ interface LyricsBarProps {
   uiScale: number;
   enableZoom: boolean;
   lyricsLines?: number;
+  lyricsRows: LyricsRows;
 }
 
 /** Translucent lyrics strip docked to the bottom of the stage. */
@@ -58,6 +61,7 @@ const LyricsBar: React.FC<LyricsBarProps> = (props) => (
         uiScale={props.uiScale}
         enableZoom={props.enableZoom}
         lyricsLines={props.lyricsLines}
+        lyricsRows={props.lyricsRows}
       />
     </Box>
   </Box>
@@ -78,6 +82,8 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
   uiScale = 1.0,
   onSwitchTrack,
 }) => {
+  const { settings } = useMelodiqSettings();
+  const lyricsRows = settings.lyricsRows;
   const lyricsScale = lyricsUiScale * (uiScale > 1 ? TV_LYRICS_SCALE : 1);
   const lyricsProps: LyricsBarProps = {
     song: parsedSong,
@@ -85,6 +91,7 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
     uiScale: lyricsScale,
     enableZoom: activeLyricsZoom,
     lyricsLines: activeLyricsLines,
+    lyricsRows,
   };
 
   if (visiblePlayers.length === 0) {
@@ -109,6 +116,7 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
               uiScale={lyricsScale * 1.45}
               enableZoom={activeLyricsZoom}
               lyricsLines={activeLyricsLines}
+              lyricsRows={lyricsRows}
             />
           </Box>
         </Box>
