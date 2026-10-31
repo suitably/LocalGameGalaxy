@@ -95,6 +95,7 @@ export const useMelodiqGlobalEvents = ({
         const currentTime = (window as any).__melodiq_current_time || 0;
         playSongOnTV(selectedSong.id, selectedSong, currentTime);
         setRemoteSong(selectedSong as unknown as SongMeta);
+        if (currentView === 'Session') setCurrentView('Home'); // The song now plays on the TV
       }
     }
   }, [
@@ -102,6 +103,8 @@ export const useMelodiqGlobalEvents = ({
     popNext,
     playSongOnTV,
     setRemoteSong,
+    currentView,
+    setCurrentView,
     setFeedbackMessage,
     selectedSong,
     remoteSong,
@@ -218,10 +221,20 @@ export const useMelodiqGlobalEvents = ({
   useEffect(() => {
     if (isTVConnected && selectedSong && !remoteSong) {
       console.log('TV Connected while playing locally, switching to TV...');
-      playSongOnTV(selectedSong.id, selectedSong);
+      const currentTime = (window as any).__melodiq_current_time || 0;
+      playSongOnTV(selectedSong.id, selectedSong, currentTime);
       setRemoteSong(selectedSong as unknown as SongMeta);
+      if (currentView === 'Session') setCurrentView('Home'); // The song now plays on the TV
     } else if (!isTVConnected && remoteSong) {
       setRemoteSong(null);
     }
-  }, [isTVConnected, selectedSong, remoteSong, playSongOnTV, setRemoteSong]);
+  }, [
+    isTVConnected,
+    selectedSong,
+    remoteSong,
+    playSongOnTV,
+    setRemoteSong,
+    currentView,
+    setCurrentView,
+  ]);
 };
