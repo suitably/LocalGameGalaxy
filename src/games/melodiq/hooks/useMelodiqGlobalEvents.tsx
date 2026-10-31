@@ -221,8 +221,10 @@ export const useMelodiqGlobalEvents = ({
   useEffect(() => {
     if (isTVConnected && selectedSong && !remoteSong) {
       console.log('TV Connected while playing locally, switching to TV...');
-      const currentTime = (window as any).__melodiq_current_time || 0;
-      playSongOnTV(selectedSong.id, selectedSong, currentTime);
+      const { __melodiq_current_time: currentTime } = window as Window & {
+        __melodiq_current_time?: number;
+      };
+      playSongOnTV(selectedSong.id, selectedSong, currentTime || 0);
       setRemoteSong(selectedSong as unknown as SongMeta);
       if (currentView === 'Session') setCurrentView('Home'); // The song now plays on the TV
     } else if (!isTVConnected && remoteSong) {

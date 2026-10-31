@@ -24,5 +24,6 @@ describe('gameRegistry settings sections', () => {
     expect(ids('wordle')).toEqual(['gameplay']);
     expect(ids('melodiq-notes')).toEqual(['sounds']);
     expect(ids('melodiq')).toEqual(['profiles', 'gameplay', 'client']);
-  });
+    // Importing every game takes over 5s on a busy machine
+  }, 30000);
 });
