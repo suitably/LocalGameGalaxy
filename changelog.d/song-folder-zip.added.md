@@ -1,0 +1,1 @@
+- **Melodiq Notes: download a song folder as ZIP** — "Manage files" has "Download folder (ZIP)", which downloads the whole song folder (karaoke `.txt`, mix, stems, sheet music, bar marks, recordings) in one file; single files still download from their own button. The companion server streams the ZIP (`GET /api/songs/:id/archive`) without holding it in memory.

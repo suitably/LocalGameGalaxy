@@ -757,6 +757,8 @@
         "files_add": "Dateien hinzufügen",
         "files_add_hint": "Noten (.gp, .mxl, .musicxml, .xml, .mid) oder Audio. Vorhandene Dateien werden nie überschrieben; eine Datei mit gleichem Namen wird als „Name (2)“ gespeichert.",
         "files_download": "Herunterladen",
+        "files_zip": "Ordner herunterladen (ZIP)",
+        "files_zip_hint": "Lädt den ganzen Song-Ordner (Karaoke-.txt, Mix, Spuren, Noten, Taktmarken, Aufnahmen) als ein ZIP herunter. Einzelne Dateien: der Download-Knopf neben jeder Datei.",
         "files_delete": "Datei löschen",
         "files_delete_score_confirm": "„{{file}}“ mit Taktmarken und Namen aus dem Song-Ordner auf dem Server löschen?",
         "files_delete_recording_confirm": "Die Aufnahme „{{file}}“ aus dem Song-Ordner auf dem Server löschen?",
