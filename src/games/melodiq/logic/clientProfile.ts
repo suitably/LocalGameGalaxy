@@ -12,7 +12,6 @@ export interface ClientProfile {
 
 export const DEFAULT_TRACKER_URLS = [
   'wss://tracker.openwebtorrent.com',
-  'wss://tracker.btorrent.xyz',
   'wss://tracker.webtorrent.dev',
 ];
 

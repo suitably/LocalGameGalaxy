@@ -1,10 +1,24 @@
 import { DEFAULT_PUBLIC_TRACKERS, type TrackerItem } from './trackerTypes';
+import { filterTrackerUrls } from './trackerProtocol';
 
 export interface ResolveTrackersOptions {
   backendTrackerUrl?: string | null;
   publicTrackers?: readonly string[];
   customTrackerUrls?: string[];
   trackerPreferences?: Record<string, boolean>;
+}
+
+/**
+ * The backend tracker as the page can use it (`ws:` upgraded on https), or `null` when the page cannot
+ * reach it — e.g. the default `localhost` signaling URL on an https page. An unusable backend must not
+ * count as configured, or it switches the public trackers off and leaves no tracker at all.
+ */
+export function usableBackendTrackerUrl(
+  signalingUrl: string,
+  page: { isSecure: boolean; hostname: string },
+): string | null {
+  if (!signalingUrl) return null;
+  return filterTrackerUrls([signalingUrl], page)[0] ?? null;
 }
 
 /**

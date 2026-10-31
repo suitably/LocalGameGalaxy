@@ -36,12 +36,12 @@ Spec summary: <https://specification.website/spec/agent-readiness/okf-bundle/>
 
 ## Sync infrastructure (public, third-party)
 
-| Service                                                                                                               | Where in code                                                                     |
-| --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| MQTT over WSS: `wss://broker.hivemq.com:8884/mqtt`, `wss://broker.emqx.io:8084/mqtt`                                  | `DEFAULT_BROKER_URLS` in `src/modules/sync/MqttMailboxService.ts`                 |
-| WebTorrent trackers: `wss://tracker.openwebtorrent.com`, `wss://tracker.btorrent.xyz`, `wss://tracker.webtorrent.dev` | `src/lib/webrtc/WebRTCHostContext.tsx`, `src/games/melodiq/PhoneClientEngine.tsx` |
-| [ntfy](https://docs.ntfy.sh/) (default `https://ntfy.sh`)                                                             | `storage.getNtfyServerUrl()`, `src/lib/push/pushClient.ts`                        |
-| Web Push (RFC 8291 / 8292) via Cloudflare Worker                                                                      | `server/cloudflare-push-relay/worker.ts`, `webpush.ts`                            |
+| Service                                                                                 | Where in code                                                                     |
+| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| MQTT over WSS: `wss://broker.hivemq.com:8884/mqtt`, `wss://broker.emqx.io:8084/mqtt`    | `DEFAULT_BROKER_URLS` in `src/modules/sync/MqttMailboxService.ts`                 |
+| WebTorrent trackers: `wss://tracker.openwebtorrent.com`, `wss://tracker.webtorrent.dev` | `src/lib/webrtc/WebRTCHostContext.tsx`, `src/games/melodiq/PhoneClientEngine.tsx` |
+| [ntfy](https://docs.ntfy.sh/) (default `https://ntfy.sh`)                               | `storage.getNtfyServerUrl()`, `src/lib/push/pushClient.ts`                        |
+| Web Push (RFC 8291 / 8292) via Cloudflare Worker                                        | `server/cloudflare-push-relay/worker.ts`, `webpush.ts`                            |
 
 These are public services without an SLA. Game state sent over MQTT is readable by anyone who knows the topic (**Inference** from the code: no payload encryption beyond LZString compression).
 

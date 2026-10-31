@@ -1,153 +1,185 @@
 import { describe, it, expect } from 'vitest';
 import {
-    buildAllTrackers,
-    filterActiveTrackers,
-    setTrackerPreference,
-    isTrackerEnabledByDefault
+  buildAllTrackers,
+  filterActiveTrackers,
+  setTrackerPreference,
+  isTrackerEnabledByDefault,
+  usableBackendTrackerUrl,
 } from './trackerLogic';
 import { DEFAULT_PUBLIC_TRACKERS } from './WebRTCHostContext';
 
 describe('WebRTC Tracker Logic', () => {
-    it('isTrackerEnabledByDefault respects backend presence', () => {
-        // Without backend: public trackers enabled by default
-        expect(isTrackerEnabledByDefault('public', false)).toBe(true);
-        expect(isTrackerEnabledByDefault('backend', false)).toBe(true);
-        expect(isTrackerEnabledByDefault('custom', false)).toBe(true);
+  it('isTrackerEnabledByDefault respects backend presence', () => {
+    // Without backend: public trackers enabled by default
+    expect(isTrackerEnabledByDefault('public', false)).toBe(true);
+    expect(isTrackerEnabledByDefault('backend', false)).toBe(true);
+    expect(isTrackerEnabledByDefault('custom', false)).toBe(true);
 
-        // With backend: public trackers disabled by default, backend enabled
-        expect(isTrackerEnabledByDefault('public', true)).toBe(false);
-        expect(isTrackerEnabledByDefault('backend', true)).toBe(true);
-        expect(isTrackerEnabledByDefault('custom', true)).toBe(true);
+    // With backend: public trackers disabled by default, backend enabled
+    expect(isTrackerEnabledByDefault('public', true)).toBe(false);
+    expect(isTrackerEnabledByDefault('backend', true)).toBe(true);
+    expect(isTrackerEnabledByDefault('custom', true)).toBe(true);
+  });
+
+  it('includes default free public trackers as active when NO backend is configured', () => {
+    const trackers = buildAllTrackers({
+      backendTrackerUrl: null,
     });
 
-    it('includes default free public trackers as active when NO backend is configured', () => {
-        const trackers = buildAllTrackers({
-            backendTrackerUrl: null
-        });
-
-        expect(trackers).toHaveLength(DEFAULT_PUBLIC_TRACKERS.length);
-        DEFAULT_PUBLIC_TRACKERS.forEach(url => {
-            const match = trackers.find(t => t.url === url);
-            expect(match).toBeDefined();
-            expect(match?.type).toBe('public');
-            expect(match?.enabled).toBe(true);
-        });
-
-        const activeUrls = filterActiveTrackers(trackers);
-        expect(activeUrls).toEqual(DEFAULT_PUBLIC_TRACKERS);
+    expect(trackers).toHaveLength(DEFAULT_PUBLIC_TRACKERS.length);
+    DEFAULT_PUBLIC_TRACKERS.forEach((url) => {
+      const match = trackers.find((t) => t.url === url);
+      expect(match).toBeDefined();
+      expect(match?.type).toBe('public');
+      expect(match?.enabled).toBe(true);
     });
 
-    it('when backend is configured, keeps free trackers visible in list but DEACTIVATED by default', () => {
-        const backendUrl = 'ws://192.168.1.50:3000';
-        const trackers = buildAllTrackers({
-            backendTrackerUrl: backendUrl
-        });
+    const activeUrls = filterActiveTrackers(trackers);
+    expect(activeUrls).toEqual(DEFAULT_PUBLIC_TRACKERS);
+  });
 
-        // Backend tracker is present and enabled
-        const backendMatch = trackers.find(t => t.url === backendUrl);
-        expect(backendMatch).toBeDefined();
-        expect(backendMatch?.type).toBe('backend');
-        expect(backendMatch?.enabled).toBe(true);
-
-        // Free public trackers must NOT fall out: they must still be in the list!
-        DEFAULT_PUBLIC_TRACKERS.forEach(url => {
-            const match = trackers.find(t => t.url === url);
-            expect(match).toBeDefined();
-            expect(match?.type).toBe('public');
-            // BUT they must be deactivated (disabled) by default per user requirement!
-            expect(match?.enabled).toBe(false);
-        });
-
-        // Only backend tracker is active by default
-        const activeUrls = filterActiveTrackers(trackers);
-        expect(activeUrls).toEqual([backendUrl]);
+  it('when backend is configured, keeps free trackers visible in list but DEACTIVATED by default', () => {
+    const backendUrl = 'ws://192.168.1.50:3000';
+    const trackers = buildAllTrackers({
+      backendTrackerUrl: backendUrl,
     });
 
-    it('allows user to explicitly activate free public trackers even when backend is configured', () => {
-        const backendUrl = 'ws://192.168.1.50:3000';
-        const publicToEnable = DEFAULT_PUBLIC_TRACKERS[0];
+    // Backend tracker is present and enabled
+    const backendMatch = trackers.find((t) => t.url === backendUrl);
+    expect(backendMatch).toBeDefined();
+    expect(backendMatch?.type).toBe('backend');
+    expect(backendMatch?.enabled).toBe(true);
 
-        // User toggles public tracker to true
-        const prefs = setTrackerPreference({}, publicToEnable, true);
-
-        const trackers = buildAllTrackers({
-            backendTrackerUrl: backendUrl,
-            trackerPreferences: prefs
-        });
-
-        const publicMatch = trackers.find(t => t.url === publicToEnable);
-        expect(publicMatch?.enabled).toBe(true);
-
-        const otherPublic = trackers.find(t => t.url === DEFAULT_PUBLIC_TRACKERS[1]);
-        expect(otherPublic?.enabled).toBe(false);
-
-        const activeUrls = filterActiveTrackers(trackers);
-        expect(activeUrls).toContain(backendUrl);
-        expect(activeUrls).toContain(publicToEnable);
-        expect(activeUrls).not.toContain(DEFAULT_PUBLIC_TRACKERS[1]);
+    // Free public trackers must NOT fall out: they must still be in the list!
+    DEFAULT_PUBLIC_TRACKERS.forEach((url) => {
+      const match = trackers.find((t) => t.url === url);
+      expect(match).toBeDefined();
+      expect(match?.type).toBe('public');
+      // BUT they must be deactivated (disabled) by default per user requirement!
+      expect(match?.enabled).toBe(false);
     });
 
-    it('allows deactivating free public trackers when NO backend is configured', () => {
-        const targetToDisable = DEFAULT_PUBLIC_TRACKERS[0];
-        const prefs = setTrackerPreference({}, targetToDisable, false);
+    // Only backend tracker is active by default
+    const activeUrls = filterActiveTrackers(trackers);
+    expect(activeUrls).toEqual([backendUrl]);
+  });
 
-        const trackers = buildAllTrackers({
-            backendTrackerUrl: null,
-            trackerPreferences: prefs
-        });
+  it('allows user to explicitly activate free public trackers even when backend is configured', () => {
+    const backendUrl = 'ws://192.168.1.50:3000';
+    const publicToEnable = DEFAULT_PUBLIC_TRACKERS[0];
 
-        const disabledMatch = trackers.find(t => t.url === targetToDisable);
-        expect(disabledMatch?.enabled).toBe(false);
+    // User toggles public tracker to true
+    const prefs = setTrackerPreference({}, publicToEnable, true);
 
-        const activeUrls = filterActiveTrackers(trackers);
-        expect(activeUrls).not.toContain(targetToDisable);
-        expect(activeUrls).toHaveLength(DEFAULT_PUBLIC_TRACKERS.length - 1);
+    const trackers = buildAllTrackers({
+      backendTrackerUrl: backendUrl,
+      trackerPreferences: prefs,
     });
 
-    it('supports custom user-added trackers', () => {
-        const backendUrl = 'ws://10.0.0.5:3000';
-        const customUrl = 'wss://custom-tracker.example.com';
+    const publicMatch = trackers.find((t) => t.url === publicToEnable);
+    expect(publicMatch?.enabled).toBe(true);
 
-        const trackers = buildAllTrackers({
-            backendTrackerUrl: backendUrl,
-            customTrackerUrls: [customUrl]
-        });
+    const otherPublic = trackers.find((t) => t.url === DEFAULT_PUBLIC_TRACKERS[1]);
+    expect(otherPublic?.enabled).toBe(false);
 
-        const customMatch = trackers.find(t => t.url === customUrl);
-        expect(customMatch).toBeDefined();
-        expect(customMatch?.type).toBe('custom');
-        expect(customMatch?.enabled).toBe(true);
+    const activeUrls = filterActiveTrackers(trackers);
+    expect(activeUrls).toContain(backendUrl);
+    expect(activeUrls).toContain(publicToEnable);
+    expect(activeUrls).not.toContain(DEFAULT_PUBLIC_TRACKERS[1]);
+  });
 
-        const activeUrls = filterActiveTrackers(trackers);
-        expect(activeUrls).toContain(customUrl);
-        expect(activeUrls).toContain(backendUrl);
-        // Public trackers are inactive by default
-        DEFAULT_PUBLIC_TRACKERS.forEach(url => {
-            expect(activeUrls).not.toContain(url);
-        });
+  it('allows deactivating free public trackers when NO backend is configured', () => {
+    const targetToDisable = DEFAULT_PUBLIC_TRACKERS[0];
+    const prefs = setTrackerPreference({}, targetToDisable, false);
+
+    const trackers = buildAllTrackers({
+      backendTrackerUrl: null,
+      trackerPreferences: prefs,
     });
 
-    it('storage.getSignalingUrl derives port 8000 from helper URL and supports overrides', async () => {
-        const { storage, STORAGE_KEYS } = await import('../storage');
+    const disabledMatch = trackers.find((t) => t.url === targetToDisable);
+    expect(disabledMatch?.enabled).toBe(false);
 
-        // Case 1: Helper active, default derived to port 8000
-        storage.setHelperActive(true);
-        storage.setHelperUrl('http://192.168.1.50:3000');
-        storage.remove(STORAGE_KEYS.SIGNALING_URL);
-        expect(storage.getSignalingUrl()).toBe('ws://192.168.1.50:8000');
+    const activeUrls = filterActiveTrackers(trackers);
+    expect(activeUrls).not.toContain(targetToDisable);
+    expect(activeUrls).toHaveLength(DEFAULT_PUBLIC_TRACKERS.length - 1);
+  });
 
-        // Case 2: Custom signaling URL override takes precedence
-        storage.setSignalingUrl('wss://custom-tracker.galaxy.org:8443');
-        expect(storage.getSignalingUrl()).toBe('wss://custom-tracker.galaxy.org:8443');
+  it('supports custom user-added trackers', () => {
+    const backendUrl = 'ws://10.0.0.5:3000';
+    const customUrl = 'wss://custom-tracker.example.com';
 
-        // Case 3: Helper disabled and no custom URL
-        storage.remove(STORAGE_KEYS.SIGNALING_URL);
-        storage.setHelperActive(false);
-        expect(storage.getSignalingUrl()).toBe('');
-
-        // Cleanup
-        storage.remove(STORAGE_KEYS.SIGNALING_URL);
-        storage.setHelperActive(true);
-        storage.setHelperUrl('http://localhost:3000');
+    const trackers = buildAllTrackers({
+      backendTrackerUrl: backendUrl,
+      customTrackerUrls: [customUrl],
     });
+
+    const customMatch = trackers.find((t) => t.url === customUrl);
+    expect(customMatch).toBeDefined();
+    expect(customMatch?.type).toBe('custom');
+    expect(customMatch?.enabled).toBe(true);
+
+    const activeUrls = filterActiveTrackers(trackers);
+    expect(activeUrls).toContain(customUrl);
+    expect(activeUrls).toContain(backendUrl);
+    // Public trackers are inactive by default
+    DEFAULT_PUBLIC_TRACKERS.forEach((url) => {
+      expect(activeUrls).not.toContain(url);
+    });
+  });
+
+  it('storage.getSignalingUrl derives port 8000 from helper URL and supports overrides', async () => {
+    const { storage, STORAGE_KEYS } = await import('../storage');
+
+    // Case 1: Helper active, default derived to port 8000
+    storage.setHelperActive(true);
+    storage.setHelperUrl('http://192.168.1.50:3000');
+    storage.remove(STORAGE_KEYS.SIGNALING_URL);
+    expect(storage.getSignalingUrl()).toBe('ws://192.168.1.50:8000');
+
+    // Case 2: Custom signaling URL override takes precedence
+    storage.setSignalingUrl('wss://custom-tracker.galaxy.org:8443');
+    expect(storage.getSignalingUrl()).toBe('wss://custom-tracker.galaxy.org:8443');
+
+    // Case 3: Helper disabled and no custom URL
+    storage.remove(STORAGE_KEYS.SIGNALING_URL);
+    storage.setHelperActive(false);
+    expect(storage.getSignalingUrl()).toBe('');
+
+    // Cleanup
+    storage.remove(STORAGE_KEYS.SIGNALING_URL);
+    storage.setHelperActive(true);
+    storage.setHelperUrl('http://localhost:3000');
+  });
+
+  describe('usableBackendTrackerUrl', () => {
+    const httpsPublic = { isSecure: true, hostname: 'games.nexumia.de' };
+
+    it('drops the default localhost backend on a public https page, keeping public trackers on', () => {
+      const backend = usableBackendTrackerUrl('ws://localhost:8000', httpsPublic);
+      expect(backend).toBeNull();
+      const active = filterActiveTrackers(buildAllTrackers({ backendTrackerUrl: backend }));
+      expect(active).toEqual([...DEFAULT_PUBLIC_TRACKERS]);
+    });
+
+    it('keeps a localhost backend on a local page', () => {
+      expect(
+        usableBackendTrackerUrl('ws://localhost:8000', { isSecure: false, hostname: 'localhost' }),
+      ).toBe('ws://localhost:8000');
+    });
+
+    it('upgrades a remote ws backend to wss on https pages', () => {
+      expect(usableBackendTrackerUrl('ws://signal.example.com', httpsPublic)).toBe(
+        'wss://signal.example.com',
+      );
+    });
+
+    it('treats a port-8000 backend as local, so https pages fall back to public trackers', () => {
+      expect(usableBackendTrackerUrl('wss://helper.example.com:8000', httpsPublic)).toBeNull();
+    });
+
+    it('returns null without a signaling URL', () => {
+      expect(usableBackendTrackerUrl('', httpsPublic)).toBeNull();
+    });
+  });
 });

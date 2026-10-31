@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { buildAllTrackers, filterActiveTrackers, setTrackerPreference } from './trackerLogic';
+import {
+  buildAllTrackers,
+  filterActiveTrackers,
+  setTrackerPreference,
+  usableBackendTrackerUrl,
+} from './trackerLogic';
 import { DEFAULT_PUBLIC_TRACKERS, type TrackerItem } from './trackerTypes';
 import { storage, STORAGE_PREFIXES } from '../storage';
 
@@ -29,10 +34,13 @@ export function useTrackerConfig(gameId: string) {
     };
   }, []);
 
-  // Self-hosted backend tracker URL if helper is enabled or custom signaling is configured
+  // Self-hosted backend tracker URL if helper is enabled or custom signaling is configured;
+  // null when this page cannot reach it (see usableBackendTrackerUrl)
   const backendTrackerUrl = useMemo(() => {
-    const signalingUrl = storage.getSignalingUrl();
-    return signalingUrl || null;
+    return usableBackendTrackerUrl(storage.getSignalingUrl(), {
+      isSecure: window.location.protocol === 'https:',
+      hostname: window.location.hostname,
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- helperSettingsHash re-reads storage on settings events
   }, [helperSettingsHash]);
 
