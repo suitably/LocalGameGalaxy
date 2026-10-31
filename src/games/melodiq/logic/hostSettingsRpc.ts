@@ -1,3 +1,4 @@
+import { LYRICS_MIN_FIT_OPTIONS } from '../gameplay/logic/lyricsFit';
 import type { HostSettings, HostSettingsRpc } from '../types';
 
 type Validator = (value: unknown) => unknown;
@@ -22,6 +23,7 @@ const VALIDATORS: Record<keyof HostSettings, Validator> = {
   lyricsLines: (v) =>
     Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 3 ? v : undefined,
   lyricsRows: (v) => (v === 1 || v === 2 ? v : undefined),
+  lyricsMinFit: (v) => (LYRICS_MIN_FIT_OPTIONS.some((option) => option === v) ? v : undefined),
   lyricsPosition: oneOf('bottom', 'center'),
   showNoteLabels: bool,
   showScoreboardQrCode: bool,

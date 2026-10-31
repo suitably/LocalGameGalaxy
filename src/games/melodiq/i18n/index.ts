@@ -255,11 +255,14 @@ export const melodiqResources = {
           'Zoom and glow active lyric syllables during singing. Disable for simple color highlighting.',
         lyrics_lines: 'Number of Lyrics Lines',
         lyrics_lines_desc: 'Choose how many lines of lyrics to display.',
+        lyrics_min_size: 'Minimum Lyrics Size',
+        lyrics_min_size_desc:
+          'Lyrics shrink down to this size, then wrap. At 100% they never shrink.',
         lyrics_rows: 'Rows per Lyric',
         lyrics_rows_one: '1 row',
         lyrics_rows_two: '2 rows',
         lyrics_rows_desc:
-          'Lyrics are sized to fit automatically. With 2 rows, long lines wrap and the text stays larger.',
+          'Lyrics are sized to fit automatically. With 2 rows, long lines wrap and the text stays larger. Very long lines wrap either way.',
         lyrics_position: 'Lyrics Position (No Singers)',
         lyrics_position_desc:
           'Choose whether lyrics appear at the bottom or in the center when no singers are active.',
@@ -603,11 +606,14 @@ export const melodiqResources = {
         lyrics_zoom_desc:
           'Aktive Silben beim Singen vergrößern. Deaktivieren für reine Text-Farbmarkierung ohne Animationen.',
         lyrics_lines: 'Anzahl der Songtext-Zeilen',
+        lyrics_min_size: 'Mindestgröße Songtext',
+        lyrics_min_size_desc:
+          'Der Text wird bis zu dieser Größe verkleinert und danach umgebrochen. Bei 100 % wird er nie verkleinert.',
         lyrics_rows: 'Zeilen pro Songtext-Abschnitt',
         lyrics_rows_one: '1 Zeile',
         lyrics_rows_two: '2 Zeilen',
         lyrics_rows_desc:
-          'Die Größe passt sich automatisch an. Mit 2 Zeilen werden lange Abschnitte umgebrochen und der Text bleibt größer.',
+          'Die Größe passt sich automatisch an. Mit 2 Zeilen werden lange Abschnitte umgebrochen und der Text bleibt größer. Sehr lange Abschnitte werden immer umgebrochen.',
         lyrics_lines_desc: 'Wähle, wie viele Zeilen Songtext angezeigt werden sollen.',
         lyrics_position: 'Songtext-Position (ohne Sänger)',
         lyrics_position_desc:

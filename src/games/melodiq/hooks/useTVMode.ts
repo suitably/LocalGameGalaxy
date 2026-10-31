@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
-import { loadSettings } from './settingsStorage';
+import { loadTvSettings } from './settingsStorage';
 
 // Minimal Presentation API Type Definitions
 interface PresentationConnectionCloseEvent extends Event {
@@ -115,8 +115,7 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
       if (type === 'TV_READY' || type === 'PONG') {
         setIsTVConnected(true);
         sendSessionInfo();
-        // A cast TV has its own storage, so it only knows settings it is told about
-        sendMessageRef.current('SETTINGS_UPDATE', { lyricsRows: loadSettings().lyricsRows });
+        sendMessageRef.current('SETTINGS_UPDATE', loadTvSettings());
       }
     },
     [sendSessionInfo],

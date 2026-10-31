@@ -76,4 +76,9 @@ describe('host settings helpers', () => {
     expect(sanitizeHostSettingsPatch({ lyricsRows: 3 })).toEqual({});
     expect(sanitizeHostSettingsPatch({ lyricsRows: '2' })).toEqual({});
   });
+
+  it('accepts only the offered minimum lyric sizes', () => {
+    expect(sanitizeHostSettingsPatch({ lyricsMinFit: 0.8 })).toEqual({ lyricsMinFit: 0.8 });
+    expect(sanitizeHostSettingsPatch({ lyricsMinFit: 0.1 })).toEqual({});
+  });
 });

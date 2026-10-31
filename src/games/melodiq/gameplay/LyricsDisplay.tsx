@@ -3,7 +3,7 @@ import { Box, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { type SongWithNotes } from './PitchVisualizer';
 import { LyricsLane } from './lyrics/LyricsLane';
 import { useSongLyricsFit } from './lyrics/useSongLyricsFit';
-import type { LyricsRows } from './logic/lyricsFit';
+import { DEFAULT_LYRICS_MIN_FIT, type LyricsRows } from './logic/lyricsFit';
 
 export interface LyricsDisplayProps {
   song: SongWithNotes;
@@ -12,6 +12,8 @@ export interface LyricsDisplayProps {
   enableZoom?: boolean;
   lyricsLines?: number;
   lyricsRows?: LyricsRows;
+  /** Smallest font factor; a longer line wraps instead. */
+  lyricsMinFit?: number;
 }
 
 /** Current song position in beats, sampled every animation frame. */
@@ -39,7 +41,15 @@ const useCurrentBeat = (
 };
 
 export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(
-  ({ song, audioRef, uiScale = 1.0, enableZoom = false, lyricsLines = 2, lyricsRows = 2 }) => {
+  ({
+    song,
+    audioRef,
+    uiScale = 1.0,
+    enableZoom = false,
+    lyricsLines = 2,
+    lyricsRows = 2,
+    lyricsMinFit = DEFAULT_LYRICS_MIN_FIT,
+  }) => {
     const theme = useTheme();
     const bpm = song.bpm || 120;
     const currentBeat = useCurrentBeat(audioRef, song.gap || 0, bpm);
@@ -53,12 +63,16 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(
       if (song.tracks && song.tracks.length > 0) return song.tracks.map((track) => track.notes);
       return [song.notes || []];
     }, [song.tracks, song.notes]);
-    const { laneRef, fit, reservedRows } = useSongLyricsFit(trackNotes, lyricsRows, uiScale);
+    const { laneRef, fit, reservedRows } = useSongLyricsFit(
+      trackNotes,
+      lyricsRows,
+      lyricsMinFit,
+      uiScale,
+    );
 
     const laneProps = {
       currentBeat,
       scale: uiScale * fit,
-      rows: lyricsRows,
       reservedRows,
       enableZoom,
       lyricsLines,

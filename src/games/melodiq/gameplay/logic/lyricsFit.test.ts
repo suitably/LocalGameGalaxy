@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { Note } from '../../parser';
 import {
   groupNotesIntoWords,
+  DEFAULT_LYRICS_MIN_FIT,
   lyricsFitFactor,
-  MIN_LYRICS_FIT,
   songWidestRowEm,
   widestRowEm,
 } from './lyricsFit';
@@ -50,21 +50,25 @@ describe('songWidestRowEm', () => {
 
 describe('lyricsFitFactor', () => {
   it('stays at full size when the widest row fits', () => {
-    expect(lyricsFitFactor(10, 1000, 54, 2)).toBe(1);
+    expect(lyricsFitFactor(10, 1000, 54)).toBe(1);
   });
 
   it('shrinks to the lane width', () => {
-    expect(lyricsFitFactor(20, 800, 54, 2)).toBeCloseTo((800 * 0.98) / (20 * 54));
+    expect(lyricsFitFactor(20, 800, 54)).toBeCloseTo((800 * 0.98) / (20 * 54));
   });
 
-  it('stops at the minimum for the row count', () => {
-    expect(lyricsFitFactor(1000, 800, 54, 1)).toBe(MIN_LYRICS_FIT[1]);
-    expect(lyricsFitFactor(1000, 800, 54, 2)).toBe(MIN_LYRICS_FIT[2]);
+  it('stops at the readable minimum', () => {
+    expect(lyricsFitFactor(1000, 800, 54)).toBe(DEFAULT_LYRICS_MIN_FIT);
+  });
+
+  it('honours the chosen minimum', () => {
+    expect(lyricsFitFactor(1000, 800, 54, 0.4)).toBe(0.4);
+    expect(lyricsFitFactor(1000, 800, 54, 1)).toBe(1);
   });
 
   it('keeps full size until everything is measured', () => {
-    expect(lyricsFitFactor(0, 800, 54, 2)).toBe(1);
-    expect(lyricsFitFactor(20, 0, 54, 2)).toBe(1);
+    expect(lyricsFitFactor(0, 800, 54)).toBe(1);
+    expect(lyricsFitFactor(20, 0, 54)).toBe(1);
   });
 });
 

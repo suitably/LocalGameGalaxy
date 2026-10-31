@@ -3,7 +3,7 @@ import { alpha, Box, Typography } from '@mui/material';
 import type { Note } from '../parser';
 import { transitionOf } from '../../../lib/motion';
 import { LineWords } from './lyrics/LineWords';
-import { ACTIVE_LINE_REM, type LyricsRows } from './logic/lyricsFit';
+import { ACTIVE_LINE_REM } from './logic/lyricsFit';
 
 export interface LineGroup {
   notes: Note[];
@@ -107,7 +107,6 @@ export interface LyricsLineProps {
   primaryColor: string;
   align: 'left' | 'center' | 'right';
   scale: number;
-  rows: LyricsRows;
   enableZoom: boolean;
 }
 
@@ -115,7 +114,7 @@ export interface LyricsLineProps {
  * Renders the active singing line with real-time syllable highlighting.
  */
 export const LyricsLine: React.FC<LyricsLineProps> = React.memo(
-  ({ line, currentBeat, primaryColor, align, scale, rows, enableZoom }) => {
+  ({ line, currentBeat, primaryColor, align, scale, enableZoom }) => {
     return (
       <Typography
         component="div"
@@ -128,7 +127,7 @@ export const LyricsLine: React.FC<LyricsLineProps> = React.memo(
             lg: `${ACTIVE_LINE_REM.lg * scale}rem`,
           },
           fontWeight: 700, // Constant weight guarantees zero font metric layout shift
-          whiteSpace: rows === 1 ? 'nowrap' : 'normal',
+          whiteSpace: 'normal',
           textWrap: 'balance',
           width: '100%',
           minWidth: 0,

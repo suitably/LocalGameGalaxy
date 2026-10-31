@@ -1,16 +1,19 @@
 import type { Note } from '../../parser';
 
-/** How many screen rows one lyric line may take: 1 keeps it whole, 2 wraps it at a space. */
+/**
+ * Preferred screen rows per lyric line: 1 shrinks a line to stay whole, 2 wraps it at a space and
+ * keeps the text larger. Either way a line too long for the minimum size wraps further.
+ */
 export type LyricsRows = 1 | 2;
 
 /** Active line font size per breakpoint at scale 1. */
 export const ACTIVE_LINE_REM = { xs: 1.35, md: 1.75, lg: 2.25 } as const;
 
-/**
- * Smallest font factor. One row must always fit, so it may go very small; two rows stop earlier
- * and let an extreme line take a third row rather than turn unreadable.
- */
-export const MIN_LYRICS_FIT: Record<LyricsRows, number> = { 1: 0.25, 2: 0.6 };
+/** Choosable smallest font factors: below it a line wraps instead of shrinking further. */
+export const LYRICS_MIN_FIT_OPTIONS = [0.4, 0.6, 0.8, 1] as const;
+
+/** Default smallest font factor: about 32px on a 1080p TV. */
+export const DEFAULT_LYRICS_MIN_FIT = 0.6;
 
 /** Keeps a little room so rounding and the words' trailing spaces cannot force an extra row. */
 const LANE_SLACK = 0.98;
@@ -46,11 +49,11 @@ export function lyricsFitFactor(
   widestEm: number,
   laneWidthPx: number,
   fontPx: number,
-  rows: LyricsRows,
+  minFit: number = DEFAULT_LYRICS_MIN_FIT,
 ): number {
   if (widestEm <= 0 || laneWidthPx <= 0 || fontPx <= 0) return 1;
   const fit = (laneWidthPx * LANE_SLACK) / (widestEm * fontPx);
-  return Math.max(MIN_LYRICS_FIT[rows], Math.min(1, fit));
+  return Math.max(minFit, Math.min(1, fit));
 }
 
 /**

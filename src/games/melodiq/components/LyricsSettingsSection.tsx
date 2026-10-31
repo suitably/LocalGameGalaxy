@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SettingsState } from '../hooks/SettingsContext';
 import { SettingSlider, SettingSwitch, SettingToggleGroup } from '../../../components/settings';
+import { LYRICS_MIN_FIT_OPTIONS } from '../gameplay/logic/lyricsFit';
 
 interface LyricsSettingsSectionProps {
   settings: SettingsState;
@@ -65,7 +66,21 @@ export const LyricsSettingsSection: React.FC<LyricsSettingsSectionProps> = ({
         onChange={(val) => onUpdateSetting('lyricsRows', val)}
         description={t(
           'melodiq.settings_panel.lyrics_rows_desc',
-          'Lyrics are sized to fit automatically. With 2 rows, long lines wrap and the text stays larger.',
+          'Lyrics are sized to fit automatically. With 2 rows, long lines wrap and the text stays larger. Very long lines wrap either way.',
+        )}
+      />
+
+      <SettingToggleGroup
+        title={t('melodiq.settings_panel.lyrics_min_size', 'Minimum Lyrics Size')}
+        value={settings.lyricsMinFit ?? 0.6}
+        options={LYRICS_MIN_FIT_OPTIONS.map((fit) => ({
+          value: fit,
+          label: `${Math.round(fit * 100)}%`,
+        }))}
+        onChange={(val) => onUpdateSetting('lyricsMinFit', val)}
+        description={t(
+          'melodiq.settings_panel.lyrics_min_size_desc',
+          'Lyrics shrink down to this size, then wrap. At 100% they never shrink.',
         )}
       />
 

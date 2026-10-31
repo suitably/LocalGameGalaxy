@@ -14,8 +14,6 @@ export interface LyricsLaneProps {
   color: string;
   align?: 'left' | 'center' | 'right';
   scale?: number;
-  /** Rows one lyric may take. */
-  rows?: LyricsRows;
   /** Rows to keep free so the layout stays still when only some lines wrap. */
   reservedRows?: LyricsRows;
   /** Set on the lane whose width sizes the song's lyrics. */
@@ -48,9 +46,8 @@ const UpcomingLine: React.FC<{
   index: number;
   align: 'left' | 'center' | 'right';
   scale: number;
-  rows: LyricsRows;
   reservedRows: LyricsRows;
-}> = ({ line, index, align, scale, rows, reservedRows }) => (
+}> = ({ line, index, align, scale, reservedRows }) => (
   <Box
     sx={{
       minHeight:
@@ -77,7 +74,7 @@ const UpcomingLine: React.FC<{
         fontWeight: 500,
         color: 'common.white',
         opacity: Math.max(0.1, 0.65 - index * 0.25),
-        whiteSpace: rows === 1 ? 'nowrap' : 'normal',
+        whiteSpace: 'normal',
         textWrap: 'balance',
         width: '100%',
         minWidth: 0,
@@ -106,7 +103,6 @@ export const LyricsLane: React.FC<LyricsLaneProps> = React.memo(
     color,
     align = 'center',
     scale = 1.0,
-    rows = 2,
     reservedRows = 1,
     laneRef,
     enableZoom = false,
@@ -183,7 +179,6 @@ export const LyricsLane: React.FC<LyricsLaneProps> = React.memo(
               primaryColor={color}
               align={align}
               scale={scale}
-              rows={rows}
               enableZoom={enableZoom}
             />
           ) : (
@@ -209,7 +204,6 @@ export const LyricsLane: React.FC<LyricsLaneProps> = React.memo(
             index={idx}
             align={align}
             scale={scale}
-            rows={rows}
             reservedRows={reservedRows}
           />
         ))}
