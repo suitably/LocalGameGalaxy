@@ -14,7 +14,7 @@ interface UseSongSelectionArgs {
   getSongById: (id: string) => Promise<Song | undefined>;
   addToQueue: (song: SongMeta, requester?: string, requesterId?: string) => void;
   setNowPlaying: (song: SongMeta | null) => void;
-  playSongOnTV: (id: string, song: SongMeta) => void;
+  playSongOnTV: (id: string, song: SongMeta) => Promise<void>;
   sendRemoteCommand: (command: string, value?: unknown) => void;
   setFeedbackMessage: (msg: string | null) => void;
   setRestoredSong: (song: SongMeta | null) => void;
@@ -33,6 +33,12 @@ export function useSongSelection(a: UseSongSelectionArgs) {
   const isPlaybackPlayingRef = useRef<boolean>(false);
   const selectedSongRef = useRef<Song | SongMeta | null>(a.selectedSong);
   const remoteSongRef = useRef<SongMeta | null>(a.remoteSong);
+  // The memoized song list keeps an old selectSong, which must still see a TV that joined later
+  const isTVConnectedRef = useRef(a.isTVConnected);
+
+  useEffect(() => {
+    isTVConnectedRef.current = a.isTVConnected;
+  }, [a.isTVConnected]);
 
   useEffect(() => {
     selectedSongRef.current = a.selectedSong;
@@ -111,10 +117,11 @@ export function useSongSelection(a: UseSongSelectionArgs) {
         storage.remove(STORAGE_KEYS.CURRENT_SONG_PARTICIPANTS);
       }
 
-      if (a.isTVConnected) {
+      if (isTVConnectedRef.current) {
         const fullSong = await a.getSongById(songMeta.id);
         if (fullSong) {
-          a.playSongOnTV(songMeta.id, fullSong);
+          // Waits for a local song's files, so the session cannot start without the TV
+          await a.playSongOnTV(songMeta.id, fullSong);
           a.setRemoteSong(songMeta);
           a.setSelectedSong(fullSong);
           a.setNowPlaying(songMeta);
@@ -130,7 +137,7 @@ export function useSongSelection(a: UseSongSelectionArgs) {
           a.setActiveParticipants(participants || null);
           a.setCurrentView('DownloadWait');
         } else {
-          a.playSongOnTV(songMeta.id, songMeta);
+          await a.playSongOnTV(songMeta.id, songMeta);
           a.setRemoteSong(songMeta);
         }
       } else {

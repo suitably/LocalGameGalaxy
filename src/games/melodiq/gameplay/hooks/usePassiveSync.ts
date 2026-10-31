@@ -1,181 +1,208 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { storage, STORAGE_KEYS } from '../../../../lib/storage';
 import { PlayerRuntime } from './PlayerRuntime';
 import { type PassiveGameState } from '../../types';
 import { type ScoreDisplayHandle } from '../ScoreDisplay';
+import { PASSIVE_PLAY_RETRY_MS, shouldRetryPassivePlay } from '../logic/passivePlayback';
 
 interface UsePassiveSyncProps {
-    isPassive: boolean;
-    passiveState: PassiveGameState | null;
-    isClient: boolean;
-    isTVMode?: boolean;
-    players: PlayerRuntime[];
-    setPlayers: React.Dispatch<React.SetStateAction<PlayerRuntime[]>>;
-    playersRef: React.RefObject<PlayerRuntime[]>;
-    scoreDisplayRef: React.RefObject<ScoreDisplayHandle | null>;
-    audioRef: React.RefObject<HTMLAudioElement | null>;
-    vocalsRef?: React.RefObject<HTMLAudioElement | null>;
-    videoRef: React.RefObject<HTMLVideoElement | null>;
-    isPlayingRef: React.RefObject<boolean>;
-    setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
-    setIsFinished: React.Dispatch<React.SetStateAction<boolean>>;
-    setIsPausedForScore: React.Dispatch<React.SetStateAction<boolean>>;
-    setPassivePlayBlocked: React.Dispatch<React.SetStateAction<boolean>>;
-    virtualTimeRef: React.RefObject<number>;
+  isPassive: boolean;
+  passiveState: PassiveGameState | null;
+  isClient: boolean;
+  isTVMode?: boolean;
+  players: PlayerRuntime[];
+  setPlayers: React.Dispatch<React.SetStateAction<PlayerRuntime[]>>;
+  playersRef: React.RefObject<PlayerRuntime[]>;
+  scoreDisplayRef: React.RefObject<ScoreDisplayHandle | null>;
+  audioRef: React.RefObject<HTMLAudioElement | null>;
+  vocalsRef?: React.RefObject<HTMLAudioElement | null>;
+  videoRef: React.RefObject<HTMLVideoElement | null>;
+  isPlayingRef: React.RefObject<boolean>;
+  setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsFinished: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsPausedForScore: React.Dispatch<React.SetStateAction<boolean>>;
+  setPassivePlayBlocked: React.Dispatch<React.SetStateAction<boolean>>;
+  virtualTimeRef: React.RefObject<number>;
 }
 
 export function usePassiveSync({
-    isPassive,
-    passiveState,
-    isClient,
-    isTVMode: _isTVMode = false,
-    setPlayers,
-    playersRef,
-    scoreDisplayRef,
-    audioRef,
-    vocalsRef,
-    videoRef,
-    isPlayingRef,
-    setIsPlaying,
-    setIsFinished,
-    setIsPausedForScore,
-    setPassivePlayBlocked,
-    virtualTimeRef
+  isPassive,
+  passiveState,
+  isClient,
+  isTVMode: _isTVMode = false,
+  setPlayers,
+  playersRef,
+  scoreDisplayRef,
+  audioRef,
+  vocalsRef,
+  videoRef,
+  isPlayingRef,
+  setIsPlaying,
+  setIsFinished,
+  setIsPausedForScore,
+  setPassivePlayBlocked,
+  virtualTimeRef,
 }: UsePassiveSyncProps) {
+  const nextPlayAttemptRef = useRef(0);
 
-    useEffect(() => {
-        if (!isPassive) return;
+  useEffect(() => {
+    if (!isPassive) return;
 
-        const handleGameState = (passiveState: PassiveGameState) => {
-            if (!passiveState) return;
+    const handleGameState = (passiveState: PassiveGameState) => {
+      if (!passiveState) return;
 
-            const remotePlayers = passiveState.players || [];
-            const currentIds = (playersRef.current || []).map(p => p.config.id).join(',');
-            const remoteIds = remotePlayers.map(p => p.id).join(',');
+      const remotePlayers = passiveState.players || [];
+      const currentIds = (playersRef.current || []).map((p) => p.config.id).join(',');
+      const remoteIds = remotePlayers.map((p) => p.id).join(',');
 
-            if (currentIds !== remoteIds) {
-                const newPlayers = remotePlayers.map(p => new PlayerRuntime({
-                    id: p.id,
-                    name: p.name,
-                    hue: p.hue,
-                    isRemote: true
-                }));
-                setPlayers(newPlayers);
-                playersRef.current = newPlayers;
-            }
+      if (currentIds !== remoteIds) {
+        const newPlayers = remotePlayers.map(
+          (p) =>
+            new PlayerRuntime({
+              id: p.id,
+              name: p.name,
+              hue: p.hue,
+              isRemote: true,
+            }),
+        );
+        setPlayers(newPlayers);
+        playersRef.current = newPlayers;
+      }
 
-            remotePlayers.forEach((pState, idx) => {
-                const rt = playersRef.current?.[idx];
-                if (rt) {
-                    rt.pitchRef.current = pState.currentPitch;
-                    rt.activeSegments = pState.activeSegments;
-                    if (pState.sungSegments) {
-                        rt.segmentsRef.current = pState.sungSegments;
-                    }
-                    rt.trackScores = pState.trackScores;
-                    rt.score = pState.score;
-                    rt.combo = pState.combo;
+      remotePlayers.forEach((pState, idx) => {
+        const rt = playersRef.current?.[idx];
+        if (rt) {
+          rt.pitchRef.current = pState.currentPitch;
+          rt.activeSegments = pState.activeSegments;
+          if (pState.sungSegments) {
+            rt.segmentsRef.current = pState.sungSegments;
+          }
+          rt.trackScores = pState.trackScores;
+          rt.score = pState.score;
+          rt.combo = pState.combo;
 
-                    if (pState.lastHit && (!rt.lastHit || pState.lastHit.timestamp > rt.lastHit.timestamp)) {
-                        rt.lastHit = pState.lastHit;
-                        scoreDisplayRef.current?.triggerHit(
-                            pState.id,
-                            pState.lastHit.rating,
-                            pState.combo,
-                            pState.lastHit.score
-                        );
-                    }
-                }
-            });
+          if (pState.lastHit && (!rt.lastHit || pState.lastHit.timestamp > rt.lastHit.timestamp)) {
+            rt.lastHit = pState.lastHit;
+            scoreDisplayRef.current?.triggerHit(
+              pState.id,
+              pState.lastHit.rating,
+              pState.combo,
+              pState.lastHit.score,
+            );
+          }
+        }
+      });
 
-            if (passiveState.isPlaying !== isPlayingRef.current) {
-                // Immediately update ref to prevent duplicate trigger loops
-                if (isPlayingRef.current !== undefined) {
-                    (isPlayingRef as any).current = passiveState.isPlaying;
-                }
-                
-                if (passiveState.isPlaying) {
-                    if (audioRef.current && Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 1.0) {
-                        audioRef.current.currentTime = passiveState.currentTime;
-                        if (vocalsRef?.current) vocalsRef.current.currentTime = passiveState.currentTime;
-                        if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
-                    }
-                    const tryPlay = async () => {
-                        setIsPlaying(true);
-                        try {
-                            if (audioRef.current) await audioRef.current.play();
-                            if (vocalsRef?.current) vocalsRef.current.play().catch(() => { });
-                            if (videoRef.current) videoRef.current.play().catch(() => { });
-                            setPassivePlayBlocked(false);
-                        } catch (e: any) {
-                            console.warn('[Session] Passive play blocked by autoplay policy:', e.name);
-                        }
-                    };
-                    tryPlay();
-                } else {
-                    audioRef.current?.pause();
-                    vocalsRef?.current?.pause();
-                    videoRef.current?.pause();
-                    setIsPlaying(false);
-                }
-            }
-
-            setIsFinished(prev => passiveState.isFinished !== prev ? passiveState.isFinished : prev);
-            setIsPausedForScore(prev => passiveState.isPausedForScore !== prev ? passiveState.isPausedForScore : prev);
-
-            // Drift threshold: 0.5s ensures TV catches up quickly after initial load
-            // (fixes race condition where TV starts behind host due to load delay)
-            if (!isClient && audioRef.current && passiveState.isPlaying && isPlayingRef.current && !audioRef.current.paused && Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 0.5) {
-                audioRef.current.currentTime = passiveState.currentTime;
-                if (vocalsRef?.current) vocalsRef.current.currentTime = passiveState.currentTime;
-                if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
-            }
-
-            if (isClient) {
-                // Ignore hostTimestamp because Date.now() on different devices is not synchronized (clock drift)
-                // Assume a fixed ~20ms latency for LAN WebRTC
-                const latency = 0.02;
-                const estimatedHostTime = passiveState.currentTime + latency;
-                
-                const drift = Math.abs(virtualTimeRef.current! - estimatedHostTime);
-                if (!isPlayingRef.current || drift > 0.15) {
-                    (virtualTimeRef as any).current = estimatedHostTime;
-                }
-            }
-        };
-
-        if (passiveState) {
-            handleGameState(passiveState);
+      const now = Date.now();
+      const retryPlay =
+        !isClient &&
+        shouldRetryPassivePlay(
+          passiveState.isPlaying,
+          audioRef.current,
+          now,
+          nextPlayAttemptRef.current,
+        );
+      if (passiveState.isPlaying !== isPlayingRef.current || retryPlay) {
+        nextPlayAttemptRef.current = now + PASSIVE_PLAY_RETRY_MS;
+        // Immediately update ref to prevent duplicate trigger loops
+        if (isPlayingRef.current !== undefined) {
+          (isPlayingRef as any).current = passiveState.isPlaying;
         }
 
-        const onEvent = (e: any) => handleGameState(e.detail);
-        window.addEventListener('melodiq_tv_game_state', onEvent);
-        return () => window.removeEventListener('melodiq_tv_game_state', onEvent);
-    }, [isPassive, isClient]);
-
-    // Sync local pitch directly from PhoneClientEngine (bypassing network latency for the local cursor)
-    useEffect(() => {
-        if (!isClient) return;
-
-        let myName = 'Phone';
-        const storedProfile = storage.get(STORAGE_KEYS.CLIENT_PROFILE);
-        if (storedProfile) {
+        if (passiveState.isPlaying) {
+          if (
+            audioRef.current &&
+            Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 1.0
+          ) {
+            audioRef.current.currentTime = passiveState.currentTime;
+            if (vocalsRef?.current) vocalsRef.current.currentTime = passiveState.currentTime;
+            if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
+          }
+          const tryPlay = async () => {
+            setIsPlaying(true);
             try {
-                const parsed = JSON.parse(storedProfile);
-                if (parsed.name) myName = parsed.name;
-            } catch (err) { }
+              if (audioRef.current) await audioRef.current.play();
+              if (vocalsRef?.current) vocalsRef.current.play().catch(() => {});
+              if (videoRef.current) videoRef.current.play().catch(() => {});
+              setPassivePlayBlocked(false);
+            } catch (e: any) {
+              console.warn('[Session] Passive play blocked by autoplay policy:', e.name);
+            }
+          };
+          tryPlay();
+        } else {
+          audioRef.current?.pause();
+          vocalsRef?.current?.pause();
+          videoRef.current?.pause();
+          setIsPlaying(false);
         }
+      }
 
-        const handleLocalPitch = (e: any) => {
-            const { pitch } = e.detail;
-            playersRef.current?.forEach(rt => {
-                if (rt.config.name === myName) {
-                    rt.pitchRef.current = pitch;
-                }
-            });
-        };
+      setIsFinished((prev) => (passiveState.isFinished !== prev ? passiveState.isFinished : prev));
+      setIsPausedForScore((prev) =>
+        passiveState.isPausedForScore !== prev ? passiveState.isPausedForScore : prev,
+      );
 
-        window.addEventListener('melodiq_local_pitch', handleLocalPitch);
-        return () => window.removeEventListener('melodiq_local_pitch', handleLocalPitch);
-    }, [isClient, playersRef]);
+      // Drift threshold: 0.5s ensures TV catches up quickly after initial load
+      // (fixes race condition where TV starts behind host due to load delay)
+      if (
+        !isClient &&
+        audioRef.current &&
+        passiveState.isPlaying &&
+        isPlayingRef.current &&
+        !audioRef.current.paused &&
+        Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 0.5
+      ) {
+        audioRef.current.currentTime = passiveState.currentTime;
+        if (vocalsRef?.current) vocalsRef.current.currentTime = passiveState.currentTime;
+        if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
+      }
+
+      if (isClient) {
+        // Ignore hostTimestamp because Date.now() on different devices is not synchronized (clock drift)
+        // Assume a fixed ~20ms latency for LAN WebRTC
+        const latency = 0.02;
+        const estimatedHostTime = passiveState.currentTime + latency;
+
+        const drift = Math.abs(virtualTimeRef.current! - estimatedHostTime);
+        if (!isPlayingRef.current || drift > 0.15) {
+          (virtualTimeRef as any).current = estimatedHostTime;
+        }
+      }
+    };
+
+    if (passiveState) {
+      handleGameState(passiveState);
+    }
+
+    const onEvent = (e: any) => handleGameState(e.detail);
+    window.addEventListener('melodiq_tv_game_state', onEvent);
+    return () => window.removeEventListener('melodiq_tv_game_state', onEvent);
+  }, [isPassive, isClient]);
+
+  // Sync local pitch directly from PhoneClientEngine (bypassing network latency for the local cursor)
+  useEffect(() => {
+    if (!isClient) return;
+
+    let myName = 'Phone';
+    const storedProfile = storage.get(STORAGE_KEYS.CLIENT_PROFILE);
+    if (storedProfile) {
+      try {
+        const parsed = JSON.parse(storedProfile);
+        if (parsed.name) myName = parsed.name;
+      } catch (err) {}
+    }
+
+    const handleLocalPitch = (e: any) => {
+      const { pitch } = e.detail;
+      playersRef.current?.forEach((rt) => {
+        if (rt.config.name === myName) {
+          rt.pitchRef.current = pitch;
+        }
+      });
+    };
+
+    window.addEventListener('melodiq_local_pitch', handleLocalPitch);
+    return () => window.removeEventListener('melodiq_local_pitch', handleLocalPitch);
+  }, [isClient, playersRef]);
 }

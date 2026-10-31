@@ -3,7 +3,7 @@ import { afterAll, describe, expect, it, vi } from 'vitest';
 // Melodiq reads `window.location` at import time; the node test environment has no window.
 vi.stubGlobal('window', { location: { search: '' } });
 
-describe('gameRegistry settings sections', () => {
+describe('gameRegistry settings sections', { timeout: 30000 }, () => {
   afterAll(() => vi.unstubAllGlobals());
 
   it('uses unique section ids per game', async () => {
@@ -24,5 +24,6 @@ describe('gameRegistry settings sections', () => {
     expect(ids('wordle')).toEqual(['gameplay']);
     expect(ids('melodiq-notes')).toEqual(['sounds']);
     expect(ids('melodiq')).toEqual(['profiles', 'gameplay', 'client']);
+    // Importing every game takes over 5s on a busy machine
   });
 });

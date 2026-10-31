@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-18
+  at: 2026-10-31
   method: 'derived from code on branch docs/okf-knowledge-base (base consolidated/quality-sprint-october @ c298e79): gameRegistry.tsx, grep of imports, STORAGE_KEYS usage, Dexie/IndexedDB names, *.test.* files'
 sources:
   - 'src/lib/gameRegistry.tsx'
@@ -86,6 +86,8 @@ Game-local key constants bypass the `STORAGE_KEYS` registry rule — see [open-q
 | all others    | single device, pass-and-play                                                                                                                                                                                                                         | —                                                                                                                                                          |
 
 Melodiq's direct `BroadcastChannel` use contradicts the "Inline BroadcastChannel Sync" rule — see [open-questions Q4](../open-questions.md#q4--melodiq-uses-inline-broadcastchannel). Protocol details: [sync-protocol.md](sync-protocol.md).
+
+A cast TV (Presentation API) runs in its own storage partition and only gets JSON over the `PresentationConnection`, so file handles and `blob:` URLs do not survive. Local-folder media travels as acknowledged binary chunks before `PLAY_SONG` (`src/games/melodiq/logic/tvMediaTransfer.ts`, `MEDIA_START` / `MEDIA_ACK` / `MEDIA_END`), and server media paths are sent as absolute URLs with the token. A popup TV window shares the host's storage and does not need this.
 
 ## 4. Translations
 

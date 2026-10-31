@@ -10,7 +10,7 @@ import { playCalibrationBeep } from '../../../modules/audio/latency';
 interface UseMelodiqGlobalEventsProps {
   lastEvent: TVEvent | null;
   popNext: () => any;
-  playSongOnTV: (id: string, song: SongMeta, currentTime?: number) => void;
+  playSongOnTV: (id: string, song: SongMeta, currentTime?: number) => Promise<void>;
   setRemoteSong: (song: SongMeta | null) => void;
   setFeedbackMessage: (msg: string | null) => void;
   handleSelectSong: (
@@ -95,6 +95,7 @@ export const useMelodiqGlobalEvents = ({
         const currentTime = (window as any).__melodiq_current_time || 0;
         playSongOnTV(selectedSong.id, selectedSong, currentTime);
         setRemoteSong(selectedSong as unknown as SongMeta);
+        if (currentView === 'Session') setCurrentView('Home'); // The song now plays on the TV
       }
     }
   }, [
@@ -102,6 +103,8 @@ export const useMelodiqGlobalEvents = ({
     popNext,
     playSongOnTV,
     setRemoteSong,
+    currentView,
+    setCurrentView,
     setFeedbackMessage,
     selectedSong,
     remoteSong,
@@ -218,10 +221,22 @@ export const useMelodiqGlobalEvents = ({
   useEffect(() => {
     if (isTVConnected && selectedSong && !remoteSong) {
       console.log('TV Connected while playing locally, switching to TV...');
-      playSongOnTV(selectedSong.id, selectedSong);
+      const { __melodiq_current_time: currentTime } = window as Window & {
+        __melodiq_current_time?: number;
+      };
+      playSongOnTV(selectedSong.id, selectedSong, currentTime || 0);
       setRemoteSong(selectedSong as unknown as SongMeta);
+      if (currentView === 'Session') setCurrentView('Home'); // The song now plays on the TV
     } else if (!isTVConnected && remoteSong) {
       setRemoteSong(null);
     }
-  }, [isTVConnected, selectedSong, remoteSong, playSongOnTV, setRemoteSong]);
+  }, [
+    isTVConnected,
+    selectedSong,
+    remoteSong,
+    playSongOnTV,
+    setRemoteSong,
+    currentView,
+    setCurrentView,
+  ]);
 };

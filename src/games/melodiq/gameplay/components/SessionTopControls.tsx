@@ -86,10 +86,13 @@ export const SessionTopControls: React.FC<SessionTopControlsProps> = ({
         <Box
           ref={progressLineRef}
           sx={{
-            width: '0%',
+            width: '100%',
             height: '100%',
             bgcolor: 'primary.main',
-            transition: 'width 0.1s linear',
+            // Not width: that repaints over the video every frame, which drops frames on a 4K clip
+            transform: 'scaleX(0)',
+            transformOrigin: 'left',
+            transition: 'transform 0.1s linear',
           }}
         />
       </Box>
