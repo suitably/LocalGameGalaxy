@@ -1,6 +1,7 @@
 import { Hono, type Context } from 'hono';
 import fs from 'node:fs';
 import path from 'node:path';
+import { Readable } from 'node:stream';
 import { getRequestToken } from '../../../core/auth';
 import { resolveSecurePath } from '../../../utils/helpers';
 import {
@@ -11,6 +12,8 @@ import {
   uniqueFileName,
 } from '../../../utils/scoreFiles';
 import { getSongCache, refreshSongFolder } from '../services/scanner';
+import { attachmentHeader, isLibraryRoot, songArchiveEntries } from '../services/songArchive';
+import { MAX_ZIP_BYTES, zipChunks, zipSize } from '../../../utils/zipStream';
 import {
   MAX_RECORDING_BYTES,
   RECORDING_EXTENSIONS,
@@ -140,6 +143,34 @@ songFilesRouter.post('/api/songs/:id/files', async (c) => {
     });
   } catch (e: unknown) {
     return c.json({ error: `Failed to store file: ${errorText(e)}` }, 500);
+  }
+});
+
+// GET /api/songs/:id/archive — the whole song folder as a ZIP (stored, streamed); `?token=` works,
+// so a plain link can download it
+songFilesRouter.get('/api/songs/:id/archive', async (c) => {
+  const found = findSong(c);
+  if (!found.ok) return found.response;
+  const song = found.value;
+  if (isLibraryRoot(song.folder)) {
+    return c.json({ error: 'A library root is not a song folder' }, 400);
+  }
+  try {
+    const entries = await songArchiveEntries(song.folder);
+    const size = zipSize(entries);
+    if (size > MAX_ZIP_BYTES || entries.length > 0xffff) {
+      return c.json({ error: 'Song folder is too large for a ZIP download' }, 413);
+    }
+    // a Node stream, as `streamFile` passes it (the node adapter pipes it)
+    const body = Readable.from(zipChunks(entries)) as unknown as ReadableStream;
+    return c.body(body, 200, {
+      'Content-Type': 'application/zip',
+      'Content-Length': String(size),
+      'Content-Disposition': attachmentHeader(`${path.basename(song.folder)}.zip`),
+      'Cache-Control': 'no-store',
+    });
+  } catch (e: unknown) {
+    return c.json({ error: `Failed to read song folder: ${errorText(e)}` }, 500);
   }
 });
 

@@ -757,6 +757,8 @@
         "files_add": "Add files",
         "files_add_hint": "Sheet music (.gp, .mxl, .musicxml, .xml, .mid) or audio. Existing files are never overwritten; a file with the same name is stored as \"name (2)\".",
         "files_download": "Download",
+        "files_zip": "Download folder (ZIP)",
+        "files_zip_hint": "Downloads the whole song folder (karaoke .txt, mix, stems, sheet music, bar marks, recordings) as one ZIP. Single files: the download button next to each file.",
         "files_delete": "Delete file",
         "files_delete_score_confirm": "Delete \"{{file}}\" with its bar marks and name from the song folder on the server?",
         "files_delete_recording_confirm": "Delete the recording \"{{file}}\" from the song folder on the server?",

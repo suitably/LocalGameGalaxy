@@ -11,9 +11,11 @@ import {
   type Theme,
 } from '@mui/material';
 import UploadIcon from '@mui/icons-material/UploadFileRounded';
+import ZipIcon from '@mui/icons-material/FolderZipRounded';
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '../../../../components/common/ConfirmDialog';
+import { songArchiveUrl } from '../../../../lib/companion/notesLibraryApi';
 import type { CompanionSong } from '../../../../lib/companion/songScoresApi';
 import { NotesDialogFrame } from '../../components/NotesDialogFrame';
 import {
@@ -146,6 +148,16 @@ export function SongFilesDialog({ song: initial, onClose }: SongFilesDialogProps
         </Stack>
       </DialogContent>
       <DialogActions>
+        <Button
+          component="a"
+          href={songArchiveUrl(m.song.id)}
+          download
+          startIcon={<ZipIcon />}
+          title={k('files_zip_hint')}
+          sx={{ mr: 'auto' }}
+        >
+          {k('files_zip')}
+        </Button>
         <Button onClick={close}>{t('common.close')}</Button>
         <Button
           variant="contained"

@@ -4,7 +4,8 @@
  * A song folder is the only store (#568): scores, their bar marks and Notes recordings are files
  * of the song; a new song without karaoke `.txt` gets a folder with `song.json`.
  */
-import { companionRequest as request, jsonBody } from './companionHttp';
+import { companionRequest as request, companionUrl, jsonBody } from './companionHttp';
+import { getHelperToken } from './companionSettings';
 import type { CompanionSong, StoredBarMarks } from './songScoresApi';
 
 export interface StoredSongFile {
@@ -57,3 +58,10 @@ export const saveSongMarks = (songId: string, file: string, marks: StoredBarMark
 /** Removes the whole song folder (the UI offers it only for songs without karaoke `.txt`). */
 export const deleteLibrarySong = (songId: string) =>
   request<{ success: true }>(songPath(songId), { method: 'DELETE' });
+
+/** Link that downloads the whole song folder as a ZIP; the token rides in the query (plain link). */
+export function songArchiveUrl(songId: string): string {
+  const token = getHelperToken();
+  const query = token ? `?token=${encodeURIComponent(token)}` : '';
+  return companionUrl(`${songPath(songId)}/archive${query}`);
+}
