@@ -10,6 +10,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useClientEngine } from '../PhoneClientEngine';
 import { SettingSlider, SettingSwitch, SettingToggleGroup } from '../../../components/settings';
+import { LYRICS_MIN_FIT_OPTIONS } from '../gameplay/logic/lyricsFit';
 import type { HostSettings, HostSettingsRpc } from '../types';
 
 type VolumeKey = 'songVolume' | 'masterVolume' | 'vocalsVolume';
@@ -129,6 +130,16 @@ const HostSettingsForm: React.FC<FormProps> = ({ settings, percent, set }) => {
           { value: 2, label: t('melodiq.settings_panel.lyrics_rows_two', '2 rows') },
         ]}
         onChange={(lyricsRows) => set({ lyricsRows })}
+      />
+
+      <SettingToggleGroup
+        title={t('melodiq.settings_panel.lyrics_min_size', 'Minimum Lyrics Size')}
+        value={settings.lyricsMinFit}
+        options={LYRICS_MIN_FIT_OPTIONS.map((fit) => ({
+          value: fit,
+          label: `${Math.round(fit * 100)}%`,
+        }))}
+        onChange={(lyricsMinFit) => set({ lyricsMinFit })}
       />
 
       <SettingToggleGroup

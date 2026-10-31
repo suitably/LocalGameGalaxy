@@ -189,6 +189,7 @@ export type HostSettings = Pick<
   | 'enableLyricsZoom'
   | 'lyricsLines'
   | 'lyricsRows'
+  | 'lyricsMinFit'
   | 'lyricsPosition'
   | 'showNoteLabels'
   | 'showScoreboardQrCode'

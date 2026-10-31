@@ -35,6 +35,7 @@ interface LyricsBarProps {
   enableZoom: boolean;
   lyricsLines?: number;
   lyricsRows: LyricsRows;
+  lyricsMinFit: number;
 }
 
 /** Translucent lyrics strip docked to the bottom of the stage. */
@@ -62,6 +63,7 @@ const LyricsBar: React.FC<LyricsBarProps> = (props) => (
         enableZoom={props.enableZoom}
         lyricsLines={props.lyricsLines}
         lyricsRows={props.lyricsRows}
+        lyricsMinFit={props.lyricsMinFit}
       />
     </Box>
   </Box>
@@ -83,7 +85,7 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
   onSwitchTrack,
 }) => {
   const { settings } = useMelodiqSettings();
-  const lyricsRows = settings.lyricsRows;
+  const { lyricsRows, lyricsMinFit } = settings;
   const lyricsScale = lyricsUiScale * (uiScale > 1 ? TV_LYRICS_SCALE : 1);
   const lyricsProps: LyricsBarProps = {
     song: parsedSong,
@@ -92,6 +94,7 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
     enableZoom: activeLyricsZoom,
     lyricsLines: activeLyricsLines,
     lyricsRows,
+    lyricsMinFit,
   };
 
   if (visiblePlayers.length === 0) {
@@ -117,6 +120,7 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
               enableZoom={activeLyricsZoom}
               lyricsLines={activeLyricsLines}
               lyricsRows={lyricsRows}
+              lyricsMinFit={lyricsMinFit}
             />
           </Box>
         </Box>

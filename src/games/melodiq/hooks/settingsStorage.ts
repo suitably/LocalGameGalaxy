@@ -24,6 +24,7 @@ export interface SettingsState {
   enableLyricsZoom: boolean;
   lyricsLines: number;
   lyricsRows: 1 | 2;
+  lyricsMinFit: number;
   lyricsPosition: 'bottom' | 'center';
   audioPlaybackMode: 'separated' | 'original';
   showScoreboardQrCode: boolean;
@@ -55,6 +56,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   enableLyricsZoom: false,
   lyricsLines: 2,
   lyricsRows: 2,
+  lyricsMinFit: 0.6,
   lyricsPosition: 'bottom',
   audioPlaybackMode: 'separated',
   showScoreboardQrCode: true,
@@ -125,6 +127,10 @@ export const loadSettings = (): SettingsState => ({
     return stored ? parseInt(stored) : 2;
   })(),
   lyricsRows: storage.get(STORAGE_KEYS.MELODIQ_LYRICS_ROWS) === '1' ? 1 : 2,
+  lyricsMinFit: (() => {
+    const stored = storage.get(STORAGE_KEYS.MELODIQ_LYRICS_MIN_FIT);
+    return stored ? parseFloat(stored) : 0.6;
+  })(),
   lyricsPosition:
     (storage.get(STORAGE_KEYS.MELODIQ_LYRICS_POSITION) as SettingsState['lyricsPosition']) ||
     'bottom',
@@ -165,6 +171,7 @@ export const persistSettings = (s: SettingsState) => {
   storage.set(STORAGE_KEYS.MELODIQ_ENABLE_LYRICS_ZOOM, String(s.enableLyricsZoom));
   storage.set(STORAGE_KEYS.MELODIQ_LYRICS_LINES, String(s.lyricsLines));
   storage.set(STORAGE_KEYS.MELODIQ_LYRICS_ROWS, String(s.lyricsRows));
+  storage.set(STORAGE_KEYS.MELODIQ_LYRICS_MIN_FIT, String(s.lyricsMinFit));
   storage.set(STORAGE_KEYS.MELODIQ_LYRICS_POSITION, s.lyricsPosition);
   storage.set(STORAGE_KEYS.MELODIQ_AUDIO_PLAYBACK_MODE, s.audioPlaybackMode);
   storage.set(STORAGE_KEYS.MELODIQ_SHOW_SCOREBOARD_QR_CODE, String(s.showScoreboardQrCode));
@@ -245,6 +252,9 @@ export const persistSingleSetting = <K extends keyof SettingsState>(
     case 'lyricsRows':
       storage.set(STORAGE_KEYS.MELODIQ_LYRICS_ROWS, String(value));
       break;
+    case 'lyricsMinFit':
+      storage.set(STORAGE_KEYS.MELODIQ_LYRICS_MIN_FIT, String(value));
+      break;
     case 'lyricsPosition':
       storage.set(STORAGE_KEYS.MELODIQ_LYRICS_POSITION, String(value));
       break;
@@ -258,4 +268,10 @@ export const persistSingleSetting = <K extends keyof SettingsState>(
       storage.set(STORAGE_KEYS.MELODIQ_MIC_LATENCY, String(value));
       break;
   }
+};
+
+/** The settings a cast TV needs: it has its own storage, so it only knows what it is told. */
+export const loadTvSettings = (): Partial<SettingsState> => {
+  const { lyricsRows, lyricsMinFit } = loadSettings();
+  return { lyricsRows, lyricsMinFit };
 };
