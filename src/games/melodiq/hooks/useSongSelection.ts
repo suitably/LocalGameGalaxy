@@ -33,6 +33,12 @@ export function useSongSelection(a: UseSongSelectionArgs) {
   const isPlaybackPlayingRef = useRef<boolean>(false);
   const selectedSongRef = useRef<Song | SongMeta | null>(a.selectedSong);
   const remoteSongRef = useRef<SongMeta | null>(a.remoteSong);
+  // The memoized song list keeps an old selectSong, which must still see a TV that joined later
+  const isTVConnectedRef = useRef(a.isTVConnected);
+
+  useEffect(() => {
+    isTVConnectedRef.current = a.isTVConnected;
+  }, [a.isTVConnected]);
 
   useEffect(() => {
     selectedSongRef.current = a.selectedSong;
@@ -111,7 +117,7 @@ export function useSongSelection(a: UseSongSelectionArgs) {
         storage.remove(STORAGE_KEYS.CURRENT_SONG_PARTICIPANTS);
       }
 
-      if (a.isTVConnected) {
+      if (isTVConnectedRef.current) {
         const fullSong = await a.getSongById(songMeta.id);
         if (fullSong) {
           // Waits for a local song's files, so the session cannot start without the TV
