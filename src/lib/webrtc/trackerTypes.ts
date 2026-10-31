@@ -6,6 +6,5 @@ export interface TrackerItem {
 
 export const DEFAULT_PUBLIC_TRACKERS: readonly string[] = [
   'wss://tracker.openwebtorrent.com',
-  'wss://tracker.btorrent.xyz',
   'wss://tracker.webtorrent.dev',
 ];
