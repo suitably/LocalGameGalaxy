@@ -1,60 +1,11 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { type PlayerRuntime } from './PlayerRuntime';
 import { type PitchResult } from '../../audio/MicrophoneManager';
-import { type RatingType, type ScoreDisplayHandle } from '../ScoreDisplay';
-import { type ParsedSong, type Note } from '../../parser';
-import { type SongWithNotes } from '../PitchVisualizer';
-import { type PassiveGameState, type PassivePlayerState } from '../../types';
+import { type RatingType } from '../ScoreDisplay';
+import { type Note } from '../../parser';
+import { notesOfTrack, type UseScoringEngineProps } from './scoringEngineTypes';
 
-export interface PlaybackUpdateState {
-    isPlaying: boolean;
-    currentTime: number;
-    duration: number;
-    progress: number;
-    players?: Array<Partial<PassivePlayerState> & { config?: unknown }>;
-}
-
-/**
- * Props for `useScoringEngine`. Separate from the component signature to allow
- * clear documentation of each timing and mode control surface.
- */
-interface UseScoringEngineProps {
-    /** All connected players (local + remote) with their `MicrophoneManager` / `WebRTCMicManager` references. */
-    players: PlayerRuntime[];
-    /** Set to `true` once audio is loaded and playback can begin. Gates the rAF loop. */
-    ready: boolean;
-    /** Ref to the main mixed audio element (used for `currentTime` as the timing source of truth). */
-    audioRef: React.RefObject<HTMLAudioElement | null>;
-    /** Ref to the optional vocals-only audio element (played/muted alongside the main track). */
-    vocalsRef: React.RefObject<HTMLAudioElement | null>;
-    videoRef: React.RefObject<HTMLVideoElement | null>;
-    scoreDisplayRef: React.RefObject<ScoreDisplayHandle | null>;
-    progressLineRef: React.RefObject<HTMLDivElement | null>;
-    /** Ref flag indicating whether audio is actively playing (used to skip scoring when paused). */
-    isPlayingRef: React.RefObject<boolean>;
-    /** The fully parsed UltraStar song data (tracks, notes, BPM, GAP). */
-    parsedSong: ParsedSong | SongWithNotes | null;
-    /** Multiplier applied to BPM for slower/faster lyric scroll (default 1.0). */
-    bpmMultiplier: number;
-    /** Per-track score weights: `[1.0]` for single singer, `[0.5, 0.5]` for duets. */
-    trackScoreWeights: number[];
-    /** Score multiplier for golden notes (`*` type). Typically 2.0. */
-    goldenNoteMultiplier: number;
-    /** Dev-only: Override all pitch detection with a fixed MIDI note number for testing. */
-    devPitchOverride: number | null;
-    /** If `true`, this instance is in TV/passive mode — reads pitch from `passiveState` rather than mic. */
-    isPassive: boolean;
-    /** State object received from the host via `GAME_STATE` BroadcastChannel message (TV mode). */
-    passiveState?: PassiveGameState | null;
-    /** If `true`, this instance is a remote phone client — runs a reduced local loop. */
-    isClient: boolean;
-    _duration: number;
-    micLatency?: number;
-    onPlaybackUpdate?: (state: PlaybackUpdateState) => void;
-    setScores?: React.Dispatch<React.SetStateAction<Record<string, number>>>;
-    /** Ref to the current virtual audio time in seconds (used for lyric sync when audioRef is unavailable). */
-    virtualTimeRef: React.RefObject<number>;
-}
+export type { PlaybackUpdateState } from './scoringEngineTypes';
 
 /**
  * `useScoringEngine` — Real-Time Pitch Matching & Scoring Engine
@@ -86,300 +37,333 @@ interface UseScoringEngineProps {
  * @param props - See `UseScoringEngineProps` for full prop documentation.
  */
 export function useScoringEngine({
-    players,
-    ready,
-    audioRef,
-    vocalsRef: _vocalsRef,
-    videoRef: _videoRef,
-    scoreDisplayRef,
-    progressLineRef,
-    isPlayingRef,
-    parsedSong,
-    bpmMultiplier,
-    trackScoreWeights,
-    goldenNoteMultiplier,
-    devPitchOverride,
-    isPassive,
-    passiveState: _passiveState,
-    isClient,
-    _duration,
-    micLatency = 0,
-    onPlaybackUpdate,
-    setScores,
-    virtualTimeRef
+  players,
+  ready,
+  audioRef,
+  vocalsRef: _vocalsRef,
+  videoRef: _videoRef,
+  scoreDisplayRef,
+  progressLineRef,
+  isPlayingRef,
+  parsedSong,
+  bpmMultiplier,
+  trackScoreWeights,
+  goldenNoteMultiplier,
+  devPitchOverride,
+  isPassive,
+  passiveState: _passiveState,
+  isClient,
+  _duration,
+  micLatency = 0,
+  onPlaybackUpdate,
+  setScores,
+  virtualTimeRef,
 }: UseScoringEngineProps) {
-    const requestRef = useRef<number>(0);
-    const lastTimeRef = useRef<number>(0);
-    const lastScoreUpdateRef = useRef<number>(0);
-    const updateLoopRef = useRef<(() => void) | undefined>(undefined);
+  const requestRef = useRef<number>(0);
+  const lastTimeRef = useRef<number>(0);
+  const lastScoreUpdateRef = useRef<number>(0);
+  const updateLoopRef = useRef<(() => void) | undefined>(undefined);
 
-    const ULTRASTAR_BEAT_DIVISOR = 4;
+  const ULTRASTAR_BEAT_DIVISOR = 4;
 
-    const processPlayer = useCallback((
-        player: PlayerRuntime,
-        devOverride: number | null,
-        deltaTimeMs: number
-    ) => {
-        let pitch: PitchResult | null = null;
-        const effectiveBpmMultiplier = (bpmMultiplier || 1) * ULTRASTAR_BEAT_DIVISOR;
-        const beatDuration = 60000 / ((parsedSong?.bpm || 120) * effectiveBpmMultiplier);
+  const processPlayer = useCallback(
+    (player: PlayerRuntime, devOverride: number | null, deltaTimeMs: number) => {
+      let pitch: PitchResult | null = null;
+      const effectiveBpmMultiplier = (bpmMultiplier || 1) * ULTRASTAR_BEAT_DIVISOR;
+      const beatDuration = 60000 / ((parsedSong?.bpm || 120) * effectiveBpmMultiplier);
 
-        if (devOverride !== null) {
-            pitch = {
-                frequency: 440 * Math.pow(2, (devOverride - 69) / 12),
-                note: devOverride,
-                volume: 1.0
-            };
-        } else if (player.config.deviceId === 'BOT') {
-            if (audioRef.current && isPlayingRef.current && parsedSong) {
-                const latency = player.config.latency || 0;
-                const currentBeat = ((audioRef.current.currentTime * 1000) - latency - (parsedSong.gap || 0)) / beatDuration;
+      if (devOverride !== null) {
+        pitch = {
+          frequency: 440 * Math.pow(2, (devOverride - 69) / 12),
+          note: devOverride,
+          volume: 1.0,
+        };
+      } else if (player.config.deviceId === 'BOT') {
+        if (audioRef.current && isPlayingRef.current && parsedSong) {
+          const latency = player.config.latency || 0;
+          const currentBeat =
+            (audioRef.current.currentTime * 1000 - latency - (parsedSong.gap || 0)) / beatDuration;
 
-                const tIdx = player.trackIndex;
-                const notesSource: Note[] = (parsedSong.tracks && parsedSong.tracks.length > 0 && parsedSong.tracks[tIdx])
-                    ? (parsedSong.tracks[tIdx].notes ?? [])
-                    : (tIdx === 0 ? (parsedSong.notes || []) : []);
+          const tIdx = player.trackIndex;
+          const notesSource = notesOfTrack(parsedSong, tIdx);
 
-                if (notesSource) {
-                    const activeNote = notesSource.find((n: Note) =>
-                        n.type !== '-' && n.type !== 'R' && n.type !== 'G' &&
-                        currentBeat >= n.start &&
-                        currentBeat <= n.start + n.duration
-                    );
-
-                    if (activeNote) {
-                        pitch = {
-                            frequency: 440 * Math.pow(2, (activeNote.pitch - 69) / 12),
-                            note: activeNote.pitch,
-                            volume: 0.8
-                        };
-                    }
-                }
-            }
-        } else {
-            pitch = devOverride !== null ? { frequency: 440, note: devOverride, volume: 0.5 } : player.getPitch();
-        }
-
-        if (!isPlayingRef.current) {
-            pitch = null;
-        }
-
-        player.pitchRef.current = pitch;
-
-        if (pitch && pitch.note > 0 && isPlayingRef.current && parsedSong && audioRef.current) {
-            const latency = (player.config.latency || 0) + micLatency;
-            const currentBeat = ((audioRef.current.currentTime * 1000) - latency - (parsedSong.gap || 0)) / beatDuration;
-
-            const tIdx = player.trackIndex;
-            const notesSource: Note[] = (parsedSong.tracks && parsedSong.tracks.length > 0 && parsedSong.tracks[tIdx])
-                ? (parsedSong.tracks[tIdx].notes ?? [])
-                : (tIdx === 0 ? (parsedSong.notes || []) : []);
-
-            if (!notesSource || notesSource.length === 0) return;
-
-            const currentScoreWeight = (trackScoreWeights.length > tIdx) ? trackScoreWeights[tIdx] : (trackScoreWeights[0] || 1);
-
-            const activeNoteIndex = notesSource.findIndex((n) =>
-                n.type !== '-' && n.type !== 'R' && n.type !== 'G' &&
+          if (notesSource) {
+            const activeNote = notesSource.find(
+              (n: Note) =>
+                n.type !== '-' &&
+                n.type !== 'R' &&
+                n.type !== 'G' &&
                 currentBeat >= n.start &&
-                currentBeat <= n.start + n.duration
+                currentBeat <= n.start + n.duration,
             );
 
-            if (activeNoteIndex !== -1) {
-                const note = notesSource[activeNoteIndex];
-                const targetPitch = note.pitch;
-                const sungPitch = pitch.note;
+            if (activeNote) {
+              pitch = {
+                frequency: 440 * Math.pow(2, (activeNote.pitch - 69) / 12),
+                note: activeNote.pitch,
+                volume: 0.8,
+              };
+            }
+          }
+        }
+      } else {
+        pitch =
+          devOverride !== null
+            ? { frequency: 440, note: devOverride, volume: 0.5 }
+            : player.getPitch();
+      }
 
-                const diff = Math.abs((sungPitch % 12) - (targetPitch % 12));
-                const semitoneDiff = Math.min(diff, 12 - diff);
+      if (!isPlayingRef.current) {
+        pitch = null;
+      }
 
-                if (semitoneDiff < 1.2) {
-                    // Standard UltraStar target score is 10,000, we limit it to 1,000 points per track
-                    const totalTrackBeats = notesSource
-                        .filter(n => n.type !== '-' && n.type !== 'R' && n.type !== 'G')
-                        .reduce((sum, n) => sum + (n.duration * (n.type === '*' ? goldenNoteMultiplier : 1)), 0);
-                    const pointsPerBeat = totalTrackBeats > 0 ? (1000 / totalTrackBeats) : 10;
+      player.pitchRef.current = pitch;
 
-                    const durationUnitsCovered = deltaTimeMs / beatDuration;
-                    let points = durationUnitsCovered * pointsPerBeat * currentScoreWeight;
-                    if (note.type === '*') points *= goldenNoteMultiplier;
+      if (pitch && pitch.note > 0 && isPlayingRef.current && parsedSong && audioRef.current) {
+        const latency = (player.config.latency || 0) + micLatency;
+        const currentBeat =
+          (audioRef.current.currentTime * 1000 - latency - (parsedSong.gap || 0)) / beatDuration;
 
-                    if (!player.trackScores[tIdx]) player.trackScores[tIdx] = 0;
-                    player.trackScores[tIdx] += points;
-                    player.score = Math.round(Object.values(player.trackScores).reduce((a, b) => a + b, 0));
+        const tIdx = player.trackIndex;
+        const notesSource = notesOfTrack(parsedSong, tIdx);
 
-                    const activeSegment = player.activeSegments[tIdx];
-                    const wasHitting = activeSegment ? activeSegment.noteIndex === activeNoteIndex : false;
+        if (!notesSource || notesSource.length === 0) return;
 
-                    if (!wasHitting) {
-                        player.combo += 1;
-                        if (player.combo > player.maxCombo) player.maxCombo = player.combo;
+        const currentScoreWeight =
+          trackScoreWeights.length > tIdx ? trackScoreWeights[tIdx] : trackScoreWeights[0] || 1;
 
-                        let rating: RatingType = 'Good';
-                        if (semitoneDiff < 0.3) rating = 'Perfect';
-                        else if (semitoneDiff < 0.7) rating = 'Good';
-                        else rating = 'Okay';
+        const activeNoteIndex = notesSource.findIndex(
+          (n) =>
+            n.type !== '-' &&
+            n.type !== 'R' &&
+            n.type !== 'G' &&
+            currentBeat >= n.start &&
+            currentBeat <= n.start + n.duration,
+        );
 
-                        const hitScore = Math.round(player.trackScores[tIdx] || 0);
+        if (activeNoteIndex !== -1) {
+          const note = notesSource[activeNoteIndex];
+          const targetPitch = note.pitch;
+          const sungPitch = pitch.note;
 
-                        player.lastHit = {
-                            rating,
-                            score: hitScore,
-                            timestamp: Date.now()
-                        };
+          const diff = Math.abs((sungPitch % 12) - (targetPitch % 12));
+          const semitoneDiff = Math.min(diff, 12 - diff);
 
-                        scoreDisplayRef.current?.triggerHit(
-                            player.config.id,
-                            rating,
-                            player.combo,
-                            hitScore
-                        );
-                    } else {
-                        if (Math.random() < 0.1) {
-                            scoreDisplayRef.current?.triggerHit(
-                                player.config.id,
-                                'Good',
-                                player.combo,
-                                Math.round(player.trackScores[tIdx])
-                            );
-                        }
-                    }
+          if (semitoneDiff < 1.2) {
+            // Standard UltraStar target score is 10,000, we limit it to 1,000 points per track
+            const totalTrackBeats = notesSource
+              .filter((n) => n.type !== '-' && n.type !== 'R' && n.type !== 'G')
+              .reduce(
+                (sum, n) => sum + n.duration * (n.type === '*' ? goldenNoteMultiplier : 1),
+                0,
+              );
+            const pointsPerBeat = totalTrackBeats > 0 ? 1000 / totalTrackBeats : 10;
 
-                    const record = player.segmentsRef.current;
-                    if (record) {
-                        const activeSeg = player.activeSegments[tIdx];
+            const durationUnitsCovered = deltaTimeMs / beatDuration;
+            let points = durationUnitsCovered * pointsPerBeat * currentScoreWeight;
+            if (note.type === '*') points *= goldenNoteMultiplier;
 
-                        if (activeSeg &&
-                            activeSeg.trackIndex === tIdx &&
-                            activeSeg.noteIndex === activeNoteIndex) {
-                            activeSeg.endBeat = currentBeat;
-                        } else {
-                            const newSegment = {
-                                noteIndex: activeNoteIndex,
-                                startBeat: currentBeat,
-                                endBeat: currentBeat,
-                                trackIndex: tIdx
-                            };
-                            player.activeSegments[tIdx] = newSegment;
+            if (!player.trackScores[tIdx]) player.trackScores[tIdx] = 0;
+            player.trackScores[tIdx] += points;
+            player.score = Math.round(Object.values(player.trackScores).reduce((a, b) => a + b, 0));
 
-                            if (!record[activeNoteIndex]) record[activeNoteIndex] = [];
-                            record[activeNoteIndex].push(newSegment);
-                        }
-                    }
-                } else {
-                    if (player.activeSegments[tIdx] !== null) {
-                        player.combo = 0;
-                        const hitScore = Math.round(player.trackScores[tIdx] || 0);
-                        player.lastHit = {
-                            rating: 'Miss',
-                            score: hitScore,
-                            timestamp: Date.now()
-                        };
+            const activeSegment = player.activeSegments[tIdx];
+            const wasHitting = activeSegment ? activeSegment.noteIndex === activeNoteIndex : false;
 
-                        scoreDisplayRef.current?.triggerHit(
-                            player.config.id,
-                            'Miss',
-                            0,
-                            hitScore
-                        );
-                    }
-                    player.activeSegments[tIdx] = null;
-                }
+            if (!wasHitting) {
+              player.combo += 1;
+              if (player.combo > player.maxCombo) player.maxCombo = player.combo;
+
+              let rating: RatingType = 'Good';
+              if (semitoneDiff < 0.3) rating = 'Perfect';
+              else if (semitoneDiff < 0.7) rating = 'Good';
+              else rating = 'Okay';
+
+              const hitScore = Math.round(player.trackScores[tIdx] || 0);
+
+              player.lastHit = {
+                rating,
+                score: hitScore,
+                timestamp: Date.now(),
+              };
+
+              scoreDisplayRef.current?.triggerHit(player.config.id, rating, player.combo, hitScore);
             } else {
-                if (player.activeSegments[tIdx] !== null) {
-                    player.activeSegments[tIdx] = null;
-                }
+              if (Math.random() < 0.1) {
+                scoreDisplayRef.current?.triggerHit(
+                  player.config.id,
+                  'Good',
+                  player.combo,
+                  Math.round(player.trackScores[tIdx]),
+                );
+              }
             }
-        }
-    }, [audioRef, isPlayingRef, parsedSong, bpmMultiplier, trackScoreWeights, goldenNoteMultiplier, scoreDisplayRef, micLatency]);
 
-    const updateLoop = useCallback(() => {
-        const now = performance.now();
-        let deltaTime = now - lastTimeRef.current;
-        if (deltaTime > 100) deltaTime = 100; // Cap to 100ms to prevent massive jumps when tab is backgrounded
-        lastTimeRef.current = now;
+            const record = player.segmentsRef.current;
+            if (record) {
+              const activeSeg = player.activeSegments[tIdx];
 
-        const duration = (audioRef.current && Number.isFinite(audioRef.current.duration) && audioRef.current.duration > 0)
-            ? audioRef.current.duration
-            : (_duration > 0 ? _duration : 0);
+              if (
+                activeSeg &&
+                activeSeg.trackIndex === tIdx &&
+                activeSeg.noteIndex === activeNoteIndex
+              ) {
+                activeSeg.endBeat = currentBeat;
+              } else {
+                const newSegment = {
+                  noteIndex: activeNoteIndex,
+                  startBeat: currentBeat,
+                  endBeat: currentBeat,
+                  trackIndex: tIdx,
+                };
+                player.activeSegments[tIdx] = newSegment;
 
-        let currentTime = (isPassive && isClient) ? virtualTimeRef.current! : (audioRef.current ? audioRef.current.currentTime : 0);
-
-        // Interpolate time for fully passive clients
-        if (isPassive && isClient && isPlayingRef.current) {
-            currentTime += (deltaTime / 1000);
-            (virtualTimeRef as React.MutableRefObject<number>).current = currentTime;
-        }
-
-        if (onPlaybackUpdate) {
-            onPlaybackUpdate({
-                isPlaying: isPassive ? (isPlayingRef.current ?? false) : !(audioRef.current?.paused ?? true),
-                currentTime,
-                duration,
-                progress: duration > 0 ? (currentTime / duration) * 100 : 0,
-                players: isPassive ? undefined : players.map(p => ({
-                    config: p.config,
-                    id: p.config.id,
-                    name: p.config.name,
-                    hue: p.config.hue,
-                    score: p.score,
-                    trackScores: p.trackScores,
-                    currentPitch: p.pitchRef.current,
-                    activeSegments: p.activeSegments,
-                    sungSegments: p.segmentsRef.current,
-                    combo: p.combo,
-                    lastHit: p.lastHit
-                }))
-            });
-        }
-
-        if (progressLineRef.current) {
-            if (duration > 0) {
-                const progress = Math.min(100, Math.max(0, (currentTime / duration) * 100));
-                progressLineRef.current.style.width = `${progress}%`;
+                if (!record[activeNoteIndex]) record[activeNoteIndex] = [];
+                record[activeNoteIndex].push(newSegment);
+              }
             }
+          } else {
+            if (player.activeSegments[tIdx] !== null) {
+              player.combo = 0;
+              const hitScore = Math.round(player.trackScores[tIdx] || 0);
+              player.lastHit = {
+                rating: 'Miss',
+                score: hitScore,
+                timestamp: Date.now(),
+              };
+
+              scoreDisplayRef.current?.triggerHit(player.config.id, 'Miss', 0, hitScore);
+            }
+            player.activeSegments[tIdx] = null;
+          }
+        } else {
+          if (player.activeSegments[tIdx] !== null) {
+            player.activeSegments[tIdx] = null;
+          }
         }
+      }
+    },
+    [
+      audioRef,
+      isPlayingRef,
+      parsedSong,
+      bpmMultiplier,
+      trackScoreWeights,
+      goldenNoteMultiplier,
+      scoreDisplayRef,
+      micLatency,
+    ],
+  );
 
-        if (isPassive) {
-            requestRef.current = requestAnimationFrame(() => updateLoopRef.current?.());
-            return;
-        }
+  const updateLoop = useCallback(() => {
+    const now = performance.now();
+    let deltaTime = now - lastTimeRef.current;
+    if (deltaTime > 100) deltaTime = 100; // Cap to 100ms to prevent massive jumps when tab is backgrounded
+    lastTimeRef.current = now;
 
-        players.forEach((player, index) => {
-            const override = (index === 0) ? devPitchOverride : null;
-            processPlayer(player, override, deltaTime);
-        });
+    const duration =
+      audioRef.current &&
+      Number.isFinite(audioRef.current.duration) &&
+      audioRef.current.duration > 0
+        ? audioRef.current.duration
+        : _duration > 0
+          ? _duration
+          : 0;
 
-        if (now - lastScoreUpdateRef.current > 150) {
-            const newScores: Record<string, number> = {};
-            players.forEach(p => {
-                const currentTrackScore = p.trackScores[p.trackIndex] || 0;
-                newScores[p.config.id] = Math.round(currentTrackScore);
-            });
-            setScores?.(newScores);
-            lastScoreUpdateRef.current = now;
-        }
+    let currentTime =
+      isPassive && isClient
+        ? virtualTimeRef.current!
+        : audioRef.current
+          ? audioRef.current.currentTime
+          : 0;
 
-        requestRef.current = requestAnimationFrame(() => updateLoopRef.current?.());
-    }, [
-        audioRef,
-        isPassive, isClient, isPlayingRef,
-        _duration, onPlaybackUpdate,
-        progressLineRef, players, devPitchOverride, processPlayer, setScores, virtualTimeRef
-    ]);
+    // Interpolate time for fully passive clients
+    if (isPassive && isClient && isPlayingRef.current) {
+      currentTime += deltaTime / 1000;
+      (virtualTimeRef as React.MutableRefObject<number>).current = currentTime;
+    }
 
-    useEffect(() => {
-        updateLoopRef.current = updateLoop;
-    }, [updateLoop]);
+    if (onPlaybackUpdate) {
+      onPlaybackUpdate({
+        isPlaying: isPassive
+          ? (isPlayingRef.current ?? false)
+          : !(audioRef.current?.paused ?? true),
+        currentTime,
+        duration,
+        progress: duration > 0 ? (currentTime / duration) * 100 : 0,
+        players: isPassive
+          ? undefined
+          : players.map((p) => ({
+              config: p.config,
+              id: p.config.id,
+              name: p.config.name,
+              hue: p.config.hue,
+              score: p.score,
+              trackScores: p.trackScores,
+              currentPitch: p.pitchRef.current,
+              activeSegments: p.activeSegments,
+              sungSegments: p.segmentsRef.current,
+              combo: p.combo,
+              lastHit: p.lastHit,
+            })),
+      });
+    }
 
-    useEffect(() => {
-        lastTimeRef.current = performance.now();
-        if (!ready) return;
+    if (progressLineRef.current) {
+      if (duration > 0) {
+        const progress = Math.min(100, Math.max(0, (currentTime / duration) * 100));
+        progressLineRef.current.style.transform = `scaleX(${progress / 100})`;
+      }
+    }
 
-        requestRef.current = requestAnimationFrame(() => updateLoopRef.current?.());
+    if (isPassive) {
+      requestRef.current = requestAnimationFrame(() => updateLoopRef.current?.());
+      return;
+    }
 
-        return () => {
-            cancelAnimationFrame(requestRef.current);
-        };
-    }, [ready]);
+    players.forEach((player, index) => {
+      const override = index === 0 ? devPitchOverride : null;
+      processPlayer(player, override, deltaTime);
+    });
+
+    if (now - lastScoreUpdateRef.current > 150) {
+      const newScores: Record<string, number> = {};
+      players.forEach((p) => {
+        const currentTrackScore = p.trackScores[p.trackIndex] || 0;
+        newScores[p.config.id] = Math.round(currentTrackScore);
+      });
+      setScores?.(newScores);
+      lastScoreUpdateRef.current = now;
+    }
+
+    requestRef.current = requestAnimationFrame(() => updateLoopRef.current?.());
+  }, [
+    audioRef,
+    isPassive,
+    isClient,
+    isPlayingRef,
+    _duration,
+    onPlaybackUpdate,
+    progressLineRef,
+    players,
+    devPitchOverride,
+    processPlayer,
+    setScores,
+    virtualTimeRef,
+  ]);
+
+  useEffect(() => {
+    updateLoopRef.current = updateLoop;
+  }, [updateLoop]);
+
+  useEffect(() => {
+    lastTimeRef.current = performance.now();
+    if (!ready) return;
+
+    requestRef.current = requestAnimationFrame(() => updateLoopRef.current?.());
+
+    return () => {
+      cancelAnimationFrame(requestRef.current);
+    };
+  }, [ready]);
 }
