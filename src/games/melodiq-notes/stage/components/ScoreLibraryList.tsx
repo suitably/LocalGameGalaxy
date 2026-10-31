@@ -1,4 +1,5 @@
 import { Alert, Button, Link, Stack } from '@mui/material';
+import BatchIcon from '@mui/icons-material/LibraryAddRounded';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '../../../../components/common/ConfirmDialog';
@@ -25,6 +26,7 @@ import {
   type CatalogScore,
 } from '../logic/scoreCatalog';
 import type { CatalogSearchState } from '../useCatalogSearch';
+import { BatchImportDialog } from './BatchImportDialog';
 import { CatalogEntryCard } from './CatalogEntryCard';
 import { CatalogSearchBar } from './CatalogSearchBar';
 import { SongFilesDialog } from './SongFilesDialog';
@@ -48,6 +50,7 @@ export function ScoreLibraryList({ search, onPlay, onPlayKaraoke }: ScoreLibrary
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<CatalogEntry | null>(null);
   const [managing, setManaging] = useState<CompanionSong | null>(null);
+  const [importing, setImporting] = useState(false);
   const enabled = isCompanionEnabled();
 
   const reload = useCallback(() => {
@@ -115,6 +118,14 @@ export function ScoreLibraryList({ search, onPlay, onPlayKaraoke }: ScoreLibrary
         />
       ))}
       {hidden > 0 && <Button onClick={search.showMore}>{k('show_more', { count: hidden })}</Button>}
+      <Button
+        variant="outlined"
+        startIcon={<BatchIcon />}
+        onClick={() => setImporting(true)}
+        sx={{ alignSelf: 'flex-start' }}
+      >
+        {k('batch_open')}
+      </Button>
       <Link
         href={scoreSearchUrl('', search.filters.query)}
         target="_blank"
@@ -138,6 +149,14 @@ export function ScoreLibraryList({ search, onPlay, onPlayKaraoke }: ScoreLibrary
           song={managing}
           onClose={(changed) => {
             setManaging(null);
+            if (changed) reload();
+          }}
+        />
+      )}
+      {importing && (
+        <BatchImportDialog
+          onClose={(changed) => {
+            setImporting(false);
             if (changed) reload();
           }}
         />

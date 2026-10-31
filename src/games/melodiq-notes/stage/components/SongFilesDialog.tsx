@@ -25,6 +25,7 @@ import {
   type SongFileRow,
 } from '../logic/songFileEdits';
 import { useSongFilesManager } from '../useSongFilesManager';
+import { RecordingSearch } from './RecordingSearch';
 import { SongFileRowItem } from './SongFileRowItem';
 
 interface SongFilesDialogProps {
@@ -120,6 +121,7 @@ export function SongFilesDialog({ song: initial, onClose }: SongFilesDialogProps
           <Typography variant="caption" color="text.secondary">
             {k('files_recordings_hint')}
           </Typography>
+          <RecordingSearch song={m.song} disabled={m.busy} onReplaced={m.adopt} />
           <input
             ref={input}
             type="file"
