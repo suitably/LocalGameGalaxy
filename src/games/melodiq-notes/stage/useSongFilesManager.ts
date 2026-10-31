@@ -84,6 +84,9 @@ export function useSongFilesManager(initial: CompanionSong) {
     [run, song.id],
   );
 
+  /** The song as another action (a new recording) left it on the server. */
+  const adopt = useCallback((next: CompanionSong) => void run(async () => next), [run]);
+
   const setTitle = (title: string) => setDraft((d) => ({ ...d, title }));
   const setArtist = (artist: string) => setDraft((d) => ({ ...d, artist }));
   const setLabel = (file: string, label: string) =>
@@ -103,6 +106,7 @@ export function useSongFilesManager(initial: CompanionSong) {
     save,
     upload,
     remove,
+    adopt,
   };
 }
 

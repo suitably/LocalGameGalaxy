@@ -23,6 +23,13 @@ export interface SongFilesDraft {
 /** Title and artist come from the `.txt` headers when a song has one; only `song.json` is edited. */
 export const canEditSongMeta = (song: CompanionSong) => song.karaoke === false;
 
+/**
+ * Whether the folder's mix may be swapped for another download: not when its karaoke `.txt` has
+ * notes, whose timing belongs to the current mix (a `.txt` with headers only is fine).
+ */
+export const canReplaceRecording = (song: CompanionSong) =>
+  !/^[:*FRG]\s/m.test(song.txtContent ?? '');
+
 export function songFileRows(song: CompanionSong): SongFileRow[] {
   return [
     ...(song.scores ?? []).map((s): SongFileRow => ({

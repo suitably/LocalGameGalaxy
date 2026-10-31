@@ -67,7 +67,7 @@ export interface ImportApi {
   wait: (ms: number) => Promise<void>;
 }
 
-const defaultApi: ImportApi = {
+export const defaultImportApi: ImportApi = {
   listSongs: listLibrarySongs,
   startDownload: startSongDownload,
   getStatus: getSongDownloadStatus,
@@ -78,10 +78,10 @@ const defaultApi: ImportApi = {
 
 export const POLL_MS = 1500;
 
-const aborted = () => new DOMException('cancelled', 'AbortError');
+export const aborted = () => new DOMException('cancelled', 'AbortError');
 
 /** Polls the server's download job until it is done; resolves to the song id it reports. */
-async function waitForDownload(
+export async function waitForDownload(
   jobId: string,
   api: ImportApi,
   onProgress: (p: ImportProgress) => void,
@@ -105,7 +105,7 @@ async function waitForDownload(
 export async function importRecording(
   input: ImportInput,
   onProgress: (p: ImportProgress) => void = () => {},
-  api: ImportApi = defaultApi,
+  api: ImportApi = defaultImportApi,
   signal?: AbortSignal,
 ): Promise<{ score: SongScore; song: CompanionSong }> {
   const from = input.fromSong;
