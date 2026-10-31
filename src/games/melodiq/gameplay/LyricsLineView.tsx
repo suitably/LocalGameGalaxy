@@ -2,6 +2,8 @@ import React from 'react';
 import { alpha, Box, Typography } from '@mui/material';
 import type { Note } from '../parser';
 import { transitionOf } from '../../../lib/motion';
+import { LineWords } from './lyrics/LineWords';
+import { ACTIVE_LINE_REM, type LyricsRows } from './logic/lyricsFit';
 
 export interface LineGroup {
   notes: Note[];
@@ -105,6 +107,7 @@ export interface LyricsLineProps {
   primaryColor: string;
   align: 'left' | 'center' | 'right';
   scale: number;
+  rows: LyricsRows;
   enableZoom: boolean;
 }
 
@@ -112,7 +115,7 @@ export interface LyricsLineProps {
  * Renders the active singing line with real-time syllable highlighting.
  */
 export const LyricsLine: React.FC<LyricsLineProps> = React.memo(
-  ({ line, currentBeat, primaryColor, align, scale, enableZoom }) => {
+  ({ line, currentBeat, primaryColor, align, scale, rows, enableZoom }) => {
     return (
       <Typography
         component="div"
@@ -120,41 +123,49 @@ export const LyricsLine: React.FC<LyricsLineProps> = React.memo(
           textAlign: align,
           lineHeight: 1.3,
           fontSize: {
-            xs: `${1.35 * scale}rem`,
-            md: `${1.75 * scale}rem`,
-            lg: `${2.25 * scale}rem`,
+            xs: `${ACTIVE_LINE_REM.xs * scale}rem`,
+            md: `${ACTIVE_LINE_REM.md * scale}rem`,
+            lg: `${ACTIVE_LINE_REM.lg * scale}rem`,
           },
           fontWeight: 700, // Constant weight guarantees zero font metric layout shift
-          whiteSpace: 'nowrap',
-          wordBreak: 'break-word',
+          whiteSpace: rows === 1 ? 'nowrap' : 'normal',
+          textWrap: 'balance',
           width: '100%',
+          minWidth: 0,
         }}
       >
-        {line.notes.map((note, idx) => {
-          const noteEnd = note.start + note.duration;
-          const isPast = currentBeat >= noteEnd;
-          const isActive = currentBeat >= note.start && currentBeat < noteEnd;
-          const noteColor = isActive ? primaryColor : isPast ? '#ffffff' : 'rgba(255,255,255,0.72)';
-          const baseShadow = '0 2px 6px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.8)';
+        <LineWords
+          notes={line.notes}
+          renderNote={(note, key) => {
+            const noteEnd = note.start + note.duration;
+            const isPast = currentBeat >= noteEnd;
+            const isActive = currentBeat >= note.start && currentBeat < noteEnd;
+            const noteColor = isActive
+              ? primaryColor
+              : isPast
+                ? '#ffffff'
+                : 'rgba(255,255,255,0.72)';
+            const baseShadow = '0 2px 6px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.8)';
 
-          return (
-            <Box
-              key={idx}
-              component="span"
-              sx={{
-                display: 'inline-block',
-                color: noteColor,
-                textShadow: baseShadow,
-                filter: enableZoom && isActive ? 'brightness(1.25)' : 'none',
-                transition:
-                  'color 0.05s ease-out, text-shadow 0.05s ease-out, filter 0.05s ease-out',
-                whiteSpace: 'pre',
-              }}
-            >
-              {note.text}
-            </Box>
-          );
-        })}
+            return (
+              <Box
+                key={key}
+                component="span"
+                sx={{
+                  display: 'inline-block',
+                  color: noteColor,
+                  textShadow: baseShadow,
+                  filter: enableZoom && isActive ? 'brightness(1.25)' : 'none',
+                  transition:
+                    'color 0.05s ease-out, text-shadow 0.05s ease-out, filter 0.05s ease-out',
+                  whiteSpace: 'pre',
+                }}
+              >
+                {note.text}
+              </Box>
+            );
+          }}
+        />
       </Typography>
     );
   },

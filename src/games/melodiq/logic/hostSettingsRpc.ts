@@ -21,6 +21,7 @@ const VALIDATORS: Record<keyof HostSettings, Validator> = {
   enableLyricsZoom: bool,
   lyricsLines: (v) =>
     Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 3 ? v : undefined,
+  lyricsRows: (v) => (v === 1 || v === 2 ? v : undefined),
   lyricsPosition: oneOf('bottom', 'center'),
   showNoteLabels: bool,
   showScoreboardQrCode: bool,

@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { type SongWithNotes } from './PitchVisualizer';
 import { LyricsLane } from './lyrics/LyricsLane';
+import { useSongLyricsFit } from './lyrics/useSongLyricsFit';
+import type { LyricsRows } from './logic/lyricsFit';
 
 export interface LyricsDisplayProps {
   song: SongWithNotes;
@@ -9,6 +11,7 @@ export interface LyricsDisplayProps {
   uiScale?: number;
   enableZoom?: boolean;
   lyricsLines?: number;
+  lyricsRows?: LyricsRows;
 }
 
 /** Current song position in beats, sampled every animation frame. */
@@ -36,7 +39,7 @@ const useCurrentBeat = (
 };
 
 export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(
-  ({ song, audioRef, uiScale = 1.0, enableZoom = false, lyricsLines = 2 }) => {
+  ({ song, audioRef, uiScale = 1.0, enableZoom = false, lyricsLines = 2, lyricsRows = 2 }) => {
     const theme = useTheme();
     const bpm = song.bpm || 120;
     const currentBeat = useCurrentBeat(audioRef, song.gap || 0, bpm);
@@ -46,7 +49,21 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(
     // Singer colours come from the piece palette: solo = teal, duet = blue / pink.
     const { piece } = theme.palette;
 
-    const laneProps = { currentBeat, scale: uiScale, enableZoom, lyricsLines, bpm } as const;
+    const trackNotes = useMemo(() => {
+      if (song.tracks && song.tracks.length > 0) return song.tracks.map((track) => track.notes);
+      return [song.notes || []];
+    }, [song.tracks, song.notes]);
+    const { laneRef, fit, reservedRows } = useSongLyricsFit(trackNotes, lyricsRows, uiScale);
+
+    const laneProps = {
+      currentBeat,
+      scale: uiScale * fit,
+      rows: lyricsRows,
+      reservedRows,
+      enableZoom,
+      lyricsLines,
+      bpm,
+    } as const;
 
     return (
       <Box
@@ -71,11 +88,18 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(
               key={idx}
               sx={{
                 flex: 1,
+                minWidth: 0, // Long no-wrap lines must shrink to the lane, not push it off screen
                 px: { xs: 1, md: 2 },
                 ...(idx === 0 && { borderRight: 1, borderColor: 'divider' }),
               }}
             >
-              <LyricsLane notes={track.notes} color={color} align="center" {...laneProps} />
+              <LyricsLane
+                notes={track.notes}
+                color={color}
+                align="center"
+                laneRef={idx === 0 ? laneRef : undefined}
+                {...laneProps}
+              />
               {/* Track name pairs with the lane colour, so colour is never the only signal. */}
               <Typography
                 variant="caption"
@@ -93,7 +117,8 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(
           ))
         ) : (
           <LyricsLane
-            notes={song.tracks && song.tracks.length > 0 ? song.tracks[0].notes : song.notes || []}
+            notes={trackNotes[0]}
+            laneRef={laneRef}
             color={piece.teal}
             align="center"
             {...laneProps}

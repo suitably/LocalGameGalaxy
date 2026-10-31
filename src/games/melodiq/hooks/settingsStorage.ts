@@ -23,6 +23,7 @@ export interface SettingsState {
   lyricsScale: number;
   enableLyricsZoom: boolean;
   lyricsLines: number;
+  lyricsRows: 1 | 2;
   lyricsPosition: 'bottom' | 'center';
   audioPlaybackMode: 'separated' | 'original';
   showScoreboardQrCode: boolean;
@@ -53,6 +54,7 @@ export const DEFAULT_SETTINGS: SettingsState = {
   lyricsScale: 1.0,
   enableLyricsZoom: false,
   lyricsLines: 2,
+  lyricsRows: 2,
   lyricsPosition: 'bottom',
   audioPlaybackMode: 'separated',
   showScoreboardQrCode: true,
@@ -122,6 +124,7 @@ export const loadSettings = (): SettingsState => ({
     const stored = storage.get(STORAGE_KEYS.MELODIQ_LYRICS_LINES);
     return stored ? parseInt(stored) : 2;
   })(),
+  lyricsRows: storage.get(STORAGE_KEYS.MELODIQ_LYRICS_ROWS) === '1' ? 1 : 2,
   lyricsPosition:
     (storage.get(STORAGE_KEYS.MELODIQ_LYRICS_POSITION) as SettingsState['lyricsPosition']) ||
     'bottom',
@@ -161,6 +164,7 @@ export const persistSettings = (s: SettingsState) => {
   storage.set(STORAGE_KEYS.MELODIQ_LYRICS_SCALE, String(s.lyricsScale));
   storage.set(STORAGE_KEYS.MELODIQ_ENABLE_LYRICS_ZOOM, String(s.enableLyricsZoom));
   storage.set(STORAGE_KEYS.MELODIQ_LYRICS_LINES, String(s.lyricsLines));
+  storage.set(STORAGE_KEYS.MELODIQ_LYRICS_ROWS, String(s.lyricsRows));
   storage.set(STORAGE_KEYS.MELODIQ_LYRICS_POSITION, s.lyricsPosition);
   storage.set(STORAGE_KEYS.MELODIQ_AUDIO_PLAYBACK_MODE, s.audioPlaybackMode);
   storage.set(STORAGE_KEYS.MELODIQ_SHOW_SCOREBOARD_QR_CODE, String(s.showScoreboardQrCode));
@@ -237,6 +241,9 @@ export const persistSingleSetting = <K extends keyof SettingsState>(
       break;
     case 'lyricsLines':
       storage.set(STORAGE_KEYS.MELODIQ_LYRICS_LINES, String(value));
+      break;
+    case 'lyricsRows':
+      storage.set(STORAGE_KEYS.MELODIQ_LYRICS_ROWS, String(value));
       break;
     case 'lyricsPosition':
       storage.set(STORAGE_KEYS.MELODIQ_LYRICS_POSITION, String(value));

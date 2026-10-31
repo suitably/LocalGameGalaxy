@@ -69,4 +69,11 @@ describe('host settings helpers', () => {
     expect(canEditHostSettings('queue_manager')).toBe(false);
     expect(canEditHostSettings(undefined)).toBe(false);
   });
+
+  it('accepts only 1 or 2 lyric rows', () => {
+    expect(sanitizeHostSettingsPatch({ lyricsRows: 1 })).toEqual({ lyricsRows: 1 });
+    expect(sanitizeHostSettingsPatch({ lyricsRows: 2 })).toEqual({ lyricsRows: 2 });
+    expect(sanitizeHostSettingsPatch({ lyricsRows: 3 })).toEqual({});
+    expect(sanitizeHostSettingsPatch({ lyricsRows: '2' })).toEqual({});
+  });
 });

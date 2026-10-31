@@ -122,6 +122,16 @@ const HostSettingsForm: React.FC<FormProps> = ({ settings, percent, set }) => {
       />
 
       <SettingToggleGroup
+        title={t('melodiq.settings_panel.lyrics_rows', 'Rows per Lyric')}
+        value={settings.lyricsRows}
+        options={[
+          { value: 1, label: t('melodiq.settings_panel.lyrics_rows_one', '1 row') },
+          { value: 2, label: t('melodiq.settings_panel.lyrics_rows_two', '2 rows') },
+        ]}
+        onChange={(lyricsRows) => set({ lyricsRows })}
+      />
+
+      <SettingToggleGroup
         title={t('melodiq.remote_host.lyrics_position', 'Lyrics position')}
         value={settings.lyricsPosition}
         options={[
