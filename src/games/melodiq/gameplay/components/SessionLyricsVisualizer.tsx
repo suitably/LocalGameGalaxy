@@ -4,6 +4,12 @@ import { LyricsDisplay } from '../LyricsDisplay';
 import { PitchVisualizer, type SongWithNotes } from '../PitchVisualizer';
 import { type PlayerRuntime } from '../hooks/PlayerRuntime';
 
+/** Wide enough that each duet lane keeps a readable font on a 1080p TV. */
+const LYRICS_MAX_WIDTH = '1800px';
+
+/** TV lyrics relative to the x2 TV UI (`uiScale`, only set by MelodiqTV): 54px instead of 72px on 1080p. */
+const TV_LYRICS_SCALE = 0.75;
+
 export interface SessionLyricsVisualizerProps {
   visiblePlayers: PlayerRuntime[];
   allPlayers: PlayerRuntime[];
@@ -45,7 +51,7 @@ const LyricsBar: React.FC<LyricsBarProps> = (props) => (
       justifyContent: 'center',
     }}
   >
-    <Box sx={{ width: '100%', maxWidth: '1400px' }}>
+    <Box sx={{ width: '100%', maxWidth: LYRICS_MAX_WIDTH }}>
       <LyricsDisplay
         song={props.song}
         audioRef={props.audioRef}
@@ -72,10 +78,11 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
   uiScale = 1.0,
   onSwitchTrack,
 }) => {
+  const lyricsScale = lyricsUiScale * (uiScale > 1 ? TV_LYRICS_SCALE : 1);
   const lyricsProps: LyricsBarProps = {
     song: parsedSong,
     audioRef: timeProxyRef,
-    uiScale: lyricsUiScale,
+    uiScale: lyricsScale,
     enableZoom: activeLyricsZoom,
     lyricsLines: activeLyricsLines,
   };
@@ -95,11 +102,11 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
             px: { xs: 2, md: 6 },
           }}
         >
-          <Box sx={{ width: '100%', maxWidth: '1400px' }}>
+          <Box sx={{ width: '100%', maxWidth: LYRICS_MAX_WIDTH }}>
             <LyricsDisplay
               song={parsedSong}
               audioRef={timeProxyRef}
-              uiScale={lyricsUiScale * 1.45}
+              uiScale={lyricsScale * 1.45}
               enableZoom={activeLyricsZoom}
               lyricsLines={activeLyricsLines}
             />

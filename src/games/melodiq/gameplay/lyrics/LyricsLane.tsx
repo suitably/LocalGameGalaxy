@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
 import type { Note } from '../../parser';
 import { LyricsLine, LeadInIndicator, type LineGroup } from '../LyricsLineView';
+import { useFitToWidth } from './useFitToWidth';
+import { FLEX_ALIGN } from './flexAlign';
 import { selectActiveLineIndex } from '../logic/lyricsLineSelection';
 import { groupNotesIntoLines, leadInTiming, upcomingLinesAfter } from '../logic/lyricsLines';
 
@@ -17,8 +19,6 @@ export interface LyricsLaneProps {
   bpm: number;
 }
 
-const FLEX_ALIGN = { left: 'flex-start', center: 'center', right: 'flex-end' } as const;
-
 /*
  * Lyrics render over a video or a dark stage, so the text is always light and carries a dark
  * text-shadow for legibility (not decoration).
@@ -30,42 +30,55 @@ const UpcomingLine: React.FC<{
   index: number;
   align: 'left' | 'center' | 'right';
   scale: number;
-}> = ({ line, index, align, scale }) => (
-  <Box
-    sx={{
-      minHeight: { xs: `${1.4 * scale}rem`, md: `${1.8 * scale}rem`, lg: `${2.2 * scale}rem` },
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: FLEX_ALIGN[align],
-      width: '100%',
-      mt: 0.5,
-    }}
-  >
-    <Typography
-      component="div"
+}> = ({ line, index, align, scale }) => {
+  const { containerRef, contentRef, fit } = useFitToWidth<HTMLDivElement, HTMLDivElement>();
+  const fitScale = scale * fit;
+  return (
+    <Box
+      ref={containerRef}
       sx={{
-        textAlign: align,
-        lineHeight: 1.3,
-        fontSize: { xs: `${0.95 * scale}rem`, md: `${1.2 * scale}rem`, lg: `${1.4 * scale}rem` },
-        fontWeight: 500,
-        color: 'common.white',
-        opacity: Math.max(0.1, 0.65 - index * 0.25),
-        whiteSpace: 'nowrap',
+        minHeight: { xs: `${1.4 * scale}rem`, md: `${1.8 * scale}rem`, lg: `${2.2 * scale}rem` },
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: FLEX_ALIGN[align],
         width: '100%',
+        minWidth: 0,
+        overflow: 'hidden',
+        mt: 0.5,
       }}
     >
-      {line.notes.map((note, idx) => (
-        <Box
-          key={idx}
-          component="span"
-          sx={{ display: 'inline-block', whiteSpace: 'pre', textShadow: LEGIBILITY_SHADOW }}
-        >
-          {note.text}
-        </Box>
-      ))}
-    </Typography>
-  </Box>
-);
+      <Typography
+        ref={contentRef}
+        component="div"
+        sx={{
+          textAlign: align,
+          lineHeight: 1.3,
+          fontSize: {
+            xs: `${0.95 * fitScale}rem`,
+            md: `${1.2 * fitScale}rem`,
+            lg: `${1.4 * fitScale}rem`,
+          },
+          fontWeight: 500,
+          color: 'common.white',
+          opacity: Math.max(0.1, 0.65 - index * 0.25),
+          whiteSpace: 'nowrap',
+          width: 'max-content',
+          flexShrink: 0,
+        }}
+      >
+        {line.notes.map((note, idx) => (
+          <Box
+            key={idx}
+            component="span"
+            sx={{ display: 'inline-block', whiteSpace: 'pre', textShadow: LEGIBILITY_SHADOW }}
+          >
+            {note.text}
+          </Box>
+        ))}
+      </Typography>
+    </Box>
+  );
+};
 
 export const LyricsLane: React.FC<LyricsLaneProps> = React.memo(
   ({
@@ -110,6 +123,7 @@ export const LyricsLane: React.FC<LyricsLaneProps> = React.memo(
           py: { xs: 0.5, md: 1 },
           width: '100%',
           maxWidth: '100%',
+          minWidth: 0,
           boxSizing: 'border-box',
         }}
       >
@@ -133,6 +147,7 @@ export const LyricsLane: React.FC<LyricsLaneProps> = React.memo(
             justifyContent: FLEX_ALIGN[align],
             textAlign: align,
             width: '100%',
+            minWidth: 0,
           }}
         >
           {activeLine ? (

@@ -71,6 +71,7 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(
               key={idx}
               sx={{
                 flex: 1,
+                minWidth: 0, // Long no-wrap lines must shrink to the lane, not push it off screen
                 px: { xs: 1, md: 2 },
                 ...(idx === 0 && { borderRight: 1, borderColor: 'divider' }),
               }}

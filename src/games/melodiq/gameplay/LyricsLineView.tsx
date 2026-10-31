@@ -2,6 +2,8 @@ import React from 'react';
 import { alpha, Box, Typography } from '@mui/material';
 import type { Note } from '../parser';
 import { transitionOf } from '../../../lib/motion';
+import { useFitToWidth } from './lyrics/useFitToWidth';
+import { FLEX_ALIGN } from './lyrics/flexAlign';
 
 export interface LineGroup {
   notes: Note[];
@@ -113,49 +115,67 @@ export interface LyricsLineProps {
  */
 export const LyricsLine: React.FC<LyricsLineProps> = React.memo(
   ({ line, currentBeat, primaryColor, align, scale, enableZoom }) => {
+    const { containerRef, contentRef, fit } = useFitToWidth<HTMLDivElement, HTMLDivElement>();
+    const fitScale = scale * fit;
     return (
-      <Typography
-        component="div"
+      <Box
+        ref={containerRef}
         sx={{
-          textAlign: align,
-          lineHeight: 1.3,
-          fontSize: {
-            xs: `${1.35 * scale}rem`,
-            md: `${1.75 * scale}rem`,
-            lg: `${2.25 * scale}rem`,
-          },
-          fontWeight: 700, // Constant weight guarantees zero font metric layout shift
-          whiteSpace: 'nowrap',
-          wordBreak: 'break-word',
+          display: 'flex',
+          justifyContent: FLEX_ALIGN[align],
           width: '100%',
+          minWidth: 0,
+          overflow: 'hidden',
         }}
       >
-        {line.notes.map((note, idx) => {
-          const noteEnd = note.start + note.duration;
-          const isPast = currentBeat >= noteEnd;
-          const isActive = currentBeat >= note.start && currentBeat < noteEnd;
-          const noteColor = isActive ? primaryColor : isPast ? '#ffffff' : 'rgba(255,255,255,0.72)';
-          const baseShadow = '0 2px 6px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.8)';
+        <Typography
+          ref={contentRef}
+          component="div"
+          sx={{
+            textAlign: align,
+            lineHeight: 1.3,
+            fontSize: {
+              xs: `${1.35 * fitScale}rem`,
+              md: `${1.75 * fitScale}rem`,
+              lg: `${2.25 * fitScale}rem`,
+            },
+            fontWeight: 700, // Constant weight guarantees zero font metric layout shift
+            whiteSpace: 'nowrap',
+            width: 'max-content',
+            flexShrink: 0,
+          }}
+        >
+          {line.notes.map((note, idx) => {
+            const noteEnd = note.start + note.duration;
+            const isPast = currentBeat >= noteEnd;
+            const isActive = currentBeat >= note.start && currentBeat < noteEnd;
+            const noteColor = isActive
+              ? primaryColor
+              : isPast
+                ? '#ffffff'
+                : 'rgba(255,255,255,0.72)';
+            const baseShadow = '0 2px 6px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.8)';
 
-          return (
-            <Box
-              key={idx}
-              component="span"
-              sx={{
-                display: 'inline-block',
-                color: noteColor,
-                textShadow: baseShadow,
-                filter: enableZoom && isActive ? 'brightness(1.25)' : 'none',
-                transition:
-                  'color 0.05s ease-out, text-shadow 0.05s ease-out, filter 0.05s ease-out',
-                whiteSpace: 'pre',
-              }}
-            >
-              {note.text}
-            </Box>
-          );
-        })}
-      </Typography>
+            return (
+              <Box
+                key={idx}
+                component="span"
+                sx={{
+                  display: 'inline-block',
+                  color: noteColor,
+                  textShadow: baseShadow,
+                  filter: enableZoom && isActive ? 'brightness(1.25)' : 'none',
+                  transition:
+                    'color 0.05s ease-out, text-shadow 0.05s ease-out, filter 0.05s ease-out',
+                  whiteSpace: 'pre',
+                }}
+              >
+                {note.text}
+              </Box>
+            );
+          })}
+        </Typography>
+      </Box>
     );
   },
 );

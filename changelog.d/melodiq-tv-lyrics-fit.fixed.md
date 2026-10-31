@@ -1,0 +1,1 @@
+- **Melodiq lyrics fit the screen**: long lines no longer run off the edge, most visibly in duets on the TV, where the left lane was cut off. A line now shrinks to fit its lane, duet lanes keep their half of the screen, the lyrics area is wider on large screens, and TV lyrics are a little smaller by default.
