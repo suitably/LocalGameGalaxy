@@ -8,6 +8,7 @@ import { ListSkeleton } from '../../../../components/common/ListSkeleton';
 import {
   isCompanionEnabled,
   scoreSearchUrl,
+  songsterrSearchUrl,
   type CompanionSong,
 } from '../../../../lib/companion/songScoresApi';
 import { deleteLibrarySong } from '../../../../lib/companion/notesLibraryApi';
@@ -26,6 +27,7 @@ import {
 import type { CatalogSearchState } from '../useCatalogSearch';
 import { CatalogEntryCard } from './CatalogEntryCard';
 import { CatalogSearchBar } from './CatalogSearchBar';
+import { SongFilesDialog } from './SongFilesDialog';
 
 interface ScoreLibraryListProps {
   search: CatalogSearchState;
@@ -45,6 +47,7 @@ export function ScoreLibraryList({ search, onPlay, onPlayKaraoke }: ScoreLibrary
   const [catalog, setCatalog] = useState<CatalogEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<CatalogEntry | null>(null);
+  const [managing, setManaging] = useState<CompanionSong | null>(null);
   const enabled = isCompanionEnabled();
 
   const reload = useCallback(() => {
@@ -108,6 +111,7 @@ export function ScoreLibraryList({ search, onPlay, onPlayKaraoke }: ScoreLibrary
           onPlay={onPlay}
           onPlayKaraoke={onPlayKaraoke}
           onDelete={() => setDeleting(match.entry)}
+          onManage={() => setManaging(match.entry.song)}
         />
       ))}
       {hidden > 0 && <Button onClick={search.showMore}>{k('show_more', { count: hidden })}</Button>}
@@ -120,6 +124,24 @@ export function ScoreLibraryList({ search, onPlay, onPlayKaraoke }: ScoreLibrary
       >
         {k('find_scores')}
       </Link>
+      <Link
+        href={songsterrSearchUrl('', search.filters.query)}
+        target="_blank"
+        rel="noopener noreferrer"
+        variant="body2"
+        title={k('find_tabs_hint')}
+      >
+        {k('find_tabs')}
+      </Link>
+      {managing && (
+        <SongFilesDialog
+          song={managing}
+          onClose={(changed) => {
+            setManaging(null);
+            if (changed) reload();
+          }}
+        />
+      )}
       <ConfirmDialog
         open={!!deleting}
         title={k('notes_delete')}

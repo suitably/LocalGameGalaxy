@@ -1,5 +1,6 @@
 import { Box, Button, Chip, IconButton, Stack, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/DeleteOutlineRounded';
+import FilesIcon from '@mui/icons-material/FolderOpenRounded';
 import PlayIcon from '@mui/icons-material/PlayArrowRounded';
 import { useTranslation } from 'react-i18next';
 import type { CompanionSong } from '../../../../lib/companion/songScoresApi';
@@ -11,18 +12,22 @@ interface CatalogEntryCardProps {
   onPlay: (item: CatalogScore) => void;
   onPlayKaraoke: (song: CompanionSong) => void;
   onDelete: () => void;
+  /** Opens the song's file management (names, add, download, delete). */
+  onManage: () => void;
 }
 
 /**
  * One song of the library: its scores and karaoke vocals as play buttons, each with its
  * instruments and format. Songs with a karaoke `.txt` carry a badge; only songs without
- * `.txt` can be deleted here (Melodiq songs are deleted in Melodiq).
+ * `.txt` can be deleted here (Melodiq songs are deleted in Melodiq); every song's files can be
+ * managed.
  */
 export function CatalogEntryCard({
   match,
   onPlay,
   onPlayKaraoke,
   onDelete,
+  onManage,
 }: CatalogEntryCardProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
@@ -63,6 +68,14 @@ export function CatalogEntryCard({
             title={k('source_song_hint')}
           />
         )}
+        <IconButton
+          size="small"
+          aria-label={k('files_manage')}
+          title={k('files_manage')}
+          onClick={onManage}
+        >
+          <FilesIcon fontSize="small" />
+        </IconButton>
         {!entry.karaoke && entry.song.karaoke === false && (
           <IconButton size="small" aria-label={k('notes_delete')} onClick={onDelete}>
             <DeleteIcon fontSize="small" />
