@@ -10,7 +10,7 @@ import { playCalibrationBeep } from '../../../modules/audio/latency';
 interface UseMelodiqGlobalEventsProps {
   lastEvent: TVEvent | null;
   popNext: () => any;
-  playSongOnTV: (id: string, song: SongMeta, currentTime?: number) => void;
+  playSongOnTV: (id: string, song: SongMeta, currentTime?: number) => Promise<void>;
   setRemoteSong: (song: SongMeta | null) => void;
   setFeedbackMessage: (msg: string | null) => void;
   handleSelectSong: (

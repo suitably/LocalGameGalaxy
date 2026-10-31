@@ -70,7 +70,7 @@
   "src/games/melodiq/hooks/useQueue.ts": 14,
   "src/games/melodiq/hooks/useSearchFilters.tsx": 1,
   "src/games/melodiq/hooks/useSongs.tsx": 2,
-  "src/games/melodiq/hooks/useTVMode.ts": 14,
+  "src/games/melodiq/hooks/useTVMode.ts": 7,
   "src/games/melodiq/hooks/useTVReceiver.ts": 1,
   "src/games/melodiq/i18n/index.ts": 1,
   "src/games/melodiq/logic/localLibraryProvider.ts": 1,

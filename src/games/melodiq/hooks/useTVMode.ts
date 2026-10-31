@@ -1,49 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
+import { getHelperToken, getHelperUrl } from '../../../lib/companion/companionSettings';
+import type { Song, SongMeta } from '../db';
+import { TvMediaSender, withAbsoluteMediaUrls } from '../logic/tvMediaTransfer';
+import type { PresentationConnection } from './presentationTypes';
 import { loadTvSettings } from './settingsStorage';
-
-// Minimal Presentation API Type Definitions
-interface PresentationConnectionCloseEvent extends Event {
-  reason: 'error' | 'closed' | 'wentaway';
-  message: string;
-}
-
-interface PresentationConnection extends EventTarget {
-  id: string;
-  state: 'connecting' | 'connected' | 'closed' | 'terminated';
-  send(message: string): void;
-  close(): void;
-  terminate(): void;
-  onconnect: ((this: PresentationConnection, ev: Event) => any) | null;
-  onclose: ((this: PresentationConnection, ev: PresentationConnectionCloseEvent) => any) | null;
-  onterminate: ((this: PresentationConnection, ev: Event) => any) | null;
-  onmessage: ((this: PresentationConnection, ev: MessageEvent) => any) | null;
-}
-
-interface PresentationRequest extends EventTarget {
-  start(): Promise<PresentationConnection>;
-  reconnect(id: string): Promise<PresentationConnection>;
-  getAvailability(): Promise<PresentationAvailability>;
-  onconnectionavailable:
-    ((this: PresentationRequest, ev: PresentationConnectionAvailableEvent) => any) | null;
-}
-
-interface PresentationConnectionAvailableEvent extends Event {
-  connection: PresentationConnection;
-}
-
-interface PresentationAvailability extends EventTarget {
-  value: boolean;
-  onchange: ((this: PresentationAvailability, ev: Event) => any) | null;
-}
-
-declare global {
-  interface Window {
-    PresentationRequest: {
-      new (urls: string | string[]): PresentationRequest;
-    };
-  }
-}
 
 export interface TVEvent {
   type: string;
@@ -88,6 +49,7 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
   // Transports
   const channelRef = useRef<BroadcastChannel | null>(null);
   const presentationConnectionRef = useRef<PresentationConnection | null>(null);
+  const mediaSenderRef = useRef(new TvMediaSender());
   const tvWindowRef = useRef<Window | null>(null);
   /** Polls whether the popup TV window was closed; cleared on close, disconnect and unmount. */
   const tvWindowPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -116,6 +78,8 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
         setIsTVConnected(true);
         sendSessionInfo();
         sendMessageRef.current('SETTINGS_UPDATE', loadTvSettings());
+      } else if (type === 'MEDIA_ACK') {
+        mediaSenderRef.current.onAck(Number(payload?.received));
       }
     },
     [sendSessionInfo],
@@ -213,6 +177,7 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
 
   const setupPresentationConnection = useCallback(
     (connection: PresentationConnection) => {
+      mediaSenderRef.current.reset();
       presentationConnectionRef.current = connection;
 
       connection.onconnect = () => {
@@ -223,12 +188,14 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
 
       connection.onclose = () => {
         console.log('Presentation closed');
+        mediaSenderRef.current.reset();
         setIsTVConnected(false);
         presentationConnectionRef.current = null;
       };
 
       connection.onterminate = () => {
         console.log('Presentation terminated');
+        mediaSenderRef.current.reset();
         setIsTVConnected(false);
         presentationConnectionRef.current = null;
       };
@@ -295,13 +262,29 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
   }, [getLatestSessionInfo, stopTvWindowPoll]);
 
   const playSongOnTV = useCallback(
-    (songId: string, songData?: any, currentTime?: number) => {
-      const info = getLatestSessionInfo();
+    async (songId: string, song?: Song | SongMeta, currentTime?: number) => {
+      const connection = presentationConnectionRef.current;
+      const sender = mediaSenderRef.current;
+      if (song && connection?.state === 'connected') {
+        // A cast TV cannot open this device's files, so they travel with the song
+        if (sender.needsTransfer(song)) {
+          const { title, artist } = song;
+          sendMessage('REMOTE_COMMAND', { command: 'WAIT_FOR_DOWNLOAD', value: { title, artist } });
+        }
+        const delivered = await sender
+          .send(song, (message) => connection.send(message))
+          .catch((e) => {
+            console.error('Failed to send song media to the TV:', e);
+            return true;
+          });
+        if (!delivered) return; // A newer song took over
+      }
+      const songData = song && withAbsoluteMediaUrls(song, getHelperUrl(), getHelperToken());
       sendMessage('PLAY_SONG', {
         songId,
         songData,
         currentTime: currentTime || 0,
-        sessionInfo: info,
+        sessionInfo: getLatestSessionInfo(),
       });
     },
     [sendMessage, getLatestSessionInfo],

@@ -1,0 +1,1 @@
+- **Melodiq: songs from a local folder play on a cast TV**: instead of "No Audio Source Found", the song's audio and video are now sent to the TV first, while it shows the waiting screen. Songs from a companion server also play on a cast TV, which has no server settings of its own.

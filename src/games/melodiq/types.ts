@@ -126,6 +126,7 @@ export interface MelodiqHostStateUpdate {
 
 export interface PresentationConnection extends EventTarget {
   state?: string;
+  binaryType?: BinaryType;
   send: (data: string) => void;
   close?: () => void;
   terminate?: () => void;
