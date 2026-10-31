@@ -267,10 +267,6 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
       const sender = mediaSenderRef.current;
       if (song && connection?.state === 'connected') {
         // A cast TV cannot open this device's files, so they travel with the song
-        if (sender.needsTransfer(song)) {
-          const { title, artist } = song;
-          sendMessage('REMOTE_COMMAND', { command: 'WAIT_FOR_DOWNLOAD', value: { title, artist } });
-        }
         const delivered = await sender
           .send(song, (message) => connection.send(message))
           .catch((e) => {
