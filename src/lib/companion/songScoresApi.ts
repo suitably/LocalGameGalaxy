@@ -82,3 +82,7 @@ export async function fetchCompanionFile(path: string): Promise<ArrayBuffer> {
 /** Opens musescore.com's search for the song; the user downloads the MusicXML with their own account. */
 export const scoreSearchUrl = (artist: string, title: string) =>
   `https://musescore.com/sheetmusic?text=${encodeURIComponent(`${artist} ${title}`.trim())}`;
+
+/** Opens Songsterr's search for the song; the user downloads the Guitar Pro (.gp) tab there. */
+export const songsterrSearchUrl = (artist: string, title: string) =>
+  `https://www.songsterr.com/?pattern=${encodeURIComponent(`${artist} ${title}`.trim())}`;
