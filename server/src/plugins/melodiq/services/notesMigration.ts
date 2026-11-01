@@ -98,10 +98,11 @@ async function readMarker(notesDir: string): Promise<MigrationMarker> {
 
 async function writeMarker(notesDir: string, marker: MigrationMarker): Promise<void> {
   await fs.promises.mkdir(notesDir, { recursive: true });
-  await fs.promises.writeFile(
-    path.join(notesDir, MIGRATION_MARKER),
-    JSON.stringify(marker, null, 2),
-  );
+  // Through a temp file: a reader (or a crash) never meets a half-written marker
+  const target = path.join(notesDir, MIGRATION_MARKER);
+  const temp = `${target}.tmp`;
+  await fs.promises.writeFile(temp, JSON.stringify(marker, null, 2));
+  await fs.promises.rename(temp, target);
 }
 
 const str = (v: unknown) => (typeof v === 'string' ? v.trim().slice(0, 200) : '');
