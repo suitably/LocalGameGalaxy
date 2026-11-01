@@ -266,6 +266,17 @@ describe('StageEngine', () => {
     expect(e.beat).toBe(-2);
   });
 
+  it('shows a jump made before the start, and starts playing from there', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    e.setMode('perform');
+    e.seekTo(8);
+    expect(e.state).toBe('paused');
+    e.start();
+    expect(e.state).toBe('playing');
+    expect(e.beat).toBe(8);
+  });
+
   it('loops the bars between two picked ones in either order', () => {
     const e = new StageEngine(fakeSound());
     e.loadSong(song());

@@ -1,0 +1,1 @@
+- **Melodiq Notes: Jump to first note** — a jump made before pressing play now shows on the stage, and the lead-in lasts the chosen seconds even when the bars before the note run at another tempo.

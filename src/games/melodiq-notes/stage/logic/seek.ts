@@ -1,3 +1,5 @@
+import type { AudioMap } from '../../../../modules/music-score';
+
 /** Lead-in choices (seconds before the first note) offered next to "jump to first note". */
 export const LEAD_IN_OPTIONS_SEC = [0, 1, 2, 3, 5, 10] as const;
 export const DEFAULT_LEAD_IN_SEC = 3;
@@ -11,15 +13,17 @@ export function firstNoteBeat(noteSets: { t: number }[][]): number | null {
   return first;
 }
 
-/** Beat to jump to so playback starts `leadSec` real seconds before `noteBeat` (not before `minBeat`). */
+/**
+ * Beat to jump to so `leadSec` seconds of the song lie before `noteBeat` (not before `minBeat`).
+ * Goes through the map, because the bars before the note can run at another tempo than the note's.
+ */
 export function leadInBeat(
   noteBeat: number,
   leadSec: number,
-  secPerBeat: number,
+  map: AudioMap,
   minBeat: number,
 ): number {
-  const lead = secPerBeat > 0 ? Math.max(0, leadSec) / secPerBeat : 0;
-  return Math.max(minBeat, noteBeat - lead);
+  return Math.max(minBeat, map.beatAt(map.secAt(noteBeat) - Math.max(0, leadSec)));
 }
 
 /** Maps a 0..1 position on the timeline bar to a beat. */

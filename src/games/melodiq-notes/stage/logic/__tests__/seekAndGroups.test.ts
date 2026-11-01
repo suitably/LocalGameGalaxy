@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { createAudioMap, type ScoreSong } from '../../../../../modules/music-score';
 import {
   beatFromFraction,
   DEFAULT_LEAD_IN_SEC,
@@ -37,10 +38,22 @@ describe('seek', () => {
 
   it('starts the lead-in seconds before the first note, not before the minimum', () => {
     // 0.5 s per beat: 3 s = 6 beats
-    expect(leadInBeat(20, 3, 0.5, -4)).toBe(14);
-    expect(leadInBeat(2, 3, 0.5, -4)).toBe(-4);
-    expect(leadInBeat(20, 0, 0.5, -4)).toBe(20);
-    expect(leadInBeat(20, 3, 0, -4)).toBe(20);
+    const steady = { secAt: (beat: number) => beat / 2, beatAt: (sec: number) => sec * 2 };
+    expect(leadInBeat(20, 3, steady, -4)).toBe(14);
+    expect(leadInBeat(2, 3, steady, -4)).toBe(-4);
+    expect(leadInBeat(20, 0, steady, -4)).toBe(20);
+  });
+
+  it('measures the lead-in in the tempo of the bars before the note', () => {
+    const score = { tempoMap: [{ beat: 0, bpm: 120 }] } as ScoreSong;
+    // the note's bar takes 2 s, the bar before it 6 s
+    const marks = [
+      { beat: 8, sec: 10 },
+      { beat: 12, sec: 16 },
+      { beat: 16, sec: 18 },
+      { beat: 20, sec: 20 },
+    ];
+    expect(leadInBeat(16, 5, createAudioMap(score, marks), 0)).toBeCloseTo(10);
   });
 
   it('maps bar positions to beats and back', () => {
