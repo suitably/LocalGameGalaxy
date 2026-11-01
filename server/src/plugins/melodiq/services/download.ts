@@ -170,6 +170,7 @@ function enqueueAutoSeparation(
   job: DownloadJob,
   songDir: string,
   safeName: string,
+  audioFile: string,
   indexedSong: Song | null,
 ) {
   if (!serverConfig.autoVocalSeparation) return;
@@ -179,7 +180,7 @@ function enqueueAutoSeparation(
     type: 'separate',
     songId: indexedSong ? indexedSong.id : safeName,
     songDir,
-    audioFile: `${safeName}.mp3`,
+    audioFile,
     txtFile: `${safeName}.txt`,
     safeName,
     status: 'pending',
@@ -209,7 +210,8 @@ export async function runDownloadJob(job: DownloadJob): Promise<void> {
     job.progress = 15;
 
     const url = await resolveYoutubeUrl(ytBin, job);
-    const audioOut = path.join(songDir, `${safeName}.mp3`);
+    const audioFile = job.skipAudio && job.audioFile ? job.audioFile : `${safeName}.m4a`;
+    const audioOut = path.join(songDir, `${safeName}.m4a`);
     const targetCover = path.join(songDir, `${safeName}-cover.jpg`);
     await downloadCover(ytBin, job, url, audioOut, targetCover);
 
@@ -218,9 +220,13 @@ export async function runDownloadJob(job: DownloadJob): Promise<void> {
       await spawnYtDlp(
         ytBin,
         [
+          // YouTube's AAC as it is: no second lossy encode, and M4A's frame index seeks exactly
+          // (browsers land up to a second off in VBR MP3s, which breaks note alignment)
+          '-f',
+          'bestaudio[ext=m4a]/bestaudio',
           '--extract-audio',
           '--audio-format',
-          'mp3',
+          'm4a',
           '--audio-quality',
           '0',
           '-o',
@@ -230,6 +236,8 @@ export async function runDownloadJob(job: DownloadJob): Promise<void> {
         ],
         (l) => job.log.push(l),
       );
+      // replacing a song's recording used to overwrite this file; now it would stay behind
+      fs.rmSync(path.join(songDir, `${safeName}.mp3`), { force: true });
     } else {
       job.log.push('⏩ Skipping audio download as requested.');
     }
@@ -243,7 +251,7 @@ export async function runDownloadJob(job: DownloadJob): Promise<void> {
     job.progress = 85;
 
     const media = {
-      mp3: job.skipAudio && job.audioFile ? job.audioFile : `${safeName}.mp3`,
+      mp3: audioFile,
       video,
       cover: fs.existsSync(targetCover) ? `${safeName}-cover.jpg` : undefined,
     };
@@ -267,7 +275,7 @@ export async function runDownloadJob(job: DownloadJob): Promise<void> {
     job.status = 'done';
     job.log.push(`🎉 Saved to: ${songDir}`);
 
-    enqueueAutoSeparation(job, songDir, safeName, indexedSong);
+    enqueueAutoSeparation(job, songDir, safeName, audioFile, indexedSong);
     setTimeout(scanSongs, 1000);
   } catch (err: unknown) {
     job.status = 'error';

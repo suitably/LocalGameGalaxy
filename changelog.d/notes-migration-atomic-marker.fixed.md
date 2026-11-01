@@ -1,0 +1,1 @@
+- **Notes library migration** — the migration marker is written in one step, so a crash or a parallel read never meets a half-written file.

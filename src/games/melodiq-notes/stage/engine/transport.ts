@@ -1,4 +1,4 @@
-import { bpmAt, type ScoreSong } from '../../../../modules/music-score';
+import { bpmAt, createAudioMap, type ScoreSong } from '../../../../modules/music-score';
 import { firstNoteBeat, leadInBeat, noNotesAhead } from '../logic/seek';
 import { buildBandEvents } from './players';
 import type { StageEngine } from './StageEngine';
@@ -47,7 +47,8 @@ export function seekStage(e: StageEngine, beat: number, loopLeadBeats: number) {
   if (e.loop && (target >= e.loop.to || target < e.loop.from - loopLeadBeats)) e.loop = null;
   e.sound.stopAll();
   e.waitingFor = null;
-  if (e.state === 'done') e.state = 'paused';
+  // idle shows the song's start, so a position that was picked needs a state that shows it
+  if (e.state === 'done' || e.state === 'idle') e.state = 'paused';
   e.rewindTo(target, target);
   syncRecording(e);
   e.emit();
@@ -56,8 +57,9 @@ export function seekStage(e: StageEngine, beat: number, loopLeadBeats: number) {
 /** Seeks to `leadInSec` real seconds before the first note of any player. */
 export function seekToFirstNote(e: StageEngine, leadInSec: number, loopLeadBeats: number) {
   const first = firstNoteBeat(e.players.map((p) => p.notes));
-  if (first === null) return;
-  seekStage(e, leadInBeat(first, leadInSec, e.secPerBeat(first), e.firstBeat), loopLeadBeats);
+  if (first === null || !e.song) return;
+  const map = e.recording?.map ?? createAudioMap(e.song, null);
+  seekStage(e, leadInBeat(first, leadInSec * e.speed, map, e.firstBeat), loopLeadBeats);
 }
 
 /** Running without a loop, before the song's end, and every player is past their last note. */

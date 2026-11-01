@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-31
+  at: 2026-11-01
   method: 'read server/src/plugins/melodiq/{services/download.ts,services/queueManager.ts,services/separator.ts,services/usdb.ts,services/scanner.ts,services/songFolder.ts,services/notesMigration.ts,routes/*.ts}, server/src/scripts/align_lyrics.py'
 sources:
   - 'server/src/plugins/melodiq/services/download.ts'
@@ -29,7 +29,7 @@ Started by `POST /api/usdb/download`; poll `GET /api/usdb/status/:jobId`; list `
 1. **Target folder** — `downloadDir`, else the first configured directory, else cwd; one sub-folder per song (sanitised name). A request with `songId` downloads into that indexed song's folder instead (`queueManager.resolveDownloadRequest`; folder must lie in a library directory, unknown ids queue nothing → `400`); such a job keeps the folder's existing `#VIDEO` when `videoMode` is `none`. A song without `.txt` (§4) is downloaded into its folder under the folder's name; the job writes a `.txt`, so the song turns into a karaoke song and keeps its `song.json` id.
 2. **Lyrics** — reuse an existing local `.txt` with notes, else log in to USDB (`usdb.animux.de`, credentials via `POST /api/config/usdb-credentials`) and fetch `?link=gettxt&id=<usdbId>`. Without credentials/ID a minimal `.txt` is generated.
 3. **YouTube URL** — taken from the request or resolved by search (`GET /api/youtube/search`).
-4. **Cover, audio, video** — via `yt-dlp`. Video either downloaded (`bestvideo[ext=mp4]+bestaudio[ext=m4a]/…`) or, in `stream` mode (`defaultDownloadMode`, default `stream`), only the stream URL is written to the `.txt` header.
+4. **Cover, audio, video** — via `yt-dlp`. Audio is stored as `<name>.m4a`, YouTube's AAC stream without a re-encode: browsers seek exactly in M4A, while seeks in a VBR MP3 land up to about a second off although `currentTime` looks right, which puts Melodiq Notes out of step with its notes. Video either downloaded (`bestvideo[ext=mp4]+bestaudio[ext=m4a]/…`) or, in `stream` mode (`defaultDownloadMode`, default `stream`), only the stream URL is written to the `.txt` header.
 5. **Write `.txt`** with media headers, index the song (the job's `songId`, returned by `GET /api/usdb/status/:jobId`, is set before `status` becomes `done`), rescan, and — if `autoVocalSeparation` is enabled in config — queue a separation job.
 
 `yt-dlp` resolution: looks in `PATH` and several fixed locations; if missing it tries `pip3 install --user yt-dlp`, then downloads the **latest** release binary from GitHub. **Inference:** this is an unpinned runtime download — relevant for security reviews and offline hosts. `ffmpeg` must be installed separately.
@@ -108,7 +108,7 @@ Melodiq Notes lists one entry per song folder (`buildScoreCatalog` in `src/games
 
 **Batch import.** "Import several scores" under the Notes library (`stage/components/BatchImportDialog.tsx`, `stage/useBatchImport.ts`, logic `importScoreFile` in `stage/logic/batchImport.ts`) takes several score files (`.gp`, `.mxl`, `.musicxml`, `.xml`, `.mid`/`.midi`) and runs them one after another: title and artist come from the score, else from an `Artist - Title` file name (`scoreMeta`); a file without artist fails. Each goes through the same plan as above, but with the **top** `GET /api/youtube/search` hit for `artist title` taken without asking. Then the score is aligned in the browser to the recording `pickRecording` chooses and its marks stored (`PUT /api/songs/:id/scores/:file/marks`). A failing file does not stop the rest.
 
-**Replacing the recording.** "Search for another recording" in "Manage files" (`stage/components/RecordingSearch.tsx`, `stage/useRecordingReplace.ts`, `replaceSongRecording`) runs a §1 download job with the folder's `songId`, which overwrites `<name>.mp3` and the `#MP3` header in place (the folder keeps its id, scores and recordings). Every score whose marks belonged to the mix (`audio: null`) or had none is aligned again; marks for another recording of the folder stay. Old stems are not removed; auto separation runs again when enabled. Not offered when the karaoke `.txt` has note lines (`canReplaceRecording`), since their timing belongs to the current mix.
+**Replacing the recording.** "Search for another recording" in "Manage files" (`stage/components/RecordingSearch.tsx`, `stage/useRecordingReplace.ts`, `replaceSongRecording`) runs a §1 download job with the folder's `songId`, which writes `<name>.m4a` (removing an old `<name>.mp3`) and rewrites the `#MP3` header (the folder keeps its id, scores and recordings). Every score whose marks belonged to the mix (`audio: null`) or had none is aligned again; marks for another recording of the folder stay. Old stems are not removed; auto separation runs again when enabled. Not offered when the karaoke `.txt` has note lines (`canReplaceRecording`), since their timing belongs to the current mix.
 
 `alignRecording` (`src/modules/music-score/alignment.ts`) produces one mark per bar in two stages: a coarse match, then `fitMarksToNotes` (whole-song Viterbi fit of the score's attacks to band and pitch-class onsets, ±0.6 s per bar). The coarse match depends on the score:
 
@@ -122,7 +122,7 @@ No fixed file names — whatever the `.txt` headers reference. A song without `.
 ```
 <library dir>/<Artist - Title>/
 ├── <name>.txt                 # UltraStar lyrics + #MP3/#VIDEO/#COVER headers
-├── <audio>.mp3|m4a|…          # master audio
+├── <audio>.m4a|mp3|…          # master audio (downloads are AAC `.m4a`; older songs `.mp3`)
 ├── <… Vocals …>.mp3           # stem (optional)
 ├── <… Instrumental …>.mp3     # stem (optional)
 ├── <video>.mp4                # optional (or stream URL in the .txt)
