@@ -1,0 +1,1 @@
+- **Song downloads are M4A** — new downloads keep YouTube's AAC audio without a re-encode, so Melodiq Notes stays exactly on the notes after a seek. Existing MP3 songs stay as they are; delete and download them again to get the improvement.
