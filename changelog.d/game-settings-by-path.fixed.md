@@ -1,0 +1,1 @@
+- **Melodiq Notes showed Melodiq's settings** (#620): the header's settings button looked up the game by path prefix, so `/games/melodiq-notes` matched Melodiq. Games are now matched by whole path segments.

@@ -26,4 +26,15 @@ describe('gameRegistry settings sections', { timeout: 30000 }, () => {
     expect(ids('melodiq')).toEqual(['profiles', 'gameplay', 'client']);
     // Importing every game takes over 5s on a busy machine
   });
+
+  it('finds a game by whole path segments, so Melodiq Notes is not Melodiq (#620)', async () => {
+    const { gameRegistry } = await import('./gameRegistry');
+    const id = (path: string) => gameRegistry.findGameByPath(path)?.id;
+    expect(id('/games/melodiq-notes')).toBe('melodiq-notes');
+    expect(id('/games/melodiq-notes/anything')).toBe('melodiq-notes');
+    expect(id('/games/melodiq')).toBe('melodiq');
+    expect(id('/games/melodiq/queue')).toBe('melodiq');
+    expect(id('/games/melodiq/tv')).toBe('melodiq');
+    expect(id('/games/melodiqx')).toBeUndefined();
+  });
 });
