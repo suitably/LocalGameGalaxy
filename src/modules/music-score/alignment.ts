@@ -13,13 +13,12 @@ import { fitMarksToNotes, onsetFeatures } from './noteFit';
 import { refineMarksWithOnsets } from './onsets';
 import { hasPitchedNotes, marksFromOnsets } from './onsetAlign';
 import { beatToSec } from './timing';
+import { unrelatedCost, warpScoreToAudio } from './warp';
 import { estimateTuningCents } from './tuning';
 import type { BarMark, ScoreSong } from './types';
 
 /** Frames (±6 s) of the warp path fitted per bar: the DTW path of a dense mix jitters, a band's tempo does not. */
 const FIT_RADIUS = 60;
-/** Extra cost of a tempo-changing step: recordings mostly keep a steady tempo, a weakly matching mix should not wander. */
-const STEP_PENALTY = 0.2;
 /** Semitone shifts of the score tried against the recording (a band tuned down, a capo, a transposed arrangement). */
 const SHIFTS = [0, -1, 1, -2, 2];
 /** A shift must beat the untransposed score by this much mean cost to be taken. */
@@ -36,24 +35,17 @@ const MAX_SKIP_SEC = 30;
  * arrangement of "Rose Tattoo" moved two bars at 0.89).
  */
 const SKIP_SHARE = 1.1;
-/** Score × recording frame pairs sampled for that baseline. */
-const BASELINE_SAMPLES = 4000;
-/** Matched frames whose tempo the skipped ends continue. */
-const EXTRAPOLATE_FRAMES = 100;
-
-/** Mean cost of score and recording frames paired at random (sampled on a fixed lattice). */
-export function unrelatedCost(n: number, m: number, cost: (i: number, j: number) => number) {
-  let sum = 0;
-  for (let k = 0; k < BASELINE_SAMPLES; k++) {
-    // golden-ratio lattice: evenly spread, deterministic
-    sum += cost(
-      Math.floor(((k * 0.618034) % 1) * n),
-      Math.floor(((k + 0.5) / BASELINE_SAMPLES) * m),
-    );
-  }
-  return sum / BASELINE_SAMPLES;
-}
-
+/** A jump or standstill of the warp at least this long splits the per-bar fit (s). */
+const GAP_MIN_SEC = 1.5;
+/**
+ * Gaps in the middle (see warpScoreToAudio), in units of an unrelated pairing's cost. Opening
+ * one costs GAP_OPEN. Each recording frame left out costs GAP_EXTEND_RECORDING: the score still
+ * pays for every one of its own frames, so a cheap one cannot hollow the match out. Each score
+ * frame left out costs SKIP_SHARE, more than matching it however badly, or the score would
+ * rather collapse than be matched.
+ */
+const GAP_OPEN = 3;
+const GAP_EXTEND_RECORDING = 0.1;
 export type AlignProgress = (
   stage: 'analyse' | 'match' | 'refine',
   fraction: number,
@@ -66,122 +58,40 @@ export interface AlignResult {
 }
 
 /**
- * Dynamic time warping of n score frames against m recording frames with steps
- * (1,1), (1,2), (2,1): tempo may differ by up to a factor of two. The start in
- * the recording is free (intros, silence) and the end is chosen by mean cost.
- * Up to `maxSkip` score frames at either end may stay unmatched at `skipCost` each
- * (an arrangement's extra intro or outro); they continue the tempo of the matched
- * path next to them. Returns the recording frame of every score frame and
- * the mean cost along the matched path.
+ * Splits the warp (recording seconds per score frame) at gaps: where the recording jumps ahead
+ * (frames the score lacks) or stands still (score frames the recording lacks) for at least
+ * GAP_MIN_SEC. Per score frame, the first and last frame of its piece.
  */
-export async function warpScoreToAudio(
-  n: number,
-  m: number,
-  cost: (i: number, j: number) => number,
-  onProgress?: AlignProgress,
-  { maxSkip = 0, skipCost = 0 }: { maxSkip?: number; skipCost?: number } = {},
-): Promise<{ at: Float64Array; meanCost: number }> {
-  const INF = 1e30;
-  const skip = Math.max(0, Math.min(maxSkip, n - 1));
-  // 0 diagonal, 1 fast, 2 slow, 3 path starts here (score frames before it skipped)
-  const steps = new Int8Array(n * m);
-  let prev2 = new Float64Array(m).fill(INF);
-  let prev = new Float64Array(m);
-  let cur = new Float64Array(m);
-  // recording frame each path starts at, so the end can be chosen by the path's own mean cost
-  let from2 = new Int32Array(m);
-  let from = Int32Array.from({ length: m }, (_, j) => j);
-  let fromCur = new Int32Array(m);
-  for (let j = 0; j < m; j++) {
-    prev[j] = cost(0, j);
-    steps[j] = 3;
+export function warpSegments(at: Float64Array): { start: Int32Array; end: Int32Array } {
+  const n = at.length;
+  const start = new Int32Array(n);
+  const end = new Int32Array(n);
+  const minRun = Math.ceil(GAP_MIN_SEC / HOP_SEC);
+  // score frames that stand still on one recording moment for long: each is a piece of its own
+  const still = new Uint8Array(n);
+  for (let i = 0; i < n;) {
+    let k = i + 1;
+    while (k < n && at[k] === at[i]) k++;
+    if (k - i >= minRun) still.fill(1, i, k);
+    i = k;
   }
-  let bestEnd = INF;
-  let endRow = n - 1;
-  let endCol = 0;
-  // a path covers about n + (its recording span) cells; skipped frames count as cells at skipCost
-  const considerEnds = (row: number, acc: Float64Array, starts: Int32Array) => {
-    if (row < n - 1 - skip) return;
-    for (let k = 0; k < m; k++) {
-      const v = (acc[k] + (n - 1 - row) * skipCost) / (n + k - starts[k] + 1);
-      if (v < bestEnd) {
-        bestEnd = v;
-        endRow = row;
-        endCol = k;
-      }
+  let first = 0;
+  for (let i = 0; i < n; i++) {
+    if (still[i]) {
+      start[i] = i;
+      end[i] = i;
+      first = i + 1;
+      continue;
     }
-  };
-  considerEnds(0, prev, from);
-  for (let i = 1; i < n; i++) {
-    const fresh = i <= skip ? i * skipCost : INF;
-    for (let j = 0; j < m; j++) {
-      const diag = j >= 1 ? prev[j - 1] : INF;
-      const fast = j >= 2 ? prev[j - 2] + STEP_PENALTY : INF;
-      const slow = i >= 2 && j >= 1 ? prev2[j - 1] + cost(i - 1, j) + STEP_PENALTY : INF;
-      let best = diag;
-      let step = 0;
-      let start = j >= 1 ? from[j - 1] : 0;
-      if (fast < best) {
-        best = fast;
-        step = 1;
-        start = from[j - 2];
-      }
-      if (slow < best) {
-        best = slow;
-        step = 2;
-        start = from2[j - 1];
-      }
-      if (fresh < best) {
-        best = fresh;
-        step = 3;
-        start = j;
-      }
-      cur[j] = best + cost(i, j);
-      fromCur[j] = start;
-      steps[i * m + j] = step;
+    const last = i + 1 >= n || still[i + 1] || at[i + 1] - at[i] >= GAP_MIN_SEC;
+    if (!last) continue;
+    for (let k = first; k <= i; k++) {
+      start[k] = first;
+      end[k] = i;
     }
-    considerEnds(i, cur, fromCur);
-    [prev2, prev, cur] = [prev, cur, prev2];
-    [from2, from, fromCur] = [from, fromCur, from2];
-    if (onProgress && i % 200 === 0) await onProgress('match', i / n);
+    first = i + 1;
   }
-  const at = new Float64Array(n);
-  let i = endRow;
-  let j = endCol;
-  at[i] = j;
-  let sum = cost(i, j);
-  let cells = 1;
-  while (i > 0) {
-    const step = steps[i * m + j];
-    if (step === 3) break;
-    if (step === 0) {
-      i--;
-      j--;
-    } else if (step === 1) {
-      i--;
-      j -= 2;
-    } else {
-      at[i - 1] = j - 1;
-      sum += cost(i - 1, j - 1);
-      cells++;
-      i -= 2;
-      j--;
-    }
-    j = Math.max(0, j);
-    if (i >= 0) {
-      at[i] = j;
-      sum += cost(i, j);
-      cells++;
-    }
-  }
-  // unmatched ends continue at the tempo of the matched path next to them
-  const startRow = i;
-  const reach = Math.min(EXTRAPOLATE_FRAMES, endRow - startRow);
-  const headSlope = reach > 0 ? (at[startRow + reach] - at[startRow]) / reach : 1;
-  const tailSlope = reach > 0 ? (at[endRow] - at[endRow - reach]) / reach : 1;
-  for (let k = startRow - 1; k >= 0; k--) at[k] = at[k + 1] - headSlope;
-  for (let k = endRow + 1; k < n; k++) at[k] = at[k - 1] + tailSlope;
-  return { at, meanCost: sum / cells };
+  return { start, end };
 }
 
 /** Turns the frame warp into one mark per bar (median-smoothed, strictly increasing) plus one at the end. */
@@ -189,10 +99,12 @@ export function marksFromWarp(song: ScoreSong, audioAt: Float64Array): BarMark[]
   const n = audioAt.length;
   // Local straight-line fit of the warp path around each bar start: robust against
   // single-frame jumps and unbiased when the tempo drifts.
+  const segment = warpSegments(audioAt);
   const marks = song.measureStarts.map((beat) => {
     const k = Math.min(n - 1, Math.round(beatToSec(song.tempoMap, beat) / HOP_SEC));
-    const lo = Math.max(0, k - FIT_RADIUS);
-    const hi = Math.min(n - 1, k + FIT_RADIUS);
+    // the fit stays on its side of a gap: a jump in the recording is no tempo change
+    const lo = Math.max(segment.start[k], k - FIT_RADIUS);
+    const hi = Math.min(segment.end[k], k + FIT_RADIUS);
     let sx = 0;
     let sy = 0;
     let sxx = 0;
@@ -228,17 +140,17 @@ export function marksFromWarp(song: ScoreSong, audioAt: Float64Array): BarMark[]
   return marks;
 }
 
-/** Shift of the score (in semitones) whose warp through the recording is cheapest, on a coarse grid. */
+/** Shift of the score (in semitones) whose warp through the recording is cheapest, on a coarse grid, and that warp's mean cost. */
 async function bestShift(score: ReturnType<typeof scoreFeatures>, audio: Features) {
   const a = decimate(audio, COARSE);
-  let best = { semitones: 0, cost: Infinity };
+  let best = { semitones: 0, cost: Infinity, meanCost: 0 };
   for (const s of SHIFTS) {
     const sc = decimate(transpose(score, s), COARSE);
     const { meanCost } = await warpScoreToAudio(sc.frames, a.frames, frameCost(sc, a));
     const cost = s === 0 ? meanCost - SHIFT_MARGIN : meanCost;
-    if (cost < best.cost) best = { semitones: s, cost };
+    if (cost < best.cost) best = { semitones: s, cost, meanCost };
   }
-  return best.semitones;
+  return best;
 }
 
 /** Full alignment of a mono recording (at ALIGN_SAMPLE_RATE) to the score: one mark per bar. */
@@ -260,12 +172,18 @@ export async function alignRecording(
   const pitched = chromaOnsets(samples, cents);
   const audio: Features = { chroma, frames, onsets: audioOnsetRows(pitched, bands, frames) };
   const plain = scoreFeatures(song);
-  const semitones = await bestShift(plain, audio);
+  const { semitones } = await bestShift(plain, audio);
   const score = transpose(plain, semitones);
   const cost = frameCost(score, audio);
+  const baseline = unrelatedCost(score.frames, audio.frames, cost);
   const warp = await warpScoreToAudio(score.frames, audio.frames, cost, onProgress, {
     maxSkip: Math.round(MAX_SKIP_SEC / HOP_SEC),
-    skipCost: SKIP_SHARE * unrelatedCost(score.frames, audio.frames, cost),
+    skipCost: SKIP_SHARE * baseline,
+    gap: {
+      open: GAP_OPEN * baseline,
+      extendRecording: GAP_EXTEND_RECORDING * baseline,
+      extendScore: SKIP_SHARE * baseline,
+    },
   });
   const coarse = marksFromWarp(
     song,

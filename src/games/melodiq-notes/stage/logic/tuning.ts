@@ -9,7 +9,7 @@ export const SPEED_PRESETS = [0.5, 0.75, 1] as const;
 export const SPEED_NUDGES = [-0.1, -0.05, 0.05, 0.1] as const;
 
 /** Offset range of the fine-tuning slider, in seconds (±). */
-export const OFFSET_RANGE_SEC = 2;
+export const OFFSET_RANGE_SEC = 10;
 export const OFFSET_COARSE_SEC = 0.01;
 export const OFFSET_FINE_SEC = 0.001;
 

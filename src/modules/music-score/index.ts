@@ -10,6 +10,7 @@ export * from './dsp';
 export * from './onsets';
 export * from './noteFit';
 export * from './alignment';
+export * from './warp';
 export * from './tuning';
 export * from './chromaOnsets';
 export * from './alignFeatures';

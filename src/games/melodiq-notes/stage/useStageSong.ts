@@ -22,6 +22,7 @@ import { musicXmlFile, saveToNotesLibrary } from './logic/notesLibrarySync';
 import { alignRecordingInBrowser, createElementRecording } from './engine/browserRecording';
 import type { StageEngine } from './engine/StageEngine';
 import { defaultSeats } from './engine/players';
+import { useExactRecordingUrl } from './useExactRecordingUrl';
 import { readInstrument, rememberSong } from './logic/lastSession';
 import {
   browserXml,
@@ -180,18 +181,19 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
   );
 
   // the engine follows song, recording and its mapping
+  const playUrl = useExactRecordingUrl(recording);
   useEffect(() => {
-    if (!song || !recording) {
+    if (!song || !playUrl) {
       engine.setRecording(null);
       return;
     }
-    const rec = createElementRecording(recording.url, song, marks, offset);
+    const rec = createElementRecording(playUrl, song, marks, offset);
     engine.setRecording(rec);
     return () => {
       rec.pause();
       rec.element.removeAttribute('src');
     };
-  }, [engine, song, recording, marks, offset]);
+  }, [engine, song, playUrl, marks, offset]);
 
   const alignNow = useCallback(async () => {
     if (!song || !recording) return;
