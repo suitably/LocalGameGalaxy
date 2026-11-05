@@ -4,7 +4,14 @@ import SpeedIcon from '@mui/icons-material/SpeedRounded';
 import { useTranslation } from 'react-i18next';
 import { TOUCH_TARGET } from '../../../../lib/touchTarget';
 import type { StageEngine } from '../engine/StageEngine';
-import { snapSpeed, SPEED_MAX, SPEED_MIN, SPEED_STEP } from '../logic/tuning';
+import {
+  snapSpeed,
+  SPEED_MAX,
+  SPEED_MIN,
+  SPEED_NUDGES,
+  SPEED_PRESETS,
+  SPEED_STEP,
+} from '../logic/tuning';
 import { overlayContainer } from './overlayContainer';
 
 /** Playback speed as a compact "75 %" button; the slider opens in a popover. Fixed in perform mode. */
@@ -49,9 +56,33 @@ export function SpeedButton({ engine }: { engine: StageEngine }) {
             marks={[{ value: 1 }]}
             onChange={(_, v) => engine.setSpeed(snapSpeed(v as number))}
           />
-          <Button size="small" disabled={percent === 100} onClick={() => engine.setSpeed(1)}>
-            100 %
-          </Button>
+          <Stack direction="row" spacing={0.5} justifyContent="center">
+            {SPEED_PRESETS.map((p) => (
+              <Button
+                key={p}
+                size="small"
+                variant={percent === Math.round(p * 100) ? 'contained' : 'outlined'}
+                onClick={() => engine.setSpeed(p)}
+              >
+                {Math.round(p * 100)} %
+              </Button>
+            ))}
+          </Stack>
+          <Stack direction="row" spacing={0.5} justifyContent="center">
+            {SPEED_NUDGES.map((d) => (
+              <Button
+                key={d}
+                size="small"
+                aria-label={`${k('speed')} ${d > 0 ? '+' : '−'}${Math.abs(Math.round(d * 100))} %`}
+                disabled={snapSpeed(engine.speed + d) === engine.speed}
+                onClick={() => engine.setSpeed(snapSpeed(engine.speed + d))}
+                sx={{ minWidth: 48 }}
+              >
+                {d > 0 ? '+' : '−'}
+                {Math.abs(Math.round(d * 100))}
+              </Button>
+            ))}
+          </Stack>
         </Stack>
       </Popover>
     </>

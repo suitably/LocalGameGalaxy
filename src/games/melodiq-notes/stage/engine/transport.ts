@@ -100,3 +100,31 @@ export function loopSections(e: StageEngine, first: number | null, last: number 
   }
   e.emit();
 }
+
+/**
+ * Leaves perform mode (which has no loop), slows down to 75 % and loops the bars `first..last`,
+ * with the playhead on them instead of at the start of the song.
+ */
+export function practiseBars(e: StageEngine, first: number, last: number) {
+  e.setMode('practice');
+  e.setSpeed(0.75);
+  loopSections(e, first, last);
+}
+
+/** End of a loop pass: tells the guided practice (which may move or end the loop), then starts over. */
+export function passLoop(e: StageEngine) {
+  e.onLoopPass?.(e);
+  if (e.loop && e.state === 'playing') e.restartAt(e.loop.from);
+}
+
+/**
+ * The beat the player hears right now: sound (synth and recording alike) reaches the ears
+ * `outputLatency` after the song clock schedules it, so the stage draws that much behind the
+ * clock and notes cross the play line with their sound. Judging stays on the clock: the
+ * tap-along input latency already holds this delay. Learn mode waits on the clock.
+ */
+export function heardBeat(e: StageEngine) {
+  const latency = e.sound.outputLatency?.() ?? 0;
+  if (e.state !== 'playing' || e.waitingFor || latency <= 0) return e.beat;
+  return e.beat - latency / e.secPerBeat(Math.max(0, e.beat));
+}

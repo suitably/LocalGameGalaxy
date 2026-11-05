@@ -3,9 +3,13 @@
 export const SPEED_MIN = 0.25;
 export const SPEED_MAX = 1.5;
 export const SPEED_STEP = 0.05;
+/** One-tap speeds of the speed popover (#638). */
+export const SPEED_PRESETS = [0.5, 0.75, 1] as const;
+/** Step buttons of the speed popover (#638). */
+export const SPEED_NUDGES = [-0.1, -0.05, 0.05, 0.1] as const;
 
 /** Offset range of the fine-tuning slider, in seconds (±). */
-export const OFFSET_RANGE_SEC = 2;
+export const OFFSET_RANGE_SEC = 10;
 export const OFFSET_COARSE_SEC = 0.01;
 export const OFFSET_FINE_SEC = 0.001;
 

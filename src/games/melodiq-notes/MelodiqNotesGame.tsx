@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, Box, Typography, useMediaQuery } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { bpmAt } from '../../modules/music-score';
-import { DEMO_SONGS } from './demoSongs';
+import { initialExample, useResumeLastSong } from './stage/useResumeLastSong';
 import { NotesSheet } from './components/NotesSheet';
 import { useMelodiqNotesHeader } from './hooks/useMelodiqNotesHeader';
 import { useStage, useStageTexts } from './stage/useStage';
@@ -22,6 +22,8 @@ import { ImmersiveSong } from './stage/components/ImmersiveSong';
 import type { StageDisplay } from './stage/render/stageRenderer';
 import { StageInvite } from './pult/components/StageInvite';
 import { playCalibrationClicks } from './stage/engine/calibrationClicks';
+import { usePracticeLadder } from './stage/usePracticeLadder';
+import { LadderPanel } from './stage/components/LadderPanel';
 
 /**
  * Melodiq Notes: learn and play songs on keyboard, guitar, bass, drums, ukulele or voice, alone or
@@ -34,10 +36,9 @@ export const MelodiqNotesGame: React.FC = () => {
     t(`games.melodiq_notes.stage.${key}`, opts);
   const { engine, unlockAudio } = useStage();
   const texts = useStageTexts();
-  const songState = useStageSong(engine, {
-    title: DEMO_SONGS[0].title,
-    xml: DEMO_SONGS[0].xmlContent,
-  });
+  const [initial] = useState(initialExample);
+  const songState = useStageSong(engine, initial);
+  useResumeLastSong(songState);
   const input = useStageInput(engine);
   const [display, setDisplay] = useState<StageDisplay>('instrument');
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -83,15 +84,13 @@ export const MelodiqNotesGame: React.FC = () => {
     if (engine.state === 'playing') engine.pause();
     else start();
   }, [engine, start]);
-  const practise = useCallback(
-    (section: number) => {
-      // the weakest bar and the one after it
-      engine.setLoop(section, Math.min(section + 1, engine.sections.length - 1));
-      engine.setSpeed(0.75);
-      start();
-    },
-    [engine, start],
-  );
+  const ladder = usePracticeLadder(engine, start);
+  const perform = useCallback(() => {
+    ladder.stop();
+    engine.setMode('perform');
+    engine.reset();
+    start();
+  }, [engine, ladder, start]);
 
   const rotate = immersive.active && portrait && engine.players.length > 1;
   return (
@@ -100,9 +99,8 @@ export const MelodiqNotesGame: React.FC = () => {
         flex: 1,
         minHeight: 0,
         display: 'flex',
+        // the whole width on every screen (#561): the stage and its lanes use the room
         width: '100%',
-        maxWidth: immersive.active ? 'none' : 1200,
-        mx: 'auto',
         p: immersive.active ? 0 : { xs: 0, sm: 1.5 },
       }}
     >
@@ -154,7 +152,8 @@ export const MelodiqNotesGame: React.FC = () => {
             onGesture={unlockAudio}
             onTogglePause={togglePause}
           >
-            <StageOverlay engine={engine} onStart={start} onPractise={practise} />
+            <StageOverlay engine={engine} onStart={start} onPractise={ladder.begin} />
+            <LadderPanel engine={engine} ladder={ladder} onPerform={perform} />
             {rotate && (
               <Typography
                 variant="caption"

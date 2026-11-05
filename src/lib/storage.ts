@@ -94,6 +94,10 @@ export const STORAGE_KEYS = {
   MELODIQ_NOTES_INPUT_LATENCY: 'melodiq_notes_input_latency',
   /** Whether notes played on a MIDI instrument sound through the browser ('0' = off, default on). */
   MELODIQ_NOTES_MIDI_SOUND: 'melodiq_notes_midi_sound',
+  /** The song last on stage (`LastSong` JSON), opened again on the next visit (#635). */
+  MELODIQ_NOTES_LAST_SONG: 'melodiq_notes_last_song',
+  /** The instrument the player last picked; a new song seats them on a matching part (#635). */
+  MELODIQ_NOTES_INSTRUMENT: 'melodiq_notes_instrument',
 
   // Werewolf game state
   WEREWOLF_STATE: 'werewolf-game-state',

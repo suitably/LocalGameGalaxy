@@ -649,7 +649,7 @@
           "stars": "Sterne",
           "accuracy": "Genau",
           "score": "Punkte",
-          "weakest": "Am unsichersten warst du in {{section}}. Übe ihn als Schleife mit 75 % Tempo.",
+          "weakest": "Am unsichersten warst du in {{section}}. Übe ihn als Schleife mit 75 %, dann im vollen Tempo, sobald er sitzt.",
           "none_weak": "Kein Abschnitt fällt ab. Probier den Auftritt-Modus oder eine andere Spur.",
           "practise": "{{section}} üben",
           "again": "Nochmal"
@@ -853,7 +853,21 @@
         "device_empty": "Noch kein Ordner importiert.",
         "device_search": "Importierte Noten durchsuchen",
         "open_file_hint": "MusicXML, MIDI oder Guitar Pro; sie wird nicht gespeichert.",
-        "import_folder_hint": "Behält die Noten in diesem Browser, auch offline."
+        "import_folder_hint": "Behält die Noten in diesem Browser, auch offline.",
+        "ladder": {
+          "progress": "{{section}} · {{speed}} % · {{streak}}/{{needed}} ✓",
+          "bar_done_title": "Takt sitzt!",
+          "bar_done_one": "{{section}} klappt im vollen Tempo. Ein schwacher Takt ist noch übrig.",
+          "bar_done_other": "{{section}} klappt im vollen Tempo. {{count}} schwache Takte sind noch übrig.",
+          "bar_done_zero": "{{section}} klappt im vollen Tempo. Das war der letzte schwache Takt.",
+          "all_done_title": "Alle schwachen Takte sind grün",
+          "all_done": "Jetzt den ganzen Song mit 50 % üben? Wenn das gut geht, 75 % und dann vorspielen.",
+          "next_bar": "Nächster schwacher Takt",
+          "finish": "Fertig",
+          "whole_song": "Ganzer Song mit 50 %",
+          "perform": "Vorspielen",
+          "stop": "Geführtes Üben beenden"
+        }
       },
       "pult": {
         "title": "Melodiq Notes – dein Instrument",

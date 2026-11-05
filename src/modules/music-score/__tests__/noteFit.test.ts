@@ -69,3 +69,30 @@ describe('fitMarksToNotes', () => {
     expect(await fitMarksToNotes(empty, marks, bands)).toBe(marks);
   });
 });
+
+describe('fitMarksToNotes with a coarse alignment far off at the ends', () => {
+  it('pulls start and end in over several passes (beyond the ±0.6 s of one pass)', async () => {
+    const s = song();
+    const secOfBeat = (beat: number) => 2 + beat;
+    const frames = Math.ceil((secOfBeat(s.end) + 4) / 0.01);
+    const bands: OnsetBands = [
+      new Float32Array(frames),
+      new Float32Array(frames),
+      new Float32Array(frames),
+    ];
+    for (const n of s.parts[0].notes)
+      bands[n.pitch === 36 ? 0 : 2][Math.round(secOfBeat(n.t) / 0.01)] = 1;
+    for (const n of s.parts[1].notes) bands[1][Math.round(secOfBeat(n.t) / 0.01)] = 0.5;
+    const truth = [...s.measureStarts, s.end].map((beat) => ({ beat, sec: secOfBeat(beat) }));
+    const last = truth.length - 1;
+    // the error ramps in over the first and last four marks, 1.3 s at the edges
+    const coarse = truth.map((m, i) => ({
+      beat: m.beat,
+      sec: m.sec + 1.3 * Math.max(0, 1 - i / 4, 1 - (last - i) / 4),
+    }));
+
+    const fitted = await fitMarksToNotes(s, coarse, bands);
+    for (let i = 0; i < truth.length; i++)
+      expect(Math.abs(fitted[i].sec - truth[i].sec)).toBeLessThan(0.03);
+  });
+});

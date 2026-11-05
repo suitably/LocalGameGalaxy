@@ -233,13 +233,15 @@ class GameRegistry {
 
   findGameByPath(pathname: string): GameDefinition | undefined {
     const clean = pathname.replace(/^\//, '');
-    return this.games.find((g) => {
-      if (clean.startsWith(g.route)) return true;
-      if (g.nestedRoutes?.some((nr) => clean.startsWith(nr.path.replace(/^\//, '')))) return true;
-      if (g.standaloneRoutes?.some((sr) => clean.startsWith(sr.path.replace(/^\//, ''))))
-        return true;
-      return false;
-    });
+    // whole path segments only: `games/melodiq-notes` is not under `games/melodiq` (#620)
+    const under = (route: string, r = route.replace(/^\//, '')) =>
+      clean === r || clean.startsWith(`${r}/`) || clean.startsWith(`${r}?`);
+    return this.games.find(
+      (g) =>
+        under(g.route) ||
+        g.nestedRoutes?.some((nr) => under(nr.path)) ||
+        g.standaloneRoutes?.some((sr) => under(sr.path)),
+    );
   }
 }
 

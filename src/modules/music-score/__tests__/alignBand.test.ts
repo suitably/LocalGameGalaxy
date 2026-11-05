@@ -81,3 +81,63 @@ describe('alignRecording on a band recording', () => {
     expect(e.max).toBeLessThan(0.05);
   });
 });
+
+/** The band song's 12 bars played `times` in a row (a song built on one progression). */
+function looped(times: number): ScoreSong {
+  const s = bandSong();
+  const n = times * 12;
+  return {
+    ...s,
+    measureStarts: Array.from({ length: n }, (_, k) => k * 4),
+    measureLengths: Array<number>(n).fill(4),
+    measureNumbers: Array.from({ length: n }, (_, k) => k + 1),
+    end: s.end * times,
+    parts: s.parts.map((p) => ({
+      ...p,
+      notes: Array.from({ length: times }, (_, r) =>
+        p.notes.map((x) => ({ ...x, t: x.t + r * s.end })),
+      ).flat(),
+    })),
+  };
+}
+
+/** `song` without bars `from..from + bars - 1`. */
+function without(song: ScoreSong, from: number, bars: number): ScoreSong {
+  const a = from * 4;
+  const d = bars * 4;
+  const keep = (b: number) => b < a || b >= a + d;
+  const move = (b: number) => (b >= a + d ? b - d : b);
+  return {
+    ...song,
+    measureStarts: song.measureStarts.filter(keep).map(move),
+    measureLengths: song.measureLengths.slice(bars),
+    measureNumbers: song.measureNumbers.slice(bars),
+    end: song.end - d,
+    parts: song.parts.map((p) => ({
+      ...p,
+      notes: p.notes.filter((x) => keep(x.t)).map((x) => ({ ...x, t: move(x.t) })),
+    })),
+  };
+}
+
+describe('alignRecording when score and recording differ in the middle', () => {
+  it('lets the score wait through a section only the recording has (an extra chorus)', async () => {
+    const full = looped(3);
+    const { samples, truth } = renderBand(full, { startSec: 1, factorAt: () => 1.03 });
+    const result = await alignRecording(without(full, 14, 4), samples);
+    // before the extra bars and after them, on the right bar (no shift by the gap)
+    expect(barErrors(result.marks.slice(0, 14), truth.slice(0, 14)).max).toBeLessThan(0.05);
+    expect(barErrors(result.marks.slice(14, 32), truth.slice(18)).max).toBeLessThan(0.05);
+  });
+
+  it('skips a section only the score has (a repeat the band left out)', async () => {
+    const full = looped(3);
+    const short = without(full, 14, 4);
+    const { samples, truth } = renderBand(short, { startSec: 1, factorAt: () => 1.03 });
+    const result = await alignRecording(full, samples);
+    expect(barErrors(result.marks.slice(0, 14), truth.slice(0, 14)).max).toBeLessThan(0.05);
+    // the first bars after the gap settle within a bar or two
+    expect(barErrors(result.marks.slice(20, 36), truth.slice(16)).max).toBeLessThan(0.05);
+    expect(Math.abs(result.marks[18].sec - truth[14])).toBeLessThan(0.5);
+  });
+});

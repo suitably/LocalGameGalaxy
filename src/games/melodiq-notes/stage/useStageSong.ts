@@ -21,6 +21,9 @@ import {
 import { musicXmlFile, saveToNotesLibrary } from './logic/notesLibrarySync';
 import { alignRecordingInBrowser, createElementRecording } from './engine/browserRecording';
 import type { StageEngine } from './engine/StageEngine';
+import { defaultSeats } from './engine/players';
+import { useExactRecordingUrl } from './useExactRecordingUrl';
+import { readInstrument, rememberSong } from './logic/lastSession';
 import {
   browserXml,
   downloadText,
@@ -45,7 +48,7 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
   // the first song is on stage from the first render (loading it again is harmless)
   const [first] = useState(() => {
     const loaded = readMusicXmlText(initial.xml, initial.title);
-    engine.loadSong(loaded.song);
+    engine.loadSong(loaded.song, defaultSeats(loaded.song, readInstrument()));
     return loaded;
   });
   const [song, setSong] = useState<ScoreSong | null>(first.song);
@@ -76,7 +79,8 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     (next: ScoreSong, nextXml: string | null, nextOrigin: SongOrigin) => {
       generation.current++;
       openedFile.current = null;
-      engine.loadSong(next);
+      engine.loadSong(next, defaultSeats(next, readInstrument()));
+      rememberSong(nextOrigin);
       setSong(next);
       setXml(nextXml);
       setOrigin(nextOrigin);
@@ -177,18 +181,19 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
   );
 
   // the engine follows song, recording and its mapping
+  const playUrl = useExactRecordingUrl(recording);
   useEffect(() => {
-    if (!song || !recording) {
+    if (!song || !playUrl) {
       engine.setRecording(null);
       return;
     }
-    const rec = createElementRecording(recording.url, song, marks, offset);
+    const rec = createElementRecording(playUrl, song, marks, offset);
     engine.setRecording(rec);
     return () => {
       rec.pause();
       rec.element.removeAttribute('src');
     };
-  }, [engine, song, recording, marks, offset]);
+  }, [engine, song, playUrl, marks, offset]);
 
   const alignNow = useCallback(async () => {
     if (!song || !recording) return;

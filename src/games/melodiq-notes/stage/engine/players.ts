@@ -16,13 +16,15 @@ const PREFERRED_SOLO: InstrumentKind[] = [
 ];
 const BAND_ORDER: InstrumentKind[] = ['drums', 'bass', 'guitar', 'keyboard', 'vocals', 'melody'];
 
-/** One player on the part that suits playing alone best. */
-export function defaultSeats(song: ScoreSong): PlayerSeat[] {
-  const best = [...song.parts].sort(
-    (a, b) =>
-      PREFERRED_SOLO.indexOf(a.guess) - PREFERRED_SOLO.indexOf(b.guess) ||
-      b.notes.length - a.notes.length,
-  )[0];
+/**
+ * One player on the part that suits playing alone best: a part of the instrument the player
+ * last picked (`prefer`, #635) when the song has one with notes.
+ */
+export function defaultSeats(song: ScoreSong, prefer: InstrumentKind | null = null): PlayerSeat[] {
+  const rank = (k: InstrumentKind) => (k === prefer ? -1 : PREFERRED_SOLO.indexOf(k));
+  const best = [...song.parts]
+    .filter((p) => p.notes.length || song.parts.every((q) => !q.notes.length))
+    .sort((a, b) => rank(a.guess) - rank(b.guess) || b.notes.length - a.notes.length)[0];
   return best ? [{ partId: best.id, inst: best.guess }] : [];
 }
 

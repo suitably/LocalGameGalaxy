@@ -1,0 +1,1 @@
+- **Melodiq Notes uses the full screen width** (#561): the stage is no longer limited to 1200 px on wide screens.

@@ -7,6 +7,7 @@ import type { InstrumentKind } from '../../../../modules/music-score';
 import type { StageEngine } from '../engine/StageEngine';
 import { MAX_PLAYERS, nextSeat } from '../engine/players';
 import { INSTRUMENT_ORDER, STAGE_INSTRUMENTS } from '../logic/instruments';
+import { rememberInstrument } from '../logic/lastSession';
 
 interface PlayerListProps {
   engine: StageEngine;
@@ -87,7 +88,11 @@ export function PlayerList({ engine, onInvite, onRemoveRemote }: PlayerListProps
                   size="small"
                   value={seat.partId}
                   inputProps={{ 'aria-label': k('player_part', { no: i + 1 }) }}
-                  onChange={(e) => engine.setSeat(i, { partId: e.target.value, chosen: true })}
+                  onChange={(e) => {
+                    const part = song.parts.find((p) => p.id === e.target.value);
+                    if (part) rememberInstrument(part.guess);
+                    engine.setSeat(i, { partId: e.target.value, chosen: true });
+                  }}
                   sx={{ gridColumn: '2 / 4', minWidth: 0 }}
                 >
                   {song.parts.map((part) => (
@@ -104,9 +109,10 @@ export function PlayerList({ engine, onInvite, onRemoveRemote }: PlayerListProps
                   size="small"
                   value={seat.inst}
                   inputProps={{ 'aria-label': k('player_view', { no: i + 1 }) }}
-                  onChange={(e) =>
-                    engine.setSeat(i, { inst: e.target.value as InstrumentKind, chosen: true })
-                  }
+                  onChange={(e) => {
+                    rememberInstrument(e.target.value as InstrumentKind);
+                    engine.setSeat(i, { inst: e.target.value as InstrumentKind, chosen: true });
+                  }}
                   sx={{ gridColumn: '2 / 4', minWidth: 0 }}
                 >
                   {INSTRUMENT_ORDER.map((kind) => (
