@@ -161,11 +161,11 @@ export interface FitOptions {
  * costs: a band speeds up or slows down gradually, so a fit that makes one bar
  * 30 % faster and the next 30 % slower to catch an off-beat hit loses.
  */
-export async function fitMarksToNotes(
+async function fitPass(
   song: ScoreSong,
   marks: BarMark[],
   bands: OnsetBands,
-  { chroma, onProgress }: FitOptions = {},
+  { chroma, onProgress }: FitOptions,
 ): Promise<BarMark[]> {
   const events = noteEvents(song);
   if (marks.length < 2 || !events.length) return marks;
@@ -261,4 +261,33 @@ export async function fitMarksToNotes(
     beat: m.beat,
     sec: m.sec < 0 ? m.sec : Math.max(0, m.sec + shiftSec(chosen[k])),
   }));
+}
+
+/** A mark that moved this far (seconds) hit the search window, so the true place may lie beyond it. */
+const SATURATED_SEC = (MAX_SHIFT - 5) * HOP_SEC;
+/** Fit passes at most; each one is centred on the result of the one before (reach ±0.6 s per pass). */
+const MAX_PASSES = 4;
+
+/**
+ * Fits the marks to the recording's attacks (see `fitPass`), and again from the result while
+ * any mark ended at the edge of the search window. A coarse alignment that is off by more than
+ * 0.6 s, mostly at the start and end of the song where the warp is free or extrapolated, is
+ * thus pulled in over several passes instead of staying consistently early or late.
+ */
+export async function fitMarksToNotes(
+  song: ScoreSong,
+  marks: BarMark[],
+  bands: OnsetBands,
+  options: FitOptions = {},
+): Promise<BarMark[]> {
+  let current = marks;
+  for (let pass = 0; pass < MAX_PASSES; pass++) {
+    const fitted = await fitPass(song, current, bands, options);
+    const saturated = fitted.some(
+      (m, i) => m.sec >= 0 && Math.abs(m.sec - current[i].sec) >= SATURATED_SEC,
+    );
+    current = fitted;
+    if (!saturated) break;
+  }
+  return current;
 }

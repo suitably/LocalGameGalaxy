@@ -22,6 +22,7 @@ import { ImmersiveSong } from './stage/components/ImmersiveSong';
 import type { StageDisplay } from './stage/render/stageRenderer';
 import { StageInvite } from './pult/components/StageInvite';
 import { playCalibrationClicks } from './stage/engine/calibrationClicks';
+import { practiseBars } from './stage/engine/transport';
 
 /**
  * Melodiq Notes: learn and play songs on keyboard, guitar, bass, drums, ukulele or voice, alone or
@@ -86,8 +87,7 @@ export const MelodiqNotesGame: React.FC = () => {
   const practise = useCallback(
     (section: number) => {
       // the weakest bar and the one after it
-      engine.setLoop(section, Math.min(section + 1, engine.sections.length - 1));
-      engine.setSpeed(0.75);
+      practiseBars(engine, section, Math.min(section + 1, engine.sections.length - 1));
       start();
     },
     [engine, start],

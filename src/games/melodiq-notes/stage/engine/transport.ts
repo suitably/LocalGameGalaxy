@@ -100,3 +100,13 @@ export function loopSections(e: StageEngine, first: number | null, last: number 
   }
   e.emit();
 }
+
+/**
+ * Leaves perform mode (which has no loop), slows down to 75 % and loops the bars `first..last`,
+ * with the playhead on them instead of at the start of the song.
+ */
+export function practiseBars(e: StageEngine, first: number, last: number) {
+  e.setMode('practice');
+  e.setSpeed(0.75);
+  loopSections(e, first, last);
+}
