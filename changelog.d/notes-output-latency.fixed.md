@@ -1,0 +1,1 @@
+- **Melodiq Notes: notes and sound line up on headphones with delay**: the stage now draws notes behind the song clock by the output latency the browser reports (Bluetooth headphones often 0.15–0.3 s), so a note crosses the play line when its sound is heard rather than before it. Judging is unchanged (the tap-along input latency already includes this delay).

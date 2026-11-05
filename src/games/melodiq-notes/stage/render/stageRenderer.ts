@@ -22,6 +22,7 @@ import { drawNotation } from './notationView';
 import { drawPitch } from './pitchView';
 import { drawStrings } from './stringsView';
 import type { HitPoint, ViewContext } from './view';
+import { heardBeat } from '../engine/transport';
 
 export type StageDisplay = 'instrument' | 'notation';
 const IDLE_BEAT = -1.2;
@@ -53,7 +54,7 @@ export class StageRenderer {
       return;
     }
     const rects = panelRects(engine.players.length, width, height);
-    const beat = engine.state === 'idle' ? IDLE_BEAT : engine.beat;
+    const beat = engine.state === 'idle' ? IDLE_BEAT : heardBeat(engine);
     const pulse =
       !this.reducedMotion && engine.state === 'playing' && beat >= 0
         ? (1 - (beat - Math.floor(beat))) ** 3

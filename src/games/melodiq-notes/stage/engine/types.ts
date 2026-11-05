@@ -68,6 +68,8 @@ export interface StageSound {
   click(accent: boolean): void;
   /** A louder click at `perfMs` (`performance.now()` time), for tap-along calibration. */
   clickAt?(perfMs: number, accent: boolean): void;
+  /** Seconds from scheduling a sound to hearing it (output device and buffers); 0 when unknown. */
+  outputLatency?(): number;
   stopAll(): void;
 }
 

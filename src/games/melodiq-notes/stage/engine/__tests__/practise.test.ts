@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { StageEngine } from '../StageEngine';
-import { practiseBars } from '../transport';
+import { heardBeat, practiseBars } from '../transport';
 import { fakeSound, run, song } from './fixtures';
 
 describe('practiseBars', () => {
@@ -19,5 +19,39 @@ describe('practiseBars', () => {
     expect(e.state).toBe('playing');
     expect(e.beat).toBeGreaterThanOrEqual(0);
     expect(e.beat).toBeLessThan(4);
+  });
+});
+
+describe('loop pass hook (#638)', () => {
+  it('reports every loop pass and lets the listener pause before it starts over', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    const seen: number[] = [];
+    e.onLoopPass = (engine) => {
+      seen.push(engine.beat);
+      if (seen.length === 2) engine.pause();
+    };
+    e.setLoop(1, 2);
+    e.start();
+    run(e, 30);
+    expect(seen).toHaveLength(2);
+    expect(seen.every((b) => b >= 12)).toBe(true);
+    expect(e.state).toBe('paused');
+  });
+});
+
+describe('heardBeat', () => {
+  it('draws the output latency behind the clock while playing, on the clock otherwise', () => {
+    const sound = { ...fakeSound(), outputLatency: () => 0.25 };
+    const e = new StageEngine(sound);
+    e.loadSong(song());
+    e.setMode('perform');
+    expect(heardBeat(e)).toBe(e.beat);
+    e.start();
+    run(e, 3);
+    // 120 bpm: 0.5 s per beat, so 0.25 s is half a beat
+    expect(heardBeat(e)).toBeCloseTo(e.beat - 0.5);
+    e.pause();
+    expect(heardBeat(e)).toBe(e.beat);
   });
 });

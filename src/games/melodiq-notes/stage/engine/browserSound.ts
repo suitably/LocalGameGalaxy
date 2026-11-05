@@ -5,6 +5,8 @@ import { STAGE_INSTRUMENTS } from '../logic/instruments';
 import type { StageSound } from './types';
 
 const MAX_VOICES = 48;
+/** Reported latencies above this are taken as a browser bug. */
+const MAX_OUTPUT_LATENCY_SEC = 0.5;
 
 /** StageSound on a real AudioContext: soundfont instruments, synthesised drums and click. */
 export class BrowserStageSound implements StageSound {
@@ -35,6 +37,12 @@ export class BrowserStageSound implements StageSound {
 
   now() {
     return this.ctx.currentTime;
+  }
+
+  /** What the browser reports for this output (Bluetooth headphones: often 0.15–0.3 s). */
+  outputLatency() {
+    const latency = (this.ctx.outputLatency || 0) + (this.ctx.baseLatency || 0);
+    return Number.isFinite(latency) ? Math.min(MAX_OUTPUT_LATENCY_SEC, Math.max(0, latency)) : 0;
   }
 
   playNote(inst: InstrumentKind, midi: number, durationSec: number, volume: number) {

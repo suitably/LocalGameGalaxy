@@ -649,7 +649,7 @@
           "stars": "Stars",
           "accuracy": "Accuracy",
           "score": "Score",
-          "weakest": "You were least sure in {{section}}. Practise it on loop at 75 % speed.",
+          "weakest": "You were least sure in {{section}}. Practise it on loop at 75 %, then at full speed once it sits.",
           "none_weak": "No section stands out. Try perform mode or another track.",
           "practise": "Practise {{section}}",
           "again": "Again"
@@ -853,7 +853,21 @@
         "device_empty": "No folder imported yet.",
         "device_search": "Search imported scores",
         "open_file_hint": "MusicXML, MIDI or Guitar Pro; it is not stored.",
-        "import_folder_hint": "Keeps its scores in this browser, also offline."
+        "import_folder_hint": "Keeps its scores in this browser, also offline.",
+        "ladder": {
+          "progress": "{{section}} · {{speed}} % · {{streak}}/{{needed}} ✓",
+          "bar_done_title": "Bar mastered!",
+          "bar_done_one": "{{section}} sits at full speed. One weak bar is left.",
+          "bar_done_other": "{{section}} sits at full speed. {{count}} weak bars are left.",
+          "bar_done_zero": "{{section}} sits at full speed. That was the last weak bar.",
+          "all_done_title": "Every weak bar is green",
+          "all_done": "Practise the whole song at 50 % now? Once it goes well, try 75 % and then perform it.",
+          "next_bar": "Next weakest bar",
+          "finish": "Done",
+          "whole_song": "Whole song at 50 %",
+          "perform": "Perform",
+          "stop": "Stop guided practice"
+        }
       },
       "pult": {
         "title": "Melodiq Notes – your instrument",

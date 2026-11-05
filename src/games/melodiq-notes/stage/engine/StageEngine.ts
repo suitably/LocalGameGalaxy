@@ -7,6 +7,7 @@ import { focused, playLane, playPitch } from './input';
 import {
   introBeat,
   loopSections,
+  passLoop,
   secPerBeatAt,
   seekStage,
   seekToFirstNote,
@@ -53,6 +54,8 @@ export class StageEngine {
   /** How late input on this screen arrives after the sound it follows (tap-along), ms. */
   inputLatencyMs = 0;
   onTap: ((localMs: number) => void) | null = null;
+  /** Called once per loop pass, before the loop starts over (guided practice, #638). */
+  onLoopPass: ((engine: StageEngine) => void) | null = null;
   beat = 0;
   countIn = 4;
   loop: BeatRange | null = null;
@@ -275,7 +278,7 @@ export class StageEngine {
     this.playBand(next);
     this.beat = next;
     for (const p of this.players) advancePlayer(this, p, this.beat - before);
-    if (this.loop && this.beat >= this.loop.to) this.restartAt(this.loop.from);
+    if (this.loop && this.beat >= this.loop.to) passLoop(this);
     else if (!this.loop && this.beat >= song.end + 1) this.finish();
     syncRecording(this);
     if (
@@ -360,8 +363,8 @@ export class StageEngine {
     if (this.focus) this.focus.voice = { pitch, singing };
   }
 
-  /** Input latency (calibrated) and a listener for every hit or sung onset (tap-along calibration). */
-  configureInput(change: Partial<Pick<StageEngine, 'inputLatencyMs' | 'onTap'>>) {
+  /** Input latency (calibrated), a listener for every hit or sung onset (tap-along), loop passes. */
+  configureInput(change: Partial<Pick<StageEngine, 'inputLatencyMs' | 'onTap' | 'onLoopPass'>>) {
     Object.assign(this, change);
   }
 
