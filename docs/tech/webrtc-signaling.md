@@ -9,8 +9,8 @@ generated:
   at: 2026-09-27T10:00:00Z
   by: previous-agent
 verified:
-  at: 2026-10-31
-  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; §6 checked against src/lib/webrtc/iceServers.ts on 2026-10-21'
+  at: 2026-11-06
+  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; §6 checked against src/lib/webrtc/iceServers.ts on 2026-10-21; §3–§4 checked against useWebRTCClient.ts and a multi-browser run on 2026-11-06'
 ---
 
 # WebRTC Signaling & Connection Architecture
@@ -88,8 +88,10 @@ The phone client manages its connection via the `useWebRTCClient` React hook:
 
 - **State Gating**: A connection attempt is triggered automatically on mount if `autoConnect` is enabled, or manually via `reconnect()`.
 - **Media Acquisition**: The hook requests microphone permissions via `getMediaStream()` option and binds the returned `MediaStream` to the WebRTC connection before initiating negotiation.
-- **Race Condition Handling**: Multiple tracker peers might be returned. The client initiates up to `MAX_CANDIDATES` (5) connections concurrently. The first connection to fire the `connect` event "wins the race" and becomes the active peer (`peerRef.current`). The other candidates are immediately destroyed to conserve battery and CPU.
+- **Race Condition Handling**: Multiple tracker peers might be returned. The client initiates up to `MAX_CANDIDATES` (4) connections concurrently. The first connection to fire the `connect` event "wins the race" and becomes the active peer (`peerRef.current`). The other candidates are immediately destroyed to conserve battery and CPU.
 - **Identification Handshake**: Upon connection, the client sends an `identify` message containing the player's profile (name, avatar color hue, and persistent device ID).
+- **Leaving the swarm**: once connected, the client stops and destroys its tracker client (`leaveSwarm`). A WebSocket tracker forwards each announce (at most 5 offers, `websocket-tracker.js`) to **random** peers of the swarm, so connected phones in the swarm would soak up the offers of later phones. With only the host and searching phones left, a new or returning phone reaches the host on its first announce. The tracker peer and the data peer stay open.
+- **Re-announce while searching**: until a host answers, the client calls `trackerClient.update()` after 3 s, then 1.5× longer, at most every 15 s (`discoveryRetryDelay` in `src/lib/webrtc/discoveryRetry.ts`); the tracker's own interval is 2 minutes.
 
 ---
 
@@ -97,8 +99,8 @@ The phone client manages its connection via the `useWebRTCClient` React hook:
 
 Local WebRTC connections can drop due to phone sleep states, network switches, or temporary physical interference. The following retry mechanics are implemented:
 
-- **Signaling Timeout**: If a connection attempt takes longer than `CONNECTION_TIMEOUT_MS` (15 seconds), the candidate peer is automatically destroyed, triggering `processNextPendingPeer` to try another tracker peer.
-- **Auto-Reconnect**: On connection loss (`close` or `error` events), if `autoConnect` is active, the client schedules a connection retry after 2 seconds.
+- **Signaling Timeout**: If a connection attempt takes longer than `CONNECTION_TIMEOUT_MS` (6 seconds), the candidate peer is automatically destroyed, triggering `processNextPendingPeer` to try another tracker peer.
+- **Auto-Reconnect**: On connection loss, if `autoConnect` is active, the client schedules a new `connect()` after 1.5 seconds. Only the `close` handler resets state and reconnects; simple-peer emits `close` right after `error`, and the `error` handler only keeps the message for the status line (before, an `error` such as an ICE failure reset the state first, so `close` skipped the reconnect).
 - **Stale State Recovery**: If a client reconnects using an identical `deviceId`, the host matches it to the existing player record and updates the session references rather than instantiating a new player slot.
 
 ---

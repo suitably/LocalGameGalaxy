@@ -8,6 +8,7 @@ import {
   generatePeerId,
   stringToInfoHash,
 } from './trackerProtocol';
+import { discoveryRetryDelay } from './discoveryRetry';
 
 const MAX_CANDIDATES = 4;
 const CONNECTION_TIMEOUT_MS = 6000;
@@ -77,8 +78,29 @@ export function useWebRTCClient(
   }, []);
 
   const initiatedTrackersRef = useRef<Set<string>>(new Set());
+  const discoveryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const stopDiscoveryRetry = useCallback(() => {
+    if (discoveryTimerRef.current) clearTimeout(discoveryTimerRef.current);
+    discoveryTimerRef.current = null;
+  }, []);
+
+  /** Leaves the tracker swarm so later phones' offers reach the host, not this phone. */
+  const leaveSwarm = useCallback(() => {
+    stopDiscoveryRetry();
+    const trackerClient = trackerClientRef.current;
+    if (!trackerClient) return;
+    trackerClientRef.current = null;
+    try {
+      trackerClient.stop();
+      trackerClient.destroy();
+    } catch (e) {
+      console.warn('[WebRTCClient] Failed to leave tracker swarm:', e);
+    }
+  }, [stopDiscoveryRetry]);
 
   const cleanup = useCallback(() => {
+    stopDiscoveryRetry();
     if (peerRef.current) {
       peerRef.current.destroy();
       peerRef.current = null;
@@ -105,7 +127,7 @@ export function useWebRTCClient(
     isWebRTCConnectedRef.current = false;
     setIsConnected(false);
     pendingPeerCandidatesRef.current = [];
-  }, []);
+  }, [stopDiscoveryRetry]);
 
   const processNextPendingPeer = useCallback((trackerPeerId: string) => {
     handledTrackerPeersRef.current.delete(trackerPeerId); // allow retry just in case it was cleaned up
@@ -235,22 +257,14 @@ export function useWebRTCClient(
             });
             candidatePeersRef.current.clear();
             pendingPeerCandidatesRef.current = [];
+            leaveSwarm();
           });
 
+          // simple-peer emits 'close' right after 'error'; the close handler resets and reconnects.
+          let lastError: Error | null = null;
           peer.on('error', (err: Error) => {
             clearTimeout(connectionTimeout);
-            candidatePeersRef.current.delete(peer);
-
-            if (isWebRTCConnectedRef.current && peerRef.current === peer) {
-              isWebRTCConnectedRef.current = false;
-              setIsConnected(false);
-              updateStatus(`Connection lost: ${err.message}`, 'status-error');
-            }
-            trackerPeer.off('data', onData);
-
-            if (!isWebRTCConnectedRef.current) {
-              processNextPendingPeer(trackerPeerId);
-            }
+            lastError = err;
           });
 
           peer.on('close', () => {
@@ -260,7 +274,11 @@ export function useWebRTCClient(
             if (isWebRTCConnectedRef.current && peerRef.current === peer) {
               isWebRTCConnectedRef.current = false;
               setIsConnected(false);
-              updateStatus('Disconnected', 'status-disconnected');
+              if (lastError) {
+                updateStatus(`Connection lost: ${lastError.message}`, 'status-error');
+              } else {
+                updateStatus('Disconnected', 'status-disconnected');
+              }
 
               if (optionsRef.current.autoConnect) {
                 setTimeout(() => {
@@ -297,7 +315,7 @@ export function useWebRTCClient(
         trackerPeer.on('connect', setupAudioPeer);
       }
     },
-    [updateStatus, processNextPendingPeer, sendIdentity],
+    [updateStatus, processNextPendingPeer, sendIdentity, leaveSwarm],
   );
 
   const setupPeerConnection = useCallback(
@@ -413,6 +431,15 @@ export function useWebRTCClient(
       });
 
       trackerClient.start();
+
+      const scheduleRediscovery = (attempt: number) => {
+        discoveryTimerRef.current = setTimeout(() => {
+          if (isWebRTCConnectedRef.current || trackerClientRef.current !== trackerClient) return;
+          trackerClient.update();
+          scheduleRediscovery(attempt + 1);
+        }, discoveryRetryDelay(attempt));
+      };
+      scheduleRediscovery(0);
     } catch (err: any) {
       console.error('[WebRTCClient] Connect error:', err);
       updateStatus(err.message || 'Failed to connect', 'status-error');
