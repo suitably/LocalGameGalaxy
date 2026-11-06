@@ -66,16 +66,17 @@ a:focus-visible {
   color: var(--text-secondary);
   font-size: 0.9rem;
 }
-.summary,
-.todo {
+.summary {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 4px 20px;
   margin: 1.5rem 0;
 }
-.todo {
-  border: 2px dashed var(--link);
+.todo-inline {
+  outline: 2px dashed var(--link);
+  outline-offset: 2px;
+  font-weight: 600;
 }
 table {
   width: 100%;
