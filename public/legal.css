@@ -1,0 +1,97 @@
+/* Styles of the static legal pages (privacy.html, datenschutz.html). Colours from DESIGN.md §2. */
+:root {
+  color-scheme: light dark;
+  --canvas: #faf6f0;
+  --surface: #ffffff;
+  --border: #ddd3c5;
+  --text: #1d1a21;
+  --text-secondary: #5f5866;
+  --link: #8a5b00;
+  --accent: #0a6f65;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #17141c;
+    --surface: #211d27;
+    --border: #403a49;
+    --text: #f7f3ee;
+    --text-secondary: #b9b1bd;
+    --link: #ffc233;
+    --accent: #3dd6c4;
+  }
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--text);
+  font:
+    16px/1.6 system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  overflow-wrap: break-word;
+}
+main {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+h1 {
+  font-size: clamp(1.5rem, 7vw, 1.9rem);
+  hyphens: auto;
+  line-height: 1.2;
+  margin: 0.5rem 0 0.25rem;
+}
+h2 {
+  font-size: 1.3rem;
+  margin: 2.5rem 0 0.5rem;
+}
+h3 {
+  font-size: 1.05rem;
+  margin: 1.5rem 0 0.25rem;
+}
+a {
+  color: var(--link);
+}
+a:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+.meta,
+.lang {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+.summary,
+.todo {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px 20px;
+  margin: 1.5rem 0;
+}
+.todo {
+  border: 2px dashed var(--link);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+th,
+td {
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--border);
+}
+.table-wrap {
+  overflow-x: auto;
+}
+code {
+  font-size: 0.9em;
+}

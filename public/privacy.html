@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Privacy Notice – Nexumia Games</title>
+    <link rel="stylesheet" href="/legal.css" />
+    <link rel="alternate" hreflang="de" href="/datenschutz.html" />
+  </head>
+  <body>
+    <main>
+      <p class="lang">
+        <a href="/datenschutz.html" hreflang="de" lang="de">Deutsche Fassung</a> ·
+        <a href="/">Back to the games</a>
+      </p>
+      <h1>Privacy Notice</h1>
+      <p class="meta">
+        for games.nexumia.de and the Nexumia Android app · Last updated: 6 November 2026
+      </p>
+
+      <section class="summary" aria-labelledby="short">
+        <h2 id="short">In short</h2>
+        <ul>
+          <li>No account, no cookies, no tracking, no ads, no analytics.</li>
+          <li>Scores, names and settings stay on your device.</li>
+          <li>
+            Data only goes to the services listed below when you play with several devices, turn on
+            notifications or load certain content. Each section says what, when and why.
+          </li>
+          <li>We do not store any data about you on a server.</li>
+        </ul>
+      </section>
+
+      <h2 id="controller">1. Controller</h2>
+      <div class="todo">
+        <p>
+          <strong>[To be added by the operator: name, postal address and e-mail address.]</strong>
+        </p>
+      </div>
+      <p>
+        We have no data protection officer and are not required to have one. Contact us at the
+        address above with any question about your data.
+      </p>
+
+      <h2 id="hosting">2. Visiting the website (hosting)</h2>
+      <p>
+        The website is hosted and delivered by <strong>Cloudflare, Inc.</strong> (101 Townsend St,
+        San Francisco, CA 94107, USA). When you visit it, Cloudflare processes the connection data
+        it needs to deliver the site and protect it from attacks: IP address, date and time, the
+        address requested, amount of data, browser and operating system (user agent) and the
+        referring page.
+      </p>
+      <p>
+        We do not analyse this data and have not turned on access logs. Cloudflare processes it as
+        our processor (Art. 28 GDPR) and deletes it under its own retention rules. Legal basis: our
+        legitimate interest in a secure, working website (Art. 6(1)(f) GDPR). Cloudflare is
+        certified under the EU-US Data Privacy Framework (adequacy decision of the European
+        Commission, Art. 45 GDPR).
+      </p>
+
+      <h2 id="device">3. Data on your device</h2>
+      <p>
+        The games store in your browser (local storage, IndexedDB, service worker cache) or in the
+        app: settings, player names, scores, room codes, downloaded songs and scores, and the app's
+        files for offline use. This data does not leave your device except in the cases below. We
+        set no cookies.
+      </p>
+      <p>
+        Storing it is strictly necessary for the features you use (§ 25(2) no. 2 TDDDG, the German
+        implementation of the ePrivacy Directive). You can delete everything at any time: in your
+        browser's settings ("clear site data") or on Android ("clear app storage").
+      </p>
+      <p>
+        When you sing in Melodiq, the app asks for your <strong>microphone</strong>. The sound is
+        analysed on your device only; the recording itself is neither sent anywhere nor stored.
+      </p>
+
+      <h2 id="multi-device">4. Playing with several devices</h2>
+      <p>
+        So that phones and the TV can play together, the games use public services. Legal basis in
+        each case: our legitimate interest in providing the multi-device feature that you start
+        yourself (Art. 6(1)(f) GDPR). When you play on one device only, none of these services is
+        used.
+      </p>
+
+      <h3>4.1 Game state over MQTT</h3>
+      <p>
+        GuessArt, Storyteller, Tabletop, the party games and room games exchange the game state
+        through public MQTT servers: first <code>broker.hivemq.com</code> (HiveMQ GmbH, Germany),
+        and if it is down <code>broker.emqx.io</code> (EMQ Technologies Co., Ltd.; servers may be
+        outside the EU).
+      </p>
+      <ul>
+        <li>
+          <strong>What:</strong> your IP address, the game state with everything you enter in the
+          game (player names, texts, drawings, moves) and a random device id.
+        </li>
+        <li>
+          <strong>Important:</strong> these servers are public. Anyone who knows the room code can
+          read the game state. The latest state stays on the server until it is overwritten. Do not
+          enter real names or confidential content.
+        </li>
+        <li>
+          Using <code>broker.emqx.io</code> may transfer data to a country without an adequacy
+          decision, where protection equal to the EU's is not guaranteed. This happens only when
+          HiveMQ cannot be reached.
+        </li>
+      </ul>
+
+      <h3>4.2 Direct connection over WebRTC (Melodiq)</h3>
+      <p>
+        Melodiq connects phone and TV directly (WebRTC). To find each other, the devices announce
+        themselves to public WebTorrent trackers (<code>tracker.openwebtorrent.com</code>,
+        <code>tracker.webtorrent.dev</code>, run by volunteers of the WebTorrent community) and ask
+        STUN servers for their public address (<code>stun.cloudflare.com</code> of Cloudflare, Inc.,
+        USA; <code>global.stun.twilio.com</code> of Twilio Inc., USA; both certified under the EU-US
+        Data Privacy Framework). These services receive your IP address and a random party id.
+        Connected devices see each other's IP addresses. In the connection settings you can add your
+        own trackers and STUN servers and turn off the default ones.
+      </p>
+
+      <h2 id="notifications">5. Notifications</h2>
+      <p>
+        When you allow notifications (consent through your browser's prompt, Art. 6(1)(a) GDPR and §
+        25(1) TDDDG), the games tell you when it is your turn. You can withdraw consent at any time
+        in your browser or app settings.
+      </p>
+      <ul>
+        <li>
+          <strong>Web Push:</strong> your browser creates a push address at its maker's push service
+          (e.g. Google, Mozilla, Apple). Another device in your game sends an encrypted message
+          ("your turn") to that address through our Cloudflare Worker. The worker stores nothing;
+          the push service receives the push address, the encrypted message and your device's IP
+          address. Google LLC, Mozilla Corporation and Apple Inc. are based in the USA.
+        </li>
+        <li>
+          <strong>ntfy:</strong> only if you choose ntfy, your ntfy topic and the notification text
+          go unencrypted to <code>ntfy.sh</code> (public service of the ntfy project; servers may be
+          outside the EU) or to the ntfy server you enter.
+        </li>
+      </ul>
+
+      <h2 id="third-party">6. Third-party content</h2>
+      <p>
+        Some games load content when you use them. The provider then receives your IP address and
+        technical details of your browser. Legal basis: our legitimate interest in providing the
+        feature (Art. 6(1)(f) GDPR).
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Provider</th>
+              <th>What</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Melodiq, when a song has a YouTube video as background</td>
+              <td>Google Ireland Ltd. / Google LLC (YouTube)</td>
+              <td>
+                Loads the YouTube player from <code>youtube.com</code> and the video from
+                <code>youtube-nocookie.com</code>. Google may store data on your device and analyse
+                your use. Google is certified under the EU-US Data Privacy Framework.
+              </td>
+            </tr>
+            <tr>
+              <td>Melodiq Notes, instrument sounds</td>
+              <td>GitHub, Inc. (GitHub Pages, <code>gleitz.github.io</code>), USA</td>
+              <td>
+                Loads sound files. Choose the built-in synthesizer in the sound settings to avoid
+                this.
+              </td>
+            </tr>
+            <tr>
+              <td>GuessArt and Gartic Phone, drawing canvas</td>
+              <td>esm.sh (CDN for JavaScript packages)</td>
+              <td>Loads the fonts of the drawing canvas (Excalidraw).</td>
+            </tr>
+            <tr>
+              <td>Tabletop, when you import a game from the Steam Workshop</td>
+              <td>Valve Corporation (Steam) and Akamai Technologies, USA</td>
+              <td>
+                The Workshop number goes to Steam through our Cloudflare Worker (without your IP
+                address). Your browser loads the game's images and files directly from Steam's
+                content servers.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="self-configured">7. Services you set up yourself</h2>
+      <p>
+        Optional features connect your device directly to services you enter yourself: your own
+        companion server, signaling server, ntfy or STUN servers, a USDB account or a GitHub token
+        for feedback. You decide what is sent; their own privacy policies apply. Feedback you send
+        through GitHub is stored there as a publicly visible issue.
+      </p>
+
+      <h2 id="android">8. Android app</h2>
+      <p>
+        The app contains the same games and processes data the same way as the website. It contains
+        no Google services and no ad or analytics libraries, and asks only for the permissions a
+        feature needs (e.g. the microphone for Melodiq).
+      </p>
+
+      <h2 id="rights">9. Your rights</h2>
+      <p>You have the right to</p>
+      <ul>
+        <li>access your data (Art. 15 GDPR),</li>
+        <li>rectification (Art. 16), erasure (Art. 17) and restriction of processing (Art. 18),</li>
+        <li>data portability (Art. 20),</li>
+        <li>
+          <strong>object</strong> to processing based on our legitimate interest, on grounds
+          relating to your particular situation (Art. 21),
+        </li>
+        <li>withdraw consent with effect for the future (Art. 7(3)),</li>
+        <li>
+          lodge a complaint with a data protection supervisory authority, in particular in the
+          member state of your residence or place of work (Art. 77).
+        </li>
+      </ul>
+      <p>
+        As we store no data about you on servers, we usually cannot report on data that exists only
+        on your device. You can view and delete it yourself.
+      </p>
+
+      <h2 id="other">10. Other information</h2>
+      <p>
+        You do not have to provide any data to use the games; without the services above, only the
+        multi-device features, notifications and third-party content do not work. There is no
+        automated decision-making and no profiling. When the games change, we update this notice;
+        the version published here applies.
+      </p>
+    </main>
+  </body>
+</html>

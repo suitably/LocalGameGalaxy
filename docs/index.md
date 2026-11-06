@@ -35,6 +35,7 @@ This bundle describes **one code base**: the GitHub repository `suitably/LocalGa
 | Companion server auth, API keys, CORS, PNA                                   | [tech/server-security.md](tech/server-security.md)                                                                     |
 | Server `config.json`, tokens, HTTPS for phones                               | [tech/secrets-management.md](tech/secrets-management.md)                                                               |
 | Hosting, Docker images, Android APK, server binaries                         | [tech/deployment.md](tech/deployment.md)                                                                               |
+| Privacy notice: data flows, third-party services                             | [tech/privacy-notice.md](tech/privacy-notice.md)                                                                       |
 | Local dev setup problems                                                     | [tech/onboarding-faq.md](tech/onboarding-faq.md)                                                                       |
 | CI workflows, release pipeline, secrets, branch protection                   | [workflows/ci-cd-pipelines.md](workflows/ci-cd-pipelines.md)                                                           |
 | Run the server via Docker Compose locally                                    | [workflows/dev-compose-workflow.md](workflows/dev-compose-workflow.md)                                                 |
