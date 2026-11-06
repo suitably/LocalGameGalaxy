@@ -1,0 +1,1 @@
+- **Melodiq: download a song folder as ZIP** — the song menu on the host gets "Download folder (ZIP)", the same archive Melodiq Notes offers under "Manage files" (#569).

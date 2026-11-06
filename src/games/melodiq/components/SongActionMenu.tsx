@@ -17,6 +17,7 @@ import VideoLibraryIcon from '@mui/icons-material/VideoLibraryRounded';
 import DeleteIcon from '@mui/icons-material/DeleteRounded';
 import SyncIcon from '@mui/icons-material/SyncRounded';
 import MicIcon from '@mui/icons-material/MicRounded';
+import ZipIcon from '@mui/icons-material/FolderZipRounded';
 import { useTranslation } from 'react-i18next';
 
 interface SongActionMenuProps {
@@ -37,6 +38,8 @@ interface SongActionMenuProps {
   onSeparateVocals: () => void;
   onFullSync: () => void;
   onDelete: () => void;
+  /** Link that downloads the song folder as a ZIP (#569); none hides the entry. */
+  archiveUrl?: string;
 }
 
 /** The action list shown when a song is picked: queue, playlist and server-side song tools. */
@@ -141,6 +144,17 @@ export const SongActionMenu: React.FC<SongActionMenuProps> = (props) => {
                   secondary={syncHint}
                 />
               </ListItemButton>
+              {props.archiveUrl && (
+                <ListItemButton component="a" href={props.archiveUrl} download>
+                  <ListItemIcon>
+                    <ZipIcon />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={t('melodiq.download_zip_title')}
+                    secondary={t('melodiq.download_zip_desc')}
+                  />
+                </ListItemButton>
+              )}
               <ListItemButton onClick={props.onDelete} sx={{ color: 'error.main' }}>
                 <ListItemIcon sx={{ color: 'error.main' }}>
                   <DeleteIcon />
