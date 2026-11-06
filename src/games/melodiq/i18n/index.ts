@@ -119,6 +119,9 @@ export const melodiqResources = {
       song_delete_error: 'Failed to delete song',
       delete_song_title: 'Delete song',
       delete_song_desc: 'Remove the whole song from the server',
+      download_zip_title: 'Download folder (ZIP)',
+      download_zip_desc:
+        'The whole song folder (.txt, audio, stems, cover, video, sheet music) as one ZIP',
       delete_song_confirm: 'Really delete "{{title}}" by {{artist}}?',
       delete_btn: 'Delete',
       change_video_title: 'Change video/audio',
@@ -468,6 +471,8 @@ export const melodiqResources = {
       song_delete_error: 'Fehler beim Löschen',
       delete_song_title: 'Song löschen',
       delete_song_desc: 'Kompletten Song vom Server entfernen',
+      download_zip_title: 'Ordner herunterladen (ZIP)',
+      download_zip_desc: 'Den ganzen Song-Ordner (.txt, Audio, Stems, Cover, Video, Noten) als ZIP',
       delete_song_confirm: '"{{title}}" von {{artist}} wirklich löschen?',
       delete_btn: 'Löschen',
       change_video_title: 'Video/Audio ändern',

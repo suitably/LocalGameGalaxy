@@ -1,0 +1,1 @@
+- **Tabletop: dragging a face-down card off a deck works again** — card images can no longer start the browser's own image drag, which cancelled the move after a few centimetres and dropped the card (#619).

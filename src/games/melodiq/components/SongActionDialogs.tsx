@@ -6,6 +6,7 @@ import { YouTubeSearchDialog } from './YouTubeSearchDialog';
 import { SongActionMenu } from './SongActionMenu';
 import { SongPlaylistDialogs } from './SongPlaylistDialogs';
 import { ConfirmDialog } from '../../../components/common/ConfirmDialog';
+import { songArchiveUrl } from '../../../lib/companion/notesLibraryApi';
 
 interface SongActionDialogsProps {
   selectedSongForQueue: SongMeta | null;
@@ -71,6 +72,10 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
         onSeparateVocals={a.handleSeparateVocalsClick}
         onFullSync={a.handleFullSync}
         onDelete={a.handleDeleteSong}
+        // a phone reaches the server only through the host, so only the host gets the plain link
+        archiveUrl={
+          song && !isClient && song.source !== 'local' ? songArchiveUrl(song.id) : undefined
+        }
       />
 
       <YouTubeSearchDialog
