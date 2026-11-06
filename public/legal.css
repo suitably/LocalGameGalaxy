@@ -73,11 +73,6 @@ a:focus-visible {
   padding: 4px 20px;
   margin: 1.5rem 0;
 }
-.todo-inline {
-  outline: 2px dashed var(--link);
-  outline-offset: 2px;
-  font-weight: 600;
-}
 table {
   width: 100%;
   border-collapse: collapse;

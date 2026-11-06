@@ -37,5 +37,5 @@ The privacy notice is two static pages served from the build: `public/datenschut
 
 ## Open points
 
-- The controller's name and postal address are a placeholder until the owner provides them (the owner's decision on a legal notice is pending).
+- The controller is named as "Nexumia" with the contact `support@nexumia.de`; at the owner's decision (2026-11-06) the pages give no personal name and no postal address, although Art. 13(1)(a) GDPR asks for the controller's identity.
 - YouTube, the soundfonts and the Excalidraw fonts load without a prior choice by the user; see the GitHub issue on loading third-party content only after consent or from our own host.
