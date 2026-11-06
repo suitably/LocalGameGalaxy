@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Datenschutzerklärung – Nexumia Spiele</title>
+    <link rel="stylesheet" href="/legal.css" />
+    <link rel="alternate" hreflang="en" href="/privacy.html" />
+  </head>
+  <body>
+    <main>
+      <p class="lang">
+        <a href="/privacy.html" hreflang="en" lang="en">English version</a> ·
+        <a href="/">Zurück zu den Spielen</a>
+      </p>
+      <h1>Datenschutzerklärung</h1>
+      <p class="meta">für games.nexumia.de und die Nexumia-Android-App · Stand: 6. November 2026</p>
+
+      <section class="summary" aria-labelledby="kurz">
+        <h2 id="kurz">Das Wichtigste in Kürze</h2>
+        <ul>
+          <li>Kein Konto, keine Cookies, kein Tracking, keine Werbung, keine Analyse-Tools.</li>
+          <li>Spielstände, Namen und Einstellungen bleiben auf deinem Gerät.</li>
+          <li>
+            Nur wenn du mit mehreren Geräten spielst, Benachrichtigungen einschaltest oder bestimmte
+            Inhalte lädst, gehen Daten an die unten genannten Dienste. Dort steht jeweils, was, wann
+            und warum.
+          </li>
+          <li>Wir selbst speichern keine Daten über dich auf einem Server.</li>
+        </ul>
+      </section>
+
+      <h2 id="verantwortlich">1. Verantwortlicher</h2>
+      <p>
+        Nexumia<br />
+        E-Mail: <a href="mailto:support@nexumia.de">support@nexumia.de</a>
+      </p>
+      <p>
+        Einen Datenschutzbeauftragten haben wir nicht; dazu sind wir nicht verpflichtet. Für alle
+        Fragen zum Datenschutz erreichst du uns unter der oben genannten E-Mail-Adresse.
+      </p>
+
+      <h2 id="hosting">2. Aufruf der Website (Hosting)</h2>
+      <p>
+        Die Website wird bei <strong>Cloudflare, Inc.</strong> (101 Townsend St, San Francisco, CA
+        94107, USA) gehostet und über deren Netz ausgeliefert. Beim Aufruf verarbeitet Cloudflare
+        technisch notwendige Verbindungsdaten: IP-Adresse, Datum und Uhrzeit, aufgerufene Adresse,
+        übertragene Datenmenge, Browser und Betriebssystem (User-Agent) und die zuvor besuchte Seite
+        (Referrer). Ohne diese Daten kann die Seite nicht ausgeliefert und nicht gegen Angriffe
+        geschützt werden.
+      </p>
+      <p>
+        Wir selbst werten diese Daten nicht aus und haben keine Zugriffsprotokolle eingeschaltet.
+        Cloudflare verarbeitet sie als unser Auftragsverarbeiter (Art. 28 DSGVO) und löscht sie nach
+        seinen eigenen Fristen. Rechtsgrundlage ist unser berechtigtes Interesse an einer sicheren,
+        funktionierenden Website (Art. 6 Abs. 1 lit. f DSGVO). Cloudflare ist unter dem EU-US Data
+        Privacy Framework zertifiziert (Angemessenheitsbeschluss der EU-Kommission, Art. 45 DSGVO).
+      </p>
+
+      <h2 id="geraet">3. Daten auf deinem Gerät</h2>
+      <p>
+        Die Spiele speichern im Browser (Local Storage, IndexedDB, Service-Worker-Cache) bzw. in der
+        App: Einstellungen, Spielernamen, Spielstände, Raumcodes, heruntergeladene Lieder und Noten
+        sowie die Dateien der App für die Offline-Nutzung. Diese Daten verlassen dein Gerät nicht,
+        außer in den Fällen unten. Wir setzen keine Cookies.
+      </p>
+      <p>
+        Das Speichern ist für die Funktionen, die du nutzt, unbedingt erforderlich (§ 25 Abs. 2 Nr.
+        2 TDDDG). Du kannst alles jederzeit löschen: in den Browser-Einstellungen über „Websitedaten
+        löschen“ bzw. auf Android über „App-Speicher löschen“.
+      </p>
+      <p>
+        Wenn du in Melodiq singst, fragt die App nach dem Zugriff auf dein
+        <strong>Mikrofon</strong>. Der Ton wird nur auf deinem Gerät ausgewertet; die Aufnahme
+        selbst wird nicht übertragen und nicht gespeichert.
+      </p>
+
+      <h2 id="mehrere-geraete">4. Spielen mit mehreren Geräten</h2>
+      <p>
+        Damit Handys und Fernseher miteinander spielen können, nutzen die Spiele öffentliche
+        Dienste. Rechtsgrundlage ist jeweils unser berechtigtes Interesse, dir die
+        Mehrgeräte-Funktion bereitzustellen, die du selbst startest (Art. 6 Abs. 1 lit. f DSGVO).
+        Spielst du nur auf einem Gerät, wird keiner dieser Dienste genutzt.
+      </p>
+
+      <h3>4.1 Spielstand-Austausch über MQTT</h3>
+      <p>
+        Bei GuessArt, Storyteller, Tabletop, Party-Spielen und Raum-Spielen werden Spielstände über
+        öffentliche MQTT-Server ausgetauscht: zuerst <code>broker.hivemq.com</code> (HiveMQ GmbH,
+        Deutschland), bei Ausfall <code>broker.emqx.io</code> (EMQ Technologies Co., Ltd.; Server
+        können außerhalb der EU liegen).
+      </p>
+      <ul>
+        <li>
+          <strong>Was:</strong> deine IP-Adresse und der Spielstand mit allem, was du im Spiel
+          eingibst (Spielernamen, Texte, Zeichnungen, Züge), sowie eine zufällige Geräte-Kennung.
+        </li>
+        <li>
+          <strong>Wichtig:</strong> Die Server sind öffentlich. Wer den Raumcode kennt, kann den
+          Spielstand lesen. Der jeweils letzte Stand bleibt auf dem Server gespeichert, bis er
+          überschrieben wird. Gib daher keine echten Namen oder vertraulichen Inhalte ein.
+        </li>
+        <li>
+          Für <code>broker.emqx.io</code> kann es zu einer Übermittlung in ein Drittland ohne
+          Angemessenheitsbeschluss kommen; garantiert ist dort kein der EU gleichwertiges
+          Schutzniveau. Sie erfolgt nur, wenn HiveMQ nicht erreichbar ist.
+        </li>
+      </ul>
+
+      <h3>4.2 Direktverbindung über WebRTC (Melodiq)</h3>
+      <p>
+        Melodiq verbindet Handy und Fernseher direkt (WebRTC). Um sich zu finden, melden sich die
+        Geräte bei öffentlichen WebTorrent-Trackern an (<code>tracker.openwebtorrent.com</code>,
+        <code>tracker.webtorrent.dev</code>, betrieben von Freiwilligen der WebTorrent-Gemeinschaft)
+        und fragen STUN-Server nach ihrer öffentlichen Adresse (<code>stun.cloudflare.com</code> von
+        Cloudflare, Inc., USA; <code>global.stun.twilio.com</code> von Twilio Inc., USA; beide unter
+        dem EU-US Data Privacy Framework zertifiziert). Dabei erhalten diese Dienste deine
+        IP-Adresse und eine zufällige Party-Kennung. Die verbundenen Geräte sehen gegenseitig ihre
+        IP-Adressen. In den Verbindungseinstellungen kannst du eigene Tracker und STUN-Server
+        eintragen und die voreingestellten abschalten.
+      </p>
+
+      <h2 id="benachrichtigungen">5. Benachrichtigungen</h2>
+      <p>
+        Wenn du Benachrichtigungen erlaubst (Einwilligung über die Abfrage deines Browsers, Art. 6
+        Abs. 1 lit. a DSGVO und § 25 Abs. 1 TDDDG), sagen dir die Spiele Bescheid, wenn du dran
+        bist. Die Einwilligung kannst du jederzeit in den Browser- oder App-Einstellungen
+        widerrufen.
+      </p>
+      <ul>
+        <li>
+          <strong>Web Push:</strong> Dein Browser erzeugt eine Push-Adresse beim Push-Dienst seines
+          Herstellers (z. B. Google, Mozilla, Apple). Ein anderes Gerät deiner Runde schickt über
+          unseren Cloudflare-Worker eine verschlüsselte Nachricht („Du bist dran“) an diese Adresse.
+          Der Worker speichert nichts; der Push-Dienst erhält die Push-Adresse, die verschlüsselte
+          Nachricht und die IP-Adresse deines Geräts. Google LLC, Mozilla Corporation und Apple Inc.
+          sitzen in den USA.
+        </li>
+        <li>
+          <strong>ntfy:</strong> Nur wenn du ntfy auswählst, gehen dein ntfy-Thema und der Text der
+          Benachrichtigung unverschlüsselt an <code>ntfy.sh</code> (öffentlicher Dienst des
+          ntfy-Projekts, Server können außerhalb der EU liegen) oder an den ntfy-Server, den du
+          einträgst.
+        </li>
+      </ul>
+
+      <h2 id="inhalte">6. Inhalte von Dritten</h2>
+      <p>
+        Einige Spiele laden Inhalte, wenn du sie nutzt. Dabei erhält der jeweilige Anbieter deine
+        IP-Adresse und technische Angaben zu deinem Browser. Rechtsgrundlage ist unser berechtigtes
+        Interesse, die Funktion bereitzustellen (Art. 6 Abs. 1 lit. f DSGVO).
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Wann</th>
+              <th>Anbieter</th>
+              <th>Was</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Melodiq, wenn ein Lied ein YouTube-Video als Hintergrund hat</td>
+              <td>Google Ireland Ltd. / Google LLC (YouTube)</td>
+              <td>
+                Lädt den YouTube-Player von <code>youtube.com</code> und das Video von
+                <code>youtube-nocookie.com</code>. Google kann dabei Daten auf deinem Gerät
+                speichern und deine Nutzung auswerten. Google ist unter dem EU-US Data Privacy
+                Framework zertifiziert.
+              </td>
+            </tr>
+            <tr>
+              <td>Melodiq Notes, Instrumentenklänge</td>
+              <td>GitHub, Inc. (GitHub Pages, <code>gleitz.github.io</code>), USA</td>
+              <td>
+                Lädt Klangdateien. In den Klang-Einstellungen kannst du den eingebauten Synthesizer
+                wählen; dann entfällt der Abruf.
+              </td>
+            </tr>
+            <tr>
+              <td>GuessArt und Gartic Phone, Zeichenfläche</td>
+              <td>esm.sh (CDN für JavaScript-Pakete)</td>
+              <td>Lädt Schriftarten der Zeichenfläche (Excalidraw).</td>
+            </tr>
+            <tr>
+              <td>Tabletop, wenn du ein Spiel aus dem Steam Workshop importierst</td>
+              <td>Valve Corporation (Steam) und Akamai Technologies, USA</td>
+              <td>
+                Die Workshop-Nummer geht über unseren Cloudflare-Worker an Steam (ohne deine
+                IP-Adresse). Bilder und Dateien des Spiels lädt dein Browser direkt von Steams
+                Content-Servern.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 id="selbst-eingerichtet">7. Dienste, die du selbst einrichtest</h2>
+      <p>
+        Freiwillige Zusatzfunktionen verbinden dein Gerät direkt mit Diensten, die du selbst
+        einträgst: einen eigenen Companion-Server, einen eigenen Signal-Server, eigene ntfy- oder
+        STUN-Server, ein USDB-Konto oder ein GitHub-Token für Feedback. Was dabei übertragen wird,
+        bestimmst du; für diese Dienste gelten deren Datenschutzbestimmungen. Feedback, das du über
+        GitHub absendest, wird dort als öffentlich sichtbares Issue gespeichert.
+      </p>
+
+      <h2 id="android">8. Android-App</h2>
+      <p>
+        Die App enthält dieselben Spiele und verarbeitet Daten genauso wie die Website. Sie enthält
+        keine Google-Dienste, keine Werbe- oder Analyse-Bibliotheken und fordert nur die
+        Berechtigungen an, die eine Funktion braucht (z. B. Mikrofon für Melodiq).
+      </p>
+
+      <h2 id="rechte">9. Deine Rechte</h2>
+      <p>Du hast das Recht auf</p>
+      <ul>
+        <li>Auskunft über deine gespeicherten Daten (Art. 15 DSGVO),</li>
+        <li>
+          Berichtigung (Art. 16), Löschung (Art. 17) und Einschränkung der Verarbeitung (Art. 18),
+        </li>
+        <li>Datenübertragbarkeit (Art. 20),</li>
+        <li>
+          <strong>Widerspruch</strong> gegen Verarbeitungen auf Grundlage unseres berechtigten
+          Interesses aus Gründen, die sich aus deiner besonderen Situation ergeben (Art. 21),
+        </li>
+        <li>Widerruf einer Einwilligung mit Wirkung für die Zukunft (Art. 7 Abs. 3),</li>
+        <li>
+          Beschwerde bei einer Datenschutz-Aufsichtsbehörde, insbesondere in dem Mitgliedstaat
+          deines Aufenthaltsorts oder Arbeitsplatzes (Art. 77).
+        </li>
+      </ul>
+      <p>
+        Da wir selbst keine Daten über dich auf Servern speichern, können wir meist keine Auskunft
+        über Daten geben, die nur auf deinem Gerät liegen. Diese kannst du selbst einsehen und
+        löschen.
+      </p>
+
+      <h2 id="sonstiges">10. Sonstiges</h2>
+      <p>
+        Du musst keine Daten angeben, um die Spiele zu nutzen; ohne die genannten Dienste
+        funktionieren nur die Mehrgeräte-Funktionen, Benachrichtigungen und Inhalte von Dritten
+        nicht. Es gibt keine automatisierte Entscheidungsfindung und kein Profiling. Wenn sich die
+        Spiele ändern, passen wir diese Erklärung an; es gilt die jeweils hier veröffentlichte
+        Fassung.
+      </p>
+    </main>
+  </body>
+</html>

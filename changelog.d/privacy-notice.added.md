@@ -1,0 +1,1 @@
+- **Privacy notice**: Settings → About links to a privacy notice in German and English that lists what data the games use, which services they contact and when, and your rights.

@@ -1503,7 +1503,10 @@
       "unknown_device": "Unknown audio device",
       "disabled": "Disabled",
       "active": "Active (assigned to local player {{n}})"
-    }
+    },
+    "privacy_title": "Privacy",
+    "privacy_desc": "Which data the games use, which services they contact and your rights.",
+    "privacy_open": "Privacy Notice"
   },
   "server": {
     "title": "Nexumia Server Connection",
