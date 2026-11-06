@@ -52,11 +52,13 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
           component="img"
           src={backContent.value}
           alt="Card back"
+          draggable={false}
           sx={{
             width: '100%',
             height: '100%',
             objectFit: 'cover',
             display: 'block',
+            pointerEvents: 'none',
             clipPath,
           }}
         />
@@ -129,11 +131,13 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
         component="img"
         src={frontContent.value}
         alt={label || 'Card'}
+        draggable={false}
         sx={{
           width: '100%',
           height: '100%',
           objectFit: 'contain',
           display: 'block',
+          pointerEvents: 'none',
           clipPath,
         }}
       />

@@ -5,18 +5,21 @@ import { PlayingCardFace } from './PlayingCardFace';
 
 const parseCss = (cssStr?: string) => {
   if (!cssStr) return {};
-  return cssStr.split(';').reduce((acc, rule) => {
-    const colonIdx = rule.indexOf(':');
-    if (colonIdx > 0) {
-      const key = rule.slice(0, colonIdx).trim();
-      const value = rule.slice(colonIdx + 1).trim();
-      if (key && value) {
-        const camelKey = key.replace(/-([a-z])/g, (_, g) => g.toUpperCase());
-        acc[camelKey] = value;
+  return cssStr.split(';').reduce(
+    (acc, rule) => {
+      const colonIdx = rule.indexOf(':');
+      if (colonIdx > 0) {
+        const key = rule.slice(0, colonIdx).trim();
+        const value = rule.slice(colonIdx + 1).trim();
+        if (key && value) {
+          const camelKey = key.replace(/-([a-z])/g, (_, g) => g.toUpperCase());
+          acc[camelKey] = value;
+        }
       }
-    }
-    return acc;
-  }, {} as Record<string, string>);
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 };
 
 export const FaceObjectsLayer: React.FC<{ objects: FaceObject[] }> = ({ objects }) => {
@@ -83,9 +86,13 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
   height,
 }) => {
   const showFaceObjects = Boolean(card.faceObjects && card.faceObjects.length > 0 && isFaceUp);
-  const showBackFaceObjects = Boolean(card.backFaceObjects && card.backFaceObjects.length > 0 && !isFaceUp);
+  const showBackFaceObjects = Boolean(
+    card.backFaceObjects && card.backFaceObjects.length > 0 && !isFaceUp,
+  );
   // Single-template fallback: If card is face-up but only backFaceObjects was parsed, show it
-  const showFallbackObjects = Boolean(isFaceUp && !showFaceObjects && card.backFaceObjects && card.backFaceObjects.length > 0);
+  const showFallbackObjects = Boolean(
+    isFaceUp && !showFaceObjects && card.backFaceObjects && card.backFaceObjects.length > 0,
+  );
 
   if (showFaceObjects) {
     return <FaceObjectsLayer objects={card.faceObjects!} />;
@@ -117,6 +124,7 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
         component="img"
         src={card.frontContent.value}
         alt={card.label || 'Card'}
+        draggable={false}
         sx={{
           width: '100%',
           height: '100%',
@@ -149,6 +157,7 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
           component="img"
           src={card.backContent.value}
           alt={card.label || 'Card'}
+          draggable={false}
           sx={{
             width: '100%',
             height: '100%',

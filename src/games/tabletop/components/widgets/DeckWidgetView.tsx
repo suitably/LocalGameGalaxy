@@ -25,6 +25,24 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
   const hasFront =
     widget.faceUp === true || (widget.activeFace !== undefined && widget.activeFace > 0);
   const rot = widget.rotation || 0;
+  const face = (
+    <CardFaceContent
+      card={
+        {
+          ...widget,
+          type: 'card',
+          faceUp: hasFront,
+          clipPath: widget.clipPath,
+          frontContent: widget.frontContent || { type: 'text', value: '' },
+          backContent: widget.backContent || { type: 'text', value: '🂠', color: '#0d47a1' },
+          faceObjects: widget.faceObjects,
+          backFaceObjects: widget.backFaceObjects,
+          rotation: 0,
+        } as unknown as CardWidget
+      }
+      isFaceUp={hasFront}
+    />
+  );
 
   return (
     <>
@@ -80,22 +98,7 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
       >
         {!isEmpty ? (
           <Box position="relative" width="100%" height="100%" sx={{ clipPath: widget.clipPath }}>
-            <CardFaceContent
-              card={
-                {
-                  ...widget,
-                  type: 'card',
-                  faceUp: hasFront,
-                  clipPath: widget.clipPath,
-                  frontContent: widget.frontContent || { type: 'text', value: '' },
-                  backContent: widget.backContent || { type: 'text', value: '🂠', color: '#0d47a1' },
-                  faceObjects: widget.faceObjects,
-                  backFaceObjects: widget.backFaceObjects,
-                  rotation: 0,
-                } as unknown as CardWidget
-              }
-              isFaceUp={hasFront}
-            />
+            {face}
             <Box
               sx={{
                 position: 'absolute',
@@ -128,6 +131,7 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
       </Box>
       <DeckShuffleOverlay
         shuffleCount={widget.shuffleCount}
+        face={isEmpty ? undefined : face}
         box={{
           left: widget.x,
           top: widget.y,

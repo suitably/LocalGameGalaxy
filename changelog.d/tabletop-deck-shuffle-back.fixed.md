@@ -1,0 +1,1 @@
+- **Tabletop: a shuffled deck keeps its card back** — the riffle animation is removed when it ends and shows the deck's own back while it plays, instead of staying over the deck as a blank (black in dark mode) card (#618).

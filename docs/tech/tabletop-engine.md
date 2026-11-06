@@ -37,7 +37,7 @@ Roadmap and comparison with VirtualTabletop: [2026-10-21 plan](../reports/2026-1
 | `editReducer.ts`      | `PATCH_WIDGETS`, `ADD_WIDGET`, `DELETE_WIDGETS`, `UPDATE_TABLE`                                                                                               |
 | `holderMembership.ts` | helper `removeFromHolderAndUpdateHand`                                                                                                                        |
 
-¹ `SHUFFLE_DECK` also counts `DeckWidget.shuffleCount`; the change syncs like any delta and `components/widgets/DeckShuffleOverlay.tsx` plays a short riffle above the deck on every device (none with reduced motion, #556).
+¹ `SHUFFLE_DECK` also counts `DeckWidget.shuffleCount`; the change syncs like any delta and `components/widgets/DeckShuffleOverlay.tsx` plays a short riffle of the deck's top face above the deck on every device and is removed when it ends (none with reduced motion, #556, #618).
 
 Holder positions (hand, stack, fan, grid) come from `logic/holderLayout.ts`.
 
