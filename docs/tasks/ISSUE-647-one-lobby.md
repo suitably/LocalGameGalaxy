@@ -3,7 +3,7 @@ type: Task
 title: 'One lobby for all multiplayer games: game slices S5–S10, S12 (#647)'
 description: 'Spec for the remaining slices of epic #647: Gartic Phone, GuessArt, Storyteller and both Melodiq modes join the party lobby and run on the shared room transport; WebRTC heartbeat; docs and multi-browser harness.'
 tags: [party, lobby, room-game, webrtc, task, agents]
-status: draft
+status: stable
 generated:
   at: 2026-11-07T10:00:00+01:00
   by: claude-code
