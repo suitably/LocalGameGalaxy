@@ -1,0 +1,1 @@
+- **Gartic Phone runs on the party room transport** (#647): the party host applies joins, submits and restarts and publishes the state, so guests on other devices play, and a reload or late joiner catches up from the host. A player can only submit for themselves; ending the round returns everyone to the lobby.

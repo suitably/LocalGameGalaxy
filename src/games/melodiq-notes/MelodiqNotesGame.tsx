@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, Box, Typography, useMediaQuery } from '@mui/material';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { bpmAt } from '../../modules/music-score';
 import { initialExample, useResumeLastSong } from './stage/useResumeLastSong';
 import { NotesSheet } from './components/NotesSheet';
@@ -20,7 +21,9 @@ import { RecordingButton, RecordingIcon } from './stage/components/RecordingIcon
 import { useRecordingStatus } from './stage/useRecordingStatus';
 import { ImmersiveSong } from './stage/components/ImmersiveSong';
 import type { StageDisplay } from './stage/render/stageRenderer';
-import { StageInvite } from './pult/components/StageInvite';
+import { StageParts } from './pult/components/StageParts';
+import { universalPartyManager } from '../../features/party/logic/universalPartyManager';
+import { buildInviteRoute } from '../../features/party/logic/partyRoutes';
 import { playCalibrationClicks } from './stage/engine/calibrationClicks';
 import { usePracticeLadder } from './stage/usePracticeLadder';
 import { LadderPanel } from './stage/components/LadderPanel';
@@ -30,8 +33,9 @@ import { LadderPanel } from './stage/components/LadderPanel';
  * as a band. One frame fills the screen like a player app: session settings on top, the stage in
  * the middle, transport docked below; the song and its recording sit in the app header.
  */
-export const MelodiqNotesGame: React.FC = () => {
+export const MelodiqNotesGame: React.FC<{ roomId?: string | null }> = ({ roomId = null }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const k = (key: string, opts?: Record<string, unknown>) =>
     t(`games.melodiq_notes.stage.${key}`, opts);
   const { engine, unlockAudio } = useStage();
@@ -44,11 +48,24 @@ export const MelodiqNotesGame: React.FC = () => {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [recordingOpen, setRecordingOpen] = useState(false);
   const [barsOpen, setBarsOpen] = useState(false);
-  // null until first opened: the room only exists once someone is invited
-  const [inviteOpen, setInviteOpen] = useState<boolean | null>(null);
+  // the pult room is the party room's code; without a room "invite" opens the lobby first
+  const [partsOpen, setPartsOpen] = useState(false);
   const [removeRemote, setRemoveRemote] = useState<((id: string) => void) | null>(null);
   const onRoom = useCallback((remove: (id: string) => void) => setRemoveRemote(() => remove), []);
-  const openInvite = useCallback(() => setInviteOpen(true), []);
+  const backToParty = useMemo(
+    () =>
+      roomId
+        ? () => {
+            universalPartyManager.returnToLobby(roomId);
+            navigate(`/party?room=${roomId}`);
+          }
+        : undefined,
+    [roomId, navigate],
+  );
+  const openInvite = useCallback(
+    () => (roomId ? setPartsOpen(true) : navigate(buildInviteRoute('melodiq-notes'))),
+    [roomId, navigate],
+  );
   const scheduleClicks = useCallback(async () => {
     unlockAudio();
     return playCalibrationClicks(engine);
@@ -74,6 +91,7 @@ export const MelodiqNotesGame: React.FC = () => {
       icon: recordingIcon,
       onOpen: openRecording,
     },
+    onBackToParty: backToParty,
   });
 
   const start = useCallback(() => {
@@ -197,11 +215,12 @@ export const MelodiqNotesGame: React.FC = () => {
       >
         <RecordingPanel state={songState} />
       </NotesSheet>
-      {inviteOpen !== null && (
-        <StageInvite
+      {roomId && (
+        <StageParts
           engine={engine}
-          open={inviteOpen}
-          onClose={() => setInviteOpen(false)}
+          roomId={roomId}
+          open={partsOpen}
+          onClose={() => setPartsOpen(false)}
           onRoom={onRoom}
         />
       )}

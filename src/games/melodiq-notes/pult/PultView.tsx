@@ -28,6 +28,7 @@ import { useStageInput } from '../stage/useStageInput';
 import { useStageTexts } from '../stage/useStage';
 import { LatencyControl } from '../components/LatencyControl';
 import { usePult } from './usePult';
+import { useFollowPartyLobby } from '../../../features/party/hooks/useFollowPartyLobby';
 
 const noop = () => {};
 
@@ -42,6 +43,7 @@ export const PultView: React.FC<{ roomId: string; wantedPart: string | null }> =
   useWakeLock(true);
   const name = useMemo(() => getOrCreatePlayerName(), []);
   const pult = usePult(roomId, name, wantedPart);
+  useFollowPartyLobby(roomId);
   const input = useStageInput(pult.engine);
   const texts = useStageTexts();
   const { state, part, clock, offset } = pult;

@@ -20,6 +20,7 @@ import PhoneIphoneRoundedIcon from '@mui/icons-material/PhoneIphoneRounded';
 import { useTranslation } from 'react-i18next';
 import { ActiveGamesList } from './ActiveGamesList';
 import { PlayerManagerCard } from '../../../modules/player-management';
+import { PlayModeCard } from './PlayModeCard';
 import type { GuessArtGameRecord } from '../logic/types';
 import type { LobbyPlayerItem } from '../hooks/useGuessArtLobby';
 
@@ -160,6 +161,9 @@ export const GameSetup: React.FC<GameSetupProps> = ({
           {feedback}
         </Alert>
       )}
+
+      {/* Live (party room) or per-player links over days */}
+      <PlayModeCard />
 
       {/* Players Setup Card */}
       <PlayerManagerCard

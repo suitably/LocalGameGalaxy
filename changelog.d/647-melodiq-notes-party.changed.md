@@ -1,0 +1,1 @@
+- **Melodiq Notes joins the party lobby** (#647): pick Melodiq Notes in the lobby and the stage opens with the lobby's room; every player's own device (the pult) opens from the lobby and picks its part there. The stage's "invite" button now leads to the lobby, and a parts panel shows who plays which part. The separate per-part links and QR codes are gone.

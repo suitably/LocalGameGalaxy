@@ -21,7 +21,7 @@ interface GuessArtRoundBodyProps {
   onSubmitDrawing: (canvasData: string) => Promise<void>;
   onSubmitGuess: React.ComponentProps<typeof GuessPanel>['onSubmitGuess'];
   onRequestHint: React.ComponentProps<typeof GuessPanel>['onRequestHint'];
-  onOpenCatalogue: () => void;
+  onOpenCatalogue?: () => void;
   onOpenShareLinks?: () => void;
   triggerLocalUpdate: () => void;
   refresh: () => Promise<void>;

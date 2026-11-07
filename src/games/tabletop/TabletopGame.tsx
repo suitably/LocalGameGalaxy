@@ -22,6 +22,7 @@ import { RestartGameButton } from './components/views/RestartGameButton';
 import { SaveStateButton } from './components/saves/SaveStateButton';
 import { TvThemeProvider } from '../../components/common/TvThemeProvider';
 import type { TabletopGameDefinition } from './logic/types';
+import { useFollowPartyLobby } from '../../features/party/hooks/useFollowPartyLobby';
 
 export function TabletopGame() {
   const { t } = useTranslation();
@@ -53,6 +54,7 @@ export function TabletopGame() {
   });
 
   const { returnToLobby } = usePartyLobbyReturn(roomId);
+  useFollowPartyLobby(roomId);
 
   // Load Game Definition (Built-in or IndexedDB)
   useEffect(() => {

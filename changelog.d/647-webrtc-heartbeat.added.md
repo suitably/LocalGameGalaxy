@@ -1,0 +1,1 @@
+- **WebRTC heartbeat** (#647): the host pings each connected phone every 5 s and the phone answers. A phone silent for 15 s (closed tab, dead network) is removed from the host's roster, and a phone that stops hearing the host reconnects on its own.

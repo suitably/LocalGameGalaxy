@@ -3,13 +3,12 @@
  *
  * For messages too frequent or too short-lived to be state (a played note, a clock ping): each
  * event goes to every device in the room once and is not kept. Same transport as
- * `useRoomReducer`, channel `<gameKey>_<roomId>_live`. Events carry no ordering guarantee; a
- * receiver must cope with late, repeated or stale ones (MQTT may redeliver the last one on join).
+ * `useRoomReducer` (`getRoomTransport(roomId)`), channel `<gameKey>_<roomId>_live`. Events carry
+ * no ordering guarantee; a receiver must cope with late, repeated or stale ones (MQTT may
+ * redeliver the last one on join).
  */
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import type { MqttMailboxService } from '../sync/MqttMailboxService';
-import { MultiChannelSyncCoordinator } from '../sync/useMultiChannelSync';
-import { roomMailbox } from './roomTransport';
+import { getRoomTransport, type RoomTransport } from './roomTransport';
 
 export interface UseRoomEventsOptions<E> {
   gameKey: string;
@@ -17,6 +16,8 @@ export interface UseRoomEventsOptions<E> {
   /** Called for every event (own ones included, filter by sender); `send` answers. */
   onEvent: (event: E, send: (event: E) => void) => void;
   enabled?: boolean;
+  /** Defaults to `getRoomTransport(roomId)`. */
+  transport?: RoomTransport;
 }
 
 export function useRoomEvents<E>({
@@ -24,36 +25,22 @@ export function useRoomEvents<E>({
   roomId,
   onEvent,
   enabled = true,
+  transport,
 }: UseRoomEventsOptions<E>): { send: (event: E) => void } {
   const onEventRef = useRef(onEvent);
   useLayoutEffect(() => {
     onEventRef.current = onEvent;
   });
-  const options = useMemo(
-    () => ({
-      channelId: `${gameKey}_${roomId}_live`,
-      broadcastPrefix: 'room',
-      mailbox: roomMailbox as unknown as MqttMailboxService<E>,
-    }),
-    [gameKey, roomId],
-  );
-  const sync = useMemo(
-    () => new MultiChannelSyncCoordinator<E>({ ...options, onMessage: () => {} }),
-    [options],
-  );
+  const channel = `${gameKey}_${roomId}_live`;
+  const t = useMemo(() => transport ?? getRoomTransport(roomId), [transport, roomId]);
+  const send = useMemo(() => (event: E) => t.publish(channel, event), [t, channel]);
 
   useEffect(() => {
     if (!enabled) return;
-    const send = (event: E) => sync.publish(event);
-    sync.updateOptions({
-      ...options,
-      onMessage: (event) => {
-        if (event) onEventRef.current(event, send);
-      },
+    return t.subscribe(channel, (event) => {
+      if (event) onEventRef.current(event as E, send);
     });
-    sync.start();
-    return () => sync.stop();
-  }, [sync, options, enabled]);
+  }, [t, channel, enabled, send]);
 
-  return useMemo(() => ({ send: (event: E) => sync.publish(event) }), [sync]);
+  return useMemo(() => ({ send }), [send]);
 }

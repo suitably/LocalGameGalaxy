@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useMelodiqSettings } from '../hooks/SettingsContext';
 import { useWebRTC } from '../audio/WebRTCContext';
 import { buildDeviceConnectionUrl } from '../../../components/connection/connectionUrl';
+import { isPartyRoomCode } from '../../../features/party/logic/partyRoom';
 
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 
@@ -47,6 +48,7 @@ export const ScoreBoardQrCode: React.FC<ScoreBoardQrCodeProps> = ({
       clientPath: '/games/melodiq?role=client',
       partyId,
       trackerUrls: trackers,
+      lobby: isPartyRoomCode(partyId),
     });
 
     QRCode.toDataURL(url, { width: 250, margin: 1 })

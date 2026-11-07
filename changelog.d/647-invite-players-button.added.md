@@ -1,0 +1,1 @@
+- **`InvitePlayersButton`** (#647 S2): one shared "Invite players" button that opens the party lobby (the current room, or a new one) with the game preselected; games adopt it in their own slices.

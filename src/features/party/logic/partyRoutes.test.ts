@@ -4,6 +4,7 @@ import {
   getGameRoute,
   resolveLobbyEntry,
   resolvePendingLaunch,
+  buildInviteRoute,
 } from './partyRoutes';
 
 describe('partyRoutes (#417)', () => {
@@ -42,13 +43,37 @@ describe('partyRoutes (#417)', () => {
     );
   });
 
-  it('routes gartic phone with the room and guessart without', () => {
+  it('routes gartic phone and guessart with the room', () => {
     expect(getGameRoute({ gameType: 'garticphone', roomId: 'R1', isHost: false, seat: 0 })).toBe(
       '/games/garticphone?room=R1',
     );
     expect(getGameRoute({ gameType: 'guessart', roomId: 'R1', isHost: true, seat: 0 })).toBe(
-      '/games/guessart',
+      '/games/guessart?room=R1',
     );
+    expect(getGameRoute({ gameType: 'storyteller', roomId: 'R1', isHost: false, seat: 1 })).toBe(
+      '/games/storyteller?room=R1',
+    );
+    expect(getGameRoute({ gameType: 'melodiq-notes', roomId: 'R1', isHost: true, seat: 0 })).toBe(
+      '/games/melodiq-notes?room=R1',
+    );
+    expect(getGameRoute({ gameType: 'melodiq-notes', roomId: 'R1', isHost: false, seat: 1 })).toBe(
+      '/games/melodiq-notes?pult=R1',
+    );
+    expect(getGameRoute({ gameType: 'melodiq', roomId: 'R1', isHost: true, seat: 0 })).toBe(
+      '/games/melodiq?room=R1',
+    );
+    expect(
+      getGameRoute({ gameType: 'melodiq', roomId: 'R1', isHost: false, seat: 1, trackers: [] }),
+    ).toBe('/games/melodiq?role=client&party=R1');
+    expect(
+      getGameRoute({
+        gameType: 'melodiq',
+        roomId: 'R1',
+        isHost: false,
+        seat: 1,
+        trackers: ['wss://t.example'],
+      }),
+    ).toBe('/games/melodiq?role=client&party=R1&tracker=wss%3A%2F%2Ft.example');
     expect(getGameRoute({ gameType: null, roomId: 'R1', isHost: true, seat: 0 })).toBe(
       '/games/guessart',
     );
@@ -65,7 +90,13 @@ describe('partyRoutes (#417)', () => {
 
 describe('resolvePendingLaunch (Spieltisch → party lobby)', () => {
   it('accepts every party game type (#647 S1)', () => {
-    for (const gameType of ['guessart', 'garticphone', 'knister'] as const) {
+    for (const gameType of [
+      'guessart',
+      'garticphone',
+      'storyteller',
+      'melodiq-notes',
+      'knister',
+    ] as const) {
       expect(resolvePendingLaunch(new URLSearchParams(`launch=${gameType}`))).toEqual({ gameType });
     }
   });
@@ -95,5 +126,28 @@ describe('resolvePendingLaunch (Spieltisch → party lobby)', () => {
     expect(getGameRoute({ gameType: 'knister', roomId: 'R1', isHost: true, seat: 0 })).toBe(
       '/games/knister?room=R1',
     );
+  });
+});
+
+describe('buildInviteRoute (#647 S2)', () => {
+  it('opens a new lobby with the game preselected', () => {
+    expect(buildInviteRoute('guessart')).toBe('/party?launch=guessart');
+    expect(buildInviteRoute('tabletop', { gameId: 'catan' })).toBe(
+      '/party?launch=tabletop&gameId=catan',
+    );
+  });
+
+  it('re-opens the room this device is in', () => {
+    expect(buildInviteRoute('garticphone', { roomId: 'AB12' })).toBe(
+      '/party?room=AB12&launch=garticphone',
+    );
+  });
+
+  it('round-trips through resolvePendingLaunch', () => {
+    const query = buildInviteRoute('tabletop', { gameId: 'catan', roomId: 'R' }).split('?')[1];
+    expect(resolvePendingLaunch(new URLSearchParams(query))).toEqual({
+      gameType: 'tabletop',
+      gameId: 'catan',
+    });
   });
 });

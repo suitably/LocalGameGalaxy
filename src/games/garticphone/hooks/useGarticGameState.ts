@@ -1,182 +1,96 @@
 /**
  * Gartic Phone Game State Hook [ID: GARTIC-HOOK-GAMESTATE]
  *
- * Encapsulates game state management, player resolution, phase transitions,
- * round task calculations, and safe session storage persistence.
+ * Runs the game on the shared room transport (`useRoomReducer`, gameKey `garticphone`): the
+ * party host applies every action, guests send theirs and render the host's state. The roster
+ * comes from `usePartyRoomPlayers`.
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  createInitialGarticState,
-  getPlayerTaskForRound,
-  startGarticGame,
-  submitPlayerGarticStep,
-  addPlayerToGarticGame,
-} from '../garticEngine';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { createInitialGarticState, getPlayerTaskForRound } from '../garticEngine';
+import { emptyGarticState, garticRoomAllows, garticRoomReducer } from '../logic/garticRoom';
+import type { GarticRoomAction } from '../logic/garticRoom';
 import { parseGameUrlParams } from '../../../modules/sharing';
+import { useRoomReducer } from '../../../modules/room-game';
+import { usePartyRoomPlayers } from '../../../features/party/hooks/usePartyRoomPlayers';
 import { universalPartyManager } from '../../../features/party/logic/universalPartyManager';
-import { storage, sessionStorageSafe, STORAGE_KEYS } from '../../../lib/storage';
+import { getOrCreatePlayerName } from '../../../features/party/logic/playerName';
 import type { GarticGameState, GarticPlayer } from '../types';
-
-const STORAGE_GARTIC_NAME = STORAGE_KEYS.PARTY_PLAYER_NAME;
 
 interface UseGarticGameStateOptions {
   initialRoomId?: string;
 }
 
+/** Without a room code the game runs on this device only (the device is its own host). */
+const LOCAL_ROOM = 'LOCAL';
+
 export function useGarticGameState({ initialRoomId }: UseGarticGameStateOptions = {}) {
-  const parsedUrl = useMemo(() => {
+  const roomId = useMemo(() => {
     const params = parseGameUrlParams();
-    const room = params.get('room') || params.get('roomId') || initialRoomId || null;
-    return { room: room ? room.toUpperCase().trim() : null };
+    const room = params.get('room') || params.get('roomId') || initialRoomId;
+    return room?.toUpperCase().trim() || universalPartyManager.getRoomState()?.roomId || LOCAL_ROOM;
   }, [initialRoomId]);
 
-  const [myPlayerId] = useState<string>(() => universalPartyManager.getMyPlayerId());
-  const [myPlayerName] = useState<string>(() => storage.get(STORAGE_GARTIC_NAME, 'Spieler'));
+  const room = usePartyRoomPlayers(roomId);
+  const myPlayerId = room.myId;
+  const myPlayerName = room.me?.name ?? getOrCreatePlayerName();
+  const isHost = roomId === LOCAL_ROOM || room.isHost;
 
-  const [gameState, setGameState] = useState<GarticGameState>(() => {
-    const partyState = universalPartyManager.getRoomState();
-    const effectiveRoomId = parsedUrl.room || partyState?.roomId || 'LOCAL';
-    const activeGameId = partyState?.gameId;
-
-    // 1. Check if an active game already exists for this room in sessionStorageSafe
-    const savedStateKey = `${STORAGE_KEYS.GARTIC_STATE_PREFIX}${effectiveRoomId}`;
-    const saved = sessionStorageSafe.getJson<GarticGameState | null>(savedStateKey, null);
-    if (
-      saved &&
-      saved.roomId === effectiveRoomId &&
-      saved.phase !== 'finished' &&
-      (!activeGameId || saved.id === activeGameId)
-    ) {
-      return saved;
-    }
-
-    const isParty = Boolean(
-      partyState && (!parsedUrl.room || partyState.roomId === parsedUrl.room),
-    );
-
-    if (isParty && partyState && partyState.players.length > 0) {
-      // spectators watch; the host stays in, since the game state is keyed to it
-      const partyPlayers: GarticPlayer[] = partyState.players
-        .filter((p) => !p.spectator || p.id === partyState.hostId)
-        .map((p) => ({
-          id: p.id,
-          name: p.name,
-          isHost: p.isHost,
-          ready: true,
-        }));
-
-      return createInitialGarticState(
-        partyState.hostId,
-        myPlayerName,
-        effectiveRoomId,
-        partyPlayers,
-        activeGameId || undefined,
-      );
-    }
-
-    const isGuestJoining = Boolean(parsedUrl.room);
-    const savedHostKey = `${STORAGE_KEYS.GARTIC_HOST_PREFIX}${parsedUrl.room || 'local'}`;
-    const amHost = !isGuestJoining || sessionStorageSafe.get(savedHostKey) === myPlayerId;
-
-    if (amHost && parsedUrl.room) {
-      sessionStorageSafe.set(savedHostKey, myPlayerId);
-    }
-
-    return createInitialGarticState(amHost ? myPlayerId : '', myPlayerName, effectiveRoomId);
+  // The host's roster is read once; later arrivals are joined below.
+  const [initialState] = useState<GarticGameState>(() => {
+    if (!isHost) return emptyGarticState(roomId);
+    const roster: GarticPlayer[] = room.players.map((p) => ({
+      id: p.id,
+      name: p.name,
+      isHost: p.isHost,
+      ready: true,
+    }));
+    const activeGameId = universalPartyManager.getRoomState()?.gameId || undefined;
+    return createInitialGarticState(myPlayerId, myPlayerName, roomId, roster, activeGameId);
   });
 
-  // Persist state changes in sessionStorageSafe to enable seamless rejoining from lobby
+  const {
+    state: gameState,
+    dispatch,
+    synced,
+  } = useRoomReducer<GarticGameState, GarticRoomAction>({
+    gameKey: 'garticphone',
+    roomId,
+    playerId: myPlayerId,
+    isHost,
+    reducer: garticRoomReducer,
+    authorize: garticRoomAllows,
+    initialState,
+  });
+
+  // The host's first action: it gives the state revision 1, which guests then accept.
+  const dealt = useRef(false);
   useEffect(() => {
-    if (gameState.roomId) {
-      const stateKey = `${STORAGE_KEYS.GARTIC_STATE_PREFIX}${gameState.roomId}`;
-      sessionStorageSafe.setJson(stateKey, gameState);
-    }
-  }, [gameState]);
+    if (!isHost || dealt.current) return;
+    dealt.current = true;
+    dispatch({ type: 'restart' });
+  }, [isHost, dispatch]);
 
-  const isHost =
-    gameState.hostId === myPlayerId ||
-    gameState.players[0]?.id === myPlayerId ||
-    universalPartyManager.isHost(gameState.roomId);
+  const roster = room.players;
+  useEffect(() => {
+    if (!isHost) return;
+    roster
+      .filter((p) => !gameState.players.some((g) => g.id === p.id))
+      .forEach((p) =>
+        dispatch({
+          type: 'join',
+          player: { id: p.id, name: p.name, isHost: p.isHost, ready: true },
+        }),
+      );
+  }, [isHost, roster, gameState.players, dispatch]);
 
-  // Robust resolution of my player
-  const myPlayer =
-    gameState.players.find((p) => p.id === myPlayerId) ||
-    gameState.players.find((p) => p.name.toLowerCase() === myPlayerName.toLowerCase()) ||
-    gameState.players[0];
-
-  const { taskType, previousStep, hasSubmitted } = getPlayerTaskForRound(
-    gameState,
-    myPlayer?.id || '',
-  );
-
-  const applyRemoteState = useCallback((remoteState: GarticGameState) => {
-    setGameState(remoteState);
-    sessionStorageSafe.setJson(
-      `${STORAGE_KEYS.GARTIC_STATE_PREFIX}${remoteState.roomId}`,
-      remoteState,
-    );
-  }, []);
-
-  const applyRemoteStep = useCallback((playerId: string, content: string) => {
-    setGameState((prev) => submitPlayerGarticStep(prev, playerId, content));
-  }, []);
-
-  const applyPlayerJoin = useCallback((newPlayer: GarticPlayer): GarticGameState | null => {
-    let updated: GarticGameState | null = null;
-    setGameState((prev) => {
-      if (prev.players.some((p) => p.id === newPlayer.id)) return prev;
-      updated = addPlayerToGarticGame(prev, newPlayer);
-      return updated;
-    });
-    return updated;
-  }, []);
-
-  const submitStep = useCallback(
-    (content: string): { updatedState: GarticGameState; isRoundCompleted: boolean } | null => {
-      if (!myPlayer) return null;
-      const updated = submitPlayerGarticStep(gameState, myPlayer.id, content);
-      setGameState(updated);
-      const isRoundCompleted =
-        updated.roundIndex !== gameState.roundIndex || updated.phase !== gameState.phase;
-      return { updatedState: updated, isRoundCompleted };
-    },
-    [gameState, myPlayer],
-  );
-
-  const restartGame = useCallback((): GarticGameState => {
-    const restarted = startGarticGame({
-      ...gameState,
-      phase: 'prompt',
-      roundIndex: 0,
-      books: [],
-    });
-    sessionStorageSafe.setJson(`${STORAGE_KEYS.GARTIC_STATE_PREFIX}${gameState.roomId}`, restarted);
-    setGameState(restarted);
-    return restarted;
-  }, [gameState]);
-
-  const updateRevealState = useCallback(
-    (bookIndex: number, stepIndex: number): GarticGameState => {
-      const updated: GarticGameState = {
-        ...gameState,
-        currentRevealBookIndex: bookIndex,
-        currentRevealStepIndex: stepIndex,
-      };
-      setGameState(updated);
-      return updated;
-    },
-    [gameState],
-  );
-
-  const endGame = useCallback(() => {
-    sessionStorageSafe.remove(`${STORAGE_KEYS.GARTIC_STATE_PREFIX}${gameState.roomId}`);
-    universalPartyManager.returnToLobby(gameState.roomId);
-  }, [gameState.roomId]);
+  const myPlayer = gameState.players.find((p) => p.id === myPlayerId);
+  const { taskType, previousStep, hasSubmitted } = getPlayerTaskForRound(gameState, myPlayerId);
 
   return {
     gameState,
-    setGameState,
+    synced,
+    roomId,
     myPlayerId,
     myPlayerName,
     myPlayer,
@@ -184,12 +98,15 @@ export function useGarticGameState({ initialRoomId }: UseGarticGameStateOptions 
     taskType,
     previousStep,
     hasSubmitted,
-    applyRemoteState,
-    applyRemoteStep,
-    applyPlayerJoin,
-    submitStep,
-    restartGame,
-    updateRevealState,
-    endGame,
+    submitStep: (content: string) =>
+      dispatch({ type: 'stepSubmit', playerId: myPlayerId, content }),
+    restartGame: () => dispatch({ type: 'restart' }),
+    updateRevealState: (bookIndex: number, stepIndex: number) =>
+      dispatch({ type: 'reveal', bookIndex, stepIndex }),
+    /** Host: ends the round for everyone and reopens the lobby. */
+    endGame: () => {
+      dispatch({ type: 'forceEnd' });
+      universalPartyManager.returnToLobby(roomId);
+    },
   };
 }

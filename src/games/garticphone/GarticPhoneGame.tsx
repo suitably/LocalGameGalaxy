@@ -1,6 +1,7 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useFollowPartyLobby } from '../../features/party/hooks/useFollowPartyLobby';
 import { GarticPromptStep } from './components/GarticPromptStep';
 import { GarticDrawingStep } from './components/GarticDrawingStep';
 import { GarticGuessingStep } from './components/GarticGuessingStep';
@@ -8,7 +9,6 @@ import { GarticAlbumReveal } from './components/GarticAlbumReveal';
 import { GarticWaitingStatus } from './components/GarticWaitingStatus';
 import { GarticHeader } from './components/GarticHeader';
 import { useGarticGameState } from './hooks/useGarticGameState';
-import { useGarticSync } from './hooks/useGarticSync';
 
 interface GarticPhoneGameProps {
   onBackToMenu?: () => void;
@@ -20,10 +20,10 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
   initialRoomId,
 }) => {
   const navigate = useNavigate();
-  const handleBack = onBackToMenu || (() => navigate('/party'));
 
   const {
     gameState,
+    roomId,
     myPlayerId,
     myPlayerName,
     myPlayer,
@@ -31,54 +31,17 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
     taskType,
     previousStep,
     hasSubmitted,
-    applyRemoteState,
-    applyRemoteStep,
-    applyPlayerJoin,
     submitStep,
     restartGame,
     updateRevealState,
     endGame,
   } = useGarticGameState({ initialRoomId });
-
-  const getCurrentState = useCallback(() => gameState, [gameState]);
-
-  const { broadcastState, broadcastStepSubmit, broadcastForceEnd } = useGarticSync({
-    roomId: gameState.roomId,
-    isHost,
-    myPlayerId,
-    myPlayerName,
-    getCurrentState,
-    onStateSync: applyRemoteState,
-    onStepSubmit: applyRemoteStep,
-    onPlayerJoin: applyPlayerJoin,
-    onForceEnd: handleBack,
-  });
-
-  const handleStepSubmit = (content: string) => {
-    if (!myPlayer) return;
-    const result = submitStep(content);
-    if (!result) return;
-
-    broadcastStepSubmit(myPlayer.id, content);
-
-    if (result.isRoundCompleted) {
-      broadcastState(result.updatedState);
-    }
-  };
-
-  const handleRevealStateChange = (bookIndex: number, stepIndex: number) => {
-    const updated = updateRevealState(bookIndex, stepIndex);
-    broadcastState(updated);
-  };
-
-  const handleRestart = () => {
-    const restarted = restartGame();
-    broadcastState(restarted);
-  };
+  // The host ended the round: everyone follows back once the party reopens its lobby.
+  useFollowPartyLobby(roomId);
+  const handleBack = onBackToMenu || (() => navigate(roomId ? `/party?room=${roomId}` : '/party'));
 
   const handleEndGame = () => {
     endGame();
-    broadcastForceEnd();
     handleBack();
   };
 
@@ -96,8 +59,8 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
       }}
     >
       <GarticHeader
-        onBack={handleBack}
-        roomId={gameState.roomId}
+        onBack={isHost ? handleEndGame : handleBack}
+        roomId={roomId}
         playerName={myPlayer?.name || myPlayerName}
         phase={gameState.phase}
         roundIndex={gameState.roundIndex}
@@ -121,10 +84,7 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
       >
         {hasSubmitted && gameState.phase !== 'reveal' && gameState.phase !== 'finished' ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: { xs: 1, sm: 3 } }}>
-            <GarticWaitingStatus
-              state={gameState}
-              myPlayerId={myPlayer?.id || myPlayerId}
-            />
+            <GarticWaitingStatus state={gameState} myPlayerId={myPlayer?.id || myPlayerId} />
           </Box>
         ) : (
           <>
@@ -132,7 +92,7 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
               <Box sx={{ display: 'flex', justifyContent: 'center', py: { xs: 1, sm: 3 } }}>
                 <GarticPromptStep
                   playerName={myPlayer?.name || myPlayerName}
-                  onSubmitPrompt={handleStepSubmit}
+                  onSubmitPrompt={submitStep}
                 />
               </Box>
             )}
@@ -141,7 +101,7 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
               <GarticDrawingStep
                 promptText={previousStep.content}
                 authorName={previousStep.authorName}
-                onSubmitDrawing={handleStepSubmit}
+                onSubmitDrawing={submitStep}
               />
             )}
 
@@ -149,7 +109,7 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
               <GarticGuessingStep
                 canvasData={previousStep.content}
                 authorName={previousStep.authorName}
-                onSubmitGuess={handleStepSubmit}
+                onSubmitGuess={submitStep}
               />
             )}
 
@@ -157,8 +117,8 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
               <GarticAlbumReveal
                 state={gameState}
                 isHost={isHost}
-                onRevealStateChange={handleRevealStateChange}
-                onRestartGame={handleRestart}
+                onRevealStateChange={updateRevealState}
+                onRestartGame={restartGame}
                 onBackToMenu={handleBack}
               />
             )}

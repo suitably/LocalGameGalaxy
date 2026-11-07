@@ -259,3 +259,24 @@ export function upsertJoiningPlayer(
   else next.push(player);
   return { players: next, player };
 }
+
+/** A seated player of a party room as games see them (#647 S3). */
+export interface RoomPlayer {
+  id: string;
+  name: string;
+  seat: number;
+  isHost: boolean;
+}
+
+/** Seated players in seat order; spectators are left out. */
+export function roomPlayersOf(state: PartyRoomState | null): RoomPlayer[] {
+  if (!state) return [];
+  return seatedPlayers(state.players)
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      seat: seatOf(state.players, p.id),
+      isHost: p.id === state.hostId,
+    }))
+    .sort((a, b) => a.seat - b.seat);
+}

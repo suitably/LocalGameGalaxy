@@ -1,0 +1,1 @@
+- **One room transport** (#647 S4): party-room games (`useRoomReducer`, `useRoomEvents`) now send through a `RoomTransport` chosen by `getRoomTransport(roomId)` (default: BroadcastChannel + MQTT `lgg/room`, unchanged on the wire); the host-run protocol lives in the React-free `RoomStatePeer`.

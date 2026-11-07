@@ -12,12 +12,14 @@ import { LocalStoryEngine } from './logic/engine';
 import { storytellerNotificationService } from './logic/notificationService';
 import { storytellerMailboxService, type StorytellerSyncMessage } from './logic/mailboxService';
 import { useMultiChannelSync } from '../../modules/sync';
+import { parseGameUrlParams } from '../../modules/sharing';
+import { StoryRoomGame } from './components/StoryRoomGame';
 import type { StoryEntry, StoryGameRecord, StoryGameSnapshot } from './types';
 import { useStoryJoinLink } from './hooks/useStoryJoinLink';
 import { useStorySeats } from './hooks/useStorySeats';
 import { notifyAfterOwnTurn, notifyIncomingTurn } from './logic/storyTurnNotify';
 
-export const StorytellerGame: React.FC = () => {
+const StorytellerLocalGame: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   usePageTitle(t('games.storyteller.title', 'Geschichtenschreiber'));
@@ -211,4 +213,12 @@ export const StorytellerGame: React.FC = () => {
       broadcastSnapshot={broadcastSnapshot}
     />
   );
+};
+
+/** `?room=<CODE>` writes live in the party room; without it the per-player "Play over days" flow runs. */
+export const StorytellerGame: React.FC = () => {
+  const { i18n } = useTranslation();
+  const room = parseGameUrlParams().get('room')?.toUpperCase().trim();
+  if (!room) return <StorytellerLocalGame />;
+  return <StoryRoomGame roomId={room} language={i18n.language.startsWith('de') ? 'de' : 'en'} />;
 };

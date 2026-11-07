@@ -9,6 +9,7 @@ import {
   stringToInfoHash,
 } from './trackerProtocol';
 import { discoveryRetryDelay } from './discoveryRetry';
+import { HEARTBEAT_CHECK_MS, isPeerStale, pongFor } from './heartbeat';
 
 const MAX_CANDIDATES = 4;
 const CONNECTION_TIMEOUT_MS = 6000;
@@ -202,6 +203,16 @@ export function useWebRTCClient(
             }
           });
 
+          // Heartbeat: no ping from the host for too long means it is gone; closing the peer
+          // takes the normal reconnect path below.
+          let lastPingAt = Date.now();
+          const heartbeat = setInterval(() => {
+            if (peerRef.current === peer && isPeerStale(lastPingAt, Date.now())) {
+              console.warn('[WebRTCClient] Host went silent, reconnecting');
+              peer.destroy();
+            }
+          }, HEARTBEAT_CHECK_MS);
+
           const onData = (data: Uint8Array | string) => {
             try {
               for (const message of decodeNdjsonChunk(data)) {
@@ -215,6 +226,14 @@ export function useWebRTCClient(
                     }
                     continue;
                   }
+
+                  if (parsed.type === 'ping' && typeof parsed.t === 'number') {
+                    lastPingAt = Date.now();
+                    if ((peer as unknown as { connected?: boolean }).connected)
+                      peer.send(JSON.stringify(pongFor({ type: 'ping', t: parsed.t })));
+                    continue;
+                  }
+                  if (parsed.type === 'pong') continue;
 
                   // Forward application-level messages directly
                   if (peerRef.current === peer) {
@@ -241,6 +260,7 @@ export function useWebRTCClient(
             }
 
             console.log('[WebRTCClient] Connected to host! (We won the race)');
+            lastPingAt = Date.now();
             isWebRTCConnectedRef.current = true;
             setIsConnected(true);
             peerRef.current = peer;
@@ -269,6 +289,7 @@ export function useWebRTCClient(
 
           peer.on('close', () => {
             clearTimeout(connectionTimeout);
+            clearInterval(heartbeat);
             candidatePeersRef.current.delete(peer);
 
             if (isWebRTCConnectedRef.current && peerRef.current === peer) {

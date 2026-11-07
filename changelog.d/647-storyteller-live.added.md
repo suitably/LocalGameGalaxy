@@ -1,0 +1,1 @@
+- **Storyteller live in the party lobby** (#647): start Storyteller from the lobby and the room's players write the story in turn on their own devices, in seat order. The setup screen offers "Mitspieler einladen" for live play; the stored per-player links stay as the "over days" way to play. The party banner now shows the right game name for every party game.
