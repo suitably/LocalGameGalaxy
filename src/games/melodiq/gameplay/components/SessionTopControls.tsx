@@ -53,7 +53,8 @@ export const SessionTopControls: React.FC<SessionTopControlsProps> = ({
             </IconButton>
           )}
         </Box>
-        <Typography variant="h6" sx={{ fontSize: `${1.25 * uiScale}rem` }}>
+        {/* the TV theme scales the variant (x1.5, 20px floor); no hard-coded size (#554) */}
+        <Typography variant="h6">
           {artist} - {title}
         </Typography>
         <Box sx={{ display: 'flex', gap: 4, pointerEvents: 'none' }}>

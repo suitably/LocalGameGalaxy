@@ -109,7 +109,7 @@ Buttons use sentence case (no `textTransform`). Long text (rules, help) is cappe
 | Host PC / laptop             | Scale as above.                                                                                |
 | TV mode (1080p+, 3 m away)   | Scale × 1.5 (body 24px, `display` 5.25rem); nothing smaller than 20px; max 3 actions per view. |
 
-Implementation: `createTvTheme()` in `src/themeTv.ts` (explicit ×1.5 sizes, min 20px, 32px icons, 48px container gutter, always dark), applied by `src/components/common/TvThemeProvider.tsx` around TV views.
+Implementation: `createTvTheme()` in `src/themeTv.ts` (explicit ×1.5 sizes, min 20px, 32px icons, 48px container gutter, always dark), applied by `src/components/common/TvThemeProvider.tsx` around TV views. Inside it `useIsTvMode()` (`src/hooks/useIsTvMode.ts`) is true, the one TV check for components (#554); TV text uses typography variants, not hard-coded `fontSize`, so the floor applies.
 
 ## 4. Spacing and layout
 
