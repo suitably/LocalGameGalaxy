@@ -111,7 +111,7 @@ Claude-Session: https://claude.ai/code/session_01L6uonSrNoWaJiNvg1NtKuH
 - [x] S3 roster hook
 - [x] S4 RoomTransport
 - [x] S6 Gartic Phone — host reload still loses the round (non-goal); unused `GARTIC_*_PREFIX` storage keys left in storage.ts
-- [ ] S10 heartbeat
+- [x] S10 heartbeat — unit-tested timing only; the two-browser check comes with the S12 harness
 - [ ] S5 GuessArt
 - [ ] S7 Storyteller
 - [ ] S8 Melodiq Notes
