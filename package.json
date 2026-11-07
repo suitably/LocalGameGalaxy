@@ -12,6 +12,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "tracker": "node scripts/start-tracker.js",
+    "e2e:multiplayer": "node scripts/e2e/webrtc-multiplayer.mjs",
     "preview": "vite preview",
     "host": "cd server && npm start",
     "test": "vitest run",

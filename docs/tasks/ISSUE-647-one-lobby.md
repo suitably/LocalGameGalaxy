@@ -116,5 +116,5 @@ Claude-Session: https://claude.ai/code/session_01L6uonSrNoWaJiNvg1NtKuH
 - [x] S7 Storyteller — live story is in memory, default modifiers only; seat model + invited/joined status for "Play over days" (#467 slice 8) left open
 - [x] S8 Melodiq Notes — pult guests have no back-to-lobby button; part pre-selection by the stage (`part=` link) is gone with the per-part links (`pultJoinUrl` kept, unused)
 - [x] S9 Melodiq phones — standalone (hub) Melodiq keeps its stored party id and direct QR link as the legacy path; tracker params are forwarded from the lobby URL only while it still carries them; not verified with real phones (S12 harness)
-- [ ] S12 docs + harness
+- [x] S12 docs + harness — `N=3` run: 6 WebRTC scenarios PASS (real tracker, Chrome); the 6 lobby scenarios SKIP because the public MQTT brokers are unreachable in the sandbox (host never saw the guests), so lobby-to-game and return-to-lobby are untested in a browser; "closed phone removed in <= 16 s" is only covered by heartbeat unit tests
 - S11 out of scope → follow-up issue

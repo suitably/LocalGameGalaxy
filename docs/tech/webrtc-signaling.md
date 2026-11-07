@@ -9,7 +9,7 @@ generated:
   at: 2026-09-27T10:00:00Z
   by: previous-agent
 verified:
-  at: 2026-11-06
+  at: 2026-11-07
   method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; §6 checked against src/lib/webrtc/iceServers.ts on 2026-10-21; §3–§4 checked against useWebRTCClient.ts and a multi-browser run on 2026-11-06'
 ---
 
@@ -101,7 +101,14 @@ Local WebRTC connections can drop due to phone sleep states, network switches, o
 
 - **Signaling Timeout**: If a connection attempt takes longer than `CONNECTION_TIMEOUT_MS` (6 seconds), the candidate peer is automatically destroyed, triggering `processNextPendingPeer` to try another tracker peer.
 - **Auto-Reconnect**: On connection loss, if `autoConnect` is active, the client schedules a new `connect()` after 1.5 seconds. Only the `close` handler resets state and reconnects; simple-peer emits `close` right after `error`, and the `error` handler only keeps the message for the status line (before, an `error` such as an ICE failure reset the state first, so `close` skipped the reconnect).
+- **Heartbeat**: the host pings every connected phone every `PING_INTERVAL_MS` (5 s) and the phone answers with `pong`; both sides check every second. A peer silent for `PEER_TIMEOUT_MS` (15 s) is dropped by the host (`removePeer`), and a phone that gets no ping for that long destroys its peer and takes the auto-reconnect path, so a closed tab leaves the roster within about 16 s. Timing and message types: `src/lib/webrtc/heartbeat.ts`; ping/pong never reach game message handlers.
 - **Stale State Recovery**: If a client reconnects using an identical `deviceId`, the host matches it to the existing player record and updates the session references rather than instantiating a new player slot.
+
+---
+
+### Party code from the lobby (#647)
+
+When Melodiq is opened from the party lobby (`/games/melodiq?room=<CODE>`), `WebRTCHostProvider` gets `fixedPartyId` and uses the room code as `partyId` instead of the stored one (not stored, not regenerated; `initialPartyId.ts`). The QR codes then open the lobby (`/#/party?room=<CODE>&tracker=…`, `buildDeviceConnectionUrl({lobby: true})`, localhost trackers rewritten as before), and the lobby sends a guest to `/games/melodiq?role=client&party=<CODE>[&tracker=…]` (`getGameRoute`). `PhoneClientEngine` then plays under the party's name and device id (`isPartyRoomCode`). Melodiq started from the hub keeps its stored party id and the direct phone link.
 
 ---
 

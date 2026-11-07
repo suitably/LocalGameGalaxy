@@ -1,0 +1,1 @@
+- **Multi-browser test harness** (#647): `npm run e2e:multiplayer` starts the tracker and dev server and drives N browsers through phones joining Melodiq, ping/pong, reload, closed tab, reconnect and late join, plus lobby-to-game for every party game. Local use only, not part of CI.
