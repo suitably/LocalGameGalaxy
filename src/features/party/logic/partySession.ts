@@ -17,6 +17,18 @@ import { markHost, resolveHostId, seatOf, upsertHost, upsertJoiningPlayer } from
 import type { PartyPlayer, PartyRoomState } from './universalPartyManager';
 
 export const HOST_TIMEOUT_MS = 20_000;
+/** Longer than this without any message from the room means this device was cut off. */
+export const HEARING_GAP_MS = 8_000;
+
+/**
+ * Since when this device hears the room without a gap, after a message at `now`. Everyone pings
+ * every 3 s, so a longer silence was this device's own outage (e.g. Wi-Fi to mobile data): what
+ * was missed then says nothing about the host, and right after reconnecting the host's next ping
+ * may simply arrive later than another player's.
+ */
+export function hearingSince(previous: number, lastHeard: number, now: number): number {
+  return now - lastHeard > HEARING_GAP_MS ? now : previous;
+}
 
 /** State after this device creates (or re-opens) its room as host. */
 export function createdState(

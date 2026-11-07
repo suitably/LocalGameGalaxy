@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { mergeIncomingState } from './partyRoster';
 import {
   HOST_TIMEOUT_MS,
+  HEARING_GAP_MS,
   createdState,
+  hearingSince,
   joinedState,
   shouldTakeOverHost,
   takeOverHost,
@@ -84,6 +86,20 @@ describe('partySession (#467 S2)', () => {
     expect(shouldTakeOverHost(room([p('s', 0, { spectator: true })]), 's', seen({}), NOW)).toBe(
       true,
     );
+  });
+
+  it('an outage of this device restarts its hearing, so it waits for the host again', () => {
+    // Pings every 3 s: hearing goes on.
+    expect(hearingSince(10, NOW - 3000, NOW)).toBe(10);
+    // Back after 30 s without any message: hearing starts now.
+    expect(hearingSince(10, NOW - 30_000, NOW)).toBe(NOW);
+    expect(hearingSince(10, NOW - HEARING_GAP_MS - 1, NOW)).toBe(NOW);
+    // Right after reconnecting, another guest's ping arrives before the host's: the host's
+    // silence is counted from the reconnect, so there is no takeover.
+    const state = room([p('h', 0), p('a', 1), p('b', 2)]);
+    const since = NOW;
+    const seenAt = (id: string) => Math.max({ h: NOW - 34_000, b: NOW }[id] ?? 0, since);
+    expect(shouldTakeOverHost(state, 'a', seenAt, NOW + 1000)).toBe(false);
   });
 
   it('a takeover raises the epoch and beats the old host on merge', () => {
