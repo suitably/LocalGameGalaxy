@@ -8,9 +8,9 @@
  * lowest seat takes over and raises `hostEpoch`. The higher epoch always wins a merge, so an old
  * host that comes back steps down instead of splitting the room.
  *
- * A silent host only counts when this device still hears another player: a phone that drops off
- * the network (e.g. Wi-Fi to mobile data) hears nobody, and must not make itself host of a room
- * the others still play in. So in a room of just the host and one guest, a silent host is never
+ * A silent host only counts when this device still hears another player who kept pinging well
+ * after the host stopped: a phone that drops off the network (e.g. Wi-Fi to mobile data) stops
+ * hearing everyone at once, and must not make itself host of a room the others still play in. So in a room of just the host and one guest, a silent host is never
  * replaced; a host that left the roster is.
  */
 import { markHost, resolveHostId, seatOf, upsertHost, upsertJoiningPlayer } from './partyRoster';
@@ -104,10 +104,17 @@ export function shouldTakeOverHost(
   const alive = (id: string) => id === myId || now - seenAt(id) < HOST_TIMEOUT_MS;
   const host = state.players.find((p) => p.id === state.hostId);
   if (host && alive(host.id)) return false;
-  // The host is silent: without another live player, this device is the one that is cut off.
-  const heardOther = state.players.some(
-    (p) => p.id !== myId && p.id !== state.hostId && alive(p.id),
-  );
+  // The host is silent. That counts only if another player kept pinging well after the host
+  // stopped; if everyone went quiet at about the same time, this device is the one cut off.
+  const heardOther =
+    host !== undefined &&
+    state.players.some(
+      (p) =>
+        p.id !== myId &&
+        p.id !== host.id &&
+        alive(p.id) &&
+        seenAt(p.id) - seenAt(host.id) > HEARING_GAP_MS,
+    );
   if (host && !heardOther) return false;
   const candidates = state.players.filter((p) => p.id !== state.hostId && alive(p.id));
   const seated = candidates.filter((p) => !p.spectator);

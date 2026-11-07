@@ -74,6 +74,10 @@ describe('partySession (#467 S2)', () => {
     const silent = NOW - HOST_TIMEOUT_MS - 1;
     const three = room([p('h', 0), p('a', 1), p('b', 2)]);
     expect(shouldTakeOverHost(three, 'a', seen({ h: silent, b: silent }), NOW)).toBe(false);
+    // Cut off right after the host's ping and just before b's: b still looks alive when the host
+    // times out, but both went quiet together, so this device is the one cut off.
+    const nearly = seen({ h: NOW - HOST_TIMEOUT_MS - 50, b: NOW - HOST_TIMEOUT_MS + 200 });
+    expect(shouldTakeOverHost(three, 'a', nearly, NOW)).toBe(false);
     // Host and one guest: a silent host is never replaced.
     const two = room([p('h', 0), p('a', 1)]);
     expect(shouldTakeOverHost(two, 'a', seen({ h: silent }), NOW)).toBe(false);
