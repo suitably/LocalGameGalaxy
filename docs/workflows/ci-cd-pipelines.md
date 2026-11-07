@@ -116,7 +116,7 @@ In `suitably/LocalGameGalaxy` a missing `DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN` (
 
 #### Runner and tool pinning
 
-- Every job runs on a concrete runner image: `ubuntu-24.04`, `ubuntu-24.04-arm` and `macos-15` (arm64 server binary). No `*-latest` labels, so an image switch never silently changes Node, Java or system tools. Docker `latest` tags are unrelated and stay.
+- Every job runs on a concrete runner image: `ubuntu-24.04`, `ubuntu-24.04-arm` and `macos-15` (arm64 server binary), plus `windows-2022` and `macos-15-intel` for the smoke tests of the cross-built server binaries (#591). No `*-latest` labels, so an image switch never silently changes Node, Java or system tools. Docker `latest` tags are unrelated and stay.
 - `tools/wrangler/package.json` holds the exact wrangler version (with its lockfile, installed by nothing). `ci.yml` and `deploy-push-relay.yml` read it into `wranglerVersion`; Dependabot updates it (`/tools/wrangler` entry), and a bump redeploys the push relay.
 - Actions are pinned by commit SHA (Dependabot keeps them current).
 

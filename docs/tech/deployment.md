@@ -91,7 +91,18 @@ npm run package    # bundle + @yao-pkg/pkg → dist/nexumia-server-{linux,win.ex
 
 First start without `config.json`: the server generates its token, prints a one-time pairing link and opens it in the browser, which pairs the app automatically (Settings → Server, [server-security §3a](server-security.md#3a-one-time-pairing-148)). Melodiq's "set up server" button opens Settings → Server with the setup wizard (`section=setup`), whose binary tab detects the OS and links the matching release archive.
 
-Restored in PR #394 (the `package` script had been removed on 2026-09-13). Only the Linux binary was smoke-tested.
+Restored in PR #394 (the `package` script had been removed on 2026-09-13).
+
+**Smoke tests (#591).** `scripts/pipeline/smoke-health.sh <port> <command>` starts a binary in a temporary directory with `PORT` set, polls `GET /health` for 30 s (`SMOKE_TIMEOUT`) and fails without `"status":"ok"`. Every server target is started on its own OS before the release gets it:
+
+| Target                                        | Where                                                            |
+| --------------------------------------------- | ---------------------------------------------------------------- |
+| Linux x64                                     | `build-server-binaries` (`ubuntu-24.04`)                         |
+| Linux arm64, macOS arm64                      | `build-server-binaries-arm64` (`ubuntu-24.04-arm`, `macos-15`)   |
+| Windows x64, macOS x64 (cross-built on Linux) | `smoke-server-binaries-cross` (`windows-2022`, `macos-15-intel`) |
+| Docker base image                             | `docker-publish.yml`, before the push                            |
+
+`build-server-binaries` keeps the x64 archives as a workflow artifact; `publish-server-binaries` attests and uploads them only after `smoke-server-binaries-cross` passed. `ci.yml` → `deploy-cloudflare` requests the deployed URL after the deploy and fails without the app root (`id="root"`). **Unverified:** these jobs have not run yet (the script was checked locally against `node dist/nexumia-server.cjs`).
 
 ## 5. Signaling tracker
 
