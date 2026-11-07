@@ -27,6 +27,7 @@ const LAUNCHABLE_GAMES: readonly PartyGameType[] = [
   'guessart',
   'garticphone',
   'storyteller',
+  'melodiq-notes',
   ...ROOM_DICE_GAMES,
 ];
 
@@ -91,6 +92,9 @@ export function getGameRoute({
   }
   if (gameType === 'garticphone') return `/games/garticphone?room=${roomId}`;
   if (gameType === 'guessart') return `/games/guessart?room=${roomId}`;
+  if (gameType === 'melodiq-notes') {
+    return isHost ? `/games/melodiq-notes?room=${roomId}` : `/games/melodiq-notes?pult=${roomId}`;
+  }
   if (gameType === 'storyteller') return `/games/storyteller?room=${roomId}`;
   if (isRoomDiceGame(gameType)) return `/games/${gameType}?room=${roomId}`;
   return '/games/guessart';

@@ -11,6 +11,7 @@ import {
   Grid,
 } from '@mui/material';
 import DrawIcon from '@mui/icons-material/DrawRounded';
+import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
 import AutoStoriesIcon from '@mui/icons-material/AutoStoriesRounded';
 import PhoneForwardedIcon from '@mui/icons-material/PhoneForwardedRounded';
 import StyleIcon from '@mui/icons-material/StyleRounded';
@@ -151,6 +152,15 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
                 'Schreibt gemeinsam eine Geschichte, einer nach dem anderen.',
               )}
               onClick={pick('storyteller')}
+            />,
+            <PartyPickerCard
+              icon={<MusicNoteIcon sx={{ fontSize: 36, color: 'primary.main' }} />}
+              title="Melodiq Notes"
+              desc={t(
+                'party.melodiq_notes_desc',
+                'Jeder spielt seine Stimme auf dem eigenen Gerät, die Bühne zeigt die Band.',
+              )}
+              onClick={pick('melodiq-notes')}
             />,
           ])}
 

@@ -12,6 +12,6 @@ export const MelodiqNotesEntry: React.FC = () => {
   return room ? (
     <PultView roomId={room.toUpperCase()} wantedPart={params.get('part')} />
   ) : (
-    <MelodiqNotesGame />
+    <MelodiqNotesGame roomId={params.get('room')?.toUpperCase().trim() || null} />
   );
 };

@@ -53,6 +53,12 @@ describe('partyRoutes (#417)', () => {
     expect(getGameRoute({ gameType: 'storyteller', roomId: 'R1', isHost: false, seat: 1 })).toBe(
       '/games/storyteller?room=R1',
     );
+    expect(getGameRoute({ gameType: 'melodiq-notes', roomId: 'R1', isHost: true, seat: 0 })).toBe(
+      '/games/melodiq-notes?room=R1',
+    );
+    expect(getGameRoute({ gameType: 'melodiq-notes', roomId: 'R1', isHost: false, seat: 1 })).toBe(
+      '/games/melodiq-notes?pult=R1',
+    );
     expect(getGameRoute({ gameType: null, roomId: 'R1', isHost: true, seat: 0 })).toBe(
       '/games/guessart',
     );
@@ -69,7 +75,13 @@ describe('partyRoutes (#417)', () => {
 
 describe('resolvePendingLaunch (Spieltisch → party lobby)', () => {
   it('accepts every party game type (#647 S1)', () => {
-    for (const gameType of ['guessart', 'garticphone', 'storyteller', 'knister'] as const) {
+    for (const gameType of [
+      'guessart',
+      'garticphone',
+      'storyteller',
+      'melodiq-notes',
+      'knister',
+    ] as const) {
       expect(resolvePendingLaunch(new URLSearchParams(`launch=${gameType}`))).toEqual({ gameType });
     }
   });
