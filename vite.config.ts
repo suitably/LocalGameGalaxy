@@ -127,25 +127,34 @@ export default defineConfig({
     dedupe: ['react', 'react-dom', '@emotion/react', '@emotion/styled', 'react-router-dom'],
   },
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: {
-          // Split React and React DOM into their own chunk
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          // Split Material-UI into its own chunk
-          'mui-vendor': [
-            '@mui/material',
-            '@mui/icons-material',
-            '@mui/lab',
-            '@emotion/react',
-            '@emotion/styled',
+        // Vite 8 bundles with Rolldown: chunk groups replace the object form of `manualChunks` (#616)
+        codeSplitting: {
+          groups: [
+            // React and the router
+            {
+              name: 'react-vendor',
+              test: /node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/,
+            },
+            // Material-UI and Emotion
+            {
+              name: 'mui-vendor',
+              test: /node_modules[\\/](@mui[\\/](material|icons-material|lab)|@emotion[\\/](react|styled))[\\/]/,
+            },
+            // Network libraries (Melodiq)
+            { name: 'lib-network', test: /node_modules[\\/](bittorrent-tracker|simple-peer)[\\/]/ },
+            // QR code libraries
+            {
+              name: 'lib-qrcode',
+              test: /node_modules[\\/](html5-qrcode|qrcode|qrcode\.react)[\\/]/,
+            },
+            // Storage
+            {
+              name: 'lib-storage',
+              test: /node_modules[\\/](dexie|dexie-react-hooks|lz-string)[\\/]/,
+            },
           ],
-          // Split network libraries (Melodiq)
-          'lib-network': ['bittorrent-tracker', 'simple-peer'],
-          // Split QR code libraries
-          'lib-qrcode': ['html5-qrcode', 'qrcode', 'qrcode.react'],
-          // Split storage
-          'lib-storage': ['dexie', 'dexie-react-hooks', 'lz-string'],
         },
       },
     },
@@ -153,8 +162,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 600,
     // Enable CSS code splitting
     cssCodeSplit: true,
-    // Use esbuild for minification (default, faster than terser)
-    minify: 'esbuild',
+    // minifier: Vite 8's default (Oxc)
   },
   test: {
     include: ['src/**/*.{test,spec}.{ts,tsx}'],

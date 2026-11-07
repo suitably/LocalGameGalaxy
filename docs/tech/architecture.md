@@ -28,7 +28,7 @@ sources:
 | Concern     | Choice                                                                                                                                                          |
 | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Runtime     | React 19 SPA, TypeScript (strict; `any` is a lint _warning_ held by a per-file ratchet, see [coding-conventions](coding-conventions.md#eslint-warning-budget))  |
-| Build       | Vite 7, `vite-plugin-pwa`, Node ≥ 24 (`.nvmrc`)                                                                                                                 |
+| Build       | Vite 8 (Rolldown, chunk groups in `vite.config.ts`), `vite-plugin-pwa`, Node ≥ 24 (`.nvmrc`)                                                                    |
 | UI          | MUI 7 (`src/theme.ts`)                                                                                                                                          |
 | State       | React state / `useReducer` / context; layout split into segregated contexts (§3.4)                                                                              |
 | Persistence | `src/lib/storage.ts` (`STORAGE_KEYS`, memory fallback), IndexedDB via Dexie 4 or raw IDB helpers ([persistence](persistence.md))                                |
