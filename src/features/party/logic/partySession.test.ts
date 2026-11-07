@@ -47,6 +47,18 @@ describe('partySession (#467 S2)', () => {
     expect(joined.player.isHost).toBe(false);
   });
 
+  it('the host can watch and stays host (#658)', () => {
+    const { state } = createdState('R', 'h', 'Hana', null, 5);
+    const watching = joinedState(
+      'R',
+      { myId: 'h', name: 'Hana', spectator: true, isRoomCreator: true },
+      state,
+      6,
+    );
+    expect(watching.state.hostId).toBe('h');
+    expect(watching.player).toMatchObject({ isHost: true, spectator: true });
+  });
+
   it('does not take over before the host is known', () => {
     const state = room([p('a', 0)], { hostId: '' });
     expect(shouldTakeOverHost(state, 'a', seen({}), NOW)).toBe(false);

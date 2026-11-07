@@ -1,6 +1,7 @@
 import { partyMailbox } from './partyMailbox';
 import { storage, sessionStorageSafe, STORAGE_KEYS, STORAGE_PREFIXES } from '../../../lib/storage';
 import { MultiChannelSyncCoordinator } from '../../../modules/sync';
+import { releaseRoomPeers } from '../../../modules/room-game';
 import { addPresencePlayer, assignSlots, mergeIncomingState, removePlayer } from './partyRoster';
 import {
   createdState,
@@ -76,6 +77,8 @@ class UniversalPartyManager {
   private listeningSince = 0;
   /** Since when this device hears the room without an outage, and when it last heard it. */
   private hearing = { since: 0, last: 0 };
+  /** `statusAt` of the game whose room peers are kept (#657); a change ends that game here. */
+  private gameStatusAt: number | undefined;
 
   public getRoomId(): string | null {
     return this.currentRoomState?.roomId || this.currentRoomId;
@@ -363,6 +366,12 @@ class UniversalPartyManager {
   }
 
   private notifyListeners(): void {
+    const state = this.currentRoomState;
+    if (state && state.statusAt !== this.gameStatusAt) {
+      // A launch or a return to the lobby: the previous game's kept state ends.
+      this.gameStatusAt = state.statusAt;
+      releaseRoomPeers(state.roomId);
+    }
     if (this.currentRoomState) {
       this.updateListeners.forEach((cb) => cb(this.currentRoomState!));
     }

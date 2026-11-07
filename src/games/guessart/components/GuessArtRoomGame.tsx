@@ -4,11 +4,11 @@ import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { InvitePlayersButton } from '../../../features/party/components/InvitePlayersButton';
-import { universalPartyManager } from '../../../features/party/logic/universalPartyManager';
 import { useWakeLock } from '../../../hooks/useWakeLock';
 import { useGuessArtRoom } from '../hooks/useGuessArtRoom';
 import { GuessArtRoundBody } from './GuessArtRoundBody';
 import { RoundSuccessModal } from './RoundSuccessModal';
+import { GuessArtSpectatorView } from './GuessArtSpectatorView';
 import { useFollowPartyLobby } from '../../../features/party/hooks/useFollowPartyLobby';
 
 const noop = async () => {};
@@ -26,10 +26,8 @@ export const GuessArtRoomGame: React.FC<{ roomId: string; language: string }> = 
   const [dismissedRound, setDismissedRound] = useState(0);
   const { game, round, completed } = live.state;
 
-  const backToParty = () => {
-    if (live.isHost) universalPartyManager.returnToLobby(roomId);
-    navigate(`/party?room=${roomId}`);
-  };
+  // The game goes on while this device visits the lobby (#657); the host ends it there.
+  const backToParty = () => navigate(`/party?room=${roomId}`);
 
   const showSuccess = Boolean(completed && completed.roundNumber > dismissedRound);
   const waiting = !live.synced || !game || !round;
@@ -55,6 +53,8 @@ export const GuessArtRoomGame: React.FC<{ roomId: string; language: string }> = 
                 : t('guessart.roomConnecting', 'Verbinde mit dem Raum …')}
             </Typography>
           </Stack>
+        ) : !game.players.some((p) => p.id === live.myId) ? (
+          <GuessArtSpectatorView game={game} round={round} />
         ) : (
           <GuessArtRoundBody
             game={game}

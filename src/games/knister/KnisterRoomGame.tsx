@@ -14,7 +14,6 @@ import { useWakeLock } from '../../hooks/useWakeLock';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { useRoomReducer } from '../../modules/room-game';
 import { usePartyRoomPlayers } from '../../features/party/hooks/usePartyRoomPlayers';
-import { universalPartyManager } from '../../features/party/logic/universalPartyManager';
 import { initKnisterI18n } from './i18n';
 import {
   INITIAL_KNISTER_ROOM,
@@ -27,6 +26,7 @@ import { calculateBoardScores } from './logic/knisterScoring';
 import { KnisterBoard } from './components/KnisterBoard';
 import { KnisterDiceRoller } from './components/KnisterDiceRoller';
 import { KnisterGameOverModal } from './components/KnisterGameOverModal';
+import { KnisterSpectatorView } from './components/KnisterSpectatorView';
 import { useFollowPartyLobby } from '../../features/party/hooks/useFollowPartyLobby';
 
 initKnisterI18n();
@@ -64,10 +64,8 @@ export const KnisterRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
     [state.players, state.placed],
   );
 
-  const backToParty = () => {
-    if (room.isHost) universalPartyManager.returnToLobby(roomId);
-    navigate(`/party?room=${roomId}`);
-  };
+  // The game goes on while this device visits the lobby (#657); the host ends it there.
+  const backToParty = () => navigate(`/party?room=${roomId}`);
 
   let status = '';
   if (roll && !iPlaced) status = t('games.knister.room_place', { sum: roll.sum });
@@ -90,9 +88,7 @@ export const KnisterRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
           <Typography color="text.secondary">{t('games.knister.room_connecting')}</Typography>
         </Stack>
       ) : !me ? (
-        <Typography color="text.secondary" textAlign="center" py={6}>
-          {t('games.knister.room_not_in_game')}
-        </Typography>
+        <KnisterSpectatorView state={state} />
       ) : (
         <>
           <Stack direction="row" gap={0.75} flexWrap="wrap" justifyContent="center" mb={1}>

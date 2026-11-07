@@ -66,7 +66,7 @@ export const PartyActiveGameBanner: React.FC<{ lobby: PartyLobbyController }> = 
               <Typography variant="body2" color="text.secondary">
                 {t(
                   'party.rejoinGameDesc',
-                  'Das Spiel läuft gerade. Du kannst jederzeit beitreten oder fortsetzen.',
+                  'Das Spiel läuft weiter, während du in der Lobby bist. Name und Zuschauen gelten ab dem nächsten Spiel.',
                 )}
               </Typography>
             </Box>

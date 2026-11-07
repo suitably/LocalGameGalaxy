@@ -1,0 +1,1 @@
+- **Visit the lobby without ending the game** (#657): in Gartic Phone, GuessArt, Storyteller and Knister, "back to lobby" now only opens the lobby, for the host as for everyone else, while the game goes on; rename yourself or switch to watching there (applies from the next game) and rejoin with one tap. The host ends the game with "End game".

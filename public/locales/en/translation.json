@@ -1992,7 +1992,11 @@
     "helperServerHint": "Ensure the Helper Server is running and a GitHub Token is configured in server settings.",
     "githubErrorHint": "Ensure your GitHub Personal Access Token (PAT) in Settings is valid and has write permissions.",
     "submitPrButton": "Create Pull Request on GitHub",
-    "pushIosInstall": "On iPhone, notifications only work in the installed app: Share icon → “Add to Home Screen”, then open it from there and enable them here."
+    "pushIosInstall": "On iPhone, notifications only work in the installed app: Share icon → “Add to Home Screen”, then open it from there and enable them here.",
+    "spectatorChoosing": "{{name}} is choosing a word",
+    "spectatorDrawing": "{{name}} is drawing",
+    "spectatorGuessing": "{{name}} is guessing",
+    "spectatorIdle": "It is not {{name}}'s turn right now."
   },
   "party": {
     "hubBannerTitle": "Party Mode (Multiplayer Lobby)",
@@ -2006,7 +2010,7 @@
     "joinButton": "Join Party",
     "spectatorBadge": "Spectator",
     "watchOnly": "Watch",
-    "watchOnlyHint": "Table games without a seat, view only",
+    "watchOnlyHint": "No place in the game, just watch",
     "connectedPlayers": "Connected Players",
     "stayConnectedHint": "All phones stay connected across all games",
     "waitingForGuests": "Waiting for players...",
@@ -2030,7 +2034,7 @@
     "editNameDesc": "Customize your player name for the party lobby and all mini-games.",
     "nameInputLabel": "Your Name",
     "liveGameActive": "Live Game Running",
-    "rejoinGameDesc": "The game is currently active. You can join or resume at any time.",
+    "rejoinGameDesc": "The game goes on while you are in the lobby. Name and watching apply from the next game.",
     "endGameForEveryone": "End Game for Everyone",
     "endGameBtn": "End Game",
     "confirmEndGameTitle": "End Game?",
@@ -2065,7 +2069,9 @@
     "removedByHost": "The host removed you from the party.",
     "rejoin": "Join again",
     "backToHub": "Back to overview",
-    "invite_players": "Invite players"
+    "invite_players": "Invite players",
+    "spectatorWatching": "You are watching",
+    "spectatorPickHint": "Pick whose view to follow"
   },
   "gartic": {
     "waitingHeader": "Waiting for other players...",
@@ -2080,7 +2086,11 @@
     "phaseReveal": "Album Show",
     "albumHeader": "Album",
     "hostControlsShow": "The host controls the album show",
-    "inviteHelp": "Invite friends: Scan the QR code with other smartphones or share the link."
+    "inviteHelp": "Invite friends: Scan the QR code with other smartphones or share the link.",
+    "spectatorTaskPrompt": "{{name}} is writing a sentence",
+    "spectatorTaskDrawing": "{{name}} is drawing",
+    "spectatorTaskGuessing": "{{name}} is describing the drawing",
+    "spectatorWorking": "Not sent yet …"
   },
   "wordle": {
     "mode": {
@@ -2233,7 +2243,10 @@
     "shareLinksDesc": "Players can join using QR code or link on their own device and receive push notifications when it is their turn.",
     "scanQrToPlayAs": "Scan this code to play as {{name}}!",
     "playHereInstead": "Write here as {{name}} instead",
-    "playHereInsteadShort": "Play on this device"
+    "playHereInsteadShort": "Play on this device",
+    "spectatorNotTurn": "It is not {{name}}'s turn right now.",
+    "spectatorNoLines": "No line written yet.",
+    "spectatorTurn": "Turn {{n}}"
   },
   "notifications": {
     "turnTitleDraw": "{{gameName}}: It's your turn to draw!",

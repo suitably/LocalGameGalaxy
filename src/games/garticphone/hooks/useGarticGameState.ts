@@ -51,6 +51,7 @@ export function useGarticGameState({ initialRoomId }: UseGarticGameStateOptions 
 
   const {
     state: gameState,
+    rev,
     dispatch,
     synced,
   } = useRoomReducer<GarticGameState, GarticRoomAction>({
@@ -61,15 +62,18 @@ export function useGarticGameState({ initialRoomId }: UseGarticGameStateOptions 
     reducer: garticRoomReducer,
     authorize: garticRoomAllows,
     initialState,
+    // A party game goes on while players visit the lobby (#657); a local one ends with its page.
+    keepAlive: roomId !== LOCAL_ROOM,
   });
 
-  // The host's first action: it gives the state revision 1, which guests then accept.
+  // The host's first action: it gives the state revision 1, which guests then accept. A host
+  // that comes back from the lobby finds its running game (rev > 0) and must not deal again.
   const dealt = useRef(false);
   useEffect(() => {
     if (!isHost || dealt.current) return;
     dealt.current = true;
-    dispatch({ type: 'restart' });
-  }, [isHost, dispatch]);
+    if (rev === 0) dispatch({ type: 'restart' });
+  }, [isHost, rev, dispatch]);
 
   const roster = room.players;
   useEffect(() => {
