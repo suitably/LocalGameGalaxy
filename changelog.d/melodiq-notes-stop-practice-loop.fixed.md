@@ -1,0 +1,1 @@
+- **Melodiq Notes: stopping guided practice ends its loop**: "Stop guided practice" and the × on the practice chip only hid the panel, while the bar kept looping. Both now end the loop, and the song plays on (#664).

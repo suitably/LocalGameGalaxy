@@ -210,14 +210,12 @@ jobs:
           path: nexumia-debug.apk
 
   build-server-binaries:
-    name: Build & Attach Server Binaries
+    name: Build Server Binaries
     needs: create-release
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
-      contents: write
-      id-token: write
-      attestations: write
+      contents: read
     steps:
       - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -238,6 +236,10 @@ jobs:
       - name: Build Binaries (pkg)
         working-directory: ./server
         run: npm run package
+
+      # the binary for this runner must answer /health before anything is published (#591)
+      - name: Smoke-Test Linux x64 Binary
+        run: scripts/pipeline/smoke-health.sh 3917 server/dist/nexumia-server-linux
 
       - name: Prepare Release Artifacts
         run: |
@@ -271,6 +273,74 @@ jobs:
           cd release/windows && zip -r ../../nexumia-server-win.zip ./* && cd ../..
           cd release/macos && tar -czf ../../nexumia-server-macos.tar.gz ./* && cd ../..
 
+      - name: Keep Archives for the Smoke Tests
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: server-archives
+          path: |
+            nexumia-server-linux.tar.gz
+            nexumia-server-macos.tar.gz
+            nexumia-server-win.zip
+          retention-days: 3
+
+  # Windows and macOS x64 are cross-built on Linux: start each on its own OS before upload (#591)
+  smoke-server-binaries-cross:
+    name: Smoke-Test Server Binary (${{ matrix.os }})
+    needs: build-server-binaries
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        include:
+          - os: windows-x64
+            runner: windows-2022
+            archive: nexumia-server-win.zip
+            binary: nexumia-server-win.exe
+          - os: macos-x64
+            runner: macos-15-intel
+            archive: nexumia-server-macos.tar.gz
+            binary: nexumia-server-macos
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download Archives
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: server-archives
+
+      - name: Smoke-Test Binary
+        shell: bash
+        env:
+          ARCHIVE: ${{ matrix.archive }}
+          BINARY: ${{ matrix.binary }}
+        run: |
+          mkdir unpacked
+          case "$ARCHIVE" in
+            *.zip) unzip -q "$ARCHIVE" -d unpacked ;;
+            *) tar -xzf "$ARCHIVE" -C unpacked ;;
+          esac
+          scripts/pipeline/smoke-health.sh 3917 "unpacked/$BINARY"
+
+  publish-server-binaries:
+    name: Attach Server Binaries
+    needs: [create-release, smoke-server-binaries-cross]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - name: Download Archives
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: server-archives
+
       - name: Attest Server Archives Build Provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
@@ -288,7 +358,7 @@ jobs:
             nexumia-server-linux.tar.gz \
             nexumia-server-macos.tar.gz \
             nexumia-server-win.zip \
-            --clobber
+            --clobber --repo "$GITHUB_REPOSITORY"
 
   # pkg cannot cross-compile bytecode for another CPU, so ARM64 builds run on ARM runners
   build-server-binaries-arm64:
@@ -337,6 +407,9 @@ jobs:
         run: |
           npm run bundle
           npx pkg dist/nexumia-server.cjs --targets "$TARGET" --output dist/nexumia-server-arm64
+
+      - name: Smoke-Test Binary
+        run: scripts/pipeline/smoke-health.sh 3917 server/dist/nexumia-server-arm64
 
       - name: Create Archive
         env:
@@ -428,7 +501,7 @@ jobs:
       [
         create-release,
         build-android,
-        build-server-binaries,
+        publish-server-binaries,
         build-server-binaries-arm64,
         sbom,
         build-docker,

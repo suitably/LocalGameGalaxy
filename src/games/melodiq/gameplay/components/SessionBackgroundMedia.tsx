@@ -1,6 +1,8 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, Typography, Snackbar, Alert } from '@mui/material';
 import { YouTubeBackgroundPlayer, getYouTubeVideoId } from '../YouTubeBackgroundPlayer';
+import { grantYouTubeConsent, hasYouTubeConsent } from '../youtubeConsent';
+import { YouTubeConsentButton } from './YouTubeConsentButton';
 
 export interface SessionBackgroundMediaProps {
   videoSrc?: string | null;
@@ -31,6 +33,13 @@ export const SessionBackgroundMedia: React.FC<SessionBackgroundMediaProps> = ({
 }) => {
   const youTubeVideoId = useMemo(() => getYouTubeVideoId(videoSrc || undefined), [videoSrc]);
   const [youTubeFailed, setYouTubeFailed] = useState(false);
+  const [youTubeAllowed, setYouTubeAllowed] = useState(hasYouTubeConsent);
+  const allowYouTube = useCallback(() => {
+    grantYouTubeConsent();
+    setYouTubeAllowed(true);
+  }, []);
+  // without consent a YouTube background is skipped like a failed one: the fallback shows
+  const youTubeBlocked = !!youTubeVideoId && (youTubeFailed || !youTubeAllowed);
 
   useEffect(() => {
     setYouTubeFailed(false);
@@ -55,14 +64,16 @@ export const SessionBackgroundMedia: React.FC<SessionBackgroundMediaProps> = ({
     <>
       {videoSrc &&
         !hideBackgroundVideo &&
-        (youTubeVideoId && !youTubeFailed ? (
-          <YouTubeBackgroundPlayer
-            key={youTubeVideoId}
-            videoId={youTubeVideoId}
-            videoRef={videoRef}
-            initialTime={initialTime}
-            onError={handleYouTubeError}
-          />
+        (youTubeVideoId ? (
+          youTubeBlocked ? null : (
+            <YouTubeBackgroundPlayer
+              key={youTubeVideoId}
+              videoId={youTubeVideoId}
+              videoRef={videoRef}
+              initialTime={initialTime}
+              onError={handleYouTubeError}
+            />
+          )
         ) : (
           <video
             ref={videoRef}
@@ -87,7 +98,10 @@ export const SessionBackgroundMedia: React.FC<SessionBackgroundMediaProps> = ({
             }}
           />
         ))}
-      {(!videoSrc || (youTubeVideoId && youTubeFailed)) &&
+      {videoSrc && !hideBackgroundVideo && youTubeVideoId && !youTubeAllowed && (
+        <YouTubeConsentButton onAllow={allowYouTube} />
+      )}
+      {(!videoSrc || youTubeBlocked) &&
         !hideBackgroundVideo &&
         fallbackBackgroundUrl &&
         (fallbackBackgroundUrl.match(/\.(mp4|webm|mov|ogg)$/i) ? (

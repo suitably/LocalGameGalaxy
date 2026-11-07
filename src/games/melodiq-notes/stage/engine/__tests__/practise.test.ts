@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { StageEngine } from '../StageEngine';
-import { heardBeat, practiseBars } from '../transport';
+import { heardBeat, practiseBars, stopPractising } from '../transport';
 import { fakeSound, run, song } from './fixtures';
 
 describe('practiseBars', () => {
@@ -37,6 +37,21 @@ describe('loop pass hook (#638)', () => {
     expect(seen).toHaveLength(2);
     expect(seen.every((b) => b >= 12)).toBe(true);
     expect(e.state).toBe('paused');
+  });
+});
+
+describe('stopPractising (#664)', () => {
+  it('ends the guided-practice loop and lets the song play on', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    practiseBars(e, 1, 1);
+    e.start();
+    run(e, 1);
+    stopPractising(e);
+    expect(e.loop).toBeNull();
+    expect(e.state).toBe('playing');
+    run(e, 10);
+    expect(e.beat).toBeGreaterThan(8);
   });
 });
 

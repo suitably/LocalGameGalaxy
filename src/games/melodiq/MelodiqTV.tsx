@@ -11,12 +11,14 @@ import { useWakeLock } from '../../hooks/useWakeLock';
 import { useScreenOrientation } from '../../hooks/useScreenOrientation';
 import { useTVReceiver } from './hooks/useTVReceiver';
 import { TvThemeProvider } from '../../components/common/TvThemeProvider';
+import { useIsTvMode } from '../../hooks/useIsTvMode';
 
 // Initialize i18n bundles at module load time to prevent setState side-effects during render
 initMelodiqI18n();
 
 const MelodiqTVScreen: React.FC = () => {
   const { t } = useTranslation();
+  const isTvMode = useIsTvMode();
   useWakeLock(true);
   useScreenOrientation('landscape');
 
@@ -61,7 +63,7 @@ const MelodiqTVScreen: React.FC = () => {
               key={activeSong.id}
               song={activeSong}
               initialTime={activeSong.initialTime || 0}
-              isTVMode={true}
+              isTVMode={isTvMode}
               isPassive={true}
               passiveState={passiveState}
               onExit={() => setActiveSong(null)}

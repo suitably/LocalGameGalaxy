@@ -25,17 +25,17 @@ sources:
 
 **LocalGameGalaxy** (`suitably/LocalGameGalaxy`, product name **Nexumia**) is an offline-first PWA that hosts local group games. Phones act as controllers, a TV/laptop as shared screen. Everything runs client-side; a companion server is optional and only needed for the Melodiq song library, stem separation, tabletop asset folders and an HTTP room relay.
 
-| Concern     | Choice                                                                                                                                                          |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Runtime     | React 19 SPA, TypeScript (strict; `any` is a lint _warning_ held by a per-file ratchet, see [coding-conventions](coding-conventions.md#eslint-warning-budget))  |
-| Build       | Vite 7, `vite-plugin-pwa`, Node ≥ 24 (`.nvmrc`)                                                                                                                 |
-| UI          | MUI 7 (`src/theme.ts`)                                                                                                                                          |
-| State       | React state / `useReducer` / context; layout split into segregated contexts (§3.4)                                                                              |
-| Persistence | `src/lib/storage.ts` (`STORAGE_KEYS`, memory fallback), IndexedDB via Dexie 4 or raw IDB helpers ([persistence](persistence.md))                                |
-| Mobile      | Capacitor 8, Android only (`android/`, appId `com.localgamegalaxy.melodiq`)                                                                                     |
-| i18n        | i18next, `de` + `en` ([i18n-strategy](i18n-strategy.md))                                                                                                        |
-| Sync        | public WSS MQTT (`MqttMailboxService`), `BroadcastChannel`, WebRTC via `simple-peer` + WebTorrent trackers, Web Push / ntfy ([sync-protocol](sync-protocol.md)) |
-| Hosting     | Cloudflare Workers static assets (`wrangler.jsonc`, deployed by `ci.yml`)                                                                                       |
+| Concern     | Choice                                                                                                                                                                                   |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Runtime     | React 19 SPA, TypeScript 6 (root; `server/` pins 7, strict; `any` is a lint _warning_ held by a per-file ratchet, see [coding-conventions](coding-conventions.md#eslint-warning-budget)) |
+| Build       | Vite 8 (Rolldown, chunk groups in `vite.config.ts`), `vite-plugin-pwa`, Node ≥ 24 (`.nvmrc`)                                                                                             |
+| UI          | MUI 7 (`src/theme.ts`)                                                                                                                                                                   |
+| State       | React state / `useReducer` / context; layout split into segregated contexts (§3.4)                                                                                                       |
+| Persistence | `src/lib/storage.ts` (`STORAGE_KEYS`, memory fallback), IndexedDB via Dexie 4 or raw IDB helpers ([persistence](persistence.md))                                                         |
+| Mobile      | Capacitor 8, Android only (`android/`, appId `com.localgamegalaxy.melodiq`)                                                                                                              |
+| i18n        | i18next, `de` + `en` ([i18n-strategy](i18n-strategy.md))                                                                                                                                 |
+| Sync        | public WSS MQTT (`MqttMailboxService`), `BroadcastChannel`, WebRTC via `simple-peer` + WebTorrent trackers, Web Push / ntfy ([sync-protocol](sync-protocol.md))                          |
+| Hosting     | Cloudflare Workers static assets (`wrangler.jsonc`, deployed by `ci.yml`)                                                                                                                |
 
 ## 2. Repository layout
 

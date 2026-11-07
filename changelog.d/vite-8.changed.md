@@ -1,0 +1,1 @@
+- **Build on Vite 8**: `vite` 8.3 with `@vitejs/plugin-react` 6. Rolldown chunk groups replace the object form of `manualChunks` (same vendor chunks, word lists stay separate); minification uses Vite's default Oxc minifier. An override keeps `@babel/plugin-transform-runtime` on 7.x so the optional Babel peers of the React plugin resolve (#616).

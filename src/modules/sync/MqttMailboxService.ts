@@ -14,7 +14,8 @@ import LZString from 'lz-string';
 
 export const DEFAULT_BROKER_URLS = [
   'wss://broker.hivemq.com:8884/mqtt',
-  'wss://broker.emqx.io:8084/mqtt',
+  // fallback inside the EU instead of broker.emqx.io (#645)
+  'wss://test.mosquitto.org:8081',
 ];
 
 export interface MqttEnvelope<T> {
@@ -25,7 +26,11 @@ export interface MqttEnvelope<T> {
   payload: T;
 }
 
-export type MessageListener<T> = (payload: T, channelId: string, timestamp: number) => Promise<void> | void;
+export type MessageListener<T> = (
+  payload: T,
+  channelId: string,
+  timestamp: number,
+) => Promise<void> | void;
 
 export interface MqttMailboxOptions {
   topicPrefix: string;
@@ -47,8 +52,13 @@ export class MqttMailboxService<T> {
   private lastProcessedRaw: Map<string, string> = new Map();
 
   constructor(options: MqttMailboxOptions) {
-    this.topicPrefix = options.topicPrefix.endsWith('/') ? options.topicPrefix : `${options.topicPrefix}/`;
-    this.brokerUrls = options.brokerUrls && options.brokerUrls.length > 0 ? options.brokerUrls : DEFAULT_BROKER_URLS;
+    this.topicPrefix = options.topicPrefix.endsWith('/')
+      ? options.topicPrefix
+      : `${options.topicPrefix}/`;
+    this.brokerUrls =
+      options.brokerUrls && options.brokerUrls.length > 0
+        ? options.brokerUrls
+        : DEFAULT_BROKER_URLS;
     this.useCompression = options.useCompression ?? true;
     const prefix = options.clientPrefix || 'lgg_sync';
     this.clientId = `${prefix}_${Math.random().toString(36).substring(2, 10)}_${Date.now()}`;

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { GlobalStyles } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { tvTheme } from '../../themeTv';
+import { TvModeContext } from '../../hooks/useIsTvMode';
 
 const tvPageStyles = {
   // The app may be in light mode; TV is always dark (DESIGN.md §9), page background included.
@@ -12,12 +13,14 @@ const tvPageStyles = {
   },
 } as const;
 
-/** Wraps every TV-mode view (DESIGN.md §3.3): x1.5 type, 32px icons, 48px gutters, dark. */
+/** Wraps every TV-mode view (DESIGN.md §3.3): x1.5 type, 32px icons, 48px gutters, dark; `useIsTvMode()` is true inside. */
 export function TvThemeProvider({ children }: { children: ReactNode }) {
   return (
-    <ThemeProvider theme={tvTheme}>
-      <GlobalStyles styles={tvPageStyles} />
-      {children}
-    </ThemeProvider>
+    <TvModeContext.Provider value>
+      <ThemeProvider theme={tvTheme}>
+        <GlobalStyles styles={tvPageStyles} />
+        {children}
+      </ThemeProvider>
+    </TvModeContext.Provider>
   );
 }
