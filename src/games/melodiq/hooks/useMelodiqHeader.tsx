@@ -1,10 +1,14 @@
 import { useEffect, useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { useLayout, type MenuItem } from '../../../context/LayoutContext';
 
 import QueueMusicIcon from '@mui/icons-material/QueueMusicRounded';
 import QrCodeIcon from '@mui/icons-material/QrCodeRounded';
 import FolderOpenIcon from '@mui/icons-material/FolderOpenRounded';
+import GroupsIcon from '@mui/icons-material/GroupsRounded';
+import { universalPartyManager } from '../../../features/party/logic/universalPartyManager';
+import { parseGameUrlParams } from '../../../modules/sharing';
 
 import { type LoadingProgress } from './useSongs';
 import TuneIcon from '@mui/icons-material/TuneRounded';
@@ -64,6 +68,15 @@ export const useMelodiqHeader = ({
     };
   });
 
+  // Started from the party lobby: the host ends the game for everyone and reopens the lobby.
+  const navigate = useNavigate();
+  const partyRoom = isClient ? null : parseGameUrlParams().get('room');
+  const backToParty = useCallback(() => {
+    if (!partyRoom) return;
+    universalPartyManager.returnToLobby(partyRoom);
+    navigate(`/party?room=${partyRoom}`);
+  }, [partyRoom, navigate]);
+
   const handleHomeAction = useCallback(() => {
     if (callbacksRef.current.onBackToHome) {
       callbacksRef.current.onBackToHome();
@@ -108,6 +121,15 @@ export const useMelodiqHeader = ({
         });
       }
 
+      if (partyRoom) {
+        headerActions.push({
+          label: t('party.backToLobby', 'Zurück zur Party-Lobby'),
+          icon: <GroupsIcon />,
+          action: backToParty,
+          showAlways: true,
+        });
+      }
+
       if (!isClient) {
         headerActions.push({
           label: t('melodiq.manage_playlists', 'Manage Playlists'),
@@ -148,5 +170,7 @@ export const useMelodiqHeader = ({
     setCustomHeaderActions,
     tvModeActions,
     handleHomeAction,
+    partyRoom,
+    backToParty,
   ]);
 };

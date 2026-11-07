@@ -81,7 +81,11 @@ export const GarticHeader: React.FC<GarticHeaderProps> = ({
         {/* Left: Back Arrow + Game Title + Room Code + Share Button */}
         <Box display="flex" alignItems="center" gap={1} minWidth={0}>
           <Tooltip title={t('party.backToLobby', 'Zurück zur Party-Lobby')}>
-            <IconButton size="small" onClick={onBack} aria-label={t('common.back', 'Zurück')}>
+            <IconButton
+              size="small"
+              onClick={onBack}
+              aria-label={t('party.backToLobby', 'Zurück zur Party-Lobby')}
+            >
               <ArrowBackRoundedIcon />
             </IconButton>
           </Tooltip>

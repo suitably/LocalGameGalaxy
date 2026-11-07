@@ -13,8 +13,10 @@
  *      closed phone leaves the host's roster within 16 s, a dropped network reconnects, a late
  *      phone joins.
  *   2. Lobby -> game -> lobby for every party game, with N-1 guests following the host.
- * Lobby scenarios need the public MQTT brokers (`lgg/party`, `lgg/room`); the result is printed
- * per scenario (PASS / FAIL / SKIP) and the exit code is 1 if anything failed.
+ * Lobby scenarios need an MQTT broker (`lgg/party`, `lgg/room`): the public ones, or a local
+ * MQTT-over-WebSocket broker given as `MQTT_RELAY=ws://localhost:1884` — the harness then
+ * routes the app's broker WebSockets there (useful offline or in a sandbox). The result is
+ * printed per scenario (PASS / FAIL / SKIP) and the exit code is 1 if anything failed.
  */
 import { createRequire } from 'node:module';
 import { spawn } from 'node:child_process';
@@ -23,7 +25,10 @@ const require = createRequire(import.meta.url);
 const N = Number(process.env.N || 3);
 const BASE = process.env.BASE_URL || 'http://localhost:5173';
 const TRACKER = process.env.TRACKER_URL || 'ws://localhost:8000';
-const GAMES = ['garticphone', 'guessart', 'storyteller', 'knister', 'melodiq-notes', 'melodiq'];
+const MQTT_RELAY = process.env.MQTT_RELAY || '';
+const GAMES = process.env.GAMES
+  ? process.env.GAMES.split(',')
+  : ['garticphone', 'guessart', 'storyteller', 'knister', 'melodiq-notes', 'melodiq'];
 const results = [];
 const children = [];
 
@@ -84,17 +89,33 @@ async function main() {
   });
   const open = async (init) => {
     const ctx = await browser.newContext();
+    if (MQTT_RELAY) await relayMqtt(ctx);
     if (init) await ctx.addInitScript(init);
     return { ctx, page: await ctx.newPage() };
   };
 
   try {
-    if (trackerUp) await webrtcScenarios(open);
+    if (process.env.SKIP_WEBRTC) record('webrtc scenarios', 'SKIP', 'SKIP_WEBRTC set');
+    else if (trackerUp) await webrtcScenarios(open);
     else record('webrtc scenarios', 'SKIP', 'no tracker');
     for (const game of GAMES) await lobbyScenario(open, game);
   } finally {
     await browser.close();
   }
+}
+
+/** Pipes the app's public-broker WebSockets to the local broker in `MQTT_RELAY`. */
+async function relayMqtt(ctx) {
+  await ctx.routeWebSocket(/\/\/broker\.(hivemq\.com|emqx\.io)[:/]/, (route) => {
+    const upstream = new WebSocket(MQTT_RELAY, 'mqtt');
+    upstream.binaryType = 'arraybuffer';
+    const pending = [];
+    upstream.onopen = () => pending.splice(0).forEach((m) => upstream.send(m));
+    upstream.onmessage = (e) => route.send(Buffer.from(e.data));
+    upstream.onclose = () => route.close().catch(() => {});
+    route.onMessage((m) => (upstream.readyState === 1 ? upstream.send(m) : pending.push(m)));
+    route.onClose(() => upstream.close());
+  });
 }
 
 /** The host's party code (`<gameId>_party_id`, stored by `WebRTCHostProvider`). */
@@ -199,11 +220,58 @@ async function lobbyScenario(open, game) {
     const urls = [host, ...guests].map((x) => x.page.url());
     return urls.every((u) => u.includes('/games/') && (u.includes(room) || u.includes('party=')));
   }, 25000);
-  record(
-    `lobby -> ${game}: guests follow the host (return to lobby is manual)`,
-    everyoneIn ? 'PASS' : 'FAIL',
-  );
+  record(`lobby -> ${game}: guests follow the host`, everyoneIn ? 'PASS' : 'FAIL');
+  if (everyoneIn) await backToLobby(host, guests, game);
   await Promise.all([host, ...guests].map((x) => x.ctx.close()));
+}
+
+/** The host ends the game with its "back to lobby" control; every guest must follow. */
+async function backToLobby(host, guests, game) {
+  const name = `${game} -> lobby: guests follow the host back`;
+  const back = host.page
+    .getByRole('button', { name: /^(?!.*(share|teilen)).*(zur party|back to (the )?party|lobby)/i })
+    .first();
+  let found = await until(() => back.isVisible().catch(() => false), 8000);
+  if (!found) {
+    // Melodiq Notes keeps it in the players panel behind "Invite players".
+    const invite = host.page.getByRole('button', { name: /Mitspieler einladen|Invite players/i });
+    if (
+      await invite
+        .first()
+        .isVisible()
+        .catch(() => false)
+    )
+      await invite.first().click();
+    found = await until(() => back.isVisible().catch(() => false), 5000);
+  }
+  if (!found) {
+    const names = await host.page
+      .getByRole('button')
+      .evaluateAll((els) =>
+        els.map((e) => e.getAttribute('aria-label') || e.textContent).slice(0, 25),
+      );
+    return record(name, 'SKIP', `no "back to lobby" control for the host (${names.join(' | ')})`);
+  }
+  const label =
+    (await back.textContent().catch(() => '')) || (await back.getAttribute('aria-label'));
+  await back.click();
+  const back2 = await until(
+    () => [host, ...guests].every((x) => new URL(x.page.url()).pathname === '/party'),
+    20000,
+  );
+  const status = (x) =>
+    x.page.evaluate(() =>
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith('galaxy_party_state_'))
+        .map((k) => JSON.parse(localStorage.getItem(k) || '{}').status)
+        .join(','),
+    );
+  const detail = back2
+    ? ''
+    : `host ${host.page.url()} [${await status(host)}]; guests ${(
+        await Promise.all(guests.map(async (g) => `${g.page.url()} [${await status(g)}]`))
+      ).join(' ')}`;
+  record(name, back2 ? 'PASS' : 'FAIL', back2 ? '' : `clicked "${label}"; ${detail}`);
 }
 
 main()

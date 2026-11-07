@@ -27,12 +27,14 @@ import { calculateBoardScores } from './logic/knisterScoring';
 import { KnisterBoard } from './components/KnisterBoard';
 import { KnisterDiceRoller } from './components/KnisterDiceRoller';
 import { KnisterGameOverModal } from './components/KnisterGameOverModal';
+import { useFollowPartyLobby } from '../../features/party/hooks/useFollowPartyLobby';
 
 initKnisterI18n();
 
 export const KnisterRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  useFollowPartyLobby(roomId);
   usePageTitle(t('games.knister.title', 'Knister'));
   useWakeLock(true);
   const room = usePartyRoomPlayers(roomId);

@@ -12,6 +12,7 @@ import { parseGameUrlParams } from '../../modules/sharing';
 import { isPartyRoomCode } from '../../features/party/logic/partyRoom';
 import { universalPartyManager } from '../../features/party/logic/universalPartyManager';
 import { getOrCreatePlayerName } from '../../features/party/logic/playerName';
+import { useFollowPartyLobby } from '../../features/party/hooks/useFollowPartyLobby';
 
 export type { ClientProfile } from './logic/clientProfile';
 
@@ -77,6 +78,7 @@ const ConnectionOverlay: React.FC<{ message: string }> = ({ message }) => (
 
 export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const partyId = parseGameUrlParams().get('party');
+  useFollowPartyLobby(partyId, isPartyRoomCode(partyId));
   const [trackerUrls] = useState<string[]>(() => resolveTrackerUrls(window.location.search));
   const [clientProfile, setClientProfile] = useState<ClientProfile>(() =>
     // joined through the lobby: the party's name and device id, no separate profile

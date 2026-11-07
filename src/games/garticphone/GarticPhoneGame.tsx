@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { useFollowPartyLobby } from '../../features/party/hooks/useFollowPartyLobby';
 import { GarticPromptStep } from './components/GarticPromptStep';
 import { GarticDrawingStep } from './components/GarticDrawingStep';
 import { GarticGuessingStep } from './components/GarticGuessingStep';
@@ -19,7 +20,6 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
   initialRoomId,
 }) => {
   const navigate = useNavigate();
-  const handleBack = onBackToMenu || (() => navigate('/party'));
 
   const {
     gameState,
@@ -36,13 +36,9 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
     updateRevealState,
     endGame,
   } = useGarticGameState({ initialRoomId });
-
-  // The host ended the round: everyone follows back.
-  const ended = gameState.phase === 'lobby';
-  useEffect(() => {
-    if (ended) handleBack();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ended]);
+  // The host ended the round: everyone follows back once the party reopens its lobby.
+  useFollowPartyLobby(roomId);
+  const handleBack = onBackToMenu || (() => navigate(roomId ? `/party?room=${roomId}` : '/party'));
 
   const handleEndGame = () => {
     endGame();
@@ -63,7 +59,7 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
       }}
     >
       <GarticHeader
-        onBack={handleBack}
+        onBack={isHost ? handleEndGame : handleBack}
         roomId={roomId}
         playerName={myPlayer?.name || myPlayerName}
         phase={gameState.phase}

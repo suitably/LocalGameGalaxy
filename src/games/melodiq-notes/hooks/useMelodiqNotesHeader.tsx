@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from 'react';
 import { alpha, Box, Stack, Typography, Chip } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
 import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
+import GroupsIcon from '@mui/icons-material/GroupsRounded';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle, useHeaderLayout } from '../../../context/LayoutContext';
 import { TOUCH_TARGET } from '../../../lib/touchTarget';
@@ -13,6 +14,8 @@ interface UseMelodiqNotesHeaderOptions {
   onOpenSongSelect: () => void;
   /** The recording behind the song: its state as label and icon, and its sheet. */
   recording: { label: string; icon: ReactNode; onOpen: () => void };
+  /** In a party room: the host ends the session and reopens the lobby for everyone. */
+  onBackToParty?: () => void;
 }
 
 export function useMelodiqNotesHeader({
@@ -21,6 +24,7 @@ export function useMelodiqNotesHeader({
   effectiveBpm,
   onOpenSongSelect,
   recording,
+  onBackToParty,
 }: UseMelodiqNotesHeaderOptions) {
   const { t } = useTranslation();
   const { setMenuItems, setCustomHeaderTitle } = useHeaderLayout();
@@ -108,8 +112,14 @@ export function useMelodiqNotesHeader({
 
   // 2. The recording behind the song sits next to it; mode, input and players are on the stage
   const { label, icon, onOpen } = recording;
+  const backLabel = t('party.backToLobby', 'Zurück zur Party-Lobby');
   useEffect(() => {
-    setMenuItems([{ label, icon, action: onOpen, showAlways: true }]);
-  }, [label, icon, onOpen, setMenuItems]);
+    setMenuItems([
+      { label, icon, action: onOpen, showAlways: true },
+      ...(onBackToParty
+        ? [{ label: backLabel, icon: <GroupsIcon />, action: onBackToParty, showAlways: true }]
+        : []),
+    ]);
+  }, [label, icon, onOpen, onBackToParty, backLabel, setMenuItems]);
   useEffect(() => () => setMenuItems([]), [setMenuItems]);
 }

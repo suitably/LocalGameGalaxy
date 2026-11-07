@@ -9,6 +9,7 @@ import { useWakeLock } from '../../../hooks/useWakeLock';
 import { useGuessArtRoom } from '../hooks/useGuessArtRoom';
 import { GuessArtRoundBody } from './GuessArtRoundBody';
 import { RoundSuccessModal } from './RoundSuccessModal';
+import { useFollowPartyLobby } from '../../../features/party/hooks/useFollowPartyLobby';
 
 const noop = async () => {};
 
@@ -19,6 +20,7 @@ export const GuessArtRoomGame: React.FC<{ roomId: string; language: string }> = 
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  useFollowPartyLobby(roomId);
   useWakeLock(true);
   const live = useGuessArtRoom(roomId, language, false);
   const [dismissedRound, setDismissedRound] = useState(0);

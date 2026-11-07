@@ -10,6 +10,7 @@ import { useWakeLock } from '../../../hooks/useWakeLock';
 import { useStoryRoom } from '../hooks/useStoryRoom';
 import { StoryWriterView } from './StoryWriterView';
 import { StoryReaderModal } from './StoryReaderModal';
+import { useFollowPartyLobby } from '../../../features/party/hooks/useFollowPartyLobby';
 
 /** Storyteller played live in a party room: the room's players write in turn. */
 export const StoryRoomGame: React.FC<{ roomId: string; language: string }> = ({
@@ -18,6 +19,7 @@ export const StoryRoomGame: React.FC<{ roomId: string; language: string }> = ({
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  useFollowPartyLobby(roomId);
   useWakeLock(true);
   const live = useStoryRoom(roomId, language);
   const [readerOpen, setReaderOpen] = useState(false);

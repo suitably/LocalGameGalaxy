@@ -22,6 +22,7 @@ import { useRecordingStatus } from './stage/useRecordingStatus';
 import { ImmersiveSong } from './stage/components/ImmersiveSong';
 import type { StageDisplay } from './stage/render/stageRenderer';
 import { StageParts } from './pult/components/StageParts';
+import { universalPartyManager } from '../../features/party/logic/universalPartyManager';
 import { buildInviteRoute } from '../../features/party/logic/partyRoutes';
 import { playCalibrationClicks } from './stage/engine/calibrationClicks';
 import { usePracticeLadder } from './stage/usePracticeLadder';
@@ -51,6 +52,16 @@ export const MelodiqNotesGame: React.FC<{ roomId?: string | null }> = ({ roomId 
   const [partsOpen, setPartsOpen] = useState(false);
   const [removeRemote, setRemoveRemote] = useState<((id: string) => void) | null>(null);
   const onRoom = useCallback((remove: (id: string) => void) => setRemoveRemote(() => remove), []);
+  const backToParty = useMemo(
+    () =>
+      roomId
+        ? () => {
+            universalPartyManager.returnToLobby(roomId);
+            navigate(`/party?room=${roomId}`);
+          }
+        : undefined,
+    [roomId, navigate],
+  );
   const openInvite = useCallback(
     () => (roomId ? setPartsOpen(true) : navigate(buildInviteRoute('melodiq-notes'))),
     [roomId, navigate],
@@ -80,6 +91,7 @@ export const MelodiqNotesGame: React.FC<{ roomId?: string | null }> = ({ roomId 
       icon: recordingIcon,
       onOpen: openRecording,
     },
+    onBackToParty: backToParty,
   });
 
   const start = useCallback(() => {
