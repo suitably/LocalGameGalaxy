@@ -6,6 +6,7 @@ import { recordingStatus } from '../logic/recordingStatus';
 import type { StageSongState } from '../useStageSong';
 import { useYouTubeImport } from '../useYouTubeImport';
 import { YouTubeRecordingDialog } from './YouTubeRecordingDialog';
+import { MarksCheck } from './MarksCheck';
 import { OffsetControls } from './OffsetControls';
 import { UltraStarExport } from './UltraStarExport';
 import { ultraStarChoices } from '../logic/ultraStarExport';
@@ -24,8 +25,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 /**
- * The recording behind the song, in the order it is set up: choose it, align it bar by bar,
- * fine-tune, then save it to the Notes library or export the score.
+ * The recording behind the song, in the order it is set up: choose it (it is aligned on its own),
+ * check the alignment and pick how it plays, fine-tune, then save it to the Notes library or export the score.
  */
 export function RecordingPanel({ state }: { state: StageSongState }) {
   const { t } = useTranslation();
@@ -112,6 +113,7 @@ export function RecordingPanel({ state }: { state: StageSongState }) {
                 {k('pin_bar_hint')}
               </Typography>
             )}
+            <MarksCheck state={state} />
           </Section>
         )}
         {recording && (

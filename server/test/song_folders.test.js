@@ -352,4 +352,22 @@ test('Song folders: scanner with and without .txt, song.json, song-folder routes
     assert.strictEqual(safeScoreFileName('song.mxl.marks.json'), null);
     assert.strictEqual(typeof parseMarksBody({ marks: [] }), 'string');
   });
+
+  await t.test('keeps where bar marks come from and how they play', () => {
+    const marks = [
+      { beat: 0, sec: 0.2 },
+      { beat: 4, sec: 2.5 },
+    ];
+    const plain = parseMarksBody({ marks });
+    assert.strictEqual(plain.aligner, null);
+    assert.strictEqual(plain.mode, 'bars');
+    assert.strictEqual(plain.edited, false);
+    const full = parseMarksBody({ marks, aligner: 2, mode: 'steady', edited: true });
+    assert.strictEqual(full.aligner, 2);
+    assert.strictEqual(full.mode, 'steady');
+    assert.strictEqual(full.edited, true);
+    assert.strictEqual(typeof parseMarksBody({ marks, mode: 'wild' }), 'string');
+    assert.strictEqual(typeof parseMarksBody({ marks, aligner: 1.5 }), 'string');
+    assert.strictEqual(typeof parseMarksBody({ marks, edited: 'yes' }), 'string');
+  });
 });

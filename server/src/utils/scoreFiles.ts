@@ -27,8 +27,17 @@ export interface StoredMarks {
   audio: string | null;
   offsetSec: number;
   marks: BarMark[];
+  /** Version of the client alignment that made the marks; null when unknown (older files, karaoke). */
+  aligner: number | null;
+  /** How the recording plays: bar by bar, one steady tempo through the marks, or the score tempo. */
+  mode: MarksMode;
+  /** Corrected by hand; a newer alignment must not replace them. */
+  edited: boolean;
   updatedAt: string;
 }
+
+export const MARKS_MODES = ['bars', 'steady', 'off'] as const;
+export type MarksMode = (typeof MARKS_MODES)[number];
 
 export function isScoreFileName(name: string): boolean {
   const lower = name.toLowerCase();
@@ -139,5 +148,21 @@ export function parseMarksBody(body: unknown): StoredMarks | string {
   if (!Number.isFinite(offsetSec) || Math.abs(offsetSec) > 600)
     return 'offsetSec must be a number of seconds';
   const audio = typeof b.audio === 'string' && b.audio ? path.basename(b.audio) : null;
-  return { version: 1, audio, offsetSec, marks, updatedAt: new Date().toISOString() };
+  const aligner = b.aligner === undefined || b.aligner === null ? null : Number(b.aligner);
+  if (aligner !== null && (!Number.isInteger(aligner) || aligner < 1))
+    return 'aligner must be a positive integer';
+  const mode = b.mode === undefined ? 'bars' : b.mode;
+  if (!MARKS_MODES.includes(mode as MarksMode))
+    return `mode must be one of ${MARKS_MODES.join(', ')}`;
+  if (b.edited !== undefined && typeof b.edited !== 'boolean') return 'edited must be a boolean';
+  return {
+    version: 1,
+    audio,
+    offsetSec,
+    marks,
+    aligner,
+    mode: mode as MarksMode,
+    edited: b.edited === true,
+    updatedAt: new Date().toISOString(),
+  };
 }

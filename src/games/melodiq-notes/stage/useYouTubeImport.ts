@@ -12,14 +12,14 @@ const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 /**
  * Score on stage → recording from YouTube in its song folder (server yt-dlp queue) → the score in
- * that folder, on stage with the song's mix, aligned right away (#568).
+ * that folder, on stage with the song's mix; it is aligned right away like any recording without
+ * marks (`useAutoAlign`, #568).
  */
 export function useYouTubeImport(state: StageSongState) {
   const [run, setRun] = useState<ImportRun>({ kind: 'idle' });
   const [songs, setSongs] = useState<CompanionSong[] | null>(null);
   const [songsError, setSongsError] = useState<string | null>(null);
   const ctrl = useRef<AbortController | null>(null);
-  const alignPending = useRef(false);
 
   /** Song folders on the server, to show where the recording will go. */
   const refreshSongs = useCallback(() => {
@@ -53,16 +53,12 @@ export function useYouTubeImport(state: StageSongState) {
           undefined,
           controller.signal,
         );
-        alignPending.current = true;
         const ok = await state.loadCatalogScore({
           file: result.score.file,
           label: result.score.label ?? null,
           ...result,
         });
-        if (!ok) {
-          alignPending.current = false;
-          throw new Error('the stored score could not be opened');
-        }
+        if (!ok) throw new Error('the stored score could not be opened');
         setRun({ kind: 'idle' });
         return true;
       } catch (e) {
@@ -78,14 +74,6 @@ export function useYouTubeImport(state: StageSongState) {
     ctrl.current?.abort();
     setRun({ kind: 'idle' });
   }, []);
-
-  // align once the score and the song's mix are on stage, unless it brought marks
-  const { recording, loading, marks, alignNow } = state;
-  useEffect(() => {
-    if (!alignPending.current || loading || !recording) return;
-    alignPending.current = false;
-    if (!marks) void alignNow();
-  }, [recording, loading, marks, alignNow]);
 
   useEffect(() => () => ctrl.current?.abort(), []);
 
