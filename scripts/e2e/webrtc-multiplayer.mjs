@@ -15,6 +15,8 @@
  *   2. Lobby -> game -> lobby for every party game, with N-1 guests following the host.
  *   3. Host takeover: the host leaves, a guest takes over within ~20 s, the old host comes back
  *      and steps down (#467 S2).
+ *   4. A guest's network goes silent for 30 s (Wi-Fi to mobile data): it must not take over,
+ *      and everyone keeps the host (needs `MQTT_RELAY`, which can cut a browser off).
  * Lobby scenarios need an MQTT broker (`lgg/party`, `lgg/room`): the public ones, or a local
  * MQTT-over-WebSocket broker given as `MQTT_RELAY=ws://localhost:1884` — the harness then
  * routes the app's broker WebSockets there (useful offline or in a sandbox). The result is
@@ -29,7 +31,7 @@ const BASE = process.env.BASE_URL || 'http://localhost:5173';
 const TRACKER = process.env.TRACKER_URL || 'ws://localhost:8000';
 const MQTT_RELAY = process.env.MQTT_RELAY || '';
 const GAMES = process.env.GAMES
-  ? process.env.GAMES.split(',')
+  ? process.env.GAMES.split(',').filter(Boolean)
   : ['garticphone', 'guessart', 'storyteller', 'knister', 'melodiq-notes', 'melodiq'];
 const results = [];
 const children = [];
@@ -91,9 +93,10 @@ async function main() {
   });
   const open = async (init) => {
     const ctx = await browser.newContext();
-    if (MQTT_RELAY) await relayMqtt(ctx);
+    const net = { cut: false };
+    if (MQTT_RELAY) await relayMqtt(ctx, net);
     if (init) await ctx.addInitScript(init);
-    return { ctx, page: await ctx.newPage() };
+    return { ctx, net, page: await ctx.newPage() };
   };
 
   try {
@@ -102,21 +105,31 @@ async function main() {
     else record('webrtc scenarios', 'SKIP', 'no tracker');
     for (const game of GAMES) await lobbyScenario(open, game);
     await hostTakeoverScenario(open);
+    if (MQTT_RELAY) await silentGuestScenario(open);
+    else record('lobby: a silent guest keeps the host', 'SKIP', 'needs MQTT_RELAY');
   } finally {
     await browser.close();
   }
 }
 
-/** Pipes the app's public-broker WebSockets to the local broker in `MQTT_RELAY`. */
-async function relayMqtt(ctx) {
+/**
+ * Pipes the app's public-broker WebSockets to the local broker in `MQTT_RELAY`. While `net.cut`
+ * is set, messages are dropped both ways without closing the socket, like a phone whose Wi-Fi
+ * went away: the app only notices through its MQTT keepalive.
+ */
+async function relayMqtt(ctx, net) {
   await ctx.routeWebSocket(/\/\/broker\.(hivemq\.com|emqx\.io)[:/]/, (route) => {
     const upstream = new WebSocket(MQTT_RELAY, 'mqtt');
     upstream.binaryType = 'arraybuffer';
     const pending = [];
     upstream.onopen = () => pending.splice(0).forEach((m) => upstream.send(m));
-    upstream.onmessage = (e) => route.send(Buffer.from(e.data));
+    upstream.onmessage = (e) => !net.cut && route.send(Buffer.from(e.data));
     upstream.onclose = () => route.close().catch(() => {});
-    route.onMessage((m) => (upstream.readyState === 1 ? upstream.send(m) : pending.push(m)));
+    route.onMessage((m) => {
+      if (net.cut) return;
+      if (upstream.readyState === 1) upstream.send(m);
+      else pending.push(m);
+    });
     route.onClose(() => upstream.close());
   });
 }
@@ -279,6 +292,49 @@ async function hostTakeoverScenario(open) {
     );
   }
   await Promise.all([host, ...guests].map((x) => x.ctx.close().catch(() => {})));
+}
+
+/** A guest hears nothing for 30 s and comes back: it must not have made itself host. */
+async function silentGuestScenario(open) {
+  const name = 'lobby: a silent guest keeps the host';
+  const host = await open();
+  await host.page.goto(`${BASE}/party?launch=garticphone`);
+  const room = await until(
+    () => host.page.evaluate(() => localStorage.getItem('galaxy_host_room_code')),
+    15000,
+  );
+  const guests = [];
+  for (let i = 1; i < Math.max(N, 3); i++) {
+    const g = await open();
+    await g.page.goto(`${BASE}/party?room=${room}`);
+    guests.push(g);
+  }
+  const all = [host, ...guests];
+  const view = (x) =>
+    x.page.evaluate((r) => {
+      const state = JSON.parse(localStorage.getItem(`galaxy_party_state_${r}`) || '{}');
+      const me = sessionStorage.getItem('party_my_player_id');
+      return {
+        hostId: state.hostId,
+        me,
+        claims: Boolean(sessionStorage.getItem(`party_host_id_${r}`)),
+      };
+    }, room);
+  const hostId = await until(async () => (await view(host)).me, 15000);
+  await until(
+    async () => (await Promise.all(guests.map(view))).every((v) => v.hostId === hostId),
+    15000,
+  );
+  await sleep(4000);
+  const lowest = guests[0]; // the first guest has the lowest seat: it would take over
+  lowest.net.cut = true;
+  await sleep(30000);
+  lowest.net.cut = false;
+  await sleep(10000);
+  const views = await Promise.all(all.map(view));
+  const ok = views.every((v) => v.hostId === hostId) && !views[1].claims && views[0].claims;
+  record(name, ok ? 'PASS' : 'FAIL', ok ? '' : JSON.stringify(views));
+  await Promise.all(all.map((x) => x.ctx.close().catch(() => {})));
 }
 
 /** The host ends the game with its "back to lobby" control; every guest must follow. */

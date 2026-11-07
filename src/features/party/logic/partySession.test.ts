@@ -61,9 +61,20 @@ describe('partySession (#467 S2)', () => {
     const times = { h: NOW - HOST_TIMEOUT_MS - 1, a: NOW, b: NOW };
     expect(shouldTakeOverHost(state, 'b', seen(times), NOW)).toBe(true);
     expect(shouldTakeOverHost(state, 'a', seen(times), NOW)).toBe(false);
-    // b is silent too: a is next
-    const bGone = { ...times, b: NOW - HOST_TIMEOUT_MS - 1 };
-    expect(shouldTakeOverHost(state, 'a', seen(bGone), NOW)).toBe(true);
+    // b is silent too: a is next, as long as it still hears someone (c)
+    const withC = room([...state.players, p('c', 3)]);
+    const bGone = { ...times, b: NOW - HOST_TIMEOUT_MS - 1, c: NOW };
+    expect(shouldTakeOverHost(withC, 'a', seen(bGone), NOW)).toBe(true);
+  });
+
+  it('a device that hears nobody does not take over (it is the one offline)', () => {
+    // Wi-Fi to mobile data: the guest stops hearing everyone at once.
+    const silent = NOW - HOST_TIMEOUT_MS - 1;
+    const three = room([p('h', 0), p('a', 1), p('b', 2)]);
+    expect(shouldTakeOverHost(three, 'a', seen({ h: silent, b: silent }), NOW)).toBe(false);
+    // Host and one guest: a silent host is never replaced.
+    const two = room([p('h', 0), p('a', 1)]);
+    expect(shouldTakeOverHost(two, 'a', seen({ h: silent }), NOW)).toBe(false);
   });
 
   it('takes over at once when the host left the roster; spectators only as last resort', () => {

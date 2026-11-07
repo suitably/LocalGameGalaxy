@@ -7,6 +7,11 @@
  * for `HOST_TIMEOUT_MS` (tab closed, device gone) or left the roster, the live player with the
  * lowest seat takes over and raises `hostEpoch`. The higher epoch always wins a merge, so an old
  * host that comes back steps down instead of splitting the room.
+ *
+ * A silent host only counts when this device still hears another player: a phone that drops off
+ * the network (e.g. Wi-Fi to mobile data) hears nobody, and must not make itself host of a room
+ * the others still play in. So in a room of just the host and one guest, a silent host is never
+ * replaced; a host that left the roster is.
  */
 import { markHost, resolveHostId, seatOf, upsertHost, upsertJoiningPlayer } from './partyRoster';
 import type { PartyPlayer, PartyRoomState } from './universalPartyManager';
@@ -71,7 +76,8 @@ interface JoinOptions {
 
 /**
  * Whether this device should take over as host: the host is gone (not in the roster, or silent
- * for `HOST_TIMEOUT_MS`) and this device is the live player with the lowest seat. `seenAt` gives
+ * for `HOST_TIMEOUT_MS` while another player is still heard) and this device is the live player
+ * with the lowest seat. `seenAt` gives
  * a player's last presence ping (or when this device started listening, if none yet).
  */
 export function shouldTakeOverHost(
@@ -86,6 +92,11 @@ export function shouldTakeOverHost(
   const alive = (id: string) => id === myId || now - seenAt(id) < HOST_TIMEOUT_MS;
   const host = state.players.find((p) => p.id === state.hostId);
   if (host && alive(host.id)) return false;
+  // The host is silent: without another live player, this device is the one that is cut off.
+  const heardOther = state.players.some(
+    (p) => p.id !== myId && p.id !== state.hostId && alive(p.id),
+  );
+  if (host && !heardOther) return false;
   const candidates = state.players.filter((p) => p.id !== state.hostId && alive(p.id));
   const seated = candidates.filter((p) => !p.spectator);
   const pool = seated.length > 0 ? seated : candidates;
