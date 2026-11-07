@@ -141,3 +141,24 @@ describe('alignRecording when score and recording differ in the middle', () => {
     expect(Math.abs(result.marks[18].sec - truth[14])).toBeLessThan(0.5);
   });
 });
+
+describe('alignRecording when the score is silent for long', () => {
+  it('places a score whose first bars are empty while the recording already plays', async () => {
+    // the recording opens with sixteen bars of voice only, then the band comes in; the score
+    // has the band only, so its first sixteen bars are empty (a Guitar Pro intro left blank)
+    const full = looped(4);
+    const intro = 64;
+    const band = (p: ScoreSong['parts'][number]) => p.id !== 'v';
+    const recorded: ScoreSong = {
+      ...full,
+      parts: full.parts.map((p) => ({
+        ...p,
+        notes: band(p) ? p.notes.filter((n) => n.t >= intro) : p.notes,
+      })),
+    };
+    const { samples, truth } = renderBand(recorded, { startSec: 0.2, factorAt: () => 1 });
+    const score: ScoreSong = { ...recorded, parts: recorded.parts.filter(band) };
+    const result = await alignRecording(score, samples);
+    expect(barErrors(result.marks.slice(16), truth.slice(16)).max).toBeLessThan(0.1);
+  });
+});

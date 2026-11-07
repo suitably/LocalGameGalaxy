@@ -11,7 +11,8 @@ import {
 import { chromaOnsets, type ChromaOnsets } from './chromaOnsets';
 import { fitMarksToNotes, onsetFeatures } from './noteFit';
 import { refineMarksWithOnsets } from './onsets';
-import { hasPitchedNotes, marksFromOnsets } from './onsetAlign';
+import { ALIGN_VERSION, clampEdgeBars } from './markQuality';
+import { hasPitchedNotes, marksFromOnsets, onsetHitScore } from './onsetAlign';
 import { beatToSec } from './timing';
 import { unrelatedCost, warpScoreToAudio } from './warp';
 import { estimateTuningCents } from './tuning';
@@ -44,6 +45,12 @@ const GAP_MIN_SEC = 1.5;
  * frame left out costs SKIP_SHARE, more than matching it however badly, or the score would
  * rather collapse than be matched.
  */
+/**
+ * The onset path (as for drums-only scores) is tried too when the score has drums; it is taken
+ * when its attacks hit the recording this much better. The chroma path fails where the score
+ * is silent for long (an intro the arrangement leaves empty) and nothing anchors its warp.
+ */
+const ONSET_CANDIDATE_MARGIN = 0.05;
 const GAP_OPEN = 3;
 const GAP_EXTEND_RECORDING = 0.1;
 export type AlignProgress = (
@@ -53,6 +60,8 @@ export type AlignProgress = (
 
 export interface AlignResult {
   marks: BarMark[];
+  /** `ALIGN_VERSION` of the alignment that made the marks. */
+  version: number;
   /** Detuning of the recording from A = 440 Hz (cents) and whole semitones the score was shifted by to match it. */
   tuning: { cents: number; semitones: number };
 }
@@ -166,7 +175,11 @@ export async function alignRecording(
     const coarse = await marksFromOnsets(song, bands, onProgress);
     if (onProgress) await onProgress('refine', 0);
     const marks = await fitMarksToNotes(song, coarse, bands, { onProgress });
-    return { marks, tuning: { cents: Math.round(cents), semitones: 0 } };
+    return {
+      marks: clampEdgeBars(song, marks),
+      version: ALIGN_VERSION,
+      tuning: { cents: Math.round(cents), semitones: 0 },
+    };
   }
   const { chroma, frames } = await audioChroma(samples, onProgress, cents);
   const pitched = chromaOnsets(samples, cents);
@@ -193,8 +206,19 @@ export async function alignRecording(
   const started = refineMarksWithOnsets(coarse.slice(0, 1), envelope).concat(coarse.slice(1));
   // the fit compares score pitch classes with the recording's, so it sees them shifted too
   const shifted = semitones ? rotate(pitched, -semitones) : pitched;
-  const marks = await fitMarksToNotes(song, started, bands, { chroma: shifted, onProgress });
-  return { marks, tuning: { cents: Math.round(cents), semitones } };
+  let marks = await fitMarksToNotes(song, started, bands, { chroma: shifted, onProgress });
+  if (song.parts.some((p) => p.isDrum && p.notes.length > 0)) {
+    const byOnsets = await fitMarksToNotes(song, await marksFromOnsets(song, bands), bands, {
+      chroma: shifted,
+    });
+    const better = onsetHitScore(song, byOnsets, bands);
+    if (better > onsetHitScore(song, marks, bands) * (1 + ONSET_CANDIDATE_MARGIN)) marks = byOnsets;
+  }
+  return {
+    marks: clampEdgeBars(song, marks),
+    version: ALIGN_VERSION,
+    tuning: { cents: Math.round(cents), semitones },
+  };
 }
 
 /** Pitch-class envelopes relabelled so class c holds what was class c - semitones. */
