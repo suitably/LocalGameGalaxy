@@ -61,6 +61,23 @@ export function useSongFilesManager(initial: CompanionSong) {
     return run(() => updateSongMeta(song.id, update.input));
   }, [run, song.id, update]);
 
+  /** Saves the edited names and whatever else waits for "Save" (aligned marks); true when all worked. */
+  const storeAll = useCallback(
+    async (alsoStore: () => Promise<boolean>) => {
+      if (update.kind === 'invalid') return false;
+      const meta = update.kind === 'update' ? await save() : true;
+      if (!meta) return false;
+      try {
+        if (await alsoStore()) setChanged(true);
+        return true;
+      } catch (e) {
+        setError(message(e));
+        return false;
+      }
+    },
+    [update.kind, save],
+  );
+
   const upload = useCallback(
     (files: File[]) =>
       run(async () => {
@@ -104,6 +121,7 @@ export function useSongFilesManager(initial: CompanionSong) {
     setArtist,
     setLabel,
     save,
+    storeAll,
     upload,
     remove,
     adopt,

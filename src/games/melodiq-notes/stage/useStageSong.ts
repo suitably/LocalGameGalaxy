@@ -139,9 +139,11 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
         replaceRecording(rec);
         // straight from the server: nothing to save until something changes
         setSaved(true);
-        // stale marks leave the alignment pending, so it runs again (useAutoAlign)
-        if (stored && applyStored(stored, next.kind === 'karaoke' ? 'karaoke' : 'notes'))
+        // outdated marks play too; the recording panel offers to align them again
+        if (stored) {
+          applyStored(stored, next.kind === 'karaoke' ? 'karaoke' : 'notes');
           setAlign({ kind: 'done' });
+        }
       });
     },
     [run, show, replaceRecording, applyStored],
@@ -267,18 +269,7 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     );
   }, [song, xml, played, offset]);
 
-  useAutoAlign({
-    loading,
-    hasSong: !!song,
-    recording,
-    hasMarks: !!marks,
-    stale: bar.stale,
-    align,
-    origin,
-    saved,
-    alignNow,
-    saveToServer,
-  });
+  useAutoAlign({ loading, hasSong: !!song, recording, hasMarks: !!marks, align, alignNow });
 
   return {
     song,

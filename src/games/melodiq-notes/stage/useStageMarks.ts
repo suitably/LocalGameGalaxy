@@ -49,7 +49,7 @@ export function useStageMarks(engine: StageEngine, song: ScoreSong | null, chang
     [replace],
   );
 
-  /** Marks stored with the score; returns whether they play as they are (else they are aligned again). */
+  /** Marks stored with the score; `stale` when an older alignment made them (the panel says so). */
   const applyStored = useCallback(
     (stored: StoredBarMarks, origin: 'notes' | 'karaoke') => {
       const plan = storedMarksPlan(stored, origin);
@@ -60,7 +60,6 @@ export function useStageMarks(engine: StageEngine, song: ScoreSong | null, chang
       });
       setEdited(!!stored.edited);
       setStale(plan === 'realign');
-      return plan === 'use';
     },
     [replace],
   );

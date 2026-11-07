@@ -6,6 +6,7 @@ import type {
 } from '../../../../lib/companion/songScoresApi';
 import type { YouTubeResult } from '../../../../lib/companion/songDownloadApi';
 import { pickRecording } from '../serverScoreLoad';
+import { freshMarks } from './folderAlignment';
 import { findSongFolder } from './scoreCatalog';
 import {
   aborted,
@@ -67,7 +68,8 @@ async function alignScore(
   const parsed = scoreSong ?? api.readScore(score.file, await api.fetchFile(score.url));
   const marks = await api.align(audio.data.slice(0), parsed);
   if (marks.length < 2) return false;
-  await api.saveMarks(song.id, score.file, { marks, offsetSec: 0, audio: audio.name });
+  // with the current version, so the score counts as aligned wherever it is opened
+  await api.saveMarks(song.id, score.file, freshMarks(parsed, marks, audio.name).stored);
   return true;
 }
 

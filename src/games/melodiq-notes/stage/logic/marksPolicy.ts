@@ -2,9 +2,10 @@ import { ALIGN_VERSION, type MarksMode } from '../../../../modules/music-score';
 import type { StoredBarMarks } from '../../../../lib/companion/songScoresApi';
 
 /**
- * What the stage does with the bar marks a score brings: play them, or align the recording
- * again. Marks from an older alignment are replaced unless someone corrected them by hand;
- * karaoke marks come from the `.txt`, which is timed to the mix, and are always right.
+ * How the bar marks a score brings stand: current, from an older alignment that should be
+ * aligned again (`realign`, offered to the user, never done while the song plays) unless
+ * someone corrected them by hand, or missing (`align`). Karaoke marks come from the `.txt`,
+ * which is timed to the mix, and are always right.
  */
 export function storedMarksPlan(
   stored: Pick<StoredBarMarks, 'aligner' | 'edited' | 'offsetSec'> | null,
