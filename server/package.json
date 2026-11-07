@@ -17,12 +17,12 @@
   "dependencies": {
     "@hono/node-server": "2.1.5",
     "fast-glob": "3.3.3",
-    "hono": "4.13.13",
-    "music-metadata": "12.2.3",
+    "hono": "4.13.14",
+    "music-metadata": "12.3.2",
     "sanitize-filename": "1.6.4"
   },
   "devDependencies": {
-    "@types/node": "26.6.5",
+    "@types/node": "26.6.6",
     "@yao-pkg/pkg": "6.24.0",
     "esbuild": "0.28.2",
     "typescript": "7.0.2"
