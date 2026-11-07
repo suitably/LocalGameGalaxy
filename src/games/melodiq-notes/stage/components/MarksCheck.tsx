@@ -1,7 +1,7 @@
 import { ToggleButton, ToggleButtonGroup, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { MarksMode } from '../../../../modules/music-score';
-import { barRanges } from '../logic/marksPolicy';
+import { markCheckText } from '../logic/markCheckText';
 import type { StageSongState } from '../useStageSong';
 
 const MODES: MarksMode[] = ['steady', 'bars', 'off'];
@@ -14,26 +14,14 @@ export function MarksCheck({ state }: { state: StageSongState }) {
   const { song, quality, mode, stale } = state;
   if (!song || !quality) return null;
 
-  let check: string;
-  let unsure = quality.verdict === 'unsure';
-  if (stale) {
-    check = k('stale_marks');
-    unsure = true;
-  } else if (quality.suspectBars.length) {
-    check = k('quality_unsure', { bars: barRanges(quality.suspectBars, song.measureNumbers) });
-  } else if (unsure) {
-    check = k('quality_tempo', { percent: Math.round(100 / quality.fit.ratio) });
-  } else if (quality.steady) {
-    const bpm = (song.tempoMap[0]?.bpm ?? 120) / quality.fit.ratio;
-    check = k('quality_good_steady', { bpm: bpm.toFixed(1) });
-  } else {
-    check = k('quality_good');
-  }
+  const checked = stale
+    ? { text: k('stale_marks'), unsure: true }
+    : markCheckText(k, song, quality);
 
   return (
     <>
-      <Typography variant="body2" color={unsure ? 'warning.main' : 'text.secondary'}>
-        {check}
+      <Typography variant="body2" color={checked.unsure ? 'warning.main' : 'text.secondary'}>
+        {checked.text}
       </Typography>
       <Typography variant="caption" color="text.secondary">
         {k('marks_mode')}
