@@ -2044,7 +2044,8 @@
     "removePlayer": "Remove from party",
     "removedByHost": "The host removed you from the party.",
     "rejoin": "Join again",
-    "backToHub": "Back to overview"
+    "backToHub": "Back to overview",
+    "invite_players": "Invite players"
   },
   "gartic": {
     "waitingHeader": "Waiting for other players...",

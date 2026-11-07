@@ -4,6 +4,7 @@ import {
   getGameRoute,
   resolveLobbyEntry,
   resolvePendingLaunch,
+  buildInviteRoute,
 } from './partyRoutes';
 
 describe('partyRoutes (#417)', () => {
@@ -95,5 +96,28 @@ describe('resolvePendingLaunch (Spieltisch → party lobby)', () => {
     expect(getGameRoute({ gameType: 'knister', roomId: 'R1', isHost: true, seat: 0 })).toBe(
       '/games/knister?room=R1',
     );
+  });
+});
+
+describe('buildInviteRoute (#647 S2)', () => {
+  it('opens a new lobby with the game preselected', () => {
+    expect(buildInviteRoute('guessart')).toBe('/party?launch=guessart');
+    expect(buildInviteRoute('tabletop', { gameId: 'catan' })).toBe(
+      '/party?launch=tabletop&gameId=catan',
+    );
+  });
+
+  it('re-opens the room this device is in', () => {
+    expect(buildInviteRoute('garticphone', { roomId: 'AB12' })).toBe(
+      '/party?room=AB12&launch=garticphone',
+    );
+  });
+
+  it('round-trips through resolvePendingLaunch', () => {
+    const query = buildInviteRoute('tabletop', { gameId: 'catan', roomId: 'R' }).split('?')[1];
+    expect(resolvePendingLaunch(new URLSearchParams(query))).toEqual({
+      gameType: 'tabletop',
+      gameId: 'catan',
+    });
   });
 });

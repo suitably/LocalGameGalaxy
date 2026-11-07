@@ -43,6 +43,21 @@ export function resolvePendingLaunch(
     : null;
 }
 
+/**
+ * Where a game's "Invite players" button goes: the lobby of the room this device is in, or a
+ * new lobby, with the game preselected (`resolvePendingLaunch`).
+ */
+export function buildInviteRoute(
+  game: PartyGameType,
+  { gameId, roomId }: { gameId?: string | null; roomId?: string | null } = {},
+): string {
+  const params = new URLSearchParams();
+  if (roomId) params.set('room', roomId);
+  params.set('launch', game);
+  if (gameId) params.set('gameId', gameId);
+  return `/party?${params.toString()}`;
+}
+
 /** Route of the active party game; tabletop opens as TV for the host and as a seat for players. */
 export function getGameRoute({
   gameType,
