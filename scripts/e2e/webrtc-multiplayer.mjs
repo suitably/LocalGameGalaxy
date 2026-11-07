@@ -13,6 +13,8 @@
  *      closed phone leaves the host's roster within 16 s, a dropped network reconnects, a late
  *      phone joins.
  *   2. Lobby -> game -> lobby for every party game, with N-1 guests following the host.
+ *   3. Host takeover: the host leaves, a guest takes over within ~20 s, the old host comes back
+ *      and steps down (#467 S2).
  * Lobby scenarios need an MQTT broker (`lgg/party`, `lgg/room`): the public ones, or a local
  * MQTT-over-WebSocket broker given as `MQTT_RELAY=ws://localhost:1884` — the harness then
  * routes the app's broker WebSockets there (useful offline or in a sandbox). The result is
@@ -99,6 +101,7 @@ async function main() {
     else if (trackerUp) await webrtcScenarios(open);
     else record('webrtc scenarios', 'SKIP', 'no tracker');
     for (const game of GAMES) await lobbyScenario(open, game);
+    await hostTakeoverScenario(open);
   } finally {
     await browser.close();
   }
@@ -225,6 +228,59 @@ async function lobbyScenario(open, game) {
   await Promise.all([host, ...guests].map((x) => x.ctx.close()));
 }
 
+/** The host closes its tab: a guest takes over (#467 S2) and can start a game for the rest. */
+async function hostTakeoverScenario(open) {
+  const name = 'lobby: a guest takes over when the host closes its tab';
+  const host = await open();
+  await host.page.goto(`${BASE}/party?launch=knister`);
+  const room = await until(
+    () => host.page.evaluate(() => localStorage.getItem('galaxy_host_room_code')),
+    15000,
+  );
+  const guests = [];
+  for (let i = 1; i < Math.max(N, 3); i++) {
+    const g = await open();
+    await g.page.goto(`${BASE}/party?room=${room}`);
+    guests.push(g);
+  }
+  const hostOf = (x) =>
+    x.page.evaluate((r) => {
+      const state = JSON.parse(localStorage.getItem(`galaxy_party_state_${r}`) || '{}');
+      return { hostId: state.hostId, me: sessionStorage.getItem('party_my_player_id') };
+    }, room);
+  await until(async () => (await hostOf(guests[0])).hostId, 15000);
+  await sleep(4000); // everyone has pinged at least once
+  // Leave the page (like a closed tab) but keep the tab's session, so it can come back.
+  await host.page.goto('about:blank');
+  const t0 = Date.now();
+  const taken = await until(async () => {
+    const views = await Promise.all(guests.map(hostOf));
+    const newHost = views[0].hostId;
+    return (
+      views.every((v) => v.hostId === newHost) && views.some((v) => v.me === newHost) && newHost
+    );
+  }, 45000);
+  const secs = Math.round((Date.now() - t0) / 1000);
+  record(name, taken ? 'PASS' : 'FAIL', taken ? `after ${secs} s` : 'no new host');
+  if (taken) {
+    // The old host comes back to the room: it must accept the new host, not split the room.
+    await host.page.goto(`${BASE}/party?room=${room}`);
+    const settled = await until(async () => {
+      const views = await Promise.all([host, ...guests].map(hostOf));
+      return views.every((v) => v.hostId === taken);
+    }, 20000);
+    await sleep(8000); // a few more pings: the old host must not take the room back
+    const views = await Promise.all([host, ...guests].map(hostOf));
+    const stable = settled && views.every((v) => v.hostId === taken);
+    record(
+      'lobby: the old host comes back and steps down',
+      stable ? 'PASS' : 'FAIL',
+      stable ? '' : JSON.stringify(views),
+    );
+  }
+  await Promise.all([host, ...guests].map((x) => x.ctx.close().catch(() => {})));
+}
+
 /** The host ends the game with its "back to lobby" control; every guest must follow. */
 async function backToLobby(host, guests, game) {
   const name = `${game} -> lobby: guests follow the host back`;
@@ -263,7 +319,11 @@ async function backToLobby(host, guests, game) {
     x.page.evaluate(() =>
       Object.keys(localStorage)
         .filter((k) => k.startsWith('galaxy_party_state_'))
-        .map((k) => JSON.parse(localStorage.getItem(k) || '{}').status)
+        .map((k) => {
+          const st = JSON.parse(localStorage.getItem(k) || '{}');
+          const me = sessionStorage.getItem('party_my_player_id');
+          return `${st.status} host=${st.hostId === me ? 'me' : st.hostId} epoch=${st.hostEpoch ?? 0}`;
+        })
         .join(','),
     );
   const detail = back2

@@ -1,0 +1,1 @@
+- **No more guests stuck in a finished game** (#647): a slow device that opens the game after the host already returned now goes straight to the lobby, and a delayed copy of an older room state can no longer pull a device back into a game (`statusAt` on launch and return).

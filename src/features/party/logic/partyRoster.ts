@@ -12,8 +12,9 @@ export const PLAYER_COLORS: readonly string[] = PIECE_ORDER.map((c) => piecePale
 export const colorForSlot = (index: number): string => PLAYER_COLORS[index % PLAYER_COLORS.length];
 
 /**
- * Who is host: the room creator on this device always is; otherwise the first known hint wins —
- * incoming hostId, our hostId, an incoming player flagged isHost, one of ours flagged isHost.
+ * Who is host: the host of the higher `hostEpoch` (a takeover); otherwise the room creator on
+ * this device; otherwise the first known hint — incoming hostId, our hostId, an incoming player
+ * flagged isHost, one of ours flagged isHost.
  */
 export function resolveHostId({
   isRoomCreator,
@@ -23,9 +24,14 @@ export function resolveHostId({
 }: {
   isRoomCreator: boolean;
   myId: string;
-  incoming: Pick<PartyRoomState, 'hostId' | 'players'>;
-  current?: Pick<PartyRoomState, 'hostId' | 'players'> | null;
+  incoming: Pick<PartyRoomState, 'hostId' | 'players' | 'hostEpoch'>;
+  current?: Pick<PartyRoomState, 'hostId' | 'players' | 'hostEpoch'> | null;
 }): string {
+  // A takeover (higher epoch) beats everything, also this device's own creator claim.
+  const incomingEpoch = incoming.hostEpoch ?? 0;
+  const currentEpoch = current?.hostEpoch ?? 0;
+  if (incoming.hostId && incomingEpoch > currentEpoch) return incoming.hostId;
+  if (current?.hostId && currentEpoch > incomingEpoch) return current.hostId;
   if (isRoomCreator) return myId;
   return (
     incoming.hostId ||
@@ -142,15 +148,29 @@ export function mergeIncomingState(
   { myId, isRoomCreator, now }: { myId: string; isRoomCreator: boolean; now: number },
 ): PartyRoomState {
   const hostId = resolveHostId({ isRoomCreator, myId, incoming, current });
+  const hostEpoch = Math.max(incoming.hostEpoch ?? 0, current?.hostEpoch ?? 0);
 
   if (!current) {
     const players = incoming.players.filter((p) => !hasLeft(p, incoming.left));
-    return { ...incoming, hostId, players: markHost(players, hostId) };
+    return { ...incoming, hostId, hostEpoch, players: markHost(players, hostId) };
   }
   const left = mergeDepartures(current.left, incoming.left);
+  // A late copy of an older state must not undo a newer launch or return to the lobby.
+  const game =
+    (current.statusAt ?? 0) > (incoming.statusAt ?? 0)
+      ? {
+          status: current.status,
+          statusAt: current.statusAt,
+          activeGame: current.activeGame,
+          gameId: current.gameId,
+          tabletopGameId: current.tabletopGameId,
+        }
+      : {};
   return {
     ...incoming,
+    ...game,
     hostId,
+    hostEpoch,
     left,
     players: markHost(mergeRoster(current.players, incoming.players, left), hostId),
     updatedAt: now,
