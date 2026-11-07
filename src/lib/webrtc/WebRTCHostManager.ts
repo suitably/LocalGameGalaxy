@@ -226,7 +226,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
 
             if (parsedData.type === 'client_probe') {
               sendHostHello();
-              return;
+              continue;
             }
 
             if (parsedData.type === 'identify' && parsedData.connectionId) {
@@ -243,7 +243,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
                   parsedData.connectionId,
                 );
               }
-              return;
+              continue;
             }
 
             // Give subclasses a chance to process tracker messages
