@@ -1,3 +1,4 @@
+import { ALIGN_VERSION } from '../../../../../modules/music-score';
 import { describe, expect, it, vi } from 'vitest';
 import type { ScoreSong } from '../../../../../modules/music-score';
 import type { CompanionSong, StoredBarMarks } from '../../../../../lib/companion/songScoresApi';
@@ -11,7 +12,16 @@ import {
 } from '../batchImport';
 import { canReplaceRecording } from '../songFileEdits';
 
-const scoreSong = (title: string, artist = '') => ({ title, artist }) as ScoreSong;
+const scoreSong = (title: string, artist = '') =>
+  ({
+    title,
+    artist,
+    tempoMap: [{ beat: 0, bpm: 120 }],
+    measureStarts: [0],
+    measureNumbers: [1],
+    end: 4,
+    parts: [],
+  }) as unknown as ScoreSong;
 
 const folder = (id: string, audio: string | null, over: Partial<CompanionSong> = {}) =>
   ({
@@ -106,7 +116,14 @@ describe('importScoreFile', () => {
       artist: 'The Beatles',
       aligned: true,
     });
-    expect(saved['jude.gp']).toEqual({ marks, offsetSec: 0, audio: null });
+    expect(saved['jude.gp']).toEqual({
+      marks,
+      offsetSec: 0,
+      audio: null,
+      aligner: ALIGN_VERSION,
+      mode: 'steady',
+      edited: false,
+    });
   });
 
   it('reuses a folder that has a recording without searching', async () => {

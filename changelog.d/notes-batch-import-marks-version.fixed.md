@@ -1,0 +1,1 @@
+- **Melodiq Notes: imported scores no longer jump on first play** — the batch import stores its bar marks with the alignment version and mode, so the stage does not take them for outdated marks and align again while the song plays.

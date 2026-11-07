@@ -1,4 +1,10 @@
-import type { BarMark, ScoreSong } from '../../../../modules/music-score';
+import {
+  ALIGN_VERSION,
+  assessMarks,
+  defaultMode,
+  type BarMark,
+  type ScoreSong,
+} from '../../../../modules/music-score';
 import type {
   CompanionSong,
   SongScore,
@@ -67,7 +73,15 @@ async function alignScore(
   const parsed = scoreSong ?? api.readScore(score.file, await api.fetchFile(score.url));
   const marks = await api.align(audio.data.slice(0), parsed);
   if (marks.length < 2) return false;
-  await api.saveMarks(song.id, score.file, { marks, offsetSec: 0, audio: audio.name });
+  // stored like the stage stores a fresh alignment, so opening the score does not align it again
+  await api.saveMarks(song.id, score.file, {
+    marks,
+    offsetSec: 0,
+    audio: audio.name,
+    aligner: ALIGN_VERSION,
+    mode: defaultMode(assessMarks(parsed, marks)),
+    edited: false,
+  });
   return true;
 }
 
