@@ -1,51 +1,54 @@
 import React from 'react';
+import { parseGameUrlParams } from '../../../modules/sharing';
 import { WebRTCHostProvider, useWebRTCHost, WebRTCHostContext } from '../../../lib/webrtc';
 import { WebRTCMicManager, type MicRemotePeer } from './WebRTCMicManager';
 
 export const useWebRTC = () => {
-    return useWebRTCHost<MicRemotePeer, WebRTCMicManager>();
+  return useWebRTCHost<MicRemotePeer, WebRTCMicManager>();
 };
 
 const createMicManager = (partyId: string, trackerUrls: string[], callbacks: any) => {
-    return new WebRTCMicManager(partyId, trackerUrls, callbacks);
+  return new WebRTCMicManager(partyId, trackerUrls, callbacks);
 };
 
 export const WebRTCProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    return (
-        <WebRTCHostProvider<MicRemotePeer, WebRTCMicManager>
-            gameId="melodiq"
-            createManager={createMicManager}
-        >
-            {children}
-        </WebRTCHostProvider>
-    );
+  return (
+    <WebRTCHostProvider<MicRemotePeer, WebRTCMicManager>
+      gameId="melodiq"
+      createManager={createMicManager}
+      fixedPartyId={parseGameUrlParams().get('room')?.toUpperCase().trim() || null}
+    >
+      {children}
+    </WebRTCHostProvider>
+  );
 };
 
-
 export const WebRTCMockProvider: React.FC<{
-    children: React.ReactNode;
-    partyId?: string;
-    activeTrackerUrls?: string[];
+  children: React.ReactNode;
+  partyId?: string;
+  activeTrackerUrls?: string[];
 }> = ({ children, partyId = '', activeTrackerUrls = [] }) => {
-    return (
-        <WebRTCHostContext.Provider value={{
-            manager: null,
-            peers: [],
-            activePeers: [],
-            inactivePeers: [],
-            togglePeerActive: () => {},
-            partyId,
-            regeneratePartyId: () => {},
-            trackerUrls: activeTrackerUrls,
-            activeTrackerUrls,
-            disabledTrackerUrls: [],
-            allTrackers: [],
-            toggleTrackerActive: () => {},
-            addTrackerUrl: () => {},
-            removeTrackerUrl: () => {},
-            restoreDefaultTrackers: () => {}
-        }}>
-            {children}
-        </WebRTCHostContext.Provider>
-    );
+  return (
+    <WebRTCHostContext.Provider
+      value={{
+        manager: null,
+        peers: [],
+        activePeers: [],
+        inactivePeers: [],
+        togglePeerActive: () => {},
+        partyId,
+        regeneratePartyId: () => {},
+        trackerUrls: activeTrackerUrls,
+        activeTrackerUrls,
+        disabledTrackerUrls: [],
+        allTrackers: [],
+        toggleTrackerActive: () => {},
+        addTrackerUrl: () => {},
+        removeTrackerUrl: () => {},
+        restoreDefaultTrackers: () => {},
+      }}
+    >
+      {children}
+    </WebRTCHostContext.Provider>
+  );
 };

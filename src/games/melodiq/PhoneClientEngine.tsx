@@ -8,6 +8,10 @@ import type { HostSettings } from './types';
 import { useFeedbackRelay } from './hooks/useFeedbackRelay';
 import { usePhoneMicStreaming } from './hooks/usePhoneMicStreaming';
 import { loadClientProfile, resolveTrackerUrls, type ClientProfile } from './logic/clientProfile';
+import { parseGameUrlParams } from '../../modules/sharing';
+import { isPartyRoomCode } from '../../features/party/logic/partyRoom';
+import { universalPartyManager } from '../../features/party/logic/universalPartyManager';
+import { getOrCreatePlayerName } from '../../features/party/logic/playerName';
 
 export type { ClientProfile } from './logic/clientProfile';
 
@@ -72,9 +76,16 @@ const ConnectionOverlay: React.FC<{ message: string }> = ({ message }) => (
 );
 
 export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const partyId = new URLSearchParams(window.location.search).get('party');
+  const partyId = parseGameUrlParams().get('party');
   const [trackerUrls] = useState<string[]>(() => resolveTrackerUrls(window.location.search));
-  const [clientProfile, setClientProfile] = useState<ClientProfile>(loadClientProfile);
+  const [clientProfile, setClientProfile] = useState<ClientProfile>(() =>
+    // joined through the lobby: the party's name and device id, no separate profile
+    loadClientProfile(
+      isPartyRoomCode(partyId)
+        ? { id: universalPartyManager.getMyPlayerId(), name: getOrCreatePlayerName() }
+        : null,
+    ),
+  );
   const [clientRole, setClientRole] = useState<string>('spectator');
   const [promptedSongId, setPromptedSongId] = useState<string | null>(null);
   const [isHostSettingsOpen, setHostSettingsOpen] = useState(false);

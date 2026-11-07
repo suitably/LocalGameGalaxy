@@ -59,6 +59,21 @@ describe('partyRoutes (#417)', () => {
     expect(getGameRoute({ gameType: 'melodiq-notes', roomId: 'R1', isHost: false, seat: 1 })).toBe(
       '/games/melodiq-notes?pult=R1',
     );
+    expect(getGameRoute({ gameType: 'melodiq', roomId: 'R1', isHost: true, seat: 0 })).toBe(
+      '/games/melodiq?room=R1',
+    );
+    expect(
+      getGameRoute({ gameType: 'melodiq', roomId: 'R1', isHost: false, seat: 1, trackers: [] }),
+    ).toBe('/games/melodiq?role=client&party=R1');
+    expect(
+      getGameRoute({
+        gameType: 'melodiq',
+        roomId: 'R1',
+        isHost: false,
+        seat: 1,
+        trackers: ['wss://t.example'],
+      }),
+    ).toBe('/games/melodiq?role=client&party=R1&tracker=wss%3A%2F%2Ft.example');
     expect(getGameRoute({ gameType: null, roomId: 'R1', isHost: true, seat: 0 })).toBe(
       '/games/guessart',
     );

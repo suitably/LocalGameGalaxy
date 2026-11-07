@@ -28,6 +28,7 @@ const LAUNCHABLE_GAMES: readonly PartyGameType[] = [
   'garticphone',
   'storyteller',
   'melodiq-notes',
+  'melodiq',
   ...ROOM_DICE_GAMES,
 ];
 
@@ -72,6 +73,7 @@ export function getGameRoute({
   isHost,
   seat,
   spectator = false,
+  trackers = parseGameUrlParams().getAll('tracker'),
 }: {
   gameType: PartyGameType | null;
   tabletopGameId?: string | null;
@@ -80,6 +82,8 @@ export function getGameRoute({
   seat: number;
   /** Opens tabletop as `role=spectator` (no seat, read-only). */
   spectator?: boolean;
+  /** Melodiq phones: custom tracker URLs from the lobby link, passed on to the phone route. */
+  trackers?: string[];
 }): string {
   if (gameType === 'tabletop') {
     const targetGame = tabletopGameId || 'standard-cards';
@@ -94,6 +98,11 @@ export function getGameRoute({
   if (gameType === 'guessart') return `/games/guessart?room=${roomId}`;
   if (gameType === 'melodiq-notes') {
     return isHost ? `/games/melodiq-notes?room=${roomId}` : `/games/melodiq-notes?pult=${roomId}`;
+  }
+  if (gameType === 'melodiq') {
+    if (isHost) return `/games/melodiq?room=${roomId}`;
+    const extra = trackers.map((t) => `&tracker=${encodeURIComponent(t)}`).join('');
+    return `/games/melodiq?role=client&party=${roomId}${extra}`;
   }
   if (gameType === 'storyteller') return `/games/storyteller?room=${roomId}`;
   if (isRoomDiceGame(gameType)) return `/games/${gameType}?room=${roomId}`;

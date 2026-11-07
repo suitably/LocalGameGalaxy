@@ -115,6 +115,6 @@ Claude-Session: https://claude.ai/code/session_01L6uonSrNoWaJiNvg1NtKuH
 - [x] S5 GuessArt — live mode has fixed catalogue word choice (no manual-word toggle) and no mid-game joins; setup text labels the links flow "Über Tage spielen"
 - [x] S7 Storyteller — live story is in memory, default modifiers only; seat model + invited/joined status for "Play over days" (#467 slice 8) left open
 - [x] S8 Melodiq Notes — pult guests have no back-to-lobby button; part pre-selection by the stage (`part=` link) is gone with the per-part links (`pultJoinUrl` kept, unused)
-- [ ] S9 Melodiq phones
+- [x] S9 Melodiq phones — standalone (hub) Melodiq keeps its stored party id and direct QR link as the legacy path; tracker params are forwarded from the lobby URL only while it still carries them; not verified with real phones (S12 harness)
 - [ ] S12 docs + harness
 - S11 out of scope → follow-up issue

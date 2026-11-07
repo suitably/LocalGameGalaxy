@@ -24,8 +24,19 @@ export const resolveTrackerUrls = (search: string): string[] => {
   return DEFAULT_TRACKER_URLS;
 };
 
+/** Name and device of this browser in the party lobby; a phone joined through the lobby plays as them. */
+export interface PartyIdentity {
+  id: string;
+  name: string;
+}
+
 /** Stored phone profile (completed with defaults) or a fresh random one, persisted on creation. */
-export const loadClientProfile = (): ClientProfile => {
+export const loadClientProfile = (party?: PartyIdentity | null): ClientProfile => {
+  const profile = loadStoredProfile();
+  return party ? { ...profile, name: party.name, deviceId: party.id } : profile;
+};
+
+const loadStoredProfile = (): ClientProfile => {
   const parsed = storage.getJson<ClientProfile | null>(STORAGE_KEYS.CLIENT_PROFILE, null);
   if (parsed) {
     if (!parsed.displayMode) parsed.displayMode = 'lyrics';

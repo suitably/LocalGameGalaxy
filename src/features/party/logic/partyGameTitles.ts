@@ -6,6 +6,7 @@ export const PARTY_GAME_TITLES: Record<PartyGameType, string> = {
   garticphone: 'Gartic Phone',
   storyteller: 'Storyteller',
   'melodiq-notes': 'Melodiq Notes',
+  melodiq: 'Melodiq',
   tabletop: 'Tabletop Spiel',
   knister: 'Knister',
 };

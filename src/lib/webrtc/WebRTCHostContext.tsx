@@ -14,6 +14,7 @@ import { useRosterBroadcast } from './useRosterBroadcast';
 import { useTrackerConfig } from './useTrackerConfig';
 import { applyPeerConnected, applyPeerCreated, applyPeerUpdated } from './peerListUpdates';
 import { storage, STORAGE_PREFIXES } from '../storage';
+import { initialPartyId, randomPartyId } from './initialPartyId';
 
 export { DEFAULT_PUBLIC_TRACKERS, type TrackerItem };
 
@@ -57,12 +58,15 @@ export interface WebRTCHostProviderProps<T extends RemotePeerBase, M extends Web
   children: React.ReactNode;
   gameId?: string; // Used for storage key isolation (e.g. 'melodiq')
   createManager: (partyId: string, trackerUrls: string[], callbacks: any) => M;
+  /** Use this party code (the lobby's room) instead of the stored one; it is not stored. */
+  fixedPartyId?: string | null;
 }
 
 export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHostManager<T>>({
   children,
   gameId = 'generic',
   createManager,
+  fixedPartyId = null,
 }: WebRTCHostProviderProps<T, M>) {
   const createManagerRef = useRef(createManager);
   useEffect(() => {
@@ -70,10 +74,9 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
   }, [createManager]);
 
   // 1. Configuration State (Persisted)
-  const [partyId, setPartyId] = useState(() => {
-    const stored = storage.get(`${gameId}${STORAGE_PREFIXES.WEBRTC_PARTY_ID}`);
-    return stored || Math.random().toString(36).substring(2, 8).toUpperCase();
-  });
+  const [partyId, setPartyId] = useState(() =>
+    initialPartyId(fixedPartyId, storage.get(`${gameId}${STORAGE_PREFIXES.WEBRTC_PARTY_ID}`)),
+  );
 
   const {
     trackerUrls,
@@ -97,8 +100,8 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
 
   // Persist Config Changes
   useEffect(() => {
-    storage.set(`${gameId}${STORAGE_PREFIXES.WEBRTC_PARTY_ID}`, partyId);
-  }, [partyId, gameId]);
+    if (!fixedPartyId) storage.set(`${gameId}${STORAGE_PREFIXES.WEBRTC_PARTY_ID}`, partyId);
+  }, [partyId, gameId, fixedPartyId]);
 
   // Persist active peer IDs
   useEffect(() => {
@@ -184,8 +187,8 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
 
   // 4. Actions
   const regeneratePartyId = useCallback(() => {
-    setPartyId(Math.random().toString(36).substring(2, 8).toUpperCase());
-  }, []);
+    if (!fixedPartyId) setPartyId(randomPartyId());
+  }, [fixedPartyId]);
 
   const togglePeerActive = useCallback((peerId: string) => {
     setActivePeerIds((prev) =>
