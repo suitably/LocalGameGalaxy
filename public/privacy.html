@@ -87,8 +87,8 @@
       <p>
         GuessArt, Storyteller, Tabletop, the party games and room games exchange the game state
         through public MQTT servers: first <code>broker.hivemq.com</code> (HiveMQ GmbH, Germany),
-        and if it is down <code>broker.emqx.io</code> (EMQ Technologies Co., Ltd.; servers may be
-        outside the EU).
+        and if it is down <code>test.mosquitto.org</code> (test server of the Eclipse Mosquitto
+        project, hosted in France as far as we know).
       </p>
       <ul>
         <li>
@@ -99,11 +99,6 @@
           <strong>Important:</strong> these servers are public. Anyone who knows the room code can
           read the game state. The latest state stays on the server until it is overwritten. Do not
           enter real names or confidential content.
-        </li>
-        <li>
-          Using <code>broker.emqx.io</code> may transfer data to a country without an adequacy
-          decision, where protection equal to the EU's is not guaranteed. This happens only when
-          HiveMQ cannot be reached.
         </li>
       </ul>
 
@@ -157,7 +152,10 @@
           </thead>
           <tbody>
             <tr>
-              <td>Melodiq, when a song has a YouTube video as background</td>
+              <td>
+                Melodiq, when a song has a YouTube video as background and you chose "Load YouTube
+                video" (the choice is stored on your device)
+              </td>
               <td>Google Ireland Ltd. / Google LLC (YouTube)</td>
               <td>
                 Loads the YouTube player from <code>youtube.com</code> and the video from
@@ -169,14 +167,9 @@
               <td>Melodiq Notes, instrument sounds</td>
               <td>GitHub, Inc. (GitHub Pages, <code>gleitz.github.io</code>), USA</td>
               <td>
-                Loads sound files. Choose the built-in synthesizer in the sound settings to avoid
-                this.
+                Only if you pick a soundfont source instead of the built-in synthesizer (the
+                default) in the sound settings: loads sound files.
               </td>
-            </tr>
-            <tr>
-              <td>GuessArt and Gartic Phone, drawing canvas</td>
-              <td>esm.sh (CDN for JavaScript packages)</td>
-              <td>Loads the fonts of the drawing canvas (Excalidraw).</td>
             </tr>
             <tr>
               <td>Tabletop, when you import a game from the Steam Workshop</td>

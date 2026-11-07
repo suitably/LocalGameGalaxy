@@ -2,7 +2,15 @@ import React, { useCallback, useRef, useState } from 'react';
 import { ensureStyles } from './excalidrawLazyStyles';
 import { storage, STORAGE_KEYS } from '../../lib/storage';
 
+declare global {
+  interface Window {
+    EXCALIDRAW_ASSET_PATH?: string;
+  }
+}
+
 export const ExcalidrawLazy = React.lazy(async () => {
+  // fonts come from our own host (copied by vite.config.ts), not from esm.sh (#645)
+  window.EXCALIDRAW_ASSET_PATH = `${import.meta.env.BASE_URL}excalidraw/`;
   await ensureStyles();
   const module = await import('@excalidraw/excalidraw');
   if (!module?.Excalidraw) {
@@ -18,10 +26,10 @@ export const ExcalidrawLazy = React.lazy(async () => {
         const stored = storage.getJson<any>(STORAGE_KEYS.EXCALIDRAW_LIBRARY, null);
         if (stored) {
           if (Array.isArray(stored)) {
-             return { libraryItems: stored };
+            return { libraryItems: stored };
           }
           if (stored.libraryItems) {
-             return { libraryItems: stored.libraryItems };
+            return { libraryItems: stored.libraryItems };
           }
         }
         return null;
@@ -39,8 +47,6 @@ export const ExcalidrawLazy = React.lazy(async () => {
     },
   };
 
-
-
   const ExcalidrawWithLibrary: React.FC<Record<string, unknown>> = (props) => {
     const [api, setApi] = useState<unknown>(null);
     const excalidrawAPIRef = useRef(props.excalidrawAPI);
@@ -54,14 +60,19 @@ export const ExcalidrawLazy = React.lazy(async () => {
     }, []);
 
     if (useHandleLibrary) {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
       (useHandleLibrary as any)({
         excalidrawAPI: api as never,
         adapter: adapter as never,
       });
     }
 
-    return <ExcalidrawComponent {...props} excalidrawAPI={handleApi} libraryReturnUrl={typeof window !== 'undefined' ? window.location.href : undefined} />;
+    return (
+      <ExcalidrawComponent
+        {...props}
+        excalidrawAPI={handleApi}
+        libraryReturnUrl={typeof window !== 'undefined' ? window.location.href : undefined}
+      />
+    );
   };
 
   return { default: ExcalidrawWithLibrary };

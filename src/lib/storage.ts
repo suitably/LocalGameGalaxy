@@ -74,6 +74,8 @@ export const STORAGE_KEYS = {
   MELODIQ_AUTOPLAY_NO_PLAYERS: 'melodiq_autoplay_no_players',
   MELODIQ_AUTOPLAY_WITH_PLAYERS: 'melodiq_autoplay_with_players',
   MELODIQ_HIDE_BACKGROUND_VIDEO: 'melodiq_hide_background_video',
+  /** '1' once the player allowed YouTube background videos on this device (#645). */
+  MELODIQ_YOUTUBE_CONSENT: 'melodiq_youtube_consent',
   MELODIQ_FALLBACK_BACKGROUND_URL: 'melodiq_fallback_background_url',
   MELODIQ_LYRICS_SCALE: 'melodiq_lyrics_scale',
   MELODIQ_ENABLE_LYRICS_ZOOM: 'melodiq_enable_lyrics_zoom',

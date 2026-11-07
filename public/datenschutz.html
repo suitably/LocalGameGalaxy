@@ -88,8 +88,8 @@
       <p>
         Bei GuessArt, Storyteller, Tabletop, Party-Spielen und Raum-Spielen werden Spielstände über
         öffentliche MQTT-Server ausgetauscht: zuerst <code>broker.hivemq.com</code> (HiveMQ GmbH,
-        Deutschland), bei Ausfall <code>broker.emqx.io</code> (EMQ Technologies Co., Ltd.; Server
-        können außerhalb der EU liegen).
+        Deutschland), bei Ausfall <code>test.mosquitto.org</code> (Testserver des Eclipse-Mosquitto-Projekts,
+        nach unseren Informationen in Frankreich gehostet).
       </p>
       <ul>
         <li>
@@ -100,11 +100,6 @@
           <strong>Wichtig:</strong> Die Server sind öffentlich. Wer den Raumcode kennt, kann den
           Spielstand lesen. Der jeweils letzte Stand bleibt auf dem Server gespeichert, bis er
           überschrieben wird. Gib daher keine echten Namen oder vertraulichen Inhalte ein.
-        </li>
-        <li>
-          Für <code>broker.emqx.io</code> kann es zu einer Übermittlung in ein Drittland ohne
-          Angemessenheitsbeschluss kommen; garantiert ist dort kein der EU gleichwertiges
-          Schutzniveau. Sie erfolgt nur, wenn HiveMQ nicht erreichbar ist.
         </li>
       </ul>
 
@@ -162,7 +157,10 @@
           </thead>
           <tbody>
             <tr>
-              <td>Melodiq, wenn ein Lied ein YouTube-Video als Hintergrund hat</td>
+              <td>
+                Melodiq, wenn ein Lied ein YouTube-Video als Hintergrund hat und du
+                „YouTube-Video laden“ gewählt hast (die Wahl wird auf deinem Gerät gespeichert)
+              </td>
               <td>Google Ireland Ltd. / Google LLC (YouTube)</td>
               <td>
                 Lädt den YouTube-Player von <code>youtube.com</code> und das Video von
@@ -175,14 +173,9 @@
               <td>Melodiq Notes, Instrumentenklänge</td>
               <td>GitHub, Inc. (GitHub Pages, <code>gleitz.github.io</code>), USA</td>
               <td>
-                Lädt Klangdateien. In den Klang-Einstellungen kannst du den eingebauten Synthesizer
-                wählen; dann entfällt der Abruf.
+                Nur wenn du in den Klang-Einstellungen eine Soundfont-Quelle statt des eingebauten
+                Synthesizers (Standard) wählst: lädt Klangdateien.
               </td>
-            </tr>
-            <tr>
-              <td>GuessArt und Gartic Phone, Zeichenfläche</td>
-              <td>esm.sh (CDN für JavaScript-Pakete)</td>
-              <td>Lädt Schriftarten der Zeichenfläche (Excalidraw).</td>
             </tr>
             <tr>
               <td>Tabletop, wenn du ein Spiel aus dem Steam Workshop importierst</td>

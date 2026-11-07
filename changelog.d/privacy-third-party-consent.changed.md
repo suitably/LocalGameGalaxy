@@ -1,0 +1,5 @@
+- **Third-party content only after consent or from our own host** (#645):
+  - Melodiq loads a YouTube background video only after "Load YouTube video"; the choice is remembered on the device. Until then the fallback background shows.
+  - GuessArt and Gartic Phone serve the drawing fonts from the app itself instead of esm.sh; they are cached on first use, not precached.
+  - Melodiq Notes uses the built-in synthesizer by default; the soundfont sources stay selectable.
+  - The MQTT fallback broker is `test.mosquitto.org` instead of `broker.emqx.io`.

@@ -38,7 +38,7 @@ Which game uses which channel: [game-catalog §3](game-catalog.md#3-sync-and-mul
 
 ### Brokers and connection
 
-- `DEFAULT_BROKER_URLS`: `wss://broker.hivemq.com:8884/mqtt`, then `wss://broker.emqx.io:8084/mqtt`. Override per instance via `brokerUrls`.
+- `DEFAULT_BROKER_URLS`: `wss://broker.hivemq.com:8884/mqtt`, then `wss://test.mosquitto.org:8081` (EU fallback since #645, replaced `broker.emqx.io`). Override per instance via `brokerUrls`.
 - One lazily created client per service instance; client id `<clientPrefix|lgg_sync>_<random>_<timestamp>`.
 - `reconnectPeriod` 5 s (fixed, no exponential backoff), `keepalive` 60 s, `connectTimeout` 10 s. On `error` the service rotates to the next broker URL.
 - On (re)connect it re-subscribes every channel in `subscribedChannels`.

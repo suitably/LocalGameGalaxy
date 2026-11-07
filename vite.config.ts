@@ -2,6 +2,21 @@ import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { VitePWA } from 'vite-plugin-pwa';
+import { cpSync, existsSync } from 'node:fs';
+
+/**
+ * Serves Excalidraw's fonts from our own host instead of esm.sh (#645): copies them into
+ * `public/excalidraw/fonts` (gitignored) when the config loads, before Vite lists `public/`; `ExcalidrawLazy` points
+ * `window.EXCALIDRAW_ASSET_PATH` there.
+ */
+const excalidrawFonts = () => ({
+  name: 'excalidraw-fonts',
+  config() {
+    const from = 'node_modules/@excalidraw/excalidraw/dist/prod/fonts';
+    const to = 'public/excalidraw/fonts';
+    if (existsSync(from) && !existsSync(to)) cpSync(from, to, { recursive: true });
+  },
+});
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -15,6 +30,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    excalidrawFonts(),
     react(),
     nodePolyfills({
       // Enable polyfills for specific globals and modules
@@ -70,6 +86,18 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff,woff2}'],
+        // Excalidraw's fonts (13 MB, mostly CJK) are cached on first use, not precached
+        globIgnores: ['**/excalidraw/fonts/**'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.includes('/excalidraw/fonts/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'excalidraw-fonts',
+              expiration: { maxEntries: 300 },
+            },
+          },
+        ],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//],
         importScripts: ['/sw-push.js'],
