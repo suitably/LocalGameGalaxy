@@ -17,7 +17,7 @@ export function useFollowPartyLobby(roomId: string | null | undefined, enabled =
     universalPartyManager.subscribeToParty(roomId);
     return universalPartyManager.onPartyUpdate((state) => {
       if (state.roomId !== roomId) return;
-      if (shouldFollowToLobby(last, state.status)) navigate(`/party?room=${roomId}`);
+      if (shouldFollowToLobby(last, state)) navigate(`/party?room=${roomId}`);
       last = state.status;
     });
   }, [roomId, enabled, navigate]);

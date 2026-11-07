@@ -1,15 +1,8 @@
 import { partyMailbox } from './partyMailbox';
 import { storage, sessionStorageSafe, STORAGE_KEYS, STORAGE_PREFIXES } from '../../../lib/storage';
 import { MultiChannelSyncCoordinator } from '../../../modules/sync';
-import {
-  addPresencePlayer,
-  assignSlots,
-  mergeIncomingState,
-  removePlayer,
-  resolveHostId,
-  upsertHost,
-  upsertJoiningPlayer,
-} from './partyRoster';
+import { addPresencePlayer, assignSlots, mergeIncomingState, removePlayer } from './partyRoster';
+import { createdState, joinedState, shouldTakeOverHost, takeOverHost } from './partySession';
 
 export interface PartyPlayer {
   id: string;
@@ -41,7 +34,11 @@ export interface PartyRoomState {
   type?: undefined;
   roomId: string;
   hostId: string;
+  /** Raised by each host takeover (`partySession.ts`); the higher epoch's host wins a merge. */
+  hostEpoch?: number;
   status: 'lobby' | 'in_game';
+  /** When the host last changed `status`/`activeGame`; the newer one wins a merge. */
+  statusAt?: number;
   activeGame: PartyGameType | null;
   gameId?: string | null;
   tabletopGameId?: string | null;
@@ -68,6 +65,9 @@ class UniversalPartyManager {
   /** BroadcastChannel (other tabs) + MQTT (other devices) for the current room. */
   private sync: MultiChannelSyncCoordinator<PartySyncEnvelope> | null = null;
   private syncChannelId: string | null = null;
+  /** Last presence ping per player, and since when this device listens (host takeover). */
+  private lastSeen = new Map<string, number>();
+  private listeningSince = 0;
 
   public getRoomId(): string | null {
     return this.currentRoomState?.roomId || this.currentRoomId;
@@ -128,33 +128,17 @@ class UniversalPartyManager {
 
     sessionStorageSafe.set(`${STORAGE_PREFIXES.PARTY_HOST_ID}${roomId}`, hostId);
 
-    let existingPlayers: PartyPlayer[] = [];
-    if (this.currentRoomState && this.currentRoomState.roomId === roomId) {
-      existingPlayers = this.currentRoomState.players;
-    } else {
-      const parsed = storage.getJson<PartyRoomState | null>(
-        `${STORAGE_PREFIXES.PARTY_STATE}${roomId}`,
-        null,
-      );
-      if (parsed && Array.isArray(parsed.players)) {
-        existingPlayers = parsed.players;
-      }
-    }
-
-    const { players: newPlayers, host: hostPlayer } = upsertHost(existingPlayers, {
-      hostId,
-      name: hostName,
-      now: Date.now(),
-    });
-
-    const state: PartyRoomState = {
+    const previous =
+      this.currentRoomState?.roomId === roomId
+        ? this.currentRoomState
+        : storage.getJson<PartyRoomState | null>(`${STORAGE_PREFIXES.PARTY_STATE}${roomId}`, null);
+    const { state, host: hostPlayer } = createdState(
       roomId,
       hostId,
-      status: this.currentRoomState?.status || 'lobby',
-      activeGame: this.currentRoomState?.activeGame || null,
-      players: newPlayers,
-      updatedAt: Date.now(),
-    };
+      hostName,
+      previous && Array.isArray(previous.players) ? previous : null,
+      Date.now(),
+    );
 
     this.currentRoomId = roomId;
     this.currentRoomState = state;
@@ -172,48 +156,19 @@ class UniversalPartyManager {
       sessionStorageSafe.get(`${STORAGE_PREFIXES.PARTY_HOST_ID}${normalizedRoomId}`),
     );
 
-    let state = this.currentRoomState;
-    if (!state || state.roomId !== normalizedRoomId) {
-      const saved = storage.getJson<PartyRoomState | null>(
-        `${STORAGE_PREFIXES.PARTY_STATE}${normalizedRoomId}`,
-        null,
-      );
-      if (saved) {
-        state = saved;
-      }
-    }
-
-    const knownHostId = state
-      ? resolveHostId({ isRoomCreator, myId: pId, incoming: state })
-      : isRoomCreator
-        ? pId
-        : '';
-
-    if (!state || state.roomId !== normalizedRoomId) {
-      state = {
-        roomId: normalizedRoomId,
-        hostId: knownHostId,
-        status: 'lobby',
-        activeGame: null,
-        players: [],
-        updatedAt: Date.now(),
-      };
-    }
-
-    const { players: newPlayers, player: playerEntry } = upsertJoiningPlayer(state.players, {
-      playerId: pId,
-      name: playerName,
-      isHost: isRoomCreator || knownHostId === pId,
-      spectator,
-      now: Date.now(),
-    });
-
-    const updatedState: PartyRoomState = {
-      ...state,
-      players: newPlayers,
-      hostId: knownHostId,
-      updatedAt: Date.now(),
-    };
+    const known =
+      this.currentRoomState?.roomId === normalizedRoomId
+        ? this.currentRoomState
+        : storage.getJson<PartyRoomState | null>(
+            `${STORAGE_PREFIXES.PARTY_STATE}${normalizedRoomId}`,
+            null,
+          );
+    const { state: updatedState, player: playerEntry } = joinedState(
+      normalizedRoomId,
+      { myId: pId, name: playerName, spectator, isRoomCreator },
+      known,
+      Date.now(),
+    );
 
     this.currentRoomId = normalizedRoomId;
     this.currentRoomState = updatedState;
@@ -247,6 +202,7 @@ class UniversalPartyManager {
     const updatedState: PartyRoomState = {
       ...this.currentRoomState,
       status: 'in_game',
+      statusAt: Date.now(),
       activeGame: gameType,
       gameId: gameId || null,
       tabletopGameId: gameType === 'tabletop' ? gameId || null : null,
@@ -266,6 +222,7 @@ class UniversalPartyManager {
     const updatedState: PartyRoomState = {
       ...this.currentRoomState,
       status: 'lobby',
+      statusAt: Date.now(),
       activeGame: null,
       gameId: null,
       updatedAt: Date.now(),
@@ -286,6 +243,8 @@ class UniversalPartyManager {
     if (this.sync && this.syncChannelId === channelId) return;
     this.sync?.stop();
     this.syncChannelId = channelId;
+    this.lastSeen.clear();
+    this.listeningSince = Date.now();
     this.sync = new MultiChannelSyncCoordinator<PartySyncEnvelope>({
       channelId,
       broadcastPrefix: 'galaxy',
@@ -301,6 +260,7 @@ class UniversalPartyManager {
     if (incoming.type === 'PARTY_PRESENCE') {
       // Own pings come back over BroadcastChannel; only other players' pings matter.
       if (!incoming.player || incoming.player.id === this.getMyPlayerId()) return;
+      this.lastSeen.set(incoming.player.id, Date.now());
       if (this.currentRoomState && this.currentRoomState.roomId === roomId) {
         const updated = addPresencePlayer(this.currentRoomState, incoming.player, Date.now());
         if (updated) {
@@ -332,8 +292,23 @@ class UniversalPartyManager {
       now: Date.now(),
     });
 
+    // Another device took over as host (higher epoch): this one no longer is.
+    if (isRoomCreator && this.currentRoomState.hostId !== myId) {
+      sessionStorageSafe.remove(`${STORAGE_PREFIXES.PARTY_HOST_ID}${roomId}`);
+    }
     storage.setJson(`${STORAGE_PREFIXES.PARTY_STATE}${roomId}`, this.currentRoomState);
     this.notifyListeners();
+  }
+
+  /** Takes over as host when the host is gone and this device is next in seat order. */
+  private checkHostTakeover(roomId: string): void {
+    const state = this.currentRoomState;
+    if (!state || state.roomId !== roomId) return;
+    const myId = this.getMyPlayerId();
+    const seenAt = (id: string) => this.lastSeen.get(id) ?? this.listeningSince;
+    if (!shouldTakeOverHost(state, myId, seenAt, Date.now())) return;
+    sessionStorageSafe.set(`${STORAGE_PREFIXES.PARTY_HOST_ID}${roomId}`, myId);
+    this.publishPartyState(takeOverHost(state, myId, Date.now()));
   }
 
   public publishPartyState(state: PartyRoomState): void {
@@ -356,6 +331,7 @@ class UniversalPartyManager {
     const sendPing = () => {
       this.subscribeToParty(roomId);
       this.sync?.publish({ type: 'PARTY_PRESENCE', roomId, player });
+      this.checkHostTakeover(roomId);
     };
 
     // Send immediately and recurring every 3 seconds for snappy updates
