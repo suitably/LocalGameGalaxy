@@ -23,7 +23,12 @@ export function resolveLobbyEntry(
 }
 
 /** Party games the lobby can preselect via `launch=` (tabletop additionally needs `gameId`). */
-const LAUNCHABLE_GAMES: readonly PartyGameType[] = ['guessart', 'garticphone', ...ROOM_DICE_GAMES];
+const LAUNCHABLE_GAMES: readonly PartyGameType[] = [
+  'guessart',
+  'garticphone',
+  'storyteller',
+  ...ROOM_DICE_GAMES,
+];
 
 export type PendingLaunch = { gameType: PartyGameType; gameId?: string };
 
@@ -86,6 +91,7 @@ export function getGameRoute({
   }
   if (gameType === 'garticphone') return `/games/garticphone?room=${roomId}`;
   if (gameType === 'guessart') return `/games/guessart?room=${roomId}`;
+  if (gameType === 'storyteller') return `/games/storyteller?room=${roomId}`;
   if (isRoomDiceGame(gameType)) return `/games/${gameType}?room=${roomId}`;
   return '/games/guessart';
 }

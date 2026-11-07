@@ -50,6 +50,9 @@ describe('partyRoutes (#417)', () => {
     expect(getGameRoute({ gameType: 'guessart', roomId: 'R1', isHost: true, seat: 0 })).toBe(
       '/games/guessart?room=R1',
     );
+    expect(getGameRoute({ gameType: 'storyteller', roomId: 'R1', isHost: false, seat: 1 })).toBe(
+      '/games/storyteller?room=R1',
+    );
     expect(getGameRoute({ gameType: null, roomId: 'R1', isHost: true, seat: 0 })).toBe(
       '/games/guessart',
     );
@@ -66,7 +69,7 @@ describe('partyRoutes (#417)', () => {
 
 describe('resolvePendingLaunch (Spieltisch → party lobby)', () => {
   it('accepts every party game type (#647 S1)', () => {
-    for (const gameType of ['guessart', 'garticphone', 'knister'] as const) {
+    for (const gameType of ['guessart', 'garticphone', 'storyteller', 'knister'] as const) {
       expect(resolvePendingLaunch(new URLSearchParams(`launch=${gameType}`))).toEqual({ gameType });
     }
   });

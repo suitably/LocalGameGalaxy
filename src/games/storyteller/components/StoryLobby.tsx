@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { StoryPlayModeCard } from './StoryPlayModeCard';
 import { Box, Button, Stack, TextField, Typography } from '@mui/material';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import { useTranslation } from 'react-i18next';
@@ -67,6 +68,8 @@ export const StoryLobby: React.FC<StoryLobbyProps> = ({
           'Schreibt gemeinsam eine Geschichte – Zug um Zug mit modularen Spielregeln!',
         )}
       </Typography>
+
+      <StoryPlayModeCard />
 
       {/* Players Setup */}
       <PlayerManagerCard

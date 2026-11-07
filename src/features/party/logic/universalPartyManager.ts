@@ -28,7 +28,7 @@ export interface PartyPlayer {
 
 /** Dice games played in the room, everyone on their own sheet (`modules/room-game`). */
 export type RoomDiceGame = 'knister';
-export type PartyGameType = 'guessart' | 'garticphone' | 'tabletop' | RoomDiceGame;
+export type PartyGameType = 'guessart' | 'garticphone' | 'storyteller' | 'tabletop' | RoomDiceGame;
 
 export interface PartyRoomState {
   type?: undefined;

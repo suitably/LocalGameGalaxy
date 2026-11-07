@@ -11,6 +11,7 @@ import {
   Grid,
 } from '@mui/material';
 import DrawIcon from '@mui/icons-material/DrawRounded';
+import AutoStoriesIcon from '@mui/icons-material/AutoStoriesRounded';
 import PhoneForwardedIcon from '@mui/icons-material/PhoneForwardedRounded';
 import StyleIcon from '@mui/icons-material/StyleRounded';
 import CasinoIcon from '@mui/icons-material/CasinoRounded';
@@ -141,6 +142,15 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
                 'Montagsmaler mit Pass-and-Play oder Peer-Synchronisation.',
               )}
               onClick={pick('guessart')}
+            />,
+            <PartyPickerCard
+              icon={<AutoStoriesIcon sx={{ fontSize: 36, color: 'piece.green' }} />}
+              title="Storyteller"
+              desc={t(
+                'party.storyteller_desc',
+                'Schreibt gemeinsam eine Geschichte, einer nach dem anderen.',
+              )}
+              onClick={pick('storyteller')}
             />,
           ])}
 
