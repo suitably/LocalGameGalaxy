@@ -8,13 +8,19 @@ import { useTranslation } from 'react-i18next';
 import { TABLETOP_STARTERS, DICE_GAMES } from '../../../games/tabletop/logic/tableCatalog';
 import type { PartyLobbyController } from '../hooks/usePartyLobbyController';
 
+/** Brand names, shown untranslated like in the game picker. */
+const PARTY_GAME_TITLES: Record<string, string> = {
+  guessart: 'GuessArt',
+  garticphone: 'Gartic Phone',
+};
+
 export const PartyPendingGame: React.FC<{ lobby: PartyLobbyController }> = ({ lobby }) => {
   const { t } = useTranslation();
   const { pendingLaunch, amIHost, players, startPendingGame, clearPendingLaunch } = lobby;
   if (!pendingLaunch || !amIHost) return null;
   const id = pendingLaunch.gameId ?? pendingLaunch.gameType;
   const starter = [...TABLETOP_STARTERS, ...DICE_GAMES].find((g) => g.id === id);
-  const title = starter ? t(starter.titleKey, starter.title) : id;
+  const title = starter ? t(starter.titleKey, starter.title) : (PARTY_GAME_TITLES[id] ?? id);
   const others = Math.max(0, players.length - 1);
 
   return (

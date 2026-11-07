@@ -27,9 +27,12 @@ export function usePartyLobbyController(initialRoomId?: string) {
 
   // Which room to open is decided purely here; joining/creating happens in the effect below.
   const [entry] = useState(() => resolveLobbyEntry(initialRoomId));
-  // A game picked on the Spieltisch: the host starts it once everybody has joined.
+  // A game picked before the lobby opened (Spieltisch, a game's invite button): only the host
+  // applies it — on create, or when re-opening its own room — and starts it once everybody joined.
   const [pendingLaunch, setPendingLaunch] = useState(() =>
-    entry.kind === 'create' ? resolvePendingLaunch() : null,
+    entry.kind === 'create' || universalPartyManager.isHost(entry.roomId)
+      ? resolvePendingLaunch()
+      : null,
   );
   const [roomId, setRoomId] = useState<string>(() =>
     entry.kind === 'join' ? entry.roomId : universalPartyManager.getSavedHostRoomCode(),
