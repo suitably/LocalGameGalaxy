@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { mergeIncomingState } from './partyRoster';
 import {
   HOST_TIMEOUT_MS,
+  HEARING_GAP_MS,
   createdState,
+  hearingSince,
   joinedState,
   shouldTakeOverHost,
   takeOverHost,
@@ -45,6 +47,18 @@ describe('partySession (#467 S2)', () => {
     expect(joined.player.isHost).toBe(false);
   });
 
+  it('the host can watch and stays host (#658)', () => {
+    const { state } = createdState('R', 'h', 'Hana', null, 5);
+    const watching = joinedState(
+      'R',
+      { myId: 'h', name: 'Hana', spectator: true, isRoomCreator: true },
+      state,
+      6,
+    );
+    expect(watching.state.hostId).toBe('h');
+    expect(watching.player).toMatchObject({ isHost: true, spectator: true });
+  });
+
   it('does not take over before the host is known', () => {
     const state = room([p('a', 0)], { hostId: '' });
     expect(shouldTakeOverHost(state, 'a', seen({}), NOW)).toBe(false);
@@ -61,9 +75,24 @@ describe('partySession (#467 S2)', () => {
     const times = { h: NOW - HOST_TIMEOUT_MS - 1, a: NOW, b: NOW };
     expect(shouldTakeOverHost(state, 'b', seen(times), NOW)).toBe(true);
     expect(shouldTakeOverHost(state, 'a', seen(times), NOW)).toBe(false);
-    // b is silent too: a is next
-    const bGone = { ...times, b: NOW - HOST_TIMEOUT_MS - 1 };
-    expect(shouldTakeOverHost(state, 'a', seen(bGone), NOW)).toBe(true);
+    // b is silent too: a is next, as long as it still hears someone (c)
+    const withC = room([...state.players, p('c', 3)]);
+    const bGone = { ...times, b: NOW - HOST_TIMEOUT_MS - 1, c: NOW };
+    expect(shouldTakeOverHost(withC, 'a', seen(bGone), NOW)).toBe(true);
+  });
+
+  it('a device that hears nobody does not take over (it is the one offline)', () => {
+    // Wi-Fi to mobile data: the guest stops hearing everyone at once.
+    const silent = NOW - HOST_TIMEOUT_MS - 1;
+    const three = room([p('h', 0), p('a', 1), p('b', 2)]);
+    expect(shouldTakeOverHost(three, 'a', seen({ h: silent, b: silent }), NOW)).toBe(false);
+    // Cut off right after the host's ping and just before b's: b still looks alive when the host
+    // times out, but both went quiet together, so this device is the one cut off.
+    const nearly = seen({ h: NOW - HOST_TIMEOUT_MS - 50, b: NOW - HOST_TIMEOUT_MS + 200 });
+    expect(shouldTakeOverHost(three, 'a', nearly, NOW)).toBe(false);
+    // Host and one guest: a silent host is never replaced.
+    const two = room([p('h', 0), p('a', 1)]);
+    expect(shouldTakeOverHost(two, 'a', seen({ h: silent }), NOW)).toBe(false);
   });
 
   it('takes over at once when the host left the roster; spectators only as last resort', () => {
@@ -73,6 +102,20 @@ describe('partySession (#467 S2)', () => {
     expect(shouldTakeOverHost(room([p('s', 0, { spectator: true })]), 's', seen({}), NOW)).toBe(
       true,
     );
+  });
+
+  it('an outage of this device restarts its hearing, so it waits for the host again', () => {
+    // Pings every 3 s: hearing goes on.
+    expect(hearingSince(10, NOW - 3000, NOW)).toBe(10);
+    // Back after 30 s without any message: hearing starts now.
+    expect(hearingSince(10, NOW - 30_000, NOW)).toBe(NOW);
+    expect(hearingSince(10, NOW - HEARING_GAP_MS - 1, NOW)).toBe(NOW);
+    // Right after reconnecting, another guest's ping arrives before the host's: the host's
+    // silence is counted from the reconnect, so there is no takeover.
+    const state = room([p('h', 0), p('a', 1), p('b', 2)]);
+    const since = NOW;
+    const seenAt = (id: string) => Math.max({ h: NOW - 34_000, b: NOW }[id] ?? 0, since);
+    expect(shouldTakeOverHost(state, 'a', seenAt, NOW + 1000)).toBe(false);
   });
 
   it('a takeover raises the epoch and beats the old host on merge', () => {

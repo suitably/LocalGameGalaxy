@@ -8,6 +8,7 @@ import { GarticGuessingStep } from './components/GarticGuessingStep';
 import { GarticAlbumReveal } from './components/GarticAlbumReveal';
 import { GarticWaitingStatus } from './components/GarticWaitingStatus';
 import { GarticHeader } from './components/GarticHeader';
+import { GarticSpectatorView } from './components/GarticSpectatorView';
 import { useGarticGameState } from './hooks/useGarticGameState';
 
 interface GarticPhoneGameProps {
@@ -40,6 +41,10 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
   useFollowPartyLobby(roomId);
   const handleBack = onBackToMenu || (() => navigate(roomId ? `/party?room=${roomId}` : '/party'));
 
+  // Not in the game (watching, or joined after the deal): follow a player's round (#659).
+  const playing = gameState.phase !== 'reveal' && gameState.phase !== 'finished';
+  const spectating = !myPlayer && playing && gameState.players.length > 0;
+
   const handleEndGame = () => {
     endGame();
     handleBack();
@@ -59,7 +64,7 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
       }}
     >
       <GarticHeader
-        onBack={isHost ? handleEndGame : handleBack}
+        onBack={handleBack}
         roomId={roomId}
         playerName={myPlayer?.name || myPlayerName}
         phase={gameState.phase}
@@ -82,7 +87,9 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
           overflow: taskType === 'drawing' || taskType === 'guessing' ? 'hidden' : 'auto',
         }}
       >
-        {hasSubmitted && gameState.phase !== 'reveal' && gameState.phase !== 'finished' ? (
+        {spectating ? (
+          <GarticSpectatorView state={gameState} />
+        ) : hasSubmitted && gameState.phase !== 'reveal' && gameState.phase !== 'finished' ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: { xs: 1, sm: 3 } }}>
             <GarticWaitingStatus state={gameState} myPlayerId={myPlayer?.id || myPlayerId} />
           </Box>

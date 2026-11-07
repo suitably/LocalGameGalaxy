@@ -123,7 +123,7 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
           )}
         </Box>
 
-        {me && !amIHost && (
+        {me && (
           <FormControlLabel
             sx={{ mt: 1.5 }}
             control={
@@ -136,7 +136,7 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
               <Typography variant="body2">
                 {t('party.watchOnly', 'Zuschauen')}
                 <Typography variant="caption" color="text.secondary" component="span" ml={1}>
-                  {t('party.watchOnlyHint', 'Tischspiele ohne Sitz, nur ansehen')}
+                  {t('party.watchOnlyHint', 'Ohne Platz im Spiel, nur zusehen')}
                 </Typography>
               </Typography>
             }

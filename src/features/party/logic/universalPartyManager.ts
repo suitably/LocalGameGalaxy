@@ -1,8 +1,15 @@
 import { partyMailbox } from './partyMailbox';
 import { storage, sessionStorageSafe, STORAGE_KEYS, STORAGE_PREFIXES } from '../../../lib/storage';
 import { MultiChannelSyncCoordinator } from '../../../modules/sync';
+import { releaseRoomPeers } from '../../../modules/room-game';
 import { addPresencePlayer, assignSlots, mergeIncomingState, removePlayer } from './partyRoster';
-import { createdState, joinedState, shouldTakeOverHost, takeOverHost } from './partySession';
+import {
+  createdState,
+  hearingSince,
+  joinedState,
+  shouldTakeOverHost,
+  takeOverHost,
+} from './partySession';
 
 export interface PartyPlayer {
   id: string;
@@ -68,6 +75,10 @@ class UniversalPartyManager {
   /** Last presence ping per player, and since when this device listens (host takeover). */
   private lastSeen = new Map<string, number>();
   private listeningSince = 0;
+  /** Since when this device hears the room without an outage, and when it last heard it. */
+  private hearing = { since: 0, last: 0 };
+  /** `statusAt` of the game whose room peers are kept (#657); a change ends that game here. */
+  private gameStatusAt: number | undefined;
 
   public getRoomId(): string | null {
     return this.currentRoomState?.roomId || this.currentRoomId;
@@ -245,6 +256,7 @@ class UniversalPartyManager {
     this.syncChannelId = channelId;
     this.lastSeen.clear();
     this.listeningSince = Date.now();
+    this.hearing = { since: this.listeningSince, last: this.listeningSince };
     this.sync = new MultiChannelSyncCoordinator<PartySyncEnvelope>({
       channelId,
       broadcastPrefix: 'galaxy',
@@ -260,7 +272,9 @@ class UniversalPartyManager {
     if (incoming.type === 'PARTY_PRESENCE') {
       // Own pings come back over BroadcastChannel; only other players' pings matter.
       if (!incoming.player || incoming.player.id === this.getMyPlayerId()) return;
-      this.lastSeen.set(incoming.player.id, Date.now());
+      const now = Date.now();
+      this.hearing = { since: hearingSince(this.hearing.since, this.hearing.last, now), last: now };
+      this.lastSeen.set(incoming.player.id, now);
       if (this.currentRoomState && this.currentRoomState.roomId === roomId) {
         const updated = addPresencePlayer(this.currentRoomState, incoming.player, Date.now());
         if (updated) {
@@ -305,7 +319,9 @@ class UniversalPartyManager {
     const state = this.currentRoomState;
     if (!state || state.roomId !== roomId) return;
     const myId = this.getMyPlayerId();
-    const seenAt = (id: string) => this.lastSeen.get(id) ?? this.listeningSince;
+    // Silence during this device's own outage does not count against anyone.
+    const seenAt = (id: string) =>
+      Math.max(this.lastSeen.get(id) ?? this.listeningSince, this.hearing.since);
     if (!shouldTakeOverHost(state, myId, seenAt, Date.now())) return;
     sessionStorageSafe.set(`${STORAGE_PREFIXES.PARTY_HOST_ID}${roomId}`, myId);
     this.publishPartyState(takeOverHost(state, myId, Date.now()));
@@ -350,6 +366,12 @@ class UniversalPartyManager {
   }
 
   private notifyListeners(): void {
+    const state = this.currentRoomState;
+    if (state && state.statusAt !== this.gameStatusAt) {
+      // A launch or a return to the lobby: the previous game's kept state ends.
+      this.gameStatusAt = state.statusAt;
+      releaseRoomPeers(state.roomId);
+    }
     if (this.currentRoomState) {
       this.updateListeners.forEach((cb) => cb(this.currentRoomState!));
     }

@@ -1992,7 +1992,11 @@
     "hintsUsed": "Hinweise genutzt",
     "allGuesses": "Alle Versuche",
     "catalogueTitle": "Katalog",
-    "pushIosInstall": "Auf dem iPhone kommen Benachrichtigungen nur in der installierten App: Teilen-Symbol → „Zum Home-Bildschirm“, dann von dort öffnen und hier aktivieren."
+    "pushIosInstall": "Auf dem iPhone kommen Benachrichtigungen nur in der installierten App: Teilen-Symbol → „Zum Home-Bildschirm“, dann von dort öffnen und hier aktivieren.",
+    "spectatorChoosing": "{{name}} wählt ein Wort",
+    "spectatorDrawing": "{{name}} zeichnet",
+    "spectatorGuessing": "{{name}} rät",
+    "spectatorIdle": "{{name}} ist gerade nicht dran."
   },
   "party": {
     "hubBannerTitle": "Party-Modus (Mehrspieler-Lobby)",
@@ -2006,7 +2010,7 @@
     "joinButton": "Party beitreten",
     "spectatorBadge": "Zuschauer",
     "watchOnly": "Zuschauen",
-    "watchOnlyHint": "Tischspiele ohne Sitz, nur ansehen",
+    "watchOnlyHint": "Ohne Platz im Spiel, nur zusehen",
     "connectedPlayers": "Verbundene Spieler",
     "stayConnectedHint": "Alle Handys bleiben für jedes Spiel verbunden",
     "waitingForGuests": "Warte auf Mitspieler...",
@@ -2032,7 +2036,7 @@
     "editNameDesc": "Passe deinen Spielernamen für die Party-Lobby und alle Minispiele an.",
     "nameInputLabel": "Dein Name",
     "liveGameActive": "Live Spiel läuft",
-    "rejoinGameDesc": "Das Spiel läuft gerade. Du kannst jederzeit beitreten oder fortsetzen.",
+    "rejoinGameDesc": "Das Spiel läuft weiter, während du in der Lobby bist. Name und Zuschauen gelten ab dem nächsten Spiel.",
     "endGameForEveryone": "Spiel für alle beenden",
     "endGameBtn": "Beenden",
     "confirmEndGameTitle": "Spiel beenden?",
@@ -2065,7 +2069,9 @@
     "removedByHost": "Der Host hat dich aus der Party entfernt.",
     "rejoin": "Wieder beitreten",
     "backToHub": "Zur Übersicht",
-    "invite_players": "Mitspieler einladen"
+    "invite_players": "Mitspieler einladen",
+    "spectatorWatching": "Du schaust zu",
+    "spectatorPickHint": "Wähle, wessen Sicht du sehen willst"
   },
   "gartic": {
     "waitingHeader": "Warte auf die anderen Spieler...",
@@ -2080,7 +2086,11 @@
     "phaseReveal": "Album-Show",
     "albumHeader": "Album",
     "hostControlsShow": "Der Host steuert die Album-Show",
-    "inviteHelp": "Freunde verbinden: Scanne den QR-Code mit weiteren Smartphones oder teile den Link."
+    "inviteHelp": "Freunde verbinden: Scanne den QR-Code mit weiteren Smartphones oder teile den Link.",
+    "spectatorTaskPrompt": "{{name}} schreibt einen Satz",
+    "spectatorTaskDrawing": "{{name}} zeichnet",
+    "spectatorTaskGuessing": "{{name}} beschreibt die Zeichnung",
+    "spectatorWorking": "Noch nicht abgeschickt …"
   },
   "wordle": {
     "mode": {
@@ -2233,7 +2243,10 @@
     "shareLinksDesc": "Mitspieler können per QR-Code oder Link auf ihrem eigenen Gerät mitspielen und Push-Benachrichtigungen empfangen, sobald sie am Zug sind.",
     "scanQrToPlayAs": "Scanne diesen Code, um als {{name}} mitzuspielen!",
     "playHereInstead": "Hier als {{name}} weiterschreiben",
-    "playHereInsteadShort": "Auf diesem Gerät spielen"
+    "playHereInsteadShort": "Auf diesem Gerät spielen",
+    "spectatorNotTurn": "{{name}} ist gerade nicht dran.",
+    "spectatorNoLines": "Noch keine Zeile geschrieben.",
+    "spectatorTurn": "Zug {{n}}"
   },
   "notifications": {
     "turnTitleDraw": "{{gameName}}: Du bist am Zeichnen!",

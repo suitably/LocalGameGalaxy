@@ -15,6 +15,10 @@
  *   2. Lobby -> game -> lobby for every party game, with N-1 guests following the host.
  *   3. Host takeover: the host leaves, a guest takes over within ~20 s, the old host comes back
  *      and steps down (#467 S2).
+ *   4. A guest's network goes silent for 30 s (Wi-Fi to mobile data): it must not take over,
+ *      and everyone keeps the host (needs `MQTT_RELAY`, which can cut a browser off).
+ *   5. Gartic Phone with a watching host (#657-#659): the host sees the spectator view, a
+ *      guest's sent sentence survives the host's and a guest's visit to the lobby.
  * Lobby scenarios need an MQTT broker (`lgg/party`, `lgg/room`): the public ones, or a local
  * MQTT-over-WebSocket broker given as `MQTT_RELAY=ws://localhost:1884` — the harness then
  * routes the app's broker WebSockets there (useful offline or in a sandbox). The result is
@@ -29,7 +33,7 @@ const BASE = process.env.BASE_URL || 'http://localhost:5173';
 const TRACKER = process.env.TRACKER_URL || 'ws://localhost:8000';
 const MQTT_RELAY = process.env.MQTT_RELAY || '';
 const GAMES = process.env.GAMES
-  ? process.env.GAMES.split(',')
+  ? process.env.GAMES.split(',').filter(Boolean)
   : ['garticphone', 'guessart', 'storyteller', 'knister', 'melodiq-notes', 'melodiq'];
 const results = [];
 const children = [];
@@ -91,9 +95,10 @@ async function main() {
   });
   const open = async (init) => {
     const ctx = await browser.newContext();
-    if (MQTT_RELAY) await relayMqtt(ctx);
+    const net = { cut: false };
+    if (MQTT_RELAY) await relayMqtt(ctx, net);
     if (init) await ctx.addInitScript(init);
-    return { ctx, page: await ctx.newPage() };
+    return { ctx, net, page: await ctx.newPage() };
   };
 
   try {
@@ -102,21 +107,32 @@ async function main() {
     else record('webrtc scenarios', 'SKIP', 'no tracker');
     for (const game of GAMES) await lobbyScenario(open, game);
     await hostTakeoverScenario(open);
+    await watchingHostScenario(open);
+    if (MQTT_RELAY) await silentGuestScenario(open);
+    else record('lobby: a silent guest keeps the host', 'SKIP', 'needs MQTT_RELAY');
   } finally {
     await browser.close();
   }
 }
 
-/** Pipes the app's public-broker WebSockets to the local broker in `MQTT_RELAY`. */
-async function relayMqtt(ctx) {
+/**
+ * Pipes the app's public-broker WebSockets to the local broker in `MQTT_RELAY`. While `net.cut`
+ * is set, messages are dropped both ways without closing the socket, like a phone whose Wi-Fi
+ * went away: the app only notices through its MQTT keepalive.
+ */
+async function relayMqtt(ctx, net) {
   await ctx.routeWebSocket(/\/\/broker\.(hivemq\.com|emqx\.io)[:/]/, (route) => {
     const upstream = new WebSocket(MQTT_RELAY, 'mqtt');
     upstream.binaryType = 'arraybuffer';
     const pending = [];
     upstream.onopen = () => pending.splice(0).forEach((m) => upstream.send(m));
-    upstream.onmessage = (e) => route.send(Buffer.from(e.data));
+    upstream.onmessage = (e) => !net.cut && route.send(Buffer.from(e.data));
     upstream.onclose = () => route.close().catch(() => {});
-    route.onMessage((m) => (upstream.readyState === 1 ? upstream.send(m) : pending.push(m)));
+    route.onMessage((m) => {
+      if (net.cut) return;
+      if (upstream.readyState === 1) upstream.send(m);
+      else pending.push(m);
+    });
     route.onClose(() => upstream.close());
   });
 }
@@ -281,12 +297,153 @@ async function hostTakeoverScenario(open) {
   await Promise.all([host, ...guests].map((x) => x.ctx.close().catch(() => {})));
 }
 
-/** The host ends the game with its "back to lobby" control; every guest must follow. */
+const BACK_TO_LOBBY = /^(?!.*(share|teilen)).*(zur party|back to (the )?party|lobby)/i;
+
+/** The host watches Gartic Phone; the game survives visits to the lobby (#657, #658, #659). */
+async function watchingHostScenario(open) {
+  const name = 'garticphone: watching host, game goes on during lobby visits';
+  const host = await open();
+  await host.page.goto(`${BASE}/party?launch=garticphone`);
+  const room = await until(
+    () => host.page.evaluate(() => localStorage.getItem('galaxy_host_room_code')),
+    15000,
+  );
+  const guests = [];
+  for (let i = 0; i < 2; i++) {
+    const g = await open();
+    await g.page.goto(`${BASE}/party?room=${room}`);
+    guests.push(g);
+  }
+  const all = [host, ...guests];
+  const fail = async (why) => {
+    record(name, 'FAIL', why);
+    await Promise.all(all.map((x) => x.ctx.close().catch(() => {})));
+  };
+  const watch = host.page.getByLabel(/Zuschauen|Watch/i);
+  if (!(await until(() => watch.isVisible().catch(() => false), 15000))) {
+    return fail('host has no watch switch');
+  }
+  await watch.check();
+  const start = host.page.getByRole('button', { name: /Jetzt starten|Start now/i });
+  if (!(await until(() => start.isVisible().catch(() => false), 20000))) {
+    return fail('no start button');
+  }
+  await sleep(3000);
+  await start.click();
+  const inGame = await until(
+    () => all.every((x) => x.page.url().includes('/games/garticphone')),
+    20000,
+  );
+  if (!inGame) return fail('not everyone opened the game');
+  const box = guests[0].page.getByRole('textbox').first();
+  if (!(await until(() => box.isVisible().catch(() => false), 20000))) {
+    return fail('guest sees no prompt field');
+  }
+  await box.fill('A cat rides a bike');
+  await guests[0].page.getByRole('button', { name: /Absenden|Submit/i }).click();
+  const spectating = () =>
+    host.page
+      .getByText('A cat rides a bike')
+      .first()
+      .isVisible()
+      .catch(() => false);
+  const watching = await until(async () => {
+    const chip = host.page.getByRole('tab', { name: /✓/ });
+    if ((await chip.count()) === 0) return false;
+    await chip.first().click();
+    return spectating();
+  }, 20000);
+  if (!watching) return fail('host does not see the sent sentence in the spectator view');
+  // The host visits the lobby and comes back: the game is not dealt again.
+  await host.page.getByRole('button', { name: BACK_TO_LOBBY }).first().click();
+  await until(() => new URL(host.page.url()).pathname === '/party', 10000);
+  await sleep(3000);
+  const guestsStayed = guests.every((g) => g.page.url().includes('/games/garticphone'));
+  await host.page
+    .getByRole('button', { name: /beitreten|fortsetzen|Join|Resume/i })
+    .first()
+    .click();
+  await until(() => host.page.url().includes('/games/garticphone'), 10000);
+  // A guest visits the lobby too, and comes back.
+  const g1 = guests[1].page;
+  await g1.getByRole('button', { name: BACK_TO_LOBBY }).first().click();
+  await until(() => new URL(g1.url()).pathname === '/party', 10000);
+  await sleep(4000);
+  const guestStaysInLobby = new URL(g1.url()).pathname === '/party';
+  await g1
+    .getByRole('button', { name: /beitreten|fortsetzen|Join|Resume/i })
+    .first()
+    .click();
+  await until(() => g1.url().includes('/games/garticphone'), 10000);
+  await sleep(3000);
+  const kept =
+    !(await box.isVisible().catch(() => false)) &&
+    (await until(async () => {
+      const chip = host.page.getByRole('tab', { name: /✓/ });
+      if ((await chip.count()) === 0) return false;
+      await chip.first().click();
+      return spectating();
+    }, 10000));
+  const ok = guestsStayed && guestStaysInLobby && kept;
+  record(
+    name,
+    ok ? 'PASS' : 'FAIL',
+    ok ? '' : JSON.stringify({ guestsStayed, guestStaysInLobby, kept }),
+  );
+  await Promise.all(all.map((x) => x.ctx.close().catch(() => {})));
+}
+
+/** A guest hears nothing for 30 s and comes back: it must not have made itself host. */
+async function silentGuestScenario(open) {
+  const name = 'lobby: a silent guest keeps the host';
+  const host = await open();
+  await host.page.goto(`${BASE}/party?launch=garticphone`);
+  const room = await until(
+    () => host.page.evaluate(() => localStorage.getItem('galaxy_host_room_code')),
+    15000,
+  );
+  const guests = [];
+  for (let i = 1; i < Math.max(N, 3); i++) {
+    const g = await open();
+    await g.page.goto(`${BASE}/party?room=${room}`);
+    guests.push(g);
+  }
+  const all = [host, ...guests];
+  const view = (x) =>
+    x.page.evaluate((r) => {
+      const state = JSON.parse(localStorage.getItem(`galaxy_party_state_${r}`) || '{}');
+      const me = sessionStorage.getItem('party_my_player_id');
+      return {
+        hostId: state.hostId,
+        me,
+        claims: Boolean(sessionStorage.getItem(`party_host_id_${r}`)),
+      };
+    }, room);
+  const hostId = await until(async () => (await view(host)).me, 15000);
+  await until(
+    async () => (await Promise.all(guests.map(view))).every((v) => v.hostId === hostId),
+    15000,
+  );
+  await sleep(4000);
+  const lowest = guests[0]; // the first guest has the lowest seat: it would take over
+  lowest.net.cut = true;
+  await sleep(30000);
+  lowest.net.cut = false;
+  await sleep(10000);
+  const views = await Promise.all(all.map(view));
+  const ok = views.every((v) => v.hostId === hostId) && !views[1].claims && views[0].claims;
+  record(name, ok ? 'PASS' : 'FAIL', ok ? '' : JSON.stringify(views));
+  await Promise.all(all.map((x) => x.ctx.close().catch(() => {})));
+}
+
+/**
+ * The host leaves the game for the lobby. Room games keep running (guests stay), and the host
+ * ends them with the lobby's "End game"; games that end on leaving take everyone back at once.
+ * Either way every guest must end up in the lobby.
+ */
 async function backToLobby(host, guests, game) {
   const name = `${game} -> lobby: guests follow the host back`;
-  const back = host.page
-    .getByRole('button', { name: /^(?!.*(share|teilen)).*(zur party|back to (the )?party|lobby)/i })
-    .first();
+  const back = host.page.getByRole('button', { name: BACK_TO_LOBBY }).first();
   let found = await until(() => back.isVisible().catch(() => false), 8000);
   if (!found) {
     // Melodiq Notes keeps it in the players panel behind "Invite players".
@@ -311,6 +468,26 @@ async function backToLobby(host, guests, game) {
   const label =
     (await back.textContent().catch(() => '')) || (await back.getAttribute('aria-label'));
   await back.click();
+  // Room games go on while the host visits the lobby (#657); the host ends them there.
+  await until(() => new URL(host.page.url()).pathname === '/party', 10000);
+  await sleep(3000);
+  const stayed = guests.every((g) => new URL(g.page.url()).pathname !== '/party');
+  if (stayed) {
+    record(`${game}: guests stay in the game while the host visits the lobby`, 'PASS');
+    const end = host.page.getByRole('button', { name: /Spiel (für alle )?beenden|End game/i });
+    if (
+      await until(
+        () =>
+          end
+            .first()
+            .isVisible()
+            .catch(() => false),
+        8000,
+      )
+    ) {
+      await end.first().click();
+    }
+  }
   const back2 = await until(
     () => [host, ...guests].every((x) => new URL(x.page.url()).pathname === '/party'),
     20000,

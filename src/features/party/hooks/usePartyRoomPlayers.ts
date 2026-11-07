@@ -3,8 +3,10 @@
  * [ID: HOOK-PARTY-ROOM-PLAYERS]
  *
  * The one roster games read (#647 S3): `{ id, name, seat, isHost }` per player, plus `me`.
+ * `isHost` is fixed while the game page stays open: the game's state lives in memory on its host,
+ * so a host takeover in the party room must not hand the running game to a device without it.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { storage, STORAGE_PREFIXES } from '../../../lib/storage';
 import { universalPartyManager, type PartyRoomState } from '../logic/universalPartyManager';
 import { roomPlayersOf, type RoomPlayer } from '../logic/partyRoster';
@@ -28,12 +30,15 @@ export function usePartyRoomPlayers(roomId: string) {
     });
   }, [roomId]);
 
+  // The role this game page opened with, per room.
+  const isHost = useMemo(() => universalPartyManager.isHost(roomId), [roomId]);
+
   const myId = universalPartyManager.getMyPlayerId();
   return {
     players,
     myId,
     /** This device's player, or `null` while it has no seat (spectator, not joined yet). */
     me: players.find((p) => p.id === myId) ?? null,
-    isHost: universalPartyManager.isHost(roomId),
+    isHost,
   };
 }

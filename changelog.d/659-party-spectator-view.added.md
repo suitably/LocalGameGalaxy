@@ -1,0 +1,1 @@
+- **Spectator view** (#659): a device that is not in the game picks a player and follows them — in Gartic Phone the step they answer and what they sent, in Knister their sheet, in GuessArt the drawer's word or the guesser's view, in Storyteller their lines. Nothing unsent is shown.

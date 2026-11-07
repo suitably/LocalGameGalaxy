@@ -41,7 +41,7 @@ export class RoomStatePeer<S, A> {
   }
 
   /** Reducer, authorize and callback may change on every render; ids and roles may not. */
-  update(opts: Pick<RoomPeerOptions<S, A>, 'reducer' | 'authorize' | 'onChange'>): void {
+  update(opts: Partial<Pick<RoomPeerOptions<S, A>, 'reducer' | 'authorize' | 'onChange'>>): void {
     this.opts = { ...this.opts, ...opts };
   }
 

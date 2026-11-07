@@ -19,6 +19,7 @@ import {
   resolveLobbyEntry,
   resolvePendingLaunch,
 } from '../logic/partyRoutes';
+import { shouldFollowIntoGame, visitedGameAt } from '../logic/lobbyReturn';
 
 export function usePartyLobbyController(initialRoomId?: string) {
   const navigate = useNavigate();
@@ -49,6 +50,8 @@ export function usePartyLobbyController(initialRoomId?: string) {
   const [roomState, setRoomState] = useState<PartyRoomState | null>(() =>
     universalPartyManager.getRoomState(),
   );
+  // Came here from a running game (#657): stay in the lobby until the host starts another one.
+  const [visitedAt] = useState(() => visitedGameAt(universalPartyManager.getRoomState(), roomId));
   const [copied, setCopied] = useState<boolean>(false);
   const [showQr, setShowQr] = useState<boolean>(false);
 
@@ -101,9 +104,9 @@ export function usePartyLobbyController(initialRoomId?: string) {
       }
 
       if (
-        updated.status === 'in_game' &&
+        updated.activeGame &&
         !universalPartyManager.isHost(roomId) &&
-        updated.activeGame
+        shouldFollowIntoGame(visitedAt, updated)
       ) {
         // Route from the updated roster: the seat is the slot the host assigned.
         navigate(
@@ -122,7 +125,7 @@ export function usePartyLobbyController(initialRoomId?: string) {
     return () => {
       unsubscribe();
     };
-  }, [roomId, playerName, navigate, removed]);
+  }, [roomId, playerName, navigate, removed, visitedAt]);
 
   const leaveParty = () => {
     universalPartyManager.leaveParty(roomId);

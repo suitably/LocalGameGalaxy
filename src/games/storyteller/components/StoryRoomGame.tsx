@@ -5,11 +5,11 @@ import MenuBookRoundedIcon from '@mui/icons-material/MenuBookRounded';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { InvitePlayersButton } from '../../../features/party/components/InvitePlayersButton';
-import { universalPartyManager } from '../../../features/party/logic/universalPartyManager';
 import { useWakeLock } from '../../../hooks/useWakeLock';
 import { useStoryRoom } from '../hooks/useStoryRoom';
 import { StoryWriterView } from './StoryWriterView';
 import { StoryReaderModal } from './StoryReaderModal';
+import { StorySpectatorView } from './StorySpectatorView';
 import { useFollowPartyLobby } from '../../../features/party/hooks/useFollowPartyLobby';
 
 /** Storyteller played live in a party room: the room's players write in turn. */
@@ -26,10 +26,8 @@ export const StoryRoomGame: React.FC<{ roomId: string; language: string }> = ({
   const { game, entries } = live.state;
   const done = game?.status === 'completed';
 
-  const backToParty = () => {
-    if (live.isHost) universalPartyManager.returnToLobby(roomId);
-    navigate(`/party?room=${roomId}`);
-  };
+  // The game goes on while this device visits the lobby (#657); the host ends it there.
+  const backToParty = () => navigate(`/party?room=${roomId}`);
 
   const writer = game?.players[game.currentPlayerIndex];
 
@@ -75,6 +73,8 @@ export const StoryRoomGame: React.FC<{ roomId: string; language: string }> = ({
               {t('storyteller.roomRead', 'Lesen')}
             </Button>
           </Stack>
+        ) : !game.players.some((p) => p.id === live.myId) ? (
+          <StorySpectatorView game={game} entries={entries} />
         ) : live.isMyTurn ? (
           <StoryWriterView
             game={game}

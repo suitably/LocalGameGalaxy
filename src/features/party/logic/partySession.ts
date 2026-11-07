@@ -7,11 +7,28 @@
  * for `HOST_TIMEOUT_MS` (tab closed, device gone) or left the roster, the live player with the
  * lowest seat takes over and raises `hostEpoch`. The higher epoch always wins a merge, so an old
  * host that comes back steps down instead of splitting the room.
+ *
+ * A silent host only counts when this device still hears another player who kept pinging well
+ * after the host stopped: a phone that drops off the network (e.g. Wi-Fi to mobile data) stops
+ * hearing everyone at once, and must not make itself host of a room the others still play in. So in a room of just the host and one guest, a silent host is never
+ * replaced; a host that left the roster is.
  */
 import { markHost, resolveHostId, seatOf, upsertHost, upsertJoiningPlayer } from './partyRoster';
 import type { PartyPlayer, PartyRoomState } from './universalPartyManager';
 
 export const HOST_TIMEOUT_MS = 20_000;
+/** Longer than this without any message from the room means this device was cut off. */
+export const HEARING_GAP_MS = 8_000;
+
+/**
+ * Since when this device hears the room without a gap, after a message at `now`. Everyone pings
+ * every 3 s, so a longer silence was this device's own outage (e.g. Wi-Fi to mobile data): what
+ * was missed then says nothing about the host, and right after reconnecting the host's next ping
+ * may simply arrive later than another player's.
+ */
+export function hearingSince(previous: number, lastHeard: number, now: number): number {
+  return now - lastHeard > HEARING_GAP_MS ? now : previous;
+}
 
 /** State after this device creates (or re-opens) its room as host. */
 export function createdState(
@@ -71,7 +88,8 @@ interface JoinOptions {
 
 /**
  * Whether this device should take over as host: the host is gone (not in the roster, or silent
- * for `HOST_TIMEOUT_MS`) and this device is the live player with the lowest seat. `seenAt` gives
+ * for `HOST_TIMEOUT_MS` while another player is still heard) and this device is the live player
+ * with the lowest seat. `seenAt` gives
  * a player's last presence ping (or when this device started listening, if none yet).
  */
 export function shouldTakeOverHost(
@@ -86,6 +104,18 @@ export function shouldTakeOverHost(
   const alive = (id: string) => id === myId || now - seenAt(id) < HOST_TIMEOUT_MS;
   const host = state.players.find((p) => p.id === state.hostId);
   if (host && alive(host.id)) return false;
+  // The host is silent. That counts only if another player kept pinging well after the host
+  // stopped; if everyone went quiet at about the same time, this device is the one cut off.
+  const heardOther =
+    host !== undefined &&
+    state.players.some(
+      (p) =>
+        p.id !== myId &&
+        p.id !== host.id &&
+        alive(p.id) &&
+        seenAt(p.id) - seenAt(host.id) > HEARING_GAP_MS,
+    );
+  if (host && !heardOther) return false;
   const candidates = state.players.filter((p) => p.id !== state.hostId && alive(p.id));
   const seated = candidates.filter((p) => !p.spectator);
   const pool = seated.length > 0 ? seated : candidates;

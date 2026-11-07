@@ -1,0 +1,1 @@
+- **The host can watch** (#658): the "Watch" switch in the party lobby is now there for the host too; a watching host still runs the room and the game.

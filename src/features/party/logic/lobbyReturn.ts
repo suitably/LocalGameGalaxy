@@ -16,3 +16,27 @@ export function shouldFollowToLobby(
   if (next.status !== 'lobby') return false;
   return previous === 'in_game' || (previous === undefined && Boolean(next.statusAt));
 }
+
+/**
+ * `statusAt` of the game that was already running when this device opened the lobby from it
+ * (#657), or `null` when the lobby opened without a running game in memory (fresh page, invite
+ * link). Such a visit must not bounce the player straight back into the game.
+ */
+export function visitedGameAt(
+  known: Pick<PartyRoomState, 'roomId' | 'status' | 'statusAt'> | null,
+  roomId: string,
+): number | null {
+  return known?.roomId === roomId && known.status === 'in_game' ? (known.statusAt ?? 0) : null;
+}
+
+/**
+ * True when a guest's lobby should open the running game: a game runs and this device did not
+ * come from it — the lobby opened without one (`visitedAt` null) or the host started a new one.
+ */
+export function shouldFollowIntoGame(
+  visitedAt: number | null,
+  next: Pick<PartyRoomState, 'status' | 'statusAt' | 'activeGame'>,
+): boolean {
+  if (next.status !== 'in_game' || !next.activeGame) return false;
+  return visitedAt === null || (next.statusAt ?? 0) > visitedAt;
+}
