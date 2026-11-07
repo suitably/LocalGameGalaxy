@@ -22,17 +22,25 @@ export function resolveLobbyEntry(
   return fromUrl ? { kind: 'join', roomId: fromUrl.toUpperCase().trim() } : { kind: 'create' };
 }
 
+/** Party games the lobby can preselect via `launch=` (tabletop additionally needs `gameId`). */
+const LAUNCHABLE_GAMES: readonly PartyGameType[] = ['guessart', 'garticphone', ...ROOM_DICE_GAMES];
+
+export type PendingLaunch = { gameType: PartyGameType; gameId?: string };
+
 /**
- * A game chosen before the lobby opened, from the Spieltisch: `/party?launch=tabletop&gameId=…`
- * or `/party?launch=knister`.
+ * A game chosen before the lobby opened (Spieltisch or a game's invite button):
+ * `/party?launch=tabletop&gameId=…`, `/party?launch=knister`, `/party?launch=guessart`, …
+ * Unknown games and tabletop without `gameId` → `null`.
  */
 export function resolvePendingLaunch(
   params: URLSearchParams = parseGameUrlParams(),
-): { gameType: 'tabletop' | RoomDiceGame; gameId?: string } | null {
+): PendingLaunch | null {
   const launch = params.get('launch');
   const gameId = params.get('gameId');
   if (launch === 'tabletop') return gameId ? { gameType: 'tabletop', gameId } : null;
-  return isRoomDiceGame(launch) ? { gameType: launch } : null;
+  return LAUNCHABLE_GAMES.includes(launch as PartyGameType)
+    ? { gameType: launch as PartyGameType }
+    : null;
 }
 
 /** Route of the active party game; tabletop opens as TV for the host and as a seat for players. */

@@ -1,0 +1,1 @@
+- **Preselect any party game in the lobby** (#647 S1): `/party?launch=guessart` and `/party?launch=garticphone` open the lobby with that game ready to start, like tabletop and Knister. The host also gets the preselection when re-opening its own room from a game.

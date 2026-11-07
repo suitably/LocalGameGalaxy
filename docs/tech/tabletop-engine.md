@@ -87,7 +87,7 @@ Pure rules in `logic/tableGestures.ts`, pointer handling in `hooks/useTabletopEn
 
 ### Spieltisch (lobby)
 
-`components/views/TabletopLobbyView.tsx` is the entry for all table games: the built-in tabletop games, the dice games (Kniffel, Knister, Qwixx; `Hub.tsx` hides them from the hub) and imported games, from `logic/tableCatalog.ts`. A game with one supported mode opens directly; otherwise `PlayModeSheet` asks: **Ein Gerät für alle** (`?local=1`, pass and play) or **Jeder am eigenen Gerät** (`/party?launch=tabletop&gameId=…`: the party lobby shows the chosen game, `PartyPendingGame`, and the host starts it once players have joined). Dice games are one-device only until they sync (#467 slice 5).
+`components/views/TabletopLobbyView.tsx` is the entry for all table games: the built-in tabletop games, the dice games (Kniffel, Knister, Qwixx; `Hub.tsx` hides them from the hub) and imported games, from `logic/tableCatalog.ts`. A game with one supported mode opens directly; otherwise `PlayModeSheet` asks: **Ein Gerät für alle** (`?local=1`, pass and play) or **Jeder am eigenen Gerät** (`/party?launch=tabletop&gameId=…`: the party lobby shows the chosen game, `PartyPendingGame`, and the host starts it once players have joined). `resolvePendingLaunch()` (`src/features/party/logic/partyRoutes.ts`) accepts every party game (`launch=guessart`, `garticphone`, `knister`, `tabletop` with `gameId`); the lobby applies it only on the host — when it creates the room or re-opens its own room (#647 S1). Dice games are one-device only until they sync (#467 slice 5).
 
 ## 5. Sync
 

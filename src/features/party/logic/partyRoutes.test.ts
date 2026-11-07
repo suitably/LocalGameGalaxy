@@ -64,6 +64,18 @@ describe('partyRoutes (#417)', () => {
 });
 
 describe('resolvePendingLaunch (Spieltisch → party lobby)', () => {
+  it('accepts every party game type (#647 S1)', () => {
+    for (const gameType of ['guessart', 'garticphone', 'knister'] as const) {
+      expect(resolvePendingLaunch(new URLSearchParams(`launch=${gameType}`))).toEqual({ gameType });
+    }
+  });
+
+  it('rejects garbage', () => {
+    for (const q of ['launch=', 'launch=GUESSART', 'launch=__proto__', 'launch=tabletop&gameId=']) {
+      expect(resolvePendingLaunch(new URLSearchParams(q))).toBeNull();
+    }
+  });
+
   it('reads a tabletop game chosen before the lobby opened', () => {
     expect(
       resolvePendingLaunch(new URLSearchParams('launch=tabletop&gameId=standard-cards')),
