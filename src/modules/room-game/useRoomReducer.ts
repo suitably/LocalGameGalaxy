@@ -3,14 +3,13 @@
  *
  * The host reduces locally and publishes each new state; guests send their actions to the host
  * and render what it publishes. A guest says hello when it opens, and the host answers with the
- * current state, so a reload or late join catches up. Transport: BroadcastChannel + MQTT
- * (`lgg/room`, channel `<gameKey>_<roomId>`).
+ * current state, so a reload or late join catches up. Protocol: `RoomStatePeer`; transport:
+ * `getRoomTransport(roomId)`, channel `<gameKey>_<roomId>`.
  */
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import type { MqttMailboxService } from '../sync/MqttMailboxService';
-import { MultiChannelSyncCoordinator } from '../sync/useMultiChannelSync';
-import { roomMailbox } from './roomTransport';
-import { guestAccept, hostApply, type RoomHost, type RoomMessage } from './roomSync';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import type { RoomHost } from './roomSync';
+import { RoomStatePeer } from './roomPeer';
+import { getRoomTransport, type RoomTransport } from './roomTransport';
 
 export interface UseRoomReducerOptions<S, A> {
   gameKey: string;
@@ -22,6 +21,10 @@ export interface UseRoomReducerOptions<S, A> {
   /** Host-side check that `from` may perform `action` (e.g. only on their own sheet). */
   authorize?: (state: S, action: A, from: string) => boolean;
   initialState: S;
+  /** Defaults to `getRoomTransport(roomId)`. */
+  transport?: RoomTransport;
+  /** Off: no messages are sent or received (e.g. while the game is not in a room). */
+  enabled?: boolean;
 }
 
 export function useRoomReducer<S, A>({
@@ -32,88 +35,47 @@ export function useRoomReducer<S, A>({
   reducer,
   authorize,
   initialState,
+  transport,
+  enabled = true,
 }: UseRoomReducerOptions<S, A>): { state: S; dispatch: (action: A) => void; synced: boolean } {
-  const [host, setHost] = useState<RoomHost<S>>({ state: initialState, rev: 0 });
-  const [synced, setSynced] = useState(isHost);
-  // Every state change goes through hostRef first, so it never lags behind `host`.
-  const hostRef = useRef(host);
-  const optsRef = useRef({ reducer, authorize, isHost, playerId });
+  // The peer holds the state; this only re-renders when it changes.
+  const [, setView] = useState<RoomHost<S> | null>(null);
+
+  const peer = useMemo(
+    () =>
+      new RoomStatePeer<S, A>({
+        transport: transport ?? getRoomTransport(roomId),
+        channel: `${gameKey}_${roomId}`,
+        playerId,
+        isHost,
+        reducer,
+        authorize,
+        initialState,
+        onChange: () => {},
+      }),
+    // A new peer only for a new room, game, player or role; the rest is updated below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [gameKey, roomId, playerId, isHost, transport],
+  );
+
   useLayoutEffect(() => {
-    optsRef.current = { reducer, authorize, isHost, playerId };
+    peer.update({ reducer, authorize, onChange: (host) => setView(host) });
   });
 
-  const sync = useMemo(
-    () =>
-      new MultiChannelSyncCoordinator<RoomMessage<S, A>>({
-        channelId: `${gameKey}_${roomId}`,
-        broadcastPrefix: 'room',
-        mailbox: roomMailbox as unknown as MqttMailboxService<RoomMessage<S, A>>,
-        onMessage: () => {},
-      }),
-    [gameKey, roomId],
-  );
-
-  const publishState = useCallback(
-    (next: RoomHost<S>) =>
-      sync.publish({
-        kind: 'state',
-        from: optsRef.current.playerId,
-        rev: next.rev,
-        state: next.state,
-      }),
-    [sync],
-  );
-
-  const applyAsHost = useCallback(
-    (action: A, from: string) => {
-      const { reducer: r, authorize: auth } = optsRef.current;
-      const next = hostApply(hostRef.current, action, from, r, auth);
-      if (!next) return;
-      hostRef.current = next;
-      setHost(next);
-      publishState(next);
-    },
-    [publishState],
-  );
-
   useEffect(() => {
-    sync.updateOptions({
-      channelId: `${gameKey}_${roomId}`,
-      broadcastPrefix: 'room',
-      mailbox: roomMailbox as unknown as MqttMailboxService<RoomMessage<S, A>>,
-      onMessage: (msg) => {
-        const me = optsRef.current;
-        if (!msg || msg.from === me.playerId) return;
-        if (me.isHost) {
-          if (msg.kind === 'hello') publishState(hostRef.current);
-          else if (msg.kind === 'action') applyAsHost(msg.action, msg.from);
-        } else if (msg.kind === 'state' && guestAccept(hostRef.current.rev, msg.rev)) {
-          hostRef.current = { state: msg.state, rev: msg.rev };
-          setHost(hostRef.current);
-          setSynced(true);
-        }
-      },
-    });
-    sync.start();
-    if (isHost) publishState(hostRef.current);
-    else sync.publish({ kind: 'hello', from: playerId });
-    return () => sync.stop();
-  }, [sync, gameKey, roomId, isHost, playerId, applyAsHost, publishState]);
+    if (!enabled) return;
+    peer.start();
+    return () => peer.stop();
+  }, [peer, enabled]);
 
   // A guest keeps asking until the host's first state arrives (the broker may still connect).
+  const synced = peer.isSynced;
   useEffect(() => {
-    if (isHost || synced) return;
-    const timer = setInterval(() => sync.publish({ kind: 'hello', from: playerId }), 2000);
+    if (!enabled || isHost || synced) return;
+    const timer = setInterval(() => peer.hello(), 2000);
     return () => clearInterval(timer);
-  }, [isHost, synced, sync, playerId]);
+  }, [enabled, isHost, synced, peer]);
 
-  const dispatch = useCallback(
-    (action: A) => {
-      if (optsRef.current.isHost) applyAsHost(action, optsRef.current.playerId);
-      else sync.publish({ kind: 'action', from: optsRef.current.playerId, action });
-    },
-    [applyAsHost, sync],
-  );
-
-  return { state: host.state, dispatch, synced };
+  const dispatch = useMemo(() => (action: A) => peer.dispatch(action), [peer]);
+  return { state: peer.current.state, dispatch, synced };
 }
