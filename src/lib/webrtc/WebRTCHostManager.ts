@@ -8,6 +8,13 @@ import {
   stringToInfoHash as partyIdToInfoHash,
 } from './trackerProtocol';
 import { findStalePeersByDevice, type PeerIdentity } from './peerRegistry';
+import {
+  HEARTBEAT_CHECK_MS,
+  isHeartbeatMessage,
+  isPeerStale,
+  isPingDue,
+  pingMessage,
+} from './heartbeat';
 
 /**
  * Base type for a remote peer entry stored in the peers Map.
@@ -113,6 +120,10 @@ export interface WebRTCHostManagerCallbacks<T extends RemotePeerBase> {
  */
 export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
   protected peers: Map<string, T> = new Map();
+  /** When each peer was last heard from (any data, pongs included); drives the heartbeat. */
+  private lastSeenAt = new Map<string, number>();
+  private lastPingAt: number | null = null;
+  private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
 
   // Dynamic callback for session
   public onMessage?: (peerId: string, data: any) => void;
@@ -344,6 +355,8 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
     }
 
     this.peers.set(peerId, remotePeer);
+    this.lastSeenAt.set(peerId, Date.now());
+    this.startHeartbeat();
     this.callbacks?.onPeerCreated?.(peerId, remotePeer);
 
     dataPeer.on('signal', (data: any) => {
@@ -371,8 +384,11 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
       try {
         for (const message of decodeNdjsonChunk(data)) {
           const msg = message;
+          this.lastSeenAt.set(peerId, Date.now());
 
-          if (msg.type === 'identify') {
+          if (isHeartbeatMessage(msg)) {
+            continue; // liveness only; games never see ping/pong
+          } else if (msg.type === 'identify') {
             this.applyIdentity(remotePeer, msg, 'WebRTC');
           } else {
             // Pass to subclass handles or generic listeners
@@ -428,10 +444,34 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
     remotePeer.peer.destroy();
     this.callbacks?.onPeerRemoved?.(peerId, remotePeer);
     this.peers.delete(peerId);
+    this.lastSeenAt.delete(peerId);
     this.callbacks?.onPeerDisconnected?.(peerId);
   }
 
+  /** Pings every phone each few seconds and drops those silent for too long. */
+  private startHeartbeat(): void {
+    if (this.heartbeatTimer) return;
+    this.heartbeatTimer = setInterval(() => {
+      const now = Date.now();
+      for (const peerId of [...this.peers.keys()]) {
+        if (isPeerStale(this.lastSeenAt.get(peerId) ?? now, now)) this.removePeer(peerId);
+      }
+      if (isPingDue(this.lastPingAt, now)) {
+        this.lastPingAt = now;
+        this.broadcast(pingMessage(now));
+      }
+    }, HEARTBEAT_CHECK_MS);
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+    this.heartbeatTimer = null;
+    this.lastPingAt = null;
+  }
+
   stop(): void {
+    this.stopHeartbeat();
+    this.lastSeenAt.clear();
     this.removeAllListeners();
     if (this.trackerClient) {
       (this.trackerClient as any).stop();
