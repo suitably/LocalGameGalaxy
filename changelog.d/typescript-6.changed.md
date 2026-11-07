@@ -1,0 +1,1 @@
+- **TypeScript 6.0 in the app**: the bridge release before TypeScript 7, which waits for `typescript-eslint` support (#665). No code changes were needed (#616).
