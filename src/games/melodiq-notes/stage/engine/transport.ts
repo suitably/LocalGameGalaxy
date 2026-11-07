@@ -111,6 +111,11 @@ export function practiseBars(e: StageEngine, first: number, last: number) {
   loopSections(e, first, last);
 }
 
+/** Ends guided practice: the loop goes, the song plays on from where it is, at its speed. */
+export function stopPractising(e: StageEngine) {
+  loopSections(e, null, null);
+}
+
 /** End of a loop pass: tells the guided practice (which may move or end the loop), then starts over. */
 export function passLoop(e: StageEngine) {
   e.onLoopPass?.(e);

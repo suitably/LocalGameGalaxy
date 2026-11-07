@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { StageEngine } from './engine/StageEngine';
 import { sectionScore } from './logic/judging';
-import { practiseBars } from './engine/transport';
+import { practiseBars, stopPractising } from './engine/transport';
 import {
   afterPass,
   ladderBar,
@@ -71,7 +71,11 @@ export function usePracticeLadder(engine: StageEngine, start: () => void) {
     start();
   }, [engine, start]);
 
-  const stop = useCallback(() => setState(null), []);
+  /** "Stop guided practice" and the chip's ×: ends the practice and its loop (#664). */
+  const stop = useCallback(() => {
+    setState(null);
+    stopPractising(engine);
+  }, [engine]);
 
   useEffect(() => {
     const onLoopPass = (e: StageEngine) => {
