@@ -11,15 +11,15 @@ export type StageInputSource = 'keys' | 'midi' | 'mic';
 /**
  * Routes a MIDI device or the microphone to the highlighted player (the computer keyboard always
  * works). Until the player picks an input, MIDI is used whenever a real instrument is connected.
- * Sung or played microphone notes never sound again through the speakers; MIDI notes do unless
- * the player turns that off (an instrument with its own sound).
+ * Sung or played microphone notes never sound again through the speakers. MIDI notes only do when
+ * the player turns that on: the synth's echo lags behind an instrument's own sound (#663).
  */
 export function useStageInput(engine: StageEngine) {
   // null: automatic (MIDI with an instrument, else the computer keys)
   const [chosen, setChosen] = useState<StageInputSource | null>(null);
   const sourceRef = useRef<StageInputSource>(chosen ?? 'keys');
   const [midiSound, setMidiSoundState] = useState(
-    () => storage.get(STORAGE_KEYS.MELODIQ_NOTES_MIDI_SOUND) !== '0',
+    () => storage.get(STORAGE_KEYS.MELODIQ_NOTES_MIDI_SOUND) === '1',
   );
   const midiSoundRef = useRef(midiSound);
   const setMidiSound = (on: boolean) => {
