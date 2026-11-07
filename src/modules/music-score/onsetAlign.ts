@@ -1,7 +1,7 @@
 import { fft } from './dsp';
 import type { AlignProgress } from './alignment';
 import { noteEvents, type NoteEvent, type OnsetBands } from './noteFit';
-import { beatToSec } from './timing';
+import { beatToSec, createAudioMap } from './timing';
 import type { BarMark, ScoreSong } from './types';
 
 /** Hop of the band onset envelopes (`onsetFeatures`). */
@@ -41,6 +41,30 @@ function scoreHits(song: ScoreSong): Hit[] {
       total: e.weight[0] + e.weight[1] + e.weight[2],
     }))
     .filter((h) => h.total > 0);
+}
+
+/**
+ * How well the score's attacks, placed by `marks`, land on onsets of the recording: the mean
+ * band onset (capped, best within ±20 ms) under each attack, weighted like the attack. Compares
+ * alignments of the same score and recording; higher is better.
+ */
+export function onsetHitScore(song: ScoreSong, marks: BarMark[], bands: OnsetBands): number {
+  const map = createAudioMap(song, marks);
+  let sum = 0;
+  let weights = 0;
+  for (const e of noteEvents(song)) {
+    const f = Math.round(map.secAt(e.beat) / HOP_SEC);
+    for (let b = 0; b < 3; b++) {
+      const w = e.weight[b];
+      if (!w) continue;
+      const env = bands[b];
+      let v = 0;
+      for (let d = -2; d <= 2; d++) v = Math.max(v, env[f + d] ?? 0);
+      sum += w * Math.min(MAX_ONSET, v);
+      weights += w;
+    }
+  }
+  return weights ? sum / weights : 0;
 }
 
 /** Envelope pooled onto the search grid (capped) and widened by `radius` cells, so attacks a little off still count. */

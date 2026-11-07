@@ -53,6 +53,12 @@ export interface StoredBarMarks {
   offsetSec: number;
   /** Recording the marks belong to: a file in the song folder, or null for the song's mix. */
   audio: string | null;
+  /** `ALIGN_VERSION` of the alignment that made the marks; missing in marks stored before it was kept. */
+  aligner?: number | null;
+  /** How the recording plays: bar by bar, one steady tempo through the marks, or the score's tempo. */
+  mode?: 'bars' | 'steady' | 'off';
+  /** Corrected by hand (pinned bars, offset); never replaced by a newer alignment. */
+  edited?: boolean;
 }
 
 export const isCompanionEnabled = () => isHelperActive() && !!getHelperUrl();

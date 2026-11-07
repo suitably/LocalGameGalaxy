@@ -89,6 +89,21 @@ describe('saveToNotesLibrary (#568: into song folders)', () => {
     expect(result.recordingName).toBe('stored-take.mp3');
   });
 
+  it('stores where the marks come from and how they play', async () => {
+    const { api } = fakeApi();
+    const marksMeta = { aligner: 2, mode: 'steady' as const, edited: false };
+    await saveToNotesLibrary(
+      { ...base, stored: { songId: 's9', scoreFile: 'a.mxl' }, marks, marksMeta },
+      api,
+    );
+    expect(api.saveMarks).toHaveBeenCalledWith('s9', 'a.mxl', {
+      marks,
+      offsetSec: 0,
+      audio: null,
+      ...marksMeta,
+    });
+  });
+
   it('only adds what is missing to a stored score', async () => {
     const { api, uploads } = fakeApi();
     await saveToNotesLibrary(

@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { nudgeOffset } from './logic/tuning';
 import {
   applyBarMarksToMusicXml,
   type AlignProgress,
   type AlignResult,
-  type BarMark,
-  nearestBar,
-  pinBar,
   type ScoreSong,
 } from '../../../modules/music-score';
+import { useAutoAlign } from './useAutoAlign';
+import { useStageMarks } from './useStageMarks';
 import { isCompanionEnabled, type CompanionSong } from '../../../lib/companion/songScoresApi';
 import type { CatalogScore } from './logic/scoreCatalog';
 import {
@@ -60,18 +58,14 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [recording, setRecording] = useState<RecordingSource | null>(null);
-  const [marks, setMarks] = useState<BarMark[] | null>(null);
-  // bars placed by hand (indices into marks); cleared whenever the marks are replaced
-  const [pins, setPins] = useState<number[]>([]);
-  const [offset, setOffset] = useState(0);
   const [align, setAlign] = useState<AlignState>({ kind: 'none' });
   const [saved, setSaved] = useState(false);
+  const unsaved = useCallback(() => setSaved(false), []);
+  const bar = useStageMarks(engine, song, unsaved);
+  const { marks, offset, played, clear: clearMarks, applyStored, applyAlignment } = bar;
+  const { aligner, mode: marksMode, edited } = bar;
   // the score file as opened, so the library gets the original (.mxl, .mid) rather than a copy
   const openedFile = useRef<File | null>(null);
-  const replaceMarks = useCallback((next: BarMark[] | null) => {
-    setMarks(next);
-    setPins([]);
-  }, []);
   // bumped whenever the song or the recording changes; async results for an older one are dropped
   const generation = useRef(0);
 
@@ -85,12 +79,11 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
       setXml(nextXml);
       setOrigin(nextOrigin);
       setError(null);
-      replaceMarks(null);
-      setOffset(0);
+      clearMarks();
       setAlign({ kind: 'none' });
       setSaved(false);
     },
-    [engine, replaceMarks],
+    [engine, clearMarks],
   );
 
   const replaceRecording = useCallback((next: RecordingSource | null) => {
@@ -146,14 +139,12 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
         replaceRecording(rec);
         // straight from the server: nothing to save until something changes
         setSaved(true);
-        if (stored) {
-          replaceMarks(stored.marks);
-          setOffset(stored.offsetSec);
+        // stale marks leave the alignment pending, so it runs again (useAutoAlign)
+        if (stored && applyStored(stored, next.kind === 'karaoke' ? 'karaoke' : 'notes'))
           setAlign({ kind: 'done' });
-        }
       });
     },
-    [run, show, replaceRecording, replaceMarks],
+    [run, show, replaceRecording, applyStored],
   );
 
   /** Opens a Melodiq song's karaoke vocals with the song's mix and computed bar marks (#566). */
@@ -172,12 +163,11 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     (file: File) => {
       generation.current++;
       replaceRecording({ name: file.name, url: URL.createObjectURL(file), local: true, file });
-      replaceMarks(null);
-      setOffset(0);
+      clearMarks();
       setAlign({ kind: 'none' });
       setSaved(false);
     },
-    [replaceRecording, replaceMarks],
+    [replaceRecording, clearMarks],
   );
 
   // the engine follows song, recording and its mapping
@@ -187,13 +177,13 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
       engine.setRecording(null);
       return;
     }
-    const rec = createElementRecording(playUrl, song, marks, offset);
+    const rec = createElementRecording(playUrl, song, played, offset);
     engine.setRecording(rec);
     return () => {
       rec.pause();
       rec.element.removeAttribute('src');
     };
-  }, [engine, song, playUrl, marks, offset]);
+  }, [engine, song, playUrl, played, offset]);
 
   const alignNow = useCallback(async () => {
     if (!song || !recording) return;
@@ -206,14 +196,13 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
         if (current()) setAlign({ kind: 'running', stage, fraction });
       });
       if (!current()) return;
-      replaceMarks(result.marks);
-      setOffset(0);
+      applyAlignment(song, result);
       setSaved(false);
       setAlign({ kind: 'done', tuning: result.tuning });
     } catch (e) {
       if (current()) setAlign({ kind: 'failed', error: errorText(e) });
     }
-  }, [song, recording, replaceMarks]);
+  }, [song, recording, applyAlignment]);
 
   // a karaoke `.txt` on stage is stored already; only a new recording of it can be saved
   const stored = useMemo(() => {
@@ -237,6 +226,7 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
         recordingName: recording && !recording.file && !recording.songMix ? recording.name : null,
         marks,
         offsetSec: offset,
+        marksMeta: { aligner, mode: marksMode, edited },
       });
       if (savingAs !== generation.current) return;
       if (result.scoreFile) {
@@ -255,7 +245,7 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     } catch (e) {
       setError(errorText(e));
     }
-  }, [song, stored, xml, marks, offset, recording]);
+  }, [song, stored, xml, marks, offset, recording, aligner, marksMode, edited]);
 
   // a stored score only needs marks or a recording; anything else needs its MusicXML to upload
   const canSaveToServer = !!song && isCompanionEnabled() && (!!stored || !!xml);
@@ -267,37 +257,28 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
   );
 
   const exportScore = useCallback(() => {
-    if (!song || !xml || !marks) return;
-    const shifted = marks.map((m) => ({ ...m, sec: m.sec + offset }));
+    if (!song || !xml || !played) return;
+    const shifted = played.map((m) => ({ ...m, sec: m.sec + offset }));
     const out = applyBarMarksToMusicXml(xml, song, shifted, browserXml, serializeXml);
     downloadText(
       `${song.title || 'score'}.musicxml`,
       out,
       'application/vnd.recordare.musicxml+xml',
     );
-  }, [song, xml, marks, offset]);
+  }, [song, xml, played, offset]);
 
-  /** Moves the bar line nearest to what the recording plays now onto this moment and pins it. */
-  const pinBarNow = useCallback(() => {
-    const now = engine.recording?.time();
-    if (!marks || now === undefined) return;
-    const sec = now - offset;
-    const next = pinBar(marks, pins, nearestBar(marks, sec), sec);
-    if (!next) return;
-    setMarks(next.marks);
-    setPins(next.pins);
-    setSaved(false);
-  }, [engine, marks, pins, offset]);
-
-  const setOffsetSec = useCallback((sec: number) => {
-    setOffset(nudgeOffset(sec, 0));
-    setSaved(false);
-  }, []);
-
-  const nudge = useCallback((deltaSec: number) => {
-    setOffset((o) => nudgeOffset(o, deltaSec));
-    setSaved(false);
-  }, []);
+  useAutoAlign({
+    loading,
+    hasSong: !!song,
+    recording,
+    hasMarks: !!marks,
+    stale: bar.stale,
+    align,
+    origin,
+    saved,
+    alignNow,
+    saveToServer,
+  });
 
   return {
     song,
@@ -306,11 +287,16 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     loading,
     recording,
     marks,
-    pins,
+    played,
+    quality: bar.quality,
+    mode: bar.mode,
+    stale: bar.stale,
+    edited: bar.edited,
+    pins: bar.pins,
     offset,
     align,
     saved,
-    canExport: !!xml && !!marks,
+    canExport: !!xml && !!played,
     loadExample,
     loadFile,
     loadCatalogScore,
@@ -321,9 +307,10 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     canSaveToServer,
     currentScoreFile,
     exportScore,
-    nudge,
-    setOffsetSec,
-    pinBarNow,
+    nudge: bar.nudge,
+    setOffsetSec: bar.setOffsetSec,
+    pinBarNow: bar.pinBarNow,
+    chooseMode: bar.chooseMode,
     clearError: () => setError(null),
   };
 }

@@ -4,7 +4,11 @@ import {
   saveSongMarks,
   uploadSongFile,
 } from '../../../../lib/companion/notesLibraryApi';
-import { listLibrarySongs, type CompanionSong } from '../../../../lib/companion/songScoresApi';
+import {
+  listLibrarySongs,
+  type CompanionSong,
+  type StoredBarMarks,
+} from '../../../../lib/companion/songScoresApi';
 import { findSongFolder } from './scoreCatalog';
 
 /** The parts of the stage that go to a song folder on the companion server. */
@@ -25,6 +29,8 @@ export interface NotesSaveInput {
   recordingName: string | null;
   marks: BarMark[] | null;
   offsetSec: number;
+  /** Where the marks come from and how they play (alignment version, mode, corrected by hand). */
+  marksMeta?: Pick<StoredBarMarks, 'aligner' | 'mode' | 'edited'>;
 }
 
 export interface NotesSaveResult {
@@ -87,6 +93,7 @@ export async function saveToNotesLibrary(
       marks: input.marks,
       offsetSec: input.offsetSec,
       audio: recordingName,
+      ...input.marksMeta,
     });
   }
   return { ...stored, recordingName };
