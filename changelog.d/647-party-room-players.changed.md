@@ -1,0 +1,1 @@
+- **One roster hook for room games** (#647 S3): `usePartyRoomPlayers` returns `{ id, name, seat, isHost }` per seated player plus `me` (pure `roomPlayersOf` in `partyRoster.ts`).
