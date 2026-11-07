@@ -1744,6 +1744,16 @@
     "no_servers_warning": "Kein STUN-Server aktiv. Handys können sich dann nur im selben Netzwerk verbinden.",
     "hint": "STUN hilft Handys, einen Weg zu diesem Gerät zu finden. Jedes Gerät hat seine eigene Liste; Änderungen gelten für neue Verbindungen."
   },
+  "turn": {
+    "title": "TURN-Relay (optional, dieses Gerät)",
+    "url": "TURN-URL",
+    "username": "Benutzername",
+    "credential": "Passwort",
+    "save": "Speichern",
+    "clear": "Entfernen",
+    "invalid_url": "Gib eine URL wie turn:host:3478 oder turns:host:5349 ein.",
+    "hint": "Standardmäßig aus. Ein TURN-Server leitet die (verschlüsselte) Verbindung weiter, wenn ein Handy dieses Gerät nicht direkt erreicht, z. B. im Mobilfunknetz. Nutze einen eigenen oder vertrauenswürdigen Server; er sieht IP-Adressen, nicht den Inhalt."
+  },
   "github": {
     "title": "GitHub-Integration",
     "desc": "Verbinde dich direkt mit GitHub für Feedback und das Veröffentlichen von Inhalten. Erstelle ein Personal Access Token (PAT) mit 'repo'-Berechtigung auf github.com/settings/tokens.",

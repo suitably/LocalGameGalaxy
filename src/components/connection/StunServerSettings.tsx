@@ -8,6 +8,7 @@ import { Box, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { ServerUrlList, type ServerUrlItem } from './ServerUrlList';
 import { useStunServerSettings } from './useStunServerSettings';
+import { TurnServerSettings } from './TurnServerSettings';
 
 export const StunServerSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -51,6 +52,9 @@ export const StunServerSettings: React.FC = () => {
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
         {t('stun.hint')}
       </Typography>
+      <Box sx={{ mt: 2 }}>
+        <TurnServerSettings />
+      </Box>
     </Box>
   );
 };

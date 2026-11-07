@@ -1744,6 +1744,16 @@
     "no_servers_warning": "No STUN server enabled. Phones can then only connect on the same network.",
     "hint": "STUN helps phones find a route to this device. Each device keeps its own list; changes apply to new connections."
   },
+  "turn": {
+    "title": "TURN relay (optional, this device)",
+    "url": "TURN URL",
+    "username": "Username",
+    "credential": "Password",
+    "save": "Save",
+    "clear": "Remove",
+    "invalid_url": "Enter a URL like turn:host:3478 or turns:host:5349.",
+    "hint": "Off by default. A TURN server relays the (encrypted) connection when a phone cannot reach this device directly, e.g. on mobile data. Use a server you run or trust; it sees IP addresses, not content."
+  },
   "github": {
     "title": "GitHub Integration",
     "desc": "Connect directly to GitHub for feedback and content publishing. Create a Personal Access Token (PAT) with \"repo\" scope on github.com/settings/tokens.",

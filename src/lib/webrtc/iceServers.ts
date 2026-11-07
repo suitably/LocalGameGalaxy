@@ -82,9 +82,45 @@ export function saveStunSettings(settings: StunSettings): void {
   storage.setJson(STORAGE_KEYS.WEBRTC_STUN_PREFERENCES, settings.preferences);
 }
 
-/** ICE servers for a new peer connection, read from this device's STUN settings. */
+/** An optional TURN relay for devices that cannot connect directly (mobile data, strict NAT). */
+export interface TurnServer {
+  url: string;
+  username: string;
+  credential: string;
+}
+
+/** Accepts `turn:host[:port][?transport=udp|tcp]` and `turns:…` (RFC 7065). */
+export function isValidTurnUrl(url: string): boolean {
+  return /^turns?:[^\s/?#]+(\?transport=(udp|tcp))?$/i.test(url.trim());
+}
+
+/** The STUN list plus the TURN relay, when one is set. */
+export function withTurn(ice: RTCIceServer[], turn: TurnServer | null): RTCIceServer[] {
+  if (!turn) return ice;
+  return [...ice, { urls: turn.url, username: turn.username, credential: turn.credential }];
+}
+
+export function loadTurnServer(): TurnServer | null {
+  const raw = storage.getJson<unknown>(STORAGE_KEYS.WEBRTC_TURN_SERVER, null);
+  if (!raw || typeof raw !== 'object') return null;
+  const { url, username, credential } = raw as Record<string, unknown>;
+  if (typeof url !== 'string' || !isValidTurnUrl(url)) return null;
+  return {
+    url,
+    username: typeof username === 'string' ? username : '',
+    credential: typeof credential === 'string' ? credential : '',
+  };
+}
+
+/** Stores the TURN relay of this device; null removes it (TURN off). */
+export function saveTurnServer(turn: TurnServer | null): void {
+  if (turn) storage.setJson(STORAGE_KEYS.WEBRTC_TURN_SERVER, turn);
+  else storage.remove(STORAGE_KEYS.WEBRTC_TURN_SERVER);
+}
+
+/** ICE servers for a new peer connection, read from this device's STUN and TURN settings. */
 export function getIceServers(): RTCIceServer[] {
-  return toIceServers(buildStunServers(loadStunSettings()));
+  return withTurn(toIceServers(buildStunServers(loadStunSettings())), loadTurnServer());
 }
 
 export type AddStunResult = 'added' | 'invalid' | 'duplicate';
