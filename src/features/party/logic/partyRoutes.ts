@@ -85,6 +85,7 @@ export function getGameRoute({
       : `/games/tabletop?room=${roomId}&gameId=${targetGame}&seat=${Math.max(0, seat)}`;
   }
   if (gameType === 'garticphone') return `/games/garticphone?room=${roomId}`;
+  if (gameType === 'guessart') return `/games/guessart?room=${roomId}`;
   if (isRoomDiceGame(gameType)) return `/games/${gameType}?room=${roomId}`;
   return '/games/guessart';
 }

@@ -112,7 +112,7 @@ Claude-Session: https://claude.ai/code/session_01L6uonSrNoWaJiNvg1NtKuH
 - [x] S4 RoomTransport
 - [x] S6 Gartic Phone — host reload still loses the round (non-goal); unused `GARTIC_*_PREFIX` storage keys left in storage.ts
 - [x] S10 heartbeat — unit-tested timing only; the two-browser check comes with the S12 harness
-- [ ] S5 GuessArt
+- [x] S5 GuessArt — live mode has fixed catalogue word choice (no manual-word toggle) and no mid-game joins; setup text labels the links flow "Über Tage spielen"
 - [ ] S7 Storyteller
 - [ ] S8 Melodiq Notes
 - [ ] S9 Melodiq phones

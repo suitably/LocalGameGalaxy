@@ -1,0 +1,1 @@
+- **GuessArt live in the party lobby** (#647): start GuessArt from the lobby and everyone in the room plays on their own device, taking turns drawing and guessing, with the room's players (no name entry, no links). The setup screen offers "Mitspieler einladen" for live play; the existing per-player links stay as the "over days" way to play.

@@ -15,11 +15,12 @@ import { GuessArtDialogs } from './components/GuessArtDialogs';
 import { useGuessArtDialogState } from './hooks/useGuessArtDialogState';
 import { useCompletedRound } from './hooks/useCompletedRound';
 import { useGuessArtShareDialog } from './hooks/useGuessArtShareDialog';
-import { cleanWindowUrlQuery } from '../../modules/sharing';
+import { cleanWindowUrlQuery, parseGameUrlParams } from '../../modules/sharing';
+import { GuessArtRoomGame } from './components/GuessArtRoomGame';
 import { playerAssignment } from './logic/playerAssignment';
 import { guessArtNotificationService } from './logic/notificationService';
 
-export const GuessArtGame: React.FC = () => {
+const GuessArtLocalGame: React.FC = () => {
   const { t, i18n } = useTranslation();
   usePageTitle(t('games.guessart.title', 'GuessArt'));
 
@@ -213,4 +214,12 @@ export const GuessArtGame: React.FC = () => {
       />
     </GuessArtSessionView>
   );
+};
+
+/** `?room=<CODE>` plays live in the party room; without it the per-player "Play over days" flow runs. */
+export const GuessArtGame: React.FC = () => {
+  const { i18n } = useTranslation();
+  const room = parseGameUrlParams().get('room')?.toUpperCase().trim();
+  if (!room) return <GuessArtLocalGame />;
+  return <GuessArtRoomGame roomId={room} language={i18n.language.startsWith('de') ? 'de' : 'en'} />;
 };

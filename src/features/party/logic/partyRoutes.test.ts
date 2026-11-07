@@ -43,12 +43,12 @@ describe('partyRoutes (#417)', () => {
     );
   });
 
-  it('routes gartic phone with the room and guessart without', () => {
+  it('routes gartic phone and guessart with the room', () => {
     expect(getGameRoute({ gameType: 'garticphone', roomId: 'R1', isHost: false, seat: 0 })).toBe(
       '/games/garticphone?room=R1',
     );
     expect(getGameRoute({ gameType: 'guessart', roomId: 'R1', isHost: true, seat: 0 })).toBe(
-      '/games/guessart',
+      '/games/guessart?room=R1',
     );
     expect(getGameRoute({ gameType: null, roomId: 'R1', isHost: true, seat: 0 })).toBe(
       '/games/guessart',
