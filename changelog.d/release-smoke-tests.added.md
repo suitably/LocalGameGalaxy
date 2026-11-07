@@ -1,0 +1,1 @@
+- **Release smoke tests**: every server binary (Linux, macOS and Windows, x64 and arm64) and the Docker base image must start and answer `/health` before the release gets it, and a Cloudflare deploy is checked after it runs (#591).

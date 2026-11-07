@@ -1,0 +1,1 @@
+- **Melodiq Notes: MIDI notes no longer echo through the speakers by default**: the synth's echo lagged noticeably behind an instrument's own sound. "Play MIDI notes through the speakers" in the input menu now starts off; a choice made earlier is kept (#663).

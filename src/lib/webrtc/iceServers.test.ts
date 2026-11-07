@@ -9,6 +9,10 @@ import {
   loadStunSettings,
   saveStunSettings,
   toIceServers,
+  isValidTurnUrl,
+  loadTurnServer,
+  saveTurnServer,
+  withTurn,
 } from './iceServers';
 import { storage, STORAGE_KEYS } from '../storage';
 
@@ -140,5 +144,42 @@ describe('custom STUN URL edits (#422)', () => {
       customUrls: ['stun:b'],
       preferences: { 'stun:b': true },
     });
+  });
+});
+
+describe('optional TURN relay (#652)', () => {
+  beforeEach(() => {
+    storage.remove(STORAGE_KEYS.WEBRTC_TURN_SERVER);
+    storage.remove(STORAGE_KEYS.WEBRTC_STUN_CUSTOM_URLS);
+    storage.remove(STORAGE_KEYS.WEBRTC_STUN_PREFERENCES);
+  });
+
+  it('accepts turn and turns URLs with an optional transport', () => {
+    expect(isValidTurnUrl('turn:turn.example.com:3478')).toBe(true);
+    expect(isValidTurnUrl('turns:turn.example.com:5349?transport=tcp')).toBe(true);
+    expect(isValidTurnUrl('stun:turn.example.com')).toBe(false);
+    expect(isValidTurnUrl('turn:host/path')).toBe(false);
+  });
+
+  it('is off by default: only STUN servers', () => {
+    expect(loadTurnServer()).toBeNull();
+    expect(getIceServers().every((s) => !String(s.urls).startsWith('turn'))).toBe(true);
+  });
+
+  it('adds the saved relay with its credentials, and removes it again', () => {
+    saveTurnServer({ url: 'turn:t.example.com:3478', username: 'u', credential: 'p' });
+    expect(getIceServers().at(-1)).toEqual({
+      urls: 'turn:t.example.com:3478',
+      username: 'u',
+      credential: 'p',
+    });
+    saveTurnServer(null);
+    expect(loadTurnServer()).toBeNull();
+  });
+
+  it('ignores a stored relay with an invalid URL', () => {
+    storage.setJson(STORAGE_KEYS.WEBRTC_TURN_SERVER, { url: 'http://x', username: 'u' });
+    expect(loadTurnServer()).toBeNull();
+    expect(withTurn([], null)).toEqual([]);
   });
 });

@@ -1,0 +1,1 @@
+- **Optional TURN relay**: next to the STUN list, each device can enter a TURN server (URL, username, password) so phones on mobile data or behind strict NATs can still connect. Off by default (#652).

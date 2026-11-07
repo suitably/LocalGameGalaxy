@@ -1,0 +1,1 @@
+- **TV mode**: one `useIsTvMode()` check, true inside every TV view (Melodiq passes it to its session); the Melodiq TV title uses the TV theme size instead of a hard-coded one (#554).

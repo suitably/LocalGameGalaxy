@@ -124,6 +124,31 @@ jobs:
             type=raw,value=base,enable={{is_default_branch}}
             type=sha,prefix=sha-
 
+      # 0. The base image must start and answer /health before anything is pushed (#591)
+      - name: Build Base Image for the Smoke Test
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: ./server
+          file: ./server/Dockerfile
+          target: base
+          load: true
+          push: false
+          tags: nexumia-server:smoke
+          cache-from: type=registry,ref=nexumia/nexumia-server:buildcache-base
+
+      - name: Smoke-Test Base Image
+        run: |
+          docker run -d --name nexumia-smoke -p 3917:3000 nexumia-server:smoke
+          for _ in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3917/health | grep -q '"status":"ok"'; then
+              echo "/health ok"; docker rm -f nexumia-smoke >/dev/null; exit 0
+            fi
+            sleep 1
+          done
+          docker logs nexumia-smoke | tail -n 40
+          docker rm -f nexumia-smoke >/dev/null
+          exit 1
+
       # 1. Build & Push Lightweight Base Image (~200MB)
       - name: Build and Push Base Image
         id: build_base

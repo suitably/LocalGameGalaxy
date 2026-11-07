@@ -20,6 +20,8 @@ export const STORAGE_KEYS = {
   SIGNALING_URL: 'galaxy_signaling_url',
   WEBRTC_STUN_CUSTOM_URLS: 'galaxy_stun_custom_urls',
   WEBRTC_STUN_PREFERENCES: 'galaxy_stun_preferences',
+  /** Optional TURN relay `{ url, username, credential }`, off when absent (#652). */
+  WEBRTC_TURN_SERVER: 'galaxy_turn_server',
 
   // Client connection states
   CLIENT_PROFILE: 'melodiq_client_profile',
@@ -74,6 +76,8 @@ export const STORAGE_KEYS = {
   MELODIQ_AUTOPLAY_NO_PLAYERS: 'melodiq_autoplay_no_players',
   MELODIQ_AUTOPLAY_WITH_PLAYERS: 'melodiq_autoplay_with_players',
   MELODIQ_HIDE_BACKGROUND_VIDEO: 'melodiq_hide_background_video',
+  /** '1' once the player allowed YouTube background videos on this device (#645). */
+  MELODIQ_YOUTUBE_CONSENT: 'melodiq_youtube_consent',
   MELODIQ_FALLBACK_BACKGROUND_URL: 'melodiq_fallback_background_url',
   MELODIQ_LYRICS_SCALE: 'melodiq_lyrics_scale',
   MELODIQ_ENABLE_LYRICS_ZOOM: 'melodiq_enable_lyrics_zoom',

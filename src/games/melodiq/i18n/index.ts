@@ -3,6 +3,10 @@ import i18n from '../../../i18n';
 export const melodiqResources = {
   en: {
     melodiq: {
+      youtube_consent: {
+        load: 'Load YouTube video',
+        hint: 'The background video comes from YouTube (Google). Loading it sends your IP address to Google. Your choice is remembered on this device.',
+      },
       join_prompt: {
         title: 'Session in progress',
         body: 'A song is currently playing. How would you like to join?',
@@ -354,6 +358,10 @@ export const melodiqResources = {
   },
   de: {
     melodiq: {
+      youtube_consent: {
+        load: 'YouTube-Video laden',
+        hint: 'Das Hintergrundvideo kommt von YouTube (Google). Beim Laden erhält Google deine IP-Adresse. Deine Wahl wird auf diesem Gerät gespeichert.',
+      },
       join_prompt: {
         title: 'Session läuft',
         body: 'Gerade läuft ein Song. Wie möchtest du einsteigen?',

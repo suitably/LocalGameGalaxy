@@ -47,6 +47,7 @@ server/music/
 keystore.properties
 
 public/assets
+public/excalidraw/
 
 # Profiling & Diagnostics
 *.heapsnapshot

@@ -225,6 +225,16 @@ jobs:
           wranglerVersion: ${{ steps.wrangler.outputs.version }}
           command: ${{ github.ref == 'refs/heads/main' && 'deploy' || 'preview' }}
 
+      # a broken deploy fails here instead of going unnoticed (#591)
+      - name: Check Deployed App
+        env:
+          DEPLOYMENT_URL: ${{ steps.cloudflare.outputs.deployment-url }}
+        run: |
+          url="${DEPLOYMENT_URL:-https://games.nexumia.de}"
+          html="$(curl -fsS --retry 5 --retry-delay 5 --retry-all-errors "$url")"
+          printf '%s' "$html" | grep -q 'id="root"' || { echo "no app root in $url"; exit 1; }
+          echo "deployed app answers at $url"
+
       - name: Comment PR with Preview Link
         if: github.event_name == 'pull_request'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
