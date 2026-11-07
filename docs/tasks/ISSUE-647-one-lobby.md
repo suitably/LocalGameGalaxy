@@ -110,7 +110,7 @@ Claude-Session: https://claude.ai/code/session_01L6uonSrNoWaJiNvg1NtKuH
 - [x] S2 InvitePlayersButton
 - [x] S3 roster hook
 - [x] S4 RoomTransport
-- [ ] S6 Gartic Phone
+- [x] S6 Gartic Phone — host reload still loses the round (non-goal); unused `GARTIC_*_PREFIX` storage keys left in storage.ts
 - [ ] S10 heartbeat
 - [ ] S5 GuessArt
 - [ ] S7 Storyteller
