@@ -2,17 +2,32 @@
  * Hook for managing Tabletop games via BYOG server or local File System API [ID: HOOK-TABLETOP-GAMES]
  */
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { storage } from '../../../lib/storage';
+import { companionRequest } from '../../../lib/companion/companionHttp';
 import { loadServerGame, type ServerGameEntry } from '../logic/tabletopServerApi';
 import { pickAndLoadGameFolder, supportsLocalFolderImport } from '../logic/localFolderImport';
 import type { TabletopGameDefinition, TabletopGameSummary } from '../logic/types';
 
 export function useTabletopGames() {
+  const { t } = useTranslation();
   const [games, setGames] = useState<TabletopGameSummary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [serverConnected, setServerConnected] = useState<boolean>(false);
   const [supportsLocalFolder] = useState<boolean>(() => supportsLocalFolderImport());
+
+  /** HTTP failures get a localised text; browser network errors stay raw (see isServerUnreachable). */
+  const describeError = useCallback(
+    (err: unknown): string => {
+      const message = err instanceof Error ? err.message : '';
+      const status = /^HTTP (\d+)$/.exec(message)?.[1];
+      if (status === '401') return t('games.tabletop.error_invalid_token');
+      if (status) return t('games.tabletop.error_server_http', { status });
+      return message || t('games.tabletop.error_server_unreachable');
+    },
+    [t],
+  );
 
   const fetchGames = useCallback(async () => {
     if (!storage.isHelperActive()) {
@@ -26,27 +41,7 @@ export function useTabletopGames() {
     setError(null);
 
     try {
-      const baseUrl = storage.getHelperUrl().replace(/\/$/, '');
-      const token = storage.getHelperToken();
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-      };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const res = await fetch(`${baseUrl}/api/tabletop/games`, { headers });
-      if (!res.ok) {
-        setServerConnected(false);
-        if (res.status === 401) {
-          setError('Ungültiger oder fehlender Server-Token');
-        } else {
-          setError(`Serverfehler: HTTP ${res.status}`);
-        }
-        return;
-      }
-
-      const rawList = (await res.json()) as ServerGameEntry[];
+      const rawList = await companionRequest<ServerGameEntry[]>('/api/tabletop/games');
       const summaries: TabletopGameSummary[] = rawList.map((entry) => ({
         id: entry.id,
         name: entry.name,
@@ -68,11 +63,11 @@ export function useTabletopGames() {
       setError(null);
     } catch (err: unknown) {
       setServerConnected(false);
-      setError(err instanceof Error ? err.message : 'Server nicht erreichbar');
+      setError(describeError(err));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [describeError]);
 
   useEffect(() => {
     fetchGames();
@@ -99,16 +94,7 @@ export function useTabletopGames() {
   const refresh = useCallback(async () => {
     if (storage.isHelperActive()) {
       try {
-        const baseUrl = storage.getHelperUrl().replace(/\/$/, '');
-        const token = storage.getHelperToken();
-        const headers: Record<string, string> = {};
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
-        await fetch(`${baseUrl}/api/tabletop/games/refresh`, {
-          method: 'POST',
-          headers,
-        });
+        await companionRequest('/api/tabletop/games/refresh', { method: 'POST' });
       } catch (err) {
         console.warn('[useTabletopGames] Rescan trigger failed:', err);
       }
