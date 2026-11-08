@@ -66,3 +66,6 @@ server/notes/
 
 # vite-plugin-pwa dev service worker (generated)
 dev-dist/
+
+# TTS compatibility harness cache (Workshop saves; never commit, Q21)
+scripts/tts-compat/.cache/
