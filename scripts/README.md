@@ -46,6 +46,17 @@ Validates that architectural changes are synced with documentation and i18n file
   npm run check:docs
   ```
 
+### `tts-compat/`
+
+Dev-only Tabletop Simulator compatibility harness (#682): tier per Workshop mod, converted/degraded/dropped objects, Lua API calls. Details: [tts-compat/README.md](tts-compat/README.md).
+
+- **Execution**:
+  ```bash
+  node scripts/tts-compat/run.mjs --fixture
+  ```
+
+---
+
 ### `changelog.mjs`
 
 Changelog and docs-log fragments (#593): `check`, `next-version`, `collect`, `collect-log`, `bump`, `release`, `notes`, `verify`. Pure logic in `lib/changelog.mjs` (tests: `lib/changelog.test.mjs`). Formats: [changelog.d/README.md](../changelog.d/README.md), [knowledge-base-maintenance.md §3](../docs/workflows/knowledge-base-maintenance.md#3-lifecycle).
