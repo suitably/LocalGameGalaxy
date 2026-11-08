@@ -1,0 +1,1 @@
+- **Melodiq Notes: dead code removed** (#695): unused `DemoSong` fields, two unused storage keys and 40 unused `games.melodiq_notes.*` locale keys (de/en) are gone; no user-visible change.
