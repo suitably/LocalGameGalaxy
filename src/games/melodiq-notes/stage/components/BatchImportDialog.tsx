@@ -18,6 +18,7 @@ import { NotesDialogFrame } from '../../components/NotesDialogFrame';
 import { BATCH_SCORE_ACCEPT } from '../logic/batchImport';
 import { useBatchImport, type BatchItem } from '../useBatchImport';
 import { batchProgressText } from './batchProgress';
+import { RecordingReviewDialog } from './RecordingReviewDialog';
 
 interface BatchImportDialogProps {
   /** `changed`: at least one song folder was filled, so the library reloads. */
@@ -26,7 +27,8 @@ interface BatchImportDialogProps {
 
 /**
  * Several score files at once (.gp, .mxl, .musicxml, .xml, .mid): each goes to its song folder,
- * gets the top YouTube hit as recording unless the folder has one, and is aligned to it.
+ * gets the YouTube hit of matching length as recording unless the folder has one (the person picks
+ * or skips when none matches), and is aligned to it.
  * Mounted only while open.
  */
 export function BatchImportDialog({ onClose }: BatchImportDialogProps) {
@@ -49,6 +51,10 @@ export function BatchImportDialog({ onClose }: BatchImportDialogProps) {
         return { text: k('batch_waiting') };
       case 'cancelled':
         return { text: k('batch_cancelled') };
+      case 'waiting-review':
+        return { text: k('batch_review') };
+      case 'skipped':
+        return { text: k(s.reason === 'none' ? 'batch_skipped_none' : 'batch_skipped') };
       case 'failed':
         return { text: k('yt_failed', { error: s.error }), error: true };
       case 'done': {
@@ -122,6 +128,9 @@ export function BatchImportDialog({ onClose }: BatchImportDialogProps) {
           )}
         </Stack>
       </DialogContent>
+      {batch.review && (
+        <RecordingReviewDialog review={batch.review} onResolve={batch.resolveReview} />
+      )}
       <DialogActions>
         {batch.running && <Button onClick={batch.cancel}>{k('batch_stop')}</Button>}
         <Button onClick={close}>{t('common.close')}</Button>
