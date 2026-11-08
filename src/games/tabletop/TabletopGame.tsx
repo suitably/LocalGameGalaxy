@@ -2,7 +2,6 @@ import { useState, useEffect, useReducer } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Box, CircularProgress, Typography, Button } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBackRounded';
-import GroupsIcon from '@mui/icons-material/GroupsRounded';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
 import { tabletopReducer } from './logic/tabletopReducer';
@@ -10,6 +9,8 @@ import { validateAndSanitizeGame } from './logic/gameValidator';
 import { deleteTabletopSession, sessionKey } from './logic/tabletopStorage';
 import { resolveTableGame, type TableOrigin } from './logic/gameSource';
 import { createGameSourceLoaders } from './logic/gameSourceLoaders';
+import { decksToShuffleOnStart } from './logic/startShuffle';
+import { localizeLabels } from './logic/localizeLabels';
 import { TabletopEditor } from './components/editor/TabletopEditor';
 import { HandDockStrip } from './components/surface/HandDockStrip';
 import { TabletopControllerView } from './components/controller/TabletopControllerView';
@@ -18,8 +19,7 @@ import { useTabletopSync } from './hooks/useTabletopSync';
 import { usePartyLobbyReturn } from './hooks/usePartyLobbyReturn';
 import { useTabletopAutosave } from './hooks/useTabletopAutosave';
 import { TabletopPassAndPlay } from './components/views/TabletopPassAndPlay';
-import { RestartGameButton } from './components/views/RestartGameButton';
-import { SaveStateButton } from './components/saves/SaveStateButton';
+import { TableGameMenu } from './components/views/TableGameMenu';
 import { TvThemeProvider } from '../../components/common/TvThemeProvider';
 import type { TabletopGameDefinition } from './logic/types';
 import { useFollowPartyLobby } from '../../features/party/hooks/useFollowPartyLobby';
@@ -75,7 +75,14 @@ export function TabletopGame() {
         );
         if (resolved) {
           setOrigin(resolved.origin);
-          dispatch({ type: 'LOAD_GAME', payload: resolved.game });
+          const game = localizeLabels(resolved.game, (key, options) => String(t(key, options)));
+          dispatch({ type: 'LOAD_GAME', payload: game });
+          // Phones take the host's state; only the owner deals a fresh game (#670).
+          if (ownsState) {
+            for (const deckId of decksToShuffleOnStart(game, resolved.startedFrom)) {
+              dispatch({ type: 'SHUFFLE_DECK', payload: { deckId } });
+            }
+          }
           return;
         }
 
@@ -110,6 +117,8 @@ export function TabletopGame() {
     onReturnToLobby: returnToLobby,
     seat,
     spectator: isSpectator,
+    ready: !loading,
+    onSnapshot: () => setError(null),
   });
 
   if (loading) {
@@ -149,21 +158,16 @@ export function TabletopGame() {
     return (
       <TvThemeProvider>
         <Box position="relative" width="100%" height="100%">
-          <Button
-            size="small"
-            variant="contained"
-            color="inherit"
-            startIcon={<GroupsIcon />}
-            onClick={() => {
+          <TableGameMenu
+            game={gameState.game}
+            origin={origin}
+            onLoad={loadSavedTable}
+            onRestart={restartGame}
+            onBackToLobby={() => {
               broadcastAction({ type: 'RETURN_TO_LOBBY' });
               returnToLobby();
             }}
-            sx={{ position: 'absolute', top: 12, left: 12, zIndex: 1000, opacity: 0.85 }}
-          >
-            {t('party.backToLobby')}
-          </Button>
-          <RestartGameButton onRestart={restartGame} />
-          <SaveStateButton game={gameState.game} origin={origin} onLoad={loadSavedTable} />
+          />
           <TabletopEditor state={gameState} dispatch={syncedDispatch} isTvMode={true} />
         </Box>
       </TvThemeProvider>
@@ -196,8 +200,12 @@ export function TabletopGame() {
     return (
       <Box display="flex" flexDirection="column" width="100%" height="100%" overflow="hidden">
         <Box flex={1} position="relative" minHeight={0}>
-          <RestartGameButton onRestart={restartGame} />
-          <SaveStateButton game={gameState.game} origin={origin} onLoad={loadSavedTable} />
+          <TableGameMenu
+            game={gameState.game}
+            origin={origin}
+            onLoad={loadSavedTable}
+            onRestart={restartGame}
+          />
           <TabletopEditor state={gameState} dispatch={syncedDispatch} hideSeatSelector />
           <TabletopPassAndPlay state={gameState} dispatch={syncedDispatch} />
         </Box>

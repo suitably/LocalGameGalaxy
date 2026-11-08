@@ -26,11 +26,11 @@
       "height": 800,
       "zIndex": 1,
       "label": "Schachbrett 8x8",
-      "dropTarget": true,
-      "dropTargetTypes": [
-        "token"
-      ],
-      "childIds": []
+      "dropTarget": false,
+      "dropTargetTypes": [],
+      "childIds": [],
+      "labelKey": "games.tabletop.labels.board_8x8",
+      "pinned": true
     },
     "r1": {
       "id": "r1",
@@ -42,7 +42,19 @@
       "zIndex": 10,
       "color": "#d32f2f",
       "shape": "circle",
-      "label": "🔴"
+      "label": "🔴",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "r2": {
       "id": "r2",
@@ -54,7 +66,19 @@
       "zIndex": 10,
       "color": "#d32f2f",
       "shape": "circle",
-      "label": "🔴"
+      "label": "🔴",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "r3": {
       "id": "r3",
@@ -66,7 +90,19 @@
       "zIndex": 10,
       "color": "#d32f2f",
       "shape": "circle",
-      "label": "🔴"
+      "label": "🔴",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "r4": {
       "id": "r4",
@@ -78,7 +114,19 @@
       "zIndex": 10,
       "color": "#d32f2f",
       "shape": "circle",
-      "label": "🔴"
+      "label": "🔴",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "r5": {
       "id": "r5",
@@ -90,7 +138,19 @@
       "zIndex": 10,
       "color": "#d32f2f",
       "shape": "circle",
-      "label": "🔴"
+      "label": "🔴",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "r6": {
       "id": "r6",
@@ -102,7 +162,19 @@
       "zIndex": 10,
       "color": "#d32f2f",
       "shape": "circle",
-      "label": "🔴"
+      "label": "🔴",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "r7": {
       "id": "r7",
@@ -114,7 +186,19 @@
       "zIndex": 10,
       "color": "#d32f2f",
       "shape": "circle",
-      "label": "🔴"
+      "label": "🔴",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "r8": {
       "id": "r8",
@@ -126,7 +210,19 @@
       "zIndex": 10,
       "color": "#d32f2f",
       "shape": "circle",
-      "label": "🔴"
+      "label": "🔴",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "r9": {
       "id": "r9",
@@ -138,7 +234,19 @@
       "zIndex": 10,
       "color": "#d32f2f",
       "shape": "circle",
-      "label": "🔴"
+      "label": "🔴",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "r10": {
       "id": "r10",
@@ -150,7 +258,19 @@
       "zIndex": 10,
       "color": "#d32f2f",
       "shape": "circle",
-      "label": "🔴"
+      "label": "🔴",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "r11": {
       "id": "r11",
@@ -162,7 +282,19 @@
       "zIndex": 10,
       "color": "#d32f2f",
       "shape": "circle",
-      "label": "🔴"
+      "label": "🔴",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "r12": {
       "id": "r12",
@@ -174,7 +306,19 @@
       "zIndex": 10,
       "color": "#d32f2f",
       "shape": "circle",
-      "label": "🔴"
+      "label": "🔴",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "b1": {
       "id": "b1",
@@ -186,7 +330,19 @@
       "zIndex": 10,
       "color": "#212121",
       "shape": "circle",
-      "label": "⚫"
+      "label": "⚫",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "b2": {
       "id": "b2",
@@ -198,7 +354,19 @@
       "zIndex": 10,
       "color": "#212121",
       "shape": "circle",
-      "label": "⚫"
+      "label": "⚫",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "b3": {
       "id": "b3",
@@ -210,7 +378,19 @@
       "zIndex": 10,
       "color": "#212121",
       "shape": "circle",
-      "label": "⚫"
+      "label": "⚫",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "b4": {
       "id": "b4",
@@ -222,7 +402,19 @@
       "zIndex": 10,
       "color": "#212121",
       "shape": "circle",
-      "label": "⚫"
+      "label": "⚫",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "b5": {
       "id": "b5",
@@ -234,7 +426,19 @@
       "zIndex": 10,
       "color": "#212121",
       "shape": "circle",
-      "label": "⚫"
+      "label": "⚫",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "b6": {
       "id": "b6",
@@ -246,7 +450,19 @@
       "zIndex": 10,
       "color": "#212121",
       "shape": "circle",
-      "label": "⚫"
+      "label": "⚫",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "b7": {
       "id": "b7",
@@ -258,7 +474,19 @@
       "zIndex": 10,
       "color": "#212121",
       "shape": "circle",
-      "label": "⚫"
+      "label": "⚫",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "b8": {
       "id": "b8",
@@ -270,7 +498,19 @@
       "zIndex": 10,
       "color": "#212121",
       "shape": "circle",
-      "label": "⚫"
+      "label": "⚫",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "b9": {
       "id": "b9",
@@ -282,7 +522,19 @@
       "zIndex": 10,
       "color": "#212121",
       "shape": "circle",
-      "label": "⚫"
+      "label": "⚫",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "b10": {
       "id": "b10",
@@ -294,7 +546,19 @@
       "zIndex": 10,
       "color": "#212121",
       "shape": "circle",
-      "label": "⚫"
+      "label": "⚫",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "b11": {
       "id": "b11",
@@ -306,7 +570,19 @@
       "zIndex": 10,
       "color": "#212121",
       "shape": "circle",
-      "label": "⚫"
+      "label": "⚫",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     },
     "b12": {
       "id": "b12",
@@ -318,7 +594,19 @@
       "zIndex": 10,
       "color": "#212121",
       "shape": "circle",
-      "label": "⚫"
+      "label": "⚫",
+      "grid": [
+        {
+          "x": 100,
+          "y": 100,
+          "offsetX": 65,
+          "offsetY": 65,
+          "minX": 15,
+          "maxX": 815,
+          "minY": 15,
+          "maxY": 815
+        }
+      ]
     }
   }
 }

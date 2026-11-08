@@ -76,6 +76,10 @@ export interface BaseWidget {
   /** Moving it does not raise it (labels that must stay above or below pieces). */
   keepZOrder?: boolean;
   label?: string;
+  /** i18n key for `label` (built-in games); applied on load by `localizeLabels`. */
+  labelKey?: string;
+  /** Values for `labelKey`; each is looked up under `games.tabletop.labels.<value>` first. */
+  labelParams?: Record<string, string | number>;
   clipPath?: string;
   borderRadius?: string | number;
   customCss?: string;
@@ -142,6 +146,8 @@ export interface DeckWidget extends BaseWidget {
   backFaceObjects?: FaceObject[];
   /** Counts shuffles; a change plays the shuffle animation on every device. */
   shuffleCount?: number;
+  /** Shuffle this deck whenever a fresh game starts (not when a session is resumed). */
+  shuffleOnStart?: boolean;
 }
 
 export interface HolderWidget extends BaseWidget {

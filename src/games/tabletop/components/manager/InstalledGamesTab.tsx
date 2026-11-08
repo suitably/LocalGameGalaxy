@@ -19,6 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import { EmptyState } from '../../../../components/common/EmptyState';
 import { ListSkeleton } from '../../../../components/common/ListSkeleton';
 import { GameCardItem } from './GameCardItem';
+import { isServerUnreachable } from '../../logic/tabletopServerApi';
 import type { TabletopGameSummary } from '../../logic/types';
 import { settingsPath } from '../../../../features/settings/settingsRoutes';
 
@@ -99,7 +100,11 @@ export const InstalledGamesTab: React.FC<InstalledGamesTabProps> = ({
         )}
       </Box>
 
-      {error && <Alert severity="error">{error}</Alert>}
+      {error && (
+        <Alert severity={isServerUnreachable(error) ? 'warning' : 'error'}>
+          {isServerUnreachable(error) ? t('games.tabletop.server_unreachable') : error}
+        </Alert>
+      )}
 
       {!serverConnected ? (
         <Paper

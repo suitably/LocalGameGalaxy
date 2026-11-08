@@ -1248,7 +1248,8 @@
         "routine_error_unknown_op": "Schritt {{step}}: unbekanntes „op“.",
         "routine_error_missing_field": "Schritt {{step}}: ein Pflichtfeld fehlt oder ist falsch.",
         "routine_error_bad_count": "Schritt {{step}}: count muss 1–60 sein.",
-        "routine_error_forbidden_prop": "Schritt {{step}}: id, type und routine lassen sich nicht setzen."
+        "routine_error_forbidden_prop": "Schritt {{step}}: id, type und routine lassen sich nicht setzen.",
+        "shuffleOnStart": "Beim Spielstart mischen"
       },
       "workshop": {
         "error_invalid_input": "Keine gültige Steam-Workshop-URL oder -ID.",
@@ -1286,7 +1287,36 @@
       "playerN": "Spieler {{n}}",
       "flipCard": "Umdrehen",
       "rollDie": "Würfeln",
-      "shuffleDeck": "Mischen"
+      "shuffleDeck": "Mischen",
+      "view_hand": "Hand",
+      "view_board": "Tisch",
+      "flick_hint": "Wische eine Karte nach oben, um sie auf den TV zu werfen!",
+      "current_table_card": "Aktuelle Karte auf dem Tisch",
+      "publish_license_agree": "Ich stimme zu, dieses Spiel unter der Open-Source-Lizenz (MIT / CC0) für die LocalGameGalaxy-Community bereitzustellen.",
+      "labels": {
+        "card": "{{suit}} {{rank}}",
+        "spades": "Pik",
+        "hearts": "Herz",
+        "diamonds": "Karo",
+        "clubs": "Kreuz",
+        "A": "Ass",
+        "J": "Bube",
+        "Q": "Dame",
+        "K": "König",
+        "draw_pile": "Ziehstapel",
+        "discard_pile": "Ablagestapel",
+        "hand_n": "Spieler {{n}}",
+        "roll_cup_n": "Becher {{n}} würfeln",
+        "current_bid": "Aktuelles Gebot",
+        "board_8x8": "Spielbrett 8×8"
+      },
+      "counterDecrement": "Verringern",
+      "counterIncrement": "Erhöhen",
+      "drawToHand": "Auf die Hand ziehen",
+      "dealEach_one": "{{count}} Karte an alle austeilen",
+      "dealEach_other": "{{count}} Karten an alle austeilen",
+      "server_unreachable": "Der Companion-Server ist gerade nicht erreichbar.",
+      "gameMenu": "Spielmenü"
     }
   },
   "lobby": {
@@ -1353,7 +1383,9 @@
       "undo_throw": "Letzten Wurf rückgängig machen",
       "download": "Herunterladen",
       "menu": "Menü"
-    }
+    },
+    "copyLink": "Link kopieren",
+    "you": "Du"
   },
   "settings": {
     "game_sheet_title": "{{game}} · Einstellungen",

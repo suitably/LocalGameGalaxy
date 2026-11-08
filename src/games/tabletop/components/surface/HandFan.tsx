@@ -17,10 +17,9 @@ const MAX_DROP = 6;
 interface HandFanProps {
   slots: HandSlotItem[];
   onCardPointerDown: (e: React.PointerEvent, card: CardWidget) => void;
-  onReturnToDeck: (cardId: string, deckId: string) => void;
 }
 
-export const HandFan: React.FC<HandFanProps> = ({ slots, onCardPointerDown, onReturnToDeck }) => {
+export const HandFan: React.FC<HandFanProps> = ({ slots, onCardPointerDown }) => {
   const { ref, width } = useElementWidth<HTMLDivElement>();
   const fan = fanLayout(slots.length, width - 8, CARD_W, { maxDrop: MAX_DROP });
 
@@ -61,7 +60,6 @@ export const HandFan: React.FC<HandFanProps> = ({ slots, onCardPointerDown, onRe
               <HandCardItem
                 card={slot.card}
                 count={slot.count}
-                onReturnToDeck={onReturnToDeck}
                 onPointerDown={(e) => onCardPointerDown(e, slot.card)}
               />
             </Box>

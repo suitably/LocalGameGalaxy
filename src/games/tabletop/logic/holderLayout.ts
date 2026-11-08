@@ -68,7 +68,8 @@ function fanPositions(holder: HolderWidget, widgets: Record<string, TabletopWidg
 
 /**
  * Positions after `snappedId` joined `holder` (which already lists it). Hands and fans
- * re-lay all children; stack, grid and unknown layouts place only the snapped widget.
+ * re-lay all children; stack and grid place only the snapped widget. A holder without a
+ * known layout (e.g. a game board) keeps the widget where it was dropped, inside the holder.
  */
 export function layoutHolderChildren(
   holder: HolderWidget,
@@ -82,6 +83,18 @@ export function layoutHolderChildren(
   const index = holder.childIds.indexOf(snappedId);
   const childW = child?.width || DEFAULT_CHILD_WIDTH;
   const childH = child?.height || DEFAULT_CHILD_HEIGHT;
+  const zIndex = Math.max(child?.zIndex ?? 0, holder.zIndex + CHILD_Z_OFFSET);
+  if (holder.layout !== 'stack' && holder.layout !== 'grid') {
+    const clamp = (v: number, min: number, size: number, own: number) =>
+      Math.min(Math.max(v, min), min + Math.max(0, size - own));
+    return {
+      [snappedId]: {
+        x: clamp(child?.x ?? holder.x, holder.x, holder.width, childW),
+        y: clamp(child?.y ?? holder.y, holder.y, holder.height, childH),
+        zIndex,
+      },
+    };
+  }
   let x = holder.x + Math.max(0, Math.round((holder.width - childW) / 2));
   let y = holder.y + Math.max(0, Math.round((holder.height - childH) / 2));
   if (holder.layout === 'stack') {
@@ -92,7 +105,6 @@ export function layoutHolderChildren(
     x += (index % cols) * GRID_CELL_WIDTH;
     y += Math.floor(index / cols) * GRID_CELL_HEIGHT;
   }
-  const zIndex = Math.max(child?.zIndex ?? 0, holder.zIndex + CHILD_Z_OFFSET);
   return { [snappedId]: { x, y, zIndex } };
 }
 

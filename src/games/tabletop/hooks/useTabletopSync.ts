@@ -33,6 +33,13 @@ interface UseTabletopSyncOptions {
   seat?: number | null;
   /** This device only watches: it sends no intents and the host would reject them anyway. */
   spectator?: boolean;
+  /**
+   * Non-host: the local game load has finished. The snapshot is requested only then, so the
+   * local `LOAD_GAME` of the starter JSON can never overwrite the host's state (#667).
+   */
+  ready?: boolean;
+  /** Non-host: called once the host's snapshot was applied (e.g. to clear a local load error). */
+  onSnapshot?: () => void;
 }
 
 /** The host's party roster for this room, or null outside a party. */
@@ -49,7 +56,13 @@ export function useTabletopSync({
   onReturnToLobby,
   seat = null,
   spectator = false,
+  ready = true,
+  onSnapshot,
 }: UseTabletopSyncOptions) {
+  const onSnapshotRef = useRef(onSnapshot);
+  useEffect(() => {
+    onSnapshotRef.current = onSnapshot;
+  }, [onSnapshot]);
   const [senderId] = useState(() => `tt_${generateUUID().slice(0, 8)}`);
   const gameRef = useRef(game);
   /** Host: devices that announced themselves as spectators. */
@@ -111,6 +124,7 @@ export function useTabletopSync({
             const widgets = await hands.open(action.state.widgets, action.sealed, seat);
             dispatch({ type: 'LOAD_GAME', payload: { ...action.state, widgets } });
             seqRef.current = action.seq;
+            onSnapshotRef.current?.();
           });
           break;
         case 'REQUEST_SNAPSHOT':
@@ -185,9 +199,9 @@ export function useTabletopSync({
     });
   }, [game, isHost, roomId, broadcastAction, enqueue, hands]);
 
-  // When joining as non-host, request snapshot from host
+  // When joining as non-host, request snapshot from host (after the local load, see `ready`)
   useEffect(() => {
-    if (!roomId || isHost) return;
+    if (!roomId || isHost || !ready) return;
     enqueue(async () => {
       const publicKey = seat !== null ? await hands.publicKey() : undefined;
       broadcastAction({
@@ -197,7 +211,7 @@ export function useTabletopSync({
         playerId: universalPartyManager.getMyPlayerId(),
       });
     });
-  }, [roomId, isHost, broadcastAction, enqueue, hands, seat, spectator]);
+  }, [roomId, isHost, ready, broadcastAction, enqueue, hands, seat, spectator]);
 
   /** Dispatch for UI components: applies locally and, on non-host devices, sends the intent. */
   const syncedDispatch = useCallback<React.Dispatch<TabletopAction>>(

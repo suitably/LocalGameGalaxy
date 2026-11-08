@@ -27,6 +27,7 @@
       "height": 135,
       "zIndex": 10,
       "label": "Ziehstapel",
+      "shuffleOnStart": true,
       "cardIds": [
         "c_s2",
         "c_s3",
@@ -85,7 +86,8 @@
         "type": "text",
         "value": "🂠",
         "color": "#0d47a1"
-      }
+      },
+      "labelKey": "games.tabletop.labels.draw_pile"
     },
     "discard": {
       "id": "discard",
@@ -101,7 +103,8 @@
         "card"
       ],
       "childIds": [],
-      "layout": "stack"
+      "layout": "stack",
+      "labelKey": "games.tabletop.labels.discard_pile"
     },
     "hand_p0": {
       "id": "hand_p0",
@@ -118,7 +121,11 @@
       "layout": "fan",
       "dropTargetTypes": [
         "card"
-      ]
+      ],
+      "labelKey": "games.tabletop.labels.hand_n",
+      "labelParams": {
+        "n": 1
+      }
     },
     "hand_p1": {
       "id": "hand_p1",
@@ -135,7 +142,11 @@
       "layout": "fan",
       "dropTargetTypes": [
         "card"
-      ]
+      ],
+      "labelKey": "games.tabletop.labels.hand_n",
+      "labelParams": {
+        "n": 2
+      }
     },
     "hand_p2": {
       "id": "hand_p2",
@@ -152,7 +163,11 @@
       "layout": "fan",
       "dropTargetTypes": [
         "card"
-      ]
+      ],
+      "labelKey": "games.tabletop.labels.hand_n",
+      "labelParams": {
+        "n": 3
+      }
     },
     "hand_p3": {
       "id": "hand_p3",
@@ -169,7 +184,11 @@
       "layout": "fan",
       "dropTargetTypes": [
         "card"
-      ]
+      ],
+      "labelKey": "games.tabletop.labels.hand_n",
+      "labelParams": {
+        "n": 4
+      }
     },
     "c_s2": {
       "id": "c_s2",
@@ -191,7 +210,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "2",
+        "suit": "spades"
+      },
+      "deckId": "deck1"
     },
     "c_s3": {
       "id": "c_s3",
@@ -213,7 +238,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "3",
+        "suit": "spades"
+      },
+      "deckId": "deck1"
     },
     "c_s4": {
       "id": "c_s4",
@@ -235,7 +266,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "4",
+        "suit": "spades"
+      },
+      "deckId": "deck1"
     },
     "c_s5": {
       "id": "c_s5",
@@ -257,7 +294,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "5",
+        "suit": "spades"
+      },
+      "deckId": "deck1"
     },
     "c_s6": {
       "id": "c_s6",
@@ -279,7 +322,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "6",
+        "suit": "spades"
+      },
+      "deckId": "deck1"
     },
     "c_s7": {
       "id": "c_s7",
@@ -301,7 +350,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "7",
+        "suit": "spades"
+      },
+      "deckId": "deck1"
     },
     "c_s8": {
       "id": "c_s8",
@@ -323,7 +378,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "8",
+        "suit": "spades"
+      },
+      "deckId": "deck1"
     },
     "c_s9": {
       "id": "c_s9",
@@ -345,7 +406,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "9",
+        "suit": "spades"
+      },
+      "deckId": "deck1"
     },
     "c_s10": {
       "id": "c_s10",
@@ -367,7 +434,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "10",
+        "suit": "spades"
+      },
+      "deckId": "deck1"
     },
     "c_sJ": {
       "id": "c_sJ",
@@ -389,7 +462,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "J",
+        "suit": "spades"
+      },
+      "deckId": "deck1"
     },
     "c_sQ": {
       "id": "c_sQ",
@@ -411,7 +490,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "Q",
+        "suit": "spades"
+      },
+      "deckId": "deck1"
     },
     "c_sK": {
       "id": "c_sK",
@@ -433,7 +518,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "K",
+        "suit": "spades"
+      },
+      "deckId": "deck1"
     },
     "c_sA": {
       "id": "c_sA",
@@ -455,7 +546,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "A",
+        "suit": "spades"
+      },
+      "deckId": "deck1"
     },
     "c_h2": {
       "id": "c_h2",
@@ -477,7 +574,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "2",
+        "suit": "hearts"
+      },
+      "deckId": "deck1"
     },
     "c_h3": {
       "id": "c_h3",
@@ -499,7 +602,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "3",
+        "suit": "hearts"
+      },
+      "deckId": "deck1"
     },
     "c_h4": {
       "id": "c_h4",
@@ -521,7 +630,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "4",
+        "suit": "hearts"
+      },
+      "deckId": "deck1"
     },
     "c_h5": {
       "id": "c_h5",
@@ -543,7 +658,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "5",
+        "suit": "hearts"
+      },
+      "deckId": "deck1"
     },
     "c_h6": {
       "id": "c_h6",
@@ -565,7 +686,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "6",
+        "suit": "hearts"
+      },
+      "deckId": "deck1"
     },
     "c_h7": {
       "id": "c_h7",
@@ -587,7 +714,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "7",
+        "suit": "hearts"
+      },
+      "deckId": "deck1"
     },
     "c_h8": {
       "id": "c_h8",
@@ -609,7 +742,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "8",
+        "suit": "hearts"
+      },
+      "deckId": "deck1"
     },
     "c_h9": {
       "id": "c_h9",
@@ -631,7 +770,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "9",
+        "suit": "hearts"
+      },
+      "deckId": "deck1"
     },
     "c_h10": {
       "id": "c_h10",
@@ -653,7 +798,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "10",
+        "suit": "hearts"
+      },
+      "deckId": "deck1"
     },
     "c_hJ": {
       "id": "c_hJ",
@@ -675,7 +826,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "J",
+        "suit": "hearts"
+      },
+      "deckId": "deck1"
     },
     "c_hQ": {
       "id": "c_hQ",
@@ -697,7 +854,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "Q",
+        "suit": "hearts"
+      },
+      "deckId": "deck1"
     },
     "c_hK": {
       "id": "c_hK",
@@ -719,7 +882,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "K",
+        "suit": "hearts"
+      },
+      "deckId": "deck1"
     },
     "c_hA": {
       "id": "c_hA",
@@ -741,7 +910,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "A",
+        "suit": "hearts"
+      },
+      "deckId": "deck1"
     },
     "c_d2": {
       "id": "c_d2",
@@ -763,7 +938,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "2",
+        "suit": "diamonds"
+      },
+      "deckId": "deck1"
     },
     "c_d3": {
       "id": "c_d3",
@@ -785,7 +966,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "3",
+        "suit": "diamonds"
+      },
+      "deckId": "deck1"
     },
     "c_d4": {
       "id": "c_d4",
@@ -807,7 +994,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "4",
+        "suit": "diamonds"
+      },
+      "deckId": "deck1"
     },
     "c_d5": {
       "id": "c_d5",
@@ -829,7 +1022,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "5",
+        "suit": "diamonds"
+      },
+      "deckId": "deck1"
     },
     "c_d6": {
       "id": "c_d6",
@@ -851,7 +1050,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "6",
+        "suit": "diamonds"
+      },
+      "deckId": "deck1"
     },
     "c_d7": {
       "id": "c_d7",
@@ -873,7 +1078,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "7",
+        "suit": "diamonds"
+      },
+      "deckId": "deck1"
     },
     "c_d8": {
       "id": "c_d8",
@@ -895,7 +1106,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "8",
+        "suit": "diamonds"
+      },
+      "deckId": "deck1"
     },
     "c_d9": {
       "id": "c_d9",
@@ -917,7 +1134,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "9",
+        "suit": "diamonds"
+      },
+      "deckId": "deck1"
     },
     "c_d10": {
       "id": "c_d10",
@@ -939,7 +1162,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "10",
+        "suit": "diamonds"
+      },
+      "deckId": "deck1"
     },
     "c_dJ": {
       "id": "c_dJ",
@@ -961,7 +1190,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "J",
+        "suit": "diamonds"
+      },
+      "deckId": "deck1"
     },
     "c_dQ": {
       "id": "c_dQ",
@@ -983,7 +1218,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "Q",
+        "suit": "diamonds"
+      },
+      "deckId": "deck1"
     },
     "c_dK": {
       "id": "c_dK",
@@ -1005,7 +1246,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "K",
+        "suit": "diamonds"
+      },
+      "deckId": "deck1"
     },
     "c_dA": {
       "id": "c_dA",
@@ -1027,7 +1274,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "A",
+        "suit": "diamonds"
+      },
+      "deckId": "deck1"
     },
     "c_c2": {
       "id": "c_c2",
@@ -1049,7 +1302,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "2",
+        "suit": "clubs"
+      },
+      "deckId": "deck1"
     },
     "c_c3": {
       "id": "c_c3",
@@ -1071,7 +1330,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "3",
+        "suit": "clubs"
+      },
+      "deckId": "deck1"
     },
     "c_c4": {
       "id": "c_c4",
@@ -1093,7 +1358,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "4",
+        "suit": "clubs"
+      },
+      "deckId": "deck1"
     },
     "c_c5": {
       "id": "c_c5",
@@ -1115,7 +1386,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "5",
+        "suit": "clubs"
+      },
+      "deckId": "deck1"
     },
     "c_c6": {
       "id": "c_c6",
@@ -1137,7 +1414,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "6",
+        "suit": "clubs"
+      },
+      "deckId": "deck1"
     },
     "c_c7": {
       "id": "c_c7",
@@ -1159,7 +1442,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "7",
+        "suit": "clubs"
+      },
+      "deckId": "deck1"
     },
     "c_c8": {
       "id": "c_c8",
@@ -1181,7 +1470,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "8",
+        "suit": "clubs"
+      },
+      "deckId": "deck1"
     },
     "c_c9": {
       "id": "c_c9",
@@ -1203,7 +1498,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "9",
+        "suit": "clubs"
+      },
+      "deckId": "deck1"
     },
     "c_c10": {
       "id": "c_c10",
@@ -1225,7 +1526,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "10",
+        "suit": "clubs"
+      },
+      "deckId": "deck1"
     },
     "c_cJ": {
       "id": "c_cJ",
@@ -1247,7 +1554,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "J",
+        "suit": "clubs"
+      },
+      "deckId": "deck1"
     },
     "c_cQ": {
       "id": "c_cQ",
@@ -1269,7 +1582,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "Q",
+        "suit": "clubs"
+      },
+      "deckId": "deck1"
     },
     "c_cK": {
       "id": "c_cK",
@@ -1291,7 +1610,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "K",
+        "suit": "clubs"
+      },
+      "deckId": "deck1"
     },
     "c_cA": {
       "id": "c_cA",
@@ -1313,7 +1638,13 @@
         "color": "#0d47a1"
       },
       "faceUp": true,
-      "rotation": 0
+      "rotation": 0,
+      "labelKey": "games.tabletop.labels.card",
+      "labelParams": {
+        "rank": "A",
+        "suit": "clubs"
+      },
+      "deckId": "deck1"
     }
   }
 }

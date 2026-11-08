@@ -71,14 +71,16 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
     <Box
       sx={{
         width: '100%',
-        height: 156,
+        // Grows with the header (zoom button) so the cards are never cut off at the bottom.
+        minHeight: 156,
         flexShrink: 0,
         bgcolor: 'background.default',
         borderTop: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.12)}`,
         display: 'flex',
         flexDirection: 'column',
         px: 2,
-        py: 1,
+        pt: 1,
+        pb: 'max(8px, env(safe-area-inset-bottom))',
         boxSizing: 'border-box',
         userSelect: 'none',
       }}
@@ -127,7 +129,6 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
       ) : (
         <HandFan
           slots={slots}
-          onReturnToDeck={returnToDeck}
           onCardPointerDown={(e, card) =>
             startCardDrag(e, card, () => setZoom({ kind: 'card', cardId: card.id }))
           }

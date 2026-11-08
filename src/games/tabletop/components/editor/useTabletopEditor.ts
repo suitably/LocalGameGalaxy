@@ -1,8 +1,9 @@
 /**
  * Edit mode state: selection, undo/redo history and edit commands [ID: HOOK-TABLETOP-EDITOR]
  *
- * While edit mode is on, every change of the game is recorded so it can be undone; undo/redo
- * themselves are dispatched as synced `APPLY_EDIT_DELTA` actions and not recorded again.
+ * Every change of the game is recorded so it can be undone, while playing too (a misplaced
+ * piece, a wrong draw); undo/redo themselves are dispatched as synced `APPLY_EDIT_DELTA`
+ * actions and not recorded again. A restart remounts the table with a fresh history.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { generateUUID } from '../../../../lib/uuid';
@@ -33,17 +34,17 @@ export function useTabletopEditor(
   const prevGameRef = useRef(game);
   const skipRecordRef = useRef(false);
 
-  // Record every change made while editing (except undo/redo itself).
+  // Record every change (except undo/redo itself).
   useEffect(() => {
     const prev = prevGameRef.current;
     prevGameRef.current = game;
-    if (!editMode || prev === game) return;
+    if (prev === game) return;
     if (skipRecordRef.current) {
       skipRecordRef.current = false;
       return;
     }
     setHistory((h) => recordChange(h, prev, game));
-  }, [game, editMode]);
+  }, [game]);
 
   const selected = selectedId ? (game.widgets[selectedId] ?? null) : null;
 
@@ -123,15 +124,14 @@ export function useTabletopEditor(
     setSelectedId(null);
   };
 
-  // Keyboard: Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z or Ctrl+Y redo, Ctrl/Cmd+] / [ reorder,
-  // Delete removes the selection.
+  // Keyboard: Ctrl/Cmd+Z undo, Ctrl/Cmd+Shift+Z or Ctrl+Y redo (always); in edit mode also
+  // Ctrl/Cmd+] / [ reorder and Delete removes the selection.
   useEffect(() => {
-    if (!editMode) return;
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
       const mod = e.ctrlKey || e.metaKey;
-      const zOp = zOrderOpForKey(e);
+      const zOp = editMode ? zOrderOpForKey(e) : null;
       if (mod && e.key.toLowerCase() === 'z') {
         e.preventDefault();
         if (e.shiftKey) redo();
@@ -143,7 +143,7 @@ export function useTabletopEditor(
         // same Ctrl/Cmd+] / [ as the table selection (which handles it first when it has one)
         e.preventDefault();
         dispatch({ type: 'SET_Z_ORDER', payload: { widgetIds: [selectedId], op: zOp } });
-      } else if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
+      } else if ((e.key === 'Delete' || e.key === 'Backspace') && editMode && selectedId) {
         e.preventDefault();
         dispatch({ type: 'DELETE_WIDGETS', payload: { ids: [selectedId] } });
         setSelectedId(null);

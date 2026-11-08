@@ -136,3 +136,7 @@ export async function saveTemplateOnServer(game: TabletopGameDefinition): Promis
     jsonBody('PUT', { game: prepared }),
   );
 }
+
+/** Browser fetch failures (server down, offline): shown as "not reachable", not as raw text. */
+export const isServerUnreachable = (error: string | null | undefined): boolean =>
+  Boolean(error && /failed to fetch|networkerror|load failed|network request failed/i.test(error));

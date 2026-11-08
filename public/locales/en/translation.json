@@ -1248,7 +1248,8 @@
         "routine_error_unknown_op": "Step {{step}}: unknown \"op\".",
         "routine_error_missing_field": "Step {{step}}: a required field is missing or wrong.",
         "routine_error_bad_count": "Step {{step}}: count must be 1–60.",
-        "routine_error_forbidden_prop": "Step {{step}}: id, type and routine cannot be set."
+        "routine_error_forbidden_prop": "Step {{step}}: id, type and routine cannot be set.",
+        "shuffleOnStart": "Shuffle when a game starts"
       },
       "workshop": {
         "error_invalid_input": "Not a valid Steam Workshop URL or ID.",
@@ -1286,7 +1287,36 @@
       "playerN": "Player {{n}}",
       "flipCard": "Flip",
       "rollDie": "Roll",
-      "shuffleDeck": "Shuffle"
+      "shuffleDeck": "Shuffle",
+      "view_hand": "Hand",
+      "view_board": "Table",
+      "flick_hint": "Swipe a card up to throw it onto the TV!",
+      "current_table_card": "Current card on the table",
+      "publish_license_agree": "I agree to share this game with the LocalGameGalaxy community under an open-source licence (MIT / CC0).",
+      "labels": {
+        "card": "{{rank}} of {{suit}}",
+        "spades": "Spades",
+        "hearts": "Hearts",
+        "diamonds": "Diamonds",
+        "clubs": "Clubs",
+        "A": "Ace",
+        "J": "Jack",
+        "Q": "Queen",
+        "K": "King",
+        "draw_pile": "Draw pile",
+        "discard_pile": "Discard pile",
+        "hand_n": "Player {{n}}",
+        "roll_cup_n": "Roll cup {{n}}",
+        "current_bid": "Current bid",
+        "board_8x8": "Board 8×8"
+      },
+      "counterDecrement": "Decrease",
+      "counterIncrement": "Increase",
+      "drawToHand": "Draw to my hand",
+      "dealEach_one": "Deal {{count}} card to everyone",
+      "dealEach_other": "Deal {{count}} cards to everyone",
+      "server_unreachable": "The companion server is not reachable right now.",
+      "gameMenu": "Game menu"
     }
   },
   "lobby": {
@@ -1353,7 +1383,9 @@
       "undo_throw": "Undo last throw",
       "download": "Download",
       "menu": "Menu"
-    }
+    },
+    "copyLink": "Copy link",
+    "you": "you"
   },
   "settings": {
     "game_sheet_title": "{{game}} · Settings",

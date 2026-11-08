@@ -9,6 +9,7 @@ import type { TabletopAction } from '../../logic/tabletopReducer';
 import type { TabletopWidget } from '../../logic/types';
 import { flipActionFor, shakeActionFor } from '../../logic/tableGestures';
 import { useZOrderShortcuts } from '../../hooks/useZOrderShortcuts';
+import { dealActions, handsInSeatOrder } from '../../logic/dealCards';
 import { WidgetContextMenu, type WidgetContextMenuPosition } from './WidgetContextMenu';
 
 interface SurfaceContextMenuProps {
@@ -18,6 +19,8 @@ interface SurfaceContextMenuProps {
   onToggleSelect: (widgetId: string) => void;
   onClose: () => void;
   dispatch: React.Dispatch<TabletopAction>;
+  /** The viewer's hand (draw target); absent for spectators. */
+  handHolderId?: string;
 }
 
 export const SurfaceContextMenu: React.FC<SurfaceContextMenuProps> = ({
@@ -27,6 +30,7 @@ export const SurfaceContextMenu: React.FC<SurfaceContextMenuProps> = ({
   onToggleSelect,
   onClose,
   dispatch,
+  handHolderId,
 }) => {
   const reorderWidget = useZOrderShortcuts(selectedIds, dispatch);
   const run = (action: TabletopAction | null) => action && dispatch(action);
@@ -50,6 +54,17 @@ export const SurfaceContextMenu: React.FC<SurfaceContextMenuProps> = ({
       onZOrder={reorderWidget}
       onFlip={(id) => run(flipActionFor(widgets[id]))}
       onShake={(id) => run(shakeActionFor(widgets[id]))}
+      onDrawToHand={
+        handHolderId
+          ? (deckId) =>
+              dispatch({ type: 'DRAW_CARD', payload: { deckId, targetHolderId: handHolderId } })
+          : undefined
+      }
+      onDeal={
+        handHolderId && handsInSeatOrder(widgets).length > 1
+          ? (deckId, perHand) => dealActions(widgets, deckId, perHand).forEach(dispatch)
+          : undefined
+      }
     />
   );
 };

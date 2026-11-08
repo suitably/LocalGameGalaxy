@@ -108,8 +108,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     () => filterBoardWidgets(game.widgets, visibleIds, isTvMode),
     [game.widgets, visibleIds, isTvMode],
   );
-
-  const fitToScreen = useFitToScreen(containerRef, game.table, setTransform, setContainerSize);
+  const fitToScreen = useFitToScreen(containerRef, game, setTransform, setContainerSize);
   const onPointerDownBoardWidget = (e: React.PointerEvent, w: TabletopWidget) => {
     if (isSpectator) return; // bubbles up to the board pan
     if (!selection.handleWidgetClick(w.id, e.shiftKey)) handlePointerDownWidget(e, w);
@@ -243,6 +242,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
         onToggleSelect={(id) => selection.handleWidgetClick(id, true)}
         onClose={() => setContextMenuPos(null)}
         dispatch={dispatch}
+        handHolderId={isSpectator ? undefined : handHolder?.id}
       />
     </Box>
   );
