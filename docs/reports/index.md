@@ -2,6 +2,8 @@
 
 Dated snapshots, audits and evaluations. Not maintained after writing (only corrections are added as notes). Living docs link here for evidence. Name files `YYYY-MM-DD-topic.md`, newest first.
 
+- [2026-11-08 TTS compatibility plan](2026-11-08-tts-compatibility-plan.md) — tiers of "a Workshop game runs", the compatibility harness, nine decisions taken (ADR-0005, Cloudflare Worker for Steam, per-device asset cache, no publishing of imports, DOM renderer, wasmoon) and 13 slices with acceptance criteria.
+- [2026-11-08 Melodiq Notes and Spieltisch analysis](2026-11-08-melodiq-notes-and-tabletop-analysis.md) — multi-agent audit of Melodiq Notes (engine, mic, parser, dead code) and the Spieltisch (sync authorization, performance, publishing, TTS import bugs found in Catan/Elfenland exports) plus research on running Workshop Lua scripts in the browser; staged macros → JS plugin → Lua VM recommendation.
 - [2026-10-27 maintainer decisions](2026-10-27-maintainer-decisions.md) — answers to the decisions blocking open issues (#547, #549, #551, #553, #565/#568, #571, #587, #590, #592, #593, #595, Q17).
 - [2026-10-26 settings unification plan](2026-10-26-settings-unification-plan.md) — audit of `/settings`, its header navigation and every game settings surface; target model (app vs. game vs. round scope, master–detail layout, registry-driven game sections) and a 10-slice plan.
 - [2026-10-22 table session plan](2026-10-22-table-session-plan.md) — party mode, tabletop, dice games and async games audited; slice plan for one session layer (local or with phones), pass-and-play handover with hidden hands, mobile; VirtualTabletop and TTS import gaps.
