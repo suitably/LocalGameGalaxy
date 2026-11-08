@@ -1,14 +1,9 @@
-export type StemType = 'drums' | 'bass' | 'instrument' | 'vocals' | 'other';
-
 export interface DemoSong {
   id: string;
   title: string;
   artist: string;
-  difficulty: 'Easy' | 'Medium' | 'Hard';
   xmlContent: string;
   baseBpm?: number;
-  stems?: Partial<Record<StemType, string>>;
-  sync_offset_ms?: number;
 }
 
 /** Soundfont family used to voice an instrument. */

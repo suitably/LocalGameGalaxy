@@ -370,28 +370,25 @@ export const FRERE_JACQUES_XML = `<?xml version="1.0" encoding="UTF-8"?>
 </score-partwise>`;
 
 export const DEMO_SONGS: DemoSong[] = [
-    {
-        id: 'ode-to-joy',
-        title: 'Ode to Joy (Full Theme)',
-        artist: 'Ludwig van Beethoven',
-        difficulty: 'Easy',
-        xmlContent: ODE_TO_JOY_XML,
-        baseBpm: 108
-    },
-    {
-        id: 'twinkle-twinkle',
-        title: 'Twinkle Twinkle Little Star (Full)',
-        artist: 'Traditional / Mozart',
-        difficulty: 'Easy',
-        xmlContent: TWINKLE_TWINKLE_XML,
-        baseBpm: 100
-    },
-    {
-        id: 'frere-jacques',
-        title: 'Frère Jacques / Bruder Jakob',
-        artist: 'Traditional',
-        difficulty: 'Easy',
-        xmlContent: FRERE_JACQUES_XML,
-        baseBpm: 112
-    }
+  {
+    id: 'ode-to-joy',
+    title: 'Ode to Joy (Full Theme)',
+    artist: 'Ludwig van Beethoven',
+    xmlContent: ODE_TO_JOY_XML,
+    baseBpm: 108,
+  },
+  {
+    id: 'twinkle-twinkle',
+    title: 'Twinkle Twinkle Little Star (Full)',
+    artist: 'Traditional / Mozart',
+    xmlContent: TWINKLE_TWINKLE_XML,
+    baseBpm: 100,
+  },
+  {
+    id: 'frere-jacques',
+    title: 'Frère Jacques / Bruder Jakob',
+    artist: 'Traditional',
+    xmlContent: FRERE_JACQUES_XML,
+    baseBpm: 112,
+  },
 ];
