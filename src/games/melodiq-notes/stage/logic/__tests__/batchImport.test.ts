@@ -6,8 +6,8 @@ import type { YouTubeResult } from '../../../../../lib/companion/songDownloadApi
 import {
   importScoreFile,
   replaceSongRecording,
+  BatchSkipped,
   scoreMeta,
-  topHit,
   type BatchApi,
 } from '../batchImport';
 import { canReplaceRecording } from '../songFileEdits';
@@ -37,7 +37,8 @@ const folder = (id: string, audio: string | null, over: Partial<CompanionSong> =
     ...over,
   }) as CompanionSong;
 
-const hit = (url: string) => ({ url }) as YouTubeResult;
+/** The fake score is 2 s long, so the default hit (2 s) is within tolerance. */
+const hit = (url: string, duration = 2) => ({ url, duration }) as YouTubeResult;
 const marks = [
   { beat: 0, sec: 1 },
   { beat: 4, sec: 3 },
@@ -99,13 +100,12 @@ describe('scoreMeta', () => {
 });
 
 describe('importScoreFile', () => {
-  it('downloads the top hit into a new folder, stores and aligns the score', async () => {
+  it('downloads the matching hit into a new folder, stores and aligns the score', async () => {
     const { api, saved } = fakeApi([], scoreSong('Hey Jude', 'The Beatles'), [
       hit('https://yt/1'),
       hit('https://yt/2'),
     ]);
     const result = await importScoreFile(gp(), api);
-    expect(topHit([])).toBeNull();
     expect(api.search).toHaveBeenCalledWith('The Beatles Hey Jude');
     expect(api.startDownload).toHaveBeenCalledWith(
       expect.objectContaining({ youtubeUrl: 'https://yt/1' }),
@@ -137,12 +137,71 @@ describe('importScoreFile', () => {
     expect(result.songId).toBe('f1');
   });
 
-  it('fails without an artist or without a hit', async () => {
+  it('fails without an artist', async () => {
     await expect(importScoreFile(gp(), fakeApi([], scoreSong('Hey Jude')).api)).rejects.toThrow(
       'no artist',
     );
+  });
+
+  it('skips and reports a score whose search finds nothing', async () => {
     const { api } = fakeApi([], scoreSong('Hey Jude', 'The Beatles'), []);
-    await expect(importScoreFile(gp(), api)).rejects.toThrow('no recording');
+    const askUser = vi.fn(async () => 'https://yt/x');
+    const err = await importScoreFile(gp(), api, undefined, undefined, askUser).catch((e) => e);
+    expect(err).toBeInstanceOf(BatchSkipped);
+    expect(err.reason).toBe('none');
+    expect(askUser).not.toHaveBeenCalled();
+    expect(api.startDownload).not.toHaveBeenCalled();
+  });
+
+  it('takes a hit within tolerance without asking, skipping a longer top hit', async () => {
+    const { api } = fakeApi([], scoreSong('Hey Jude', 'The Beatles'), [
+      hit('https://yt/long', 600),
+      hit('https://yt/ok', 9),
+    ]);
+    const askUser = vi.fn(async () => null);
+    await importScoreFile(gp(), api, undefined, undefined, askUser);
+    expect(askUser).not.toHaveBeenCalled();
+    expect(api.startDownload).toHaveBeenCalledWith(
+      expect.objectContaining({ youtubeUrl: 'https://yt/ok' }),
+    );
+  });
+
+  it('stores nothing for a non-matching hit without confirmation', async () => {
+    const { api } = fakeApi([], scoreSong('Hey Jude', 'The Beatles'), [hit('https://yt/1', 600)]);
+    const err = await importScoreFile(gp(), api).catch((e) => e);
+    expect(err).toBeInstanceOf(BatchSkipped);
+    expect(err.reason).toBe('unreviewed');
+    expect(api.startDownload).not.toHaveBeenCalled();
+    expect(api.uploadScore).not.toHaveBeenCalled();
+  });
+
+  it('downloads the hit the user confirms for a non-matching search', async () => {
+    const { api } = fakeApi([], scoreSong('Hey Jude', 'The Beatles'), [
+      hit('https://yt/1', 600),
+      hit('https://yt/2', 0),
+    ]);
+    const askUser = vi.fn(async () => 'https://yt/2');
+    await importScoreFile(gp(), api, undefined, undefined, askUser);
+    expect(askUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        artist: 'The Beatles',
+        title: 'Hey Jude',
+        candidates: expect.any(Array),
+      }),
+    );
+    expect(api.startDownload).toHaveBeenCalledWith(
+      expect.objectContaining({ youtubeUrl: 'https://yt/2' }),
+    );
+  });
+
+  it('skips a non-matching search the user declines', async () => {
+    const { api } = fakeApi([], scoreSong('Hey Jude', 'The Beatles'), [hit('https://yt/1', 600)]);
+    const err = await importScoreFile(gp(), api, undefined, undefined, async () => null).catch(
+      (e) => e,
+    );
+    expect(err).toBeInstanceOf(BatchSkipped);
+    expect(err.reason).toBe('declined');
+    expect(api.startDownload).not.toHaveBeenCalled();
   });
 
   it('reports a score that could not be aligned', async () => {
