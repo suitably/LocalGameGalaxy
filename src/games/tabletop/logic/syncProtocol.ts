@@ -9,6 +9,7 @@ import type { TabletopGameDefinition } from './types';
 import type { TabletopAction } from './tabletopReducer';
 import type { GameDelta } from './stateDelta';
 import type { SealedSecrets } from './privateHandChannel';
+import { authorizeSeatIntent, type IntentSender } from './intentAuthorization';
 
 export type TabletopSyncAction =
   /**
@@ -31,7 +32,14 @@ export type TabletopSyncAction =
     }
   | { type: 'STATE_DELTA'; delta: GameDelta; seq: number; sealed?: SealedSecrets }
   /** `spectator` is the sender's own claim; it can only make the sender read-only, never a player. */
-  | { type: 'INTENT'; action: TabletopAction; spectator?: boolean; playerId?: string }
+  /** `seat` is the sender's claim; the seat it joined with (`REQUEST_SNAPSHOT`) wins on the host. */
+  | {
+      type: 'INTENT';
+      action: TabletopAction;
+      spectator?: boolean;
+      playerId?: string;
+      seat?: number;
+    }
   | { type: 'FLICK_CARD_TO_TABLE'; cardId: string; targetHolderId: string; senderSeat?: number }
   | { type: 'RETURN_TO_LOBBY' };
 
@@ -58,10 +66,18 @@ export const isSyncedIntent = (action: TabletopAction): boolean =>
 /**
  * Whether the host applies an intent. Spectators are read-only: every synced intent (move, flip,
  * draw, shuffle, roll, edit …) is rejected, only device-local actions pass (and are never sent).
- * Intents carrying a blanked hidden-zone copy are rejected too.
+ * Intents carrying a blanked hidden-zone copy are rejected too. Players stay within their seat
+ * (`authorizeSeatIntent`: no editor actions, no other seat's hand or zone, #685).
  */
-export const acceptIntent = (action: TabletopAction, sender: { spectator: boolean }): boolean =>
-  isSyncedIntent(action) && !sender.spectator && !containsRedactedWidget(action);
+export const acceptIntent = (
+  action: TabletopAction,
+  sender: IntentSender,
+  game: Pick<TabletopGameDefinition, 'widgets' | 'hiddenZones'>,
+): boolean =>
+  isSyncedIntent(action) &&
+  !sender.spectator &&
+  !containsRedactedWidget(action) &&
+  authorizeSeatIntent(action, sender, game);
 
 /**
  * Whether an action carries a widget copy blanked for a hidden zone (#551), e.g. a duplicate or an
@@ -96,6 +112,16 @@ export function senderIsSpectator(sender: {
   const member = sender.roster.find((p) => p.id === sender.playerId);
   return !member || Boolean(member.spectator);
 }
+
+/**
+ * Seat the host attributes to a sender: the one it joined with, else the one it claims, else none.
+ * Both are unauthenticated URL params of the phone (residual risk, `tabletop-engine.md`).
+ */
+export const resolveSenderSeat = (
+  joined: number | undefined,
+  claimed: number | undefined,
+): number | null =>
+  typeof joined === 'number' ? joined : typeof claimed === 'number' ? claimed : null;
 
 /** How a device handles a delta: apply it, or ask for a snapshot because one was missed. */
 export function classifyDelta(lastSeq: number | null, seq: number): 'apply' | 'ignore' | 'resync' {

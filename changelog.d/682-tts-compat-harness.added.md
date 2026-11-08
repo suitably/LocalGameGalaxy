@@ -1,0 +1,1 @@
+- **TTS compatibility harness** (#682): dev-only `scripts/tts-compat/` runs the Tabletop Simulator importer over a corpus of Workshop ids and reports tier A–D per mod, converted/degraded/dropped objects, deck completeness, image hosts and the Lua API calls/events of the scripts (`luaparse`).

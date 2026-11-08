@@ -1,0 +1,33 @@
+{
+  "SaveName": "Compat Fixture",
+  "PlayerCounts": [2, 4],
+  "Note": "Hand-made save for the tts-compat harness; not a Workshop mod.",
+  "LuaScript": "function onLoad(state)\n  local d = getObjectFromGUID('deck01')\n  d.shuffle()\n  self.createButton({click_function = 'dealCards', label = 'Deal'})\n  broadcastToAll('Welcome')\nend\nfunction dealCards()\n  local d = getObjectFromGUID('deck01')\n  d.deal(5)\n  Wait.time(function() print('ok') end, 1)\nend\nfunction onObjectDrop(color, obj) end",
+  "ObjectStates": [
+    {
+      "GUID": "board01", "Name": "Custom_Board",
+      "Transform": { "posX": 0, "posY": 1, "posZ": 0, "rotX": 0, "rotY": 0, "rotZ": 0, "scaleX": 1, "scaleY": 1, "scaleZ": 1 },
+      "CustomImage": { "ImageURL": "http://cloud-3.steamusercontent.com/ugc/1/board/", "WidthScale": 1, "ImageScalar": 1 }
+    },
+    {
+      "GUID": "deck01", "Name": "Deck",
+      "Transform": { "posX": 3, "posY": 1, "posZ": 0, "rotX": 0, "rotY": 0, "rotZ": 180, "scaleX": 1, "scaleY": 1, "scaleZ": 1 },
+      "DeckIDs": [100, 101, 102],
+      "CustomDeck": { "1": { "FaceURL": "https://example.invalid/faces.png", "BackURL": "https://example.invalid/back.png", "NumWidth": 2, "NumHeight": 2 } }
+    },
+    {
+      "GUID": "hand01", "Name": "HandTrigger", "FogColor": "White",
+      "Transform": { "posX": -4, "posY": 1, "posZ": 8, "rotX": 0, "rotY": 0, "rotZ": 0, "scaleX": 1, "scaleY": 1, "scaleZ": 1 }
+    },
+    {
+      "GUID": "model01", "Name": "Custom_Model",
+      "Transform": { "posX": 6, "posY": 1, "posZ": 6, "rotX": 0, "rotY": 0, "rotZ": 0, "scaleX": 1, "scaleY": 1, "scaleZ": 1 },
+      "CustomMesh": { "MeshURL": "https://example.invalid/m.obj", "DiffuseURL": "https://example.invalid/m.png" }
+    },
+    {
+      "GUID": "text01", "Name": "3DText",
+      "Transform": { "posX": 1, "posY": 1, "posZ": 1, "rotX": 0, "rotY": 0, "rotZ": 0, "scaleX": 1, "scaleY": 1, "scaleZ": 1 },
+      "LuaScript": "function onObjectEnterContainer(c, o) end"
+    }
+  ]
+}

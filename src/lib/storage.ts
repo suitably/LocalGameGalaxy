@@ -91,8 +91,6 @@ export const STORAGE_KEYS = {
 
   // Melodiq Notes preferences
   MELODIQ_NOTES_SOUND_CONFIG: 'melodiq_notes_sound_config',
-  MELODIQ_NOTES_VIEW_MODE: 'melodiq_notes_view_mode',
-  MELODIQ_NOTES_SHEET_RENDER_MODE: 'melodiq_notes_sheet_render_mode',
   MELODIQ_NOTES_SEEK_LEAD_IN: 'melodiq_notes_seek_lead_in',
   /** This device's input latency as a pult (ms, calibrated against the stage). */
   MELODIQ_NOTES_INPUT_LATENCY: 'melodiq_notes_input_latency',
