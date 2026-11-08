@@ -184,4 +184,20 @@ describe('holder layout via SNAP_TO_HOLDER (#414 characterisation)', () => {
       ]
     `);
   });
+
+  it('a holder without a layout (game board) keeps the dropped position, inside the holder', () => {
+    const board = holder({ id: 'board', x: 50, y: 50, width: 800, height: 800, zIndex: 1 });
+    const piece = card('p', { x: 265, y: 465, width: 70, height: 70, zIndex: 10 });
+    const outside = card('q', { x: 840, y: 20, width: 70, height: 70, zIndex: 10 });
+    let state = stateWith([board, piece, outside]);
+    for (const id of ['p', 'q']) {
+      state = tabletopReducer(state, {
+        type: 'SNAP_TO_HOLDER',
+        payload: { widgetId: id, holderId: 'board' },
+      });
+    }
+    const { p, q } = state.game.widgets;
+    expect([p.x, p.y, p.parent]).toEqual([265, 465, 'board']);
+    expect([q.x, q.y]).toEqual([780, 50]);
+  });
 });

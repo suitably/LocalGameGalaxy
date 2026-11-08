@@ -39,7 +39,7 @@ Roadmap and comparison with VirtualTabletop: [2026-10-21 plan](../reports/2026-1
 
 ¹ `SHUFFLE_DECK` also counts `DeckWidget.shuffleCount`; the change syncs like any delta and `components/widgets/DeckShuffleOverlay.tsx` plays a short riffle of the deck's top face above the deck on every device and is removed when it ends (none with reduced motion, #556, #618).
 
-Holder positions (hand, stack, fan, grid) come from `logic/holderLayout.ts`.
+Holder positions (hand, stack, fan, grid) come from `logic/holderLayout.ts`; a holder without one of these layouts (a game board) keeps a dropped widget where it was dropped, clamped inside the holder.
 
 ### Stacking order
 
