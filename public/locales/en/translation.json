@@ -511,7 +511,7 @@
     },
     "melodiq_notes": {
       "title": "Melodiq Notes",
-      "description": "Practice songs with classical sheet music via MIDI keyboard or microphone. Features Yousician/Flowkey practice modes!",
+      "description": "Band stage for up to 4 players: keys, guitar, bass, drums and vocals from sheet music, with learn, practice and perform modes. Play via MIDI, touch or microphone, phones join as pults.",
       "beta": "Beta",
       "score": "SCORE",
       "hits": "HITS",
@@ -519,7 +519,7 @@
       "upload_xml": "Upload MusicXML",
       "mode": "Mode",
       "continuous_mode": "Continuous Play",
-      "wait_mode": "Wait Mode (Flowkey)",
+      "wait_mode": "Wait Mode",
       "input_source": "Input Source",
       "midi_keyboard": "MIDI Keyboard",
       "microphone": "Microphone",

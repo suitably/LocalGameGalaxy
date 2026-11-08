@@ -27,7 +27,7 @@ const KEY_LABELS: Record<number, string> = {
   12: 'K',
 };
 
-/** Notes fall onto a real keyboard (flowkey style). */
+/** Notes fall onto a real keyboard (falling-notes style). */
 export function drawKeys(v: ViewContext): HitPoint {
   const { g, p, w, h, beat } = v;
   const color = p.instrument.color;

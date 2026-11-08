@@ -1,0 +1,1 @@
+- **Melodiq Notes hub description** (#688): describes the band stage (keys, guitar, bass, drums, vocals; learn, practice and perform; phones as pults) and no longer names other apps.

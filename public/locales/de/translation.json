@@ -511,7 +511,7 @@
     },
     "melodiq_notes": {
       "title": "Melodiq Notes",
-      "description": "Übe Songs nach klassischem Notenblatt via MIDI-Keyboard oder Mikrofon. Mit Yousician/Flowkey-Modi!",
+      "description": "Bandbühne für bis zu 4 Spieler: Keys, Gitarre, Bass, Schlagzeug und Gesang nach Noten, mit Lern-, Übungs- und Auftrittsmodus. Spiel per MIDI, Touch oder Mikrofon, Handys werden zu Pulten.",
       "beta": "Beta",
       "score": "PUNKTE",
       "hits": "TREFFER",
@@ -519,7 +519,7 @@
       "upload_xml": "MusicXML hochladen",
       "mode": "Modus",
       "continuous_mode": "Fortlaufendes Spiel",
-      "wait_mode": "Warte-Modus (Flowkey)",
+      "wait_mode": "Warte-Modus",
       "input_source": "Eingabequelle",
       "midi_keyboard": "MIDI-Keyboard",
       "microphone": "Mikrofon",
