@@ -13,12 +13,14 @@ import {
   acceptIntent,
   classifyDelta,
   isSyncedIntent,
+  resolveSenderSeat,
   senderIsSpectator,
   type RosterEntry,
   type TabletopSyncEnvelope,
   type TabletopSyncAction,
 } from '../logic/syncProtocol';
 import { diffGame } from '../logic/stateDelta';
+import { authorizeSeatIntent } from '../logic/intentAuthorization';
 import { PrivateHandChannel } from '../logic/privateHandChannel';
 import type { TabletopGameDefinition } from '../logic/types';
 import type { TabletopAction } from '../logic/tabletopReducer';
@@ -40,6 +42,11 @@ interface UseTabletopSyncOptions {
   ready?: boolean;
   /** Non-host: called once the host's snapshot was applied (e.g. to clear a local load error). */
   onSnapshot?: () => void;
+}
+
+interface JoinedDevice {
+  seat?: number;
+  playerId?: string;
 }
 
 /** The host's party roster for this room, or null outside a party. */
@@ -67,6 +74,8 @@ export function useTabletopSync({
   const gameRef = useRef(game);
   /** Host: devices that announced themselves as spectators. */
   const spectatorsRef = useRef(new Set<string>());
+  /** Host: seat and party id each device joined with (`REQUEST_SNAPSHOT`). */
+  const joinedRef = useRef(new Map<string, JoinedDevice>());
   /** Host: last broadcast sequence number. Others: last applied one (`null` = no snapshot yet). */
   const seqRef = useRef<number | null>(isHost ? 0 : null);
   const lastSentGameRef = useRef(game);
@@ -91,18 +100,22 @@ export function useTabletopSync({
       const action = envelope.action;
       const send = broadcastActionRef.current;
 
+      /** Host: the sender as the host knows it; the seat it joined with wins over a claim. */
+      const sender = (claim: { spectator?: boolean; playerId?: string; seat?: number }) => {
+        const joined = joinedRef.current.get(envelope.senderId);
+        return {
+          spectator: senderIsSpectator({
+            claimed: claim.spectator === true || spectatorsRef.current.has(envelope.senderId),
+            playerId: claim.playerId ?? joined?.playerId,
+            roster: partyRoster(roomId),
+          }),
+          seat: resolveSenderSeat(joined?.seat, claim.seat),
+        };
+      };
+
       switch (action.type) {
         case 'INTENT':
-          if (
-            isHost &&
-            acceptIntent(action.action, {
-              spectator: senderIsSpectator({
-                claimed: action.spectator === true || spectatorsRef.current.has(envelope.senderId),
-                playerId: action.playerId,
-                roster: partyRoster(roomId),
-              }),
-            })
-          ) {
+          if (isHost && acceptIntent(action.action, sender(action), gameRef.current)) {
             dispatch(action.action);
           }
           break;
@@ -127,10 +140,16 @@ export function useTabletopSync({
             onSnapshotRef.current?.();
           });
           break;
-        case 'REQUEST_SNAPSHOT':
+        case 'REQUEST_SNAPSHOT': {
           if (!isHost) break;
           if (action.spectator) spectatorsRef.current.add(envelope.senderId);
           else spectatorsRef.current.delete(envelope.senderId);
+          // A resync request carries neither; keep what the device joined with.
+          const prev = joinedRef.current.get(envelope.senderId);
+          joinedRef.current.set(envelope.senderId, {
+            seat: action.seat ?? prev?.seat,
+            playerId: action.playerId ?? prev?.playerId,
+          });
           enqueue(async () => {
             if (typeof action.seat === 'number' && action.publicKey) {
               await hands.registerSeat(action.seat, action.publicKey);
@@ -139,12 +158,19 @@ export function useTabletopSync({
             send({ type: 'STATE_SNAPSHOT', ...out, seq: seqRef.current ?? 0 });
           });
           break;
-        case 'FLICK_CARD_TO_TABLE':
-          dispatch({
+        }
+        case 'FLICK_CARD_TO_TABLE': {
+          const flick: TabletopAction = {
             type: 'ANIMATE_CARD_TO_TABLE',
             payload: { cardId: action.cardId, targetHolderId: action.targetHolderId },
-          });
+          };
+          // Others only animate; the host's delta is the truth (#685: own cards only).
+          const s = isHost ? sender({ seat: action.senderSeat }) : null;
+          if (!s || (!s.spectator && authorizeSeatIntent(flick, s, gameRef.current))) {
+            dispatch(flick);
+          }
           break;
+        }
         case 'RETURN_TO_LOBBY':
           onReturnToLobby?.();
           break;
@@ -206,7 +232,8 @@ export function useTabletopSync({
       const publicKey = seat !== null ? await hands.publicKey() : undefined;
       broadcastAction({
         type: 'REQUEST_SNAPSHOT',
-        ...(publicKey ? { seat: seat!, publicKey } : {}),
+        ...(seat !== null ? { seat } : {}),
+        ...(publicKey ? { publicKey } : {}),
         ...(spectator ? { spectator: true } : {}),
         playerId: universalPartyManager.getMyPlayerId(),
       });
@@ -223,11 +250,12 @@ export function useTabletopSync({
           type: 'INTENT',
           action,
           ...(spectator ? { spectator } : {}),
+          ...(seat !== null ? { seat } : {}),
           playerId: universalPartyManager.getMyPlayerId(),
         });
       }
     },
-    [dispatch, roomId, isHost, broadcastAction, spectator],
+    [dispatch, roomId, isHost, broadcastAction, spectator, seat],
   );
 
   return { broadcastAction, syncedDispatch, senderId };

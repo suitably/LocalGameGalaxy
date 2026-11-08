@@ -67,10 +67,22 @@ describe('PrivateHandChannel (#449)', () => {
     expect(front((await seat0.open(d.delta.widgets, d.sealed, 0)).a)).toBe('Ace');
   });
 
-  it('passes data through unchanged when no seat registered or no WebCrypto', async () => {
+  it('spectator rooms never receive faces: hands are blanked before any seat key (#685)', async () => {
     const host = new PrivateHandChannel();
-    expect((await host.outgoingSnapshot(game)).state).toBe(game);
+    const snap = await host.outgoingSnapshot(game);
+    expect(JSON.stringify(snap.state)).not.toContain('Ace');
+    expect(JSON.stringify(snap.state)).not.toContain('King');
+    const d = await host.outgoingDelta({ widgets: { k: game.widgets.k } }, game);
+    expect(front(d.delta.widgets.k)).toBe('BACK');
+    // A spectator has no seat: it opens nothing.
+    const watcher = new PrivateHandChannel();
+    await watcher.acceptHostKey(snap.hostKey);
+    expect(front((await watcher.open(snap.state.widgets, snap.sealed, null)).a)).toBe('BACK');
+  });
+
+  it('passes data through unchanged without WebCrypto (plain-HTTP LAN)', async () => {
     const plain = new PrivateHandChannel(false);
+    expect((await plain.outgoingSnapshot(game)).state).toBe(game);
     await plain.registerSeat(0, {});
     expect((await plain.outgoingDelta({ widgets: {} }, game)).sealed).toBeUndefined();
   });
