@@ -219,6 +219,10 @@ jobs:
       - name: Deploy to Cloudflare
         id: cloudflare
         uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
+        env:
+          # The action installs wrangler at the repo root, which runs the install scripts of every
+          # app dependency; node-datachannel's prebuild crashes there. Deploying needs none of them.
+          npm_config_ignore_scripts: 'true'
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
