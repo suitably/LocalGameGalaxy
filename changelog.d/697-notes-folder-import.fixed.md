@@ -1,0 +1,1 @@
+- **Melodiq Notes remembers songs from your device folder** (#697): songs imported from a folder now reopen as your last song, and a folder import also picks up MIDI (`.mid`) and Guitar Pro (`.gp`) files, read by the same parser as every other song source. Re-syncing folders asks for permission right after your click.
