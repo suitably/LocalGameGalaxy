@@ -12,7 +12,7 @@ node scripts/tts-compat/run.mjs --out after.json --baseline before.json   # exit
 ```
 
 Flags: `--ids a,b` (override corpus), `--offline` (cache only), `--check-images` (HEAD up to 3 URLs per image host), `--top N`.
-Unit tests (offline): `npm run test:scripts`.
+Unit tests (offline, need `npm ci`): `npm run test:tts-compat` (part of `ci:gates`; not in `test:scripts`, which runs without install).
 
 ## Rules
 
