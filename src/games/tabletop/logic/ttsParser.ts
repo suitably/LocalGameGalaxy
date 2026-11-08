@@ -24,8 +24,20 @@ import {
   type TokenWidget,
   type HolderWidget,
   type CardContent,
+  type ScriptZone,
 } from './types';
 import { validateAndSanitizeGame } from './gameValidator';
+import {
+  assignSeats,
+  cardOrientation,
+  claimId,
+  convertScriptZone,
+  convertText,
+  hasHexTiles,
+  noteObjectText,
+  resetIdClaims,
+  rulesFromTabs,
+} from './ttsFidelity';
 import { resolveCardSprite, resolveBackSprite } from './ttsSpritesheet';
 
 /** Scale factor: 1 TTS unit ≈ this many pixels */
@@ -76,22 +88,6 @@ function ttsColorToHex(c?: { r: number; g: number; b: number }): string {
   const b = Math.round(Math.min(1, Math.max(0, c.b)) * 255);
   return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
 }
-
-// ─── HandTrigger seat mapping by FogColor ────────────────────────────
-
-const FOG_COLOR_SEAT: Record<string, number> = {
-  White: 0,
-  Brown: 1,
-  Red: 2,
-  Orange: 3,
-  Yellow: 4,
-  Green: 5,
-  Teal: 6,
-  Blue: 7,
-  Purple: 8,
-  Pink: 9,
-  Black: 10,
-};
 
 // ─── Die name → sides ────────────────────────────────────────────────
 
@@ -207,7 +203,7 @@ function createSnapHolderWidget(
   const isHex = sp.Tags?.some((t) => /feld|hex/i.test(t)) || hasHexDeck;
   const snapW = isHex ? 210 : 80;
   const snapH = isHex ? 182 : 120;
-  const label = sp.Tags?.[0] || 'Ablage';
+  const label = sp.Tags?.[0];
 
   return {
     id,
@@ -217,7 +213,8 @@ function createSnapHolderWidget(
     width: snapW,
     height: snapH,
     zIndex,
-    label,
+    label: label ?? 'Zone',
+    ...(label ? {} : { labelKey: 'games.tabletop.labels.zone' }),
     dropTargetTypes: ['card', 'token'],
     childIds: [],
     layout: 'stack',
@@ -309,8 +306,10 @@ function convertCard(
   const deckEntry = decks[String(deckIndex)];
   const shapeInfo = getCardShapeAndSize(deckEntry);
 
+  const { faceUp, rotation } = cardOrientation(obj.Transform);
+
   return {
-    id: obj.GUID,
+    id: claimId(obj.GUID),
     type: 'card',
     x: pos.x,
     y: pos.y,
@@ -318,12 +317,15 @@ function convertCard(
     height: shapeInfo.height,
     clipPath: shapeInfo.clipPath,
     zIndex: pos.zIndex,
-    label: obj.Nickname || `Karte ${cardId}`,
+    label: obj.Nickname || `Card ${cardId}`,
+    ...(obj.Nickname
+      ? {}
+      : { labelKey: 'games.tabletop.labels.card_n', labelParams: { n: cardId } }),
     deckId: deckWidgetId,
     frontContent: buildCardFrontContent(cardId, decks),
     backContent: buildCardBackContent(cardId, decks),
-    faceUp: !obj.HideWhenFaceDown,
-    rotation: 0,
+    faceUp,
+    rotation,
     movable: !obj.Locked,
     pinned: Boolean(obj.Locked),
   };
@@ -367,6 +369,7 @@ function convertDeck(
       card.inPile = true;
       card.pileId = deckId;
       card.faceUp = false;
+      card.rotation = 0;
       widgets[card.id] = card;
       cardIds.push(card.id);
     }
@@ -386,7 +389,9 @@ function convertDeck(
         height: cardShape.height,
         clipPath: cardShape.clipPath,
         zIndex: pos.zIndex + 1,
-        label: `Karte ${dId}`,
+        label: `Card ${dId}`,
+        labelKey: 'games.tabletop.labels.card_n',
+        labelParams: { n: dId },
         deckId,
         frontContent: buildCardFrontContent(dId, mergedDecks),
         backContent: buildCardBackContent(dId, mergedDecks),
@@ -416,7 +421,8 @@ function convertDeck(
     height: shapeInfo.height,
     clipPath: shapeInfo.clipPath,
     zIndex: pos.zIndex,
-    label: obj.Nickname || 'Kartenstapel',
+    label: obj.Nickname || 'Card pile',
+    ...(obj.Nickname ? {} : { labelKey: 'games.tabletop.labels.card_pile' }),
     cardIds,
     backContent,
     isPile: true,
@@ -472,7 +478,8 @@ function convertBoard(
     width,
     height,
     zIndex: 0,
-    label: obj.Nickname || 'Spielbrett',
+    label: obj.Nickname || 'Board',
+    ...(obj.Nickname ? {} : { labelKey: 'games.tabletop.labels.board' }),
     image: imageUrl,
     movable: false,
     pinned: true,
@@ -522,7 +529,9 @@ function convertHandTrigger(
     width: 340,
     height: 200,
     zIndex: pos.zIndex + 1000,
-    label: `Hand ${seatIndex + 1}`,
+    label: `Player ${seatIndex + 1}`,
+    labelKey: 'games.tabletop.labels.hand_n',
+    labelParams: { n: seatIndex + 1 },
     dropTargetTypes: ['card'],
     childIds: [],
     layout: 'fan',
@@ -548,6 +557,7 @@ export function parseTtsSaveFile(
 ): TabletopGameDefinition {
   // Reset counter
   widgetIdCounter = 0;
+  resetIdClaims();
 
   const widgets: Record<string, TabletopWidget> = {};
   const bounds = computeBounds(save.ObjectStates);
@@ -556,19 +566,39 @@ export function parseTtsSaveFile(
   // Collect all CustomDeck entries globally
   const globalDecks: Record<string, TTSCustomDeckEntry> = {};
   collectCustomDecks(save.ObjectStates, globalDecks);
-  const hasAnyHexDeck = Object.values(globalDecks).some((d) => d.Type === 2 || d.Type === 3);
+  const hasAnyHexDeck =
+    Object.values(globalDecks).some((d) => d.Type === 2 || d.Type === 3) ||
+    hasHexTiles(save.ObjectStates);
 
-  // Track HandTrigger seat assignment
-  let handSeatCounter = 0;
+  // HandTrigger seats: dense, in FogColor order, at most maxPlayers
+  const maxPlayers = save.PlayerCounts?.[1] ?? 6;
+  const seats = assignSeats(
+    save.ObjectStates.filter((o) => o.Name === 'HandTrigger'),
+    maxPlayers,
+    save.ObjectStates.filter((o) => o.Name === 'FogOfWarTrigger').flatMap((o) => o.FogColor ?? []),
+  );
   const hiddenZones: Record<string, HiddenZone> = {};
+  const scriptZones: Record<string, ScriptZone> = {};
+  const noteTexts: string[] = [];
+
+  const putClaimed = (w: TabletopWidget) => {
+    const id = claimId(w.id);
+    widgets[id] = { ...w, id };
+  };
 
   /** Objects inside bags: cards, dice and tiles keep their kind, the rest become tokens. */
   const convertChild = (child: TTSObjectState, p: { x: number; y: number; zIndex: number }) => {
     if (child.Name === 'Card') return convertCard(child, p, globalDecks);
     const sides = parseDieSides(child.Name);
-    if (sides !== null) return convertDie(child, p, sides);
-    if (child.Name === 'Custom_Tile') return { ...convertToken(child, p), ...tileShape(child) };
-    return convertToken(child, p);
+    if (sides !== null) {
+      const die = convertDie(child, p, sides);
+      return { ...die, id: claimId(die.id) };
+    }
+    const w =
+      child.Name === 'Custom_Tile'
+        ? { ...convertToken(child, p), ...tileShape(child) }
+        : convertToken(child, p);
+    return { ...w, id: claimId(w.id) };
   };
 
   // Process all top-level objects
@@ -600,11 +630,8 @@ export function parseTtsSaveFile(
 
     // HandTrigger → player hand
     if (name === 'HandTrigger') {
-      const seat =
-        obj.FogColor && FOG_COLOR_SEAT[obj.FogColor] !== undefined
-          ? FOG_COLOR_SEAT[obj.FogColor]
-          : handSeatCounter;
-      handSeatCounter = Math.max(handSeatCounter, seat + 1);
+      const seat = seats.byGuid.get(obj.GUID);
+      if (seat === undefined) continue;
       const hand = convertHandTrigger(obj, pos, seat);
       widgets[hand.id] = hand;
       continue;
@@ -613,7 +640,7 @@ export function parseTtsSaveFile(
     // Dice
     const dieSides = parseDieSides(name);
     if (dieSides !== null) {
-      widgets[obj.GUID] = convertDie(obj, pos, dieSides);
+      putClaimed(convertDie(obj, pos, dieSides));
       continue;
     }
 
@@ -626,7 +653,8 @@ export function parseTtsSaveFile(
 
     // Single Card (not inside a deck)
     if (name === 'Card') {
-      widgets[obj.GUID] = convertCard(obj, pos, globalDecks);
+      const single = convertCard(obj, pos, globalDecks);
+      widgets[single.id] = single;
       continue;
     }
 
@@ -643,7 +671,7 @@ export function parseTtsSaveFile(
         obj,
         pos,
         TTS_SCALE,
-        obj.FogColor ? FOG_COLOR_SEAT[obj.FogColor] : undefined,
+        obj.FogColor ? seats.byColor.get(obj.FogColor) : undefined,
         ttsColorToHex(obj.ColorDiffuse),
       );
       hiddenZones[zone.id] = zone;
@@ -652,13 +680,29 @@ export function parseTtsSaveFile(
 
     // Custom_Tile → token with the tile's shape (box, hex, circle, rounded)
     if (name === 'Custom_Tile') {
-      widgets[obj.GUID] = { ...convertToken(obj, pos), ...tileShape(obj) };
+      putClaimed({ ...convertToken(obj, pos), ...tileShape(obj) });
       continue;
     }
 
     // Custom_Board → convert to pinned board token widget
     if (name === 'Custom_Board') {
-      widgets[obj.GUID] = convertBoard(obj, pos);
+      putClaimed(convertBoard(obj, pos));
+      continue;
+    }
+
+    // 3DText → label widget; ScriptingTrigger → invisible zone for scripts
+    if (name === '3DText') {
+      const text = convertText(obj, pos, ttsColorToHex(obj.Text?.colorstate));
+      widgets[text.id] = text;
+      continue;
+    }
+    if (name === 'ScriptingTrigger') {
+      scriptZones[obj.GUID] = convertScriptZone(obj, pos, TTS_SCALE);
+      continue;
+    }
+    if (name.startsWith('Notecard') || name.startsWith('Tablet')) {
+      const note = noteObjectText(obj);
+      if (note) noteTexts.push(note);
       continue;
     }
 
@@ -672,13 +716,13 @@ export function parseTtsSaveFile(
       name.startsWith('backgammon_piece') ||
       name.startsWith('PiecePack_')
     ) {
-      widgets[obj.GUID] = convertToken(obj, pos);
+      putClaimed(convertToken(obj, pos));
       continue;
     }
 
     // Default fallback: generic token for any unrecognized object
     if (!name.startsWith('Notecard') && !name.startsWith('Tablet')) {
-      widgets[obj.GUID] = convertToken(obj, pos);
+      putClaimed(convertToken(obj, pos));
     }
   }
 
@@ -713,20 +757,15 @@ export function parseTtsSaveFile(
   const tableWidth = Math.round((bounds.maxX - bounds.minX) * TTS_SCALE + margin * 2 + 200);
   const tableHeight = Math.round((bounds.maxZ - bounds.minZ) * TTS_SCALE + margin * 2 + 200);
 
-  // Extract rules from TabStates
-  let ruleText: string | undefined;
-  if (save.TabStates) {
-    const rulesTab = Object.values(save.TabStates).find((t) => t.title === 'Rules');
-    if (rulesTab?.body) ruleText = rulesTab.body;
-  }
+  const ruleText = rulesFromTabs(save, noteTexts);
 
   return validateAndSanitizeGame({
     name: save.SaveName || options?.defaultName || 'TTS Import',
-    description: save.Note || save.Tags?.join(', ') || '',
+    description: save.Note || '',
     author: 'Steam Workshop',
     version: save.VersionNumber || '1.0.0',
     minPlayers: save.PlayerCounts?.[0] ?? 1,
-    maxPlayers: save.PlayerCounts?.[1] ?? 6,
+    maxPlayers,
     table: {
       width: Math.max(1600, tableWidth),
       height: Math.max(1000, tableHeight),
@@ -735,6 +774,7 @@ export function parseTtsSaveFile(
     widgets,
     ruleText,
     ...(Object.keys(hiddenZones).length > 0 ? { hiddenZones } : {}),
+    ...(Object.keys(scriptZones).length > 0 ? { scriptZones } : {}),
   });
 }
 
