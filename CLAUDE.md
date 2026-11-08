@@ -25,9 +25,11 @@ Run gates only after code changes, not while researching. Prefer the narrowest c
 
 ## Working rules for Claude
 
-- Code is the source of truth. When docs and code disagree, fix the doc in the same change (front matter `verified`, fragment in `docs/log.d/`) or add an open question — never leave a known-wrong statement behind.
-- Before naming a file, symbol, key or route in a doc, confirm it exists with `grep`.
+AGENTS.md covers code-vs-docs and secrets; these add to it.
+
 - Keep changes to the requested scope; refactors, dependency bumps and formatting passes are separate PRs.
-- Secrets: never read or print any `config.json`, `.env*` or keystore.
+- One task per session; write findings to `docs/` so a fresh session can continue instead of a long one growing.
+- Read the lines you need (`grep -n`, `sed -n 'a,bp'`), not whole files; never print lock files, `dist/` or full logs.
+- Do not poll CI or PRs in a loop; subscribe to PR activity or wait once.
 - Everything is English: code, comments, commit messages, docs, PR and issue texts, and replies to the user (who may write in German or English).
 - Keep answers short: no intro, no restating the question, no closing summary; bullets over prose. Keep conditions, caveats and reasons.
