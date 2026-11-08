@@ -17,6 +17,7 @@ How the code works **right now**. One topic, one file. Start with the architectu
 ## Game internals
 
 - [Melodiq](melodiq-architecture.md) — host / TV / phone roles, hooks, playback modes, technical debt.
+- [Melodiq Notes](melodiq-notes-architecture.md) — band stage engine, latency model, pult protocol, song sources.
 - [Song pipeline](song-pipeline.md) — USDB + yt-dlp download jobs, audio-separator, whisper alignment, endpoints.
 - [Werewolf](werewolf-architecture.md) — roles, night order, state machine, TTS.
 - [Qwixx sheet rules](qwixx-sheet-rules.md) — variants and scoring.
