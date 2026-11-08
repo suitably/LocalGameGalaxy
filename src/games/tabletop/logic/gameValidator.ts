@@ -11,6 +11,7 @@ import {
   type CardWidget,
   type DeckWidget,
   type HiddenZone,
+  type ScriptZone,
 } from './types';
 import { isPersonalHolder, isSupplyReserveHolder } from './boardFilter';
 
@@ -238,6 +239,19 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
     };
   }
 
+  const cleanScriptZones: Record<string, ScriptZone> = {};
+  for (const [zId, z] of Object.entries(raw.scriptZones ?? {})) {
+    if (!z || typeof z !== 'object') continue;
+    cleanScriptZones[zId] = {
+      id: z.id || zId,
+      x: typeof z.x === 'number' ? z.x : 0,
+      y: typeof z.y === 'number' ? z.y : 0,
+      width: typeof z.width === 'number' ? z.width : 20,
+      height: typeof z.height === 'number' ? z.height : 20,
+      label: typeof z.label === 'string' ? z.label : undefined,
+    };
+  }
+
   return {
     id,
     name,
@@ -264,5 +278,6 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
     updatedAt: raw.updatedAt || Date.now(),
     ruleText: typeof raw.ruleText === 'string' ? raw.ruleText : undefined,
     hiddenZones: Object.keys(cleanHiddenZones).length > 0 ? cleanHiddenZones : undefined,
+    scriptZones: Object.keys(cleanScriptZones).length > 0 ? cleanScriptZones : undefined,
   };
 }

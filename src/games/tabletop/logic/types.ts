@@ -296,6 +296,16 @@ export interface HiddenZone {
   label?: string;
 }
 
+/** Invisible trigger area of an imported game (TTS `ScriptingTrigger`); only scripts use it. */
+export interface ScriptZone {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  label?: string;
+}
+
 export interface TabletopGameDefinition extends TabletopGameMetadata {
   version: string;
   minPlayers: number;
@@ -307,6 +317,7 @@ export interface TabletopGameDefinition extends TabletopGameMetadata {
   updatedAt?: number;
   ruleText?: string;
   hiddenZones?: Record<string, HiddenZone>;
+  scriptZones?: Record<string, ScriptZone>;
 }
 
 export interface TabletopGameSummary extends TabletopGameMetadata {

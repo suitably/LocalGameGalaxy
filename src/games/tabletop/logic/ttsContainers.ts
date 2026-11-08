@@ -13,6 +13,7 @@ import {
 } from './types';
 import type { TTSObjectState } from './ttsTypes';
 import { stateFaceOf } from './tableTools';
+import { claimId } from './ttsFidelity';
 
 type Pos = { x: number; y: number; zIndex: number };
 
@@ -69,7 +70,7 @@ export function convertBag(
     pinned: false,
   })) as TabletopWidget[];
   const base: BagWidget = {
-    id: obj.GUID,
+    id: claimId(obj.GUID),
     type: 'bag',
     x: pos.x,
     y: pos.y,
