@@ -55,9 +55,12 @@ export class PrivateHandChannel {
     this.seatKeys.set(seat, await deriveSealKey(pair.privateKey, theirPublic));
   }
 
-  /** Hands are redacted once a seat registered a key. */
+  /**
+   * Hands are redacted whenever sealing works, also before (or without) any seat key, so a
+   * spectator-only room never gets faces in clear (#685).
+   */
   private get privateHands(): boolean {
-    return this.supported && this.seatKeys.size > 0;
+    return this.supported;
   }
 
   /** Hidden zones are redacted whenever sealing works, so seatless devices and spectators see nothing. */

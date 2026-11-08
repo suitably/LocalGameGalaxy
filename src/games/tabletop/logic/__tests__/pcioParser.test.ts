@@ -149,7 +149,11 @@ describe('Tabletop pcioParser', () => {
       name: 'Deck Test',
       widgets: {
         normalDeck: { id: 'normalDeck', type: 'deck' } as unknown as DeckWidget,
-        explicitOpenDeck: { id: 'explicitOpenDeck', type: 'deck', faceUp: true } as unknown as DeckWidget,
+        explicitOpenDeck: {
+          id: 'explicitOpenDeck',
+          type: 'deck',
+          faceUp: true,
+        } as unknown as DeckWidget,
       },
     });
     expect((sanitizedWithDeck.widgets.normalDeck as DeckWidget).faceUp).toBe(false);
@@ -259,4 +263,3 @@ describe('Tabletop pcioParser', () => {
     expect(resourceDeck.activeFace).toBe(1);
   });
 });
-

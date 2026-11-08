@@ -5,8 +5,13 @@ import {
   classifyDelta,
   containsRedactedWidget,
   isSyncedIntent,
+  resolveSenderSeat,
   senderIsSpectator,
 } from '../syncProtocol';
+
+const game = { widgets: {}, hiddenZones: {} };
+const player = { spectator: false, seat: 0 };
+const spectator = { spectator: true, seat: null };
 
 describe('syncProtocol (#449)', () => {
   it('applies the next delta, ignores duplicates and waits for the first snapshot', () => {
@@ -34,22 +39,21 @@ describe('syncProtocol (#449)', () => {
       { type: 'DRAW_CARD', payload: { deckId: 'd' } },
       { type: 'SHUFFLE_DECK', payload: { deckId: 'd' } },
       { type: 'ROLL_DIE', payload: { dieId: 'd' } },
-      { type: 'DELETE_WIDGETS', payload: { ids: ['a'] } },
       { type: 'UPDATE_COUNTER', payload: { counterId: 'c', delta: 1 } },
-      { type: 'SELECT_SEAT', payload: { seatId: 's' } },
     ];
     for (const action of mutating) {
-      expect(acceptIntent(action, { spectator: true })).toBe(false);
-      expect(acceptIntent(action, { spectator: false })).toBe(true);
+      expect(acceptIntent(action, spectator, game)).toBe(false);
+      expect(acceptIntent(action, player, game)).toBe(true);
     }
+    // editor actions are host-only for players too (#685)
+    const del: TabletopAction = { type: 'DELETE_WIDGETS', payload: { ids: ['a'] } };
+    expect(acceptIntent(del, spectator, game)).toBe(false);
+    expect(acceptIntent(del, player, game)).toBe(false);
   });
 
   it('never accepts device-local actions as intents', () => {
     expect(
-      acceptIntent(
-        { type: 'FINISH_ANIMATION', payload: { animationId: 'x' } },
-        { spectator: false },
-      ),
+      acceptIntent({ type: 'FINISH_ANIMATION', payload: { animationId: 'x' } }, player, game),
     ).toBe(false);
   });
 
@@ -81,8 +85,14 @@ describe('syncProtocol (#449)', () => {
     };
     const add = { type: 'ADD_WIDGETS', payload: { widgets: [blank] } } as unknown as TabletopAction;
     expect(containsRedactedWidget(add)).toBe(true);
-    expect(acceptIntent(add, { spectator: false })).toBe(false);
+    expect(acceptIntent(add, player, game)).toBe(false);
     const move: TabletopAction = { type: 'MOVE_WIDGET', payload: { id: 'c', x: 1, y: 2 } };
-    expect(acceptIntent(move, { spectator: false })).toBe(true);
+    expect(acceptIntent(move, player, game)).toBe(true);
+  });
+
+  it('attributes the seat a device joined with, not a later claim (#685)', () => {
+    expect(resolveSenderSeat(1, 0)).toBe(1);
+    expect(resolveSenderSeat(undefined, 0)).toBe(0);
+    expect(resolveSenderSeat(undefined, undefined)).toBeNull();
   });
 });
