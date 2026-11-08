@@ -30,6 +30,7 @@ This bundle describes **one code base**: the GitHub repository `suitably/LocalGa
 | Theme, safe areas, Capacitor touch CSS                                       | [tech/styling.md](tech/styling.md)                                                                                     |
 | Write or run tests (Vitest, `node --test`)                                   | [tech/testing-guide.md](tech/testing-guide.md)                                                                         |
 | Melodiq karaoke internals (host, TV, phone client, stems)                    | [tech/melodiq-architecture.md](tech/melodiq-architecture.md)                                                           |
+| Melodiq Notes internals (engine, latency model, pult protocol, song sources) | [tech/melodiq-notes-architecture.md](tech/melodiq-notes-architecture.md)                                               |
 | Song download, vocal separation, lyric alignment on the server               | [tech/song-pipeline.md](tech/song-pipeline.md)                                                                         |
 | Werewolf / Qwixx game rules and engines                                      | [tech/werewolf-architecture.md](tech/werewolf-architecture.md), [tech/qwixx-sheet-rules.md](tech/qwixx-sheet-rules.md) |
 | Companion server auth, API keys, CORS, PNA                                   | [tech/server-security.md](tech/server-security.md)                                                                     |
