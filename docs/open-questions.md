@@ -33,9 +33,9 @@ Resolve: replace local constants with the registry entries (same string values, 
 
 ADR-0004 says "Demucs via PyTorch". `server/src/plugins/melodiq/services/separator.ts` runs `audio-separator[cpu]` with model `UVR-MDX-NET-Inst_HQ_3.onnx` and aligns lyrics with `whisper-timestamped` (`server/src/scripts/align_lyrics.py`). The ADR now carries a note; a superseding ADR is a maintainer decision.
 
-## Q15 — VirtualTabletop routines on import
+## Resolved 2026-11-08
 
-**[user]** VirtualTabletop games rely on routines (14 580 in its library); our button routines express about 1.2 % of them, so imported buttons do nothing. Options: translate the trivial subset and list the rest in an import report, or build a sandboxed interpreter for VTT's routine language (the scripting-scope question from the [2026-10-21 plan](reports/2026-10-21-tabletop-vtt-plan.md), slice 9).
+- Q15 VirtualTabletop routines on import → maintainer decision (by best practice, 2026-11-08): routines stay the canonical executable model and gain triggers, conditions and new ops; VTT/PCIO trivial subsets and straight-line TTS Lua idioms are translated into them, the rest is listed in an import report; a host-only sandboxed Lua runtime follows behind a flag. [ADR-0005](adr/0005-tabletop-scripting-for-imported-games.md), [TTS compatibility plan](reports/2026-11-08-tts-compatibility-plan.md) slices 7–9.
 
 ## Resolved 2026-10-27
 
