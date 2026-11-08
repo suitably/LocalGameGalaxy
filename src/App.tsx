@@ -7,6 +7,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { gameRegistry } from './lib/gameRegistry';
 import { useServerUrlAutoConnect } from './hooks/useServerUrlAutoConnect';
 import { hasGitHubPAT } from './lib/github';
+import { runBackHandlers } from './lib/backButton';
 import { settingsPath } from './features/settings/settingsRoutes';
 
 // Route-level code splitting: the hub and settings load on first visit (the party lobby is a
@@ -61,6 +62,9 @@ function AppRoutes() {
         );
         return;
       }
+
+      // a mounted screen (e.g. the Melodiq Notes stage) may take the press before the default
+      if (runBackHandlers()) return;
 
       if (window.location.pathname === '/') {
         CapacitorApp.exitApp();
