@@ -1,5 +1,5 @@
 /**
- * Edit-mode switch, undo/redo, add-widget menu and table settings [ID: COMP-TABLETOP-EDITOR-TOOLBAR]
+ * Edit-mode switch, undo/redo (also while playing), add-widget menu and table settings [ID: COMP-TABLETOP-EDITOR-TOOLBAR]
  */
 import React, { useState } from 'react';
 import { Divider, IconButton, Menu, MenuItem, Paper, Tooltip } from '@mui/material';
@@ -49,23 +49,31 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
           {editor.editMode ? <DoneIcon /> : <EditIcon />}
         </IconButton>
       </Tooltip>
+      <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
+      <Tooltip title={t('games.tabletop.editor.undo')}>
+        <span>
+          <IconButton
+            onClick={editor.undo}
+            disabled={!editor.canUndo}
+            aria-label={t('games.tabletop.editor.undo')}
+          >
+            <UndoIcon />
+          </IconButton>
+        </span>
+      </Tooltip>
+      <Tooltip title={t('games.tabletop.editor.redo')}>
+        <span>
+          <IconButton
+            onClick={editor.redo}
+            disabled={!editor.canRedo}
+            aria-label={t('games.tabletop.editor.redo')}
+          >
+            <RedoIcon />
+          </IconButton>
+        </span>
+      </Tooltip>
       {editor.editMode && (
         <>
-          <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
-          <Tooltip title={t('games.tabletop.editor.undo')}>
-            <span>
-              <IconButton onClick={editor.undo} disabled={!editor.canUndo}>
-                <UndoIcon />
-              </IconButton>
-            </span>
-          </Tooltip>
-          <Tooltip title={t('games.tabletop.editor.redo')}>
-            <span>
-              <IconButton onClick={editor.redo} disabled={!editor.canRedo}>
-                <RedoIcon />
-              </IconButton>
-            </span>
-          </Tooltip>
           <Tooltip title={t('games.tabletop.editor.add')}>
             <IconButton onClick={(e) => setAddAnchor(e.currentTarget)}>
               <AddBoxIcon />

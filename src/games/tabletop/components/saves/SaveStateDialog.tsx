@@ -13,6 +13,7 @@ import { checkSaveName, suggestUniqueName } from '../../logic/saveNames';
 import type { SaveTarget, TableSaves } from '../../hooks/useTableSaves';
 import { SaveStateForm } from './SaveStateForm';
 import { SaveStateList } from './SaveStateList';
+import { isServerUnreachable } from '../../logic/tabletopServerApi';
 import { TemplateActions, type TemplateAction } from './TemplateActions';
 
 type Pending =
@@ -37,7 +38,7 @@ export const SaveStateDialog: React.FC<Props> = ({ open, onClose, gameName, save
   /** null until the player types: then the name follows the free suggestion. */
   const [typedName, setTypedName] = useState<string | null>(null);
   const [pending, setPending] = useState<Pending>(null);
-  const serverAllowed = saves.serverAvailable && saves.permissions.saveStates;
+  const serverAllowed = saves.serverAvailable && !saves.serverError && saves.permissions.saveStates;
   const target: SaveTarget = serverAllowed ? chosenTarget : 'local';
   const name =
     typedName ??
@@ -70,11 +71,13 @@ export const SaveStateDialog: React.FC<Props> = ({ open, onClose, gameName, save
 
   const serverHint = !saves.serverAvailable
     ? null
-    : saves.serverError
-      ? t('games.tabletop.saves.serverUnavailable', { error: saves.serverError })
-      : !saves.permissions.saveStates
-        ? t('games.tabletop.saves.noServerPermission')
-        : null;
+    : isServerUnreachable(saves.serverError)
+      ? t('games.tabletop.server_unreachable')
+      : saves.serverError
+        ? t('games.tabletop.saves.serverUnavailable', { error: saves.serverError })
+        : !saves.permissions.saveStates
+          ? t('games.tabletop.saves.noServerPermission')
+          : null;
 
   return (
     <>

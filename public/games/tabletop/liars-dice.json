@@ -28,7 +28,8 @@
       "value": 2,
       "step": 1,
       "min": 1,
-      "max": 30
+      "max": 30,
+      "labelKey": "games.tabletop.labels.current_bid"
     },
     "d0_1": {
       "id": "d0_1",
@@ -113,7 +114,11 @@
         "d0_4",
         "d0_5"
       ],
-      "layout": "grid"
+      "layout": "grid",
+      "labelKey": "games.tabletop.labels.hand_n",
+      "labelParams": {
+        "n": 1
+      }
     },
     "d1_1": {
       "id": "d1_1",
@@ -198,7 +203,11 @@
         "d1_4",
         "d1_5"
       ],
-      "layout": "grid"
+      "layout": "grid",
+      "labelKey": "games.tabletop.labels.hand_n",
+      "labelParams": {
+        "n": 2
+      }
     },
     "d2_1": {
       "id": "d2_1",
@@ -283,7 +292,11 @@
         "d2_4",
         "d2_5"
       ],
-      "layout": "grid"
+      "layout": "grid",
+      "labelKey": "games.tabletop.labels.hand_n",
+      "labelParams": {
+        "n": 3
+      }
     },
     "d3_1": {
       "id": "d3_1",
@@ -368,7 +381,161 @@
         "d3_4",
         "d3_5"
       ],
-      "layout": "grid"
+      "layout": "grid",
+      "labelKey": "games.tabletop.labels.hand_n",
+      "labelParams": {
+        "n": 4
+      }
+    },
+    "roll_cup_0": {
+      "id": "roll_cup_0",
+      "type": "button",
+      "x": 870,
+      "y": 752,
+      "width": 140,
+      "height": 44,
+      "zIndex": 20,
+      "text": "Becher 1 würfeln",
+      "label": "Becher 1 würfeln",
+      "labelKey": "games.tabletop.labels.roll_cup_n",
+      "labelParams": {
+        "n": 1
+      },
+      "pinned": true,
+      "routine": [
+        {
+          "op": "ROLL",
+          "dice": [
+            "d0_1",
+            "d0_2",
+            "d0_3",
+            "d0_4",
+            "d0_5"
+          ]
+        }
+      ]
+    },
+    "roll_cup_1": {
+      "id": "roll_cup_1",
+      "type": "button",
+      "x": 870,
+      "y": 92,
+      "width": 140,
+      "height": 44,
+      "zIndex": 20,
+      "text": "Becher 2 würfeln",
+      "label": "Becher 2 würfeln",
+      "labelKey": "games.tabletop.labels.roll_cup_n",
+      "labelParams": {
+        "n": 2
+      },
+      "pinned": true,
+      "routine": [
+        {
+          "op": "ROLL",
+          "dice": [
+            "d1_1",
+            "d1_2",
+            "d1_3",
+            "d1_4",
+            "d1_5"
+          ]
+        }
+      ]
+    },
+    "roll_cup_2": {
+      "id": "roll_cup_2",
+      "type": "button",
+      "x": 40,
+      "y": 530,
+      "width": 140,
+      "height": 44,
+      "zIndex": 20,
+      "text": "Becher 3 würfeln",
+      "label": "Becher 3 würfeln",
+      "labelKey": "games.tabletop.labels.roll_cup_n",
+      "labelParams": {
+        "n": 3
+      },
+      "pinned": true,
+      "routine": [
+        {
+          "op": "ROLL",
+          "dice": [
+            "d2_1",
+            "d2_2",
+            "d2_3",
+            "d2_4",
+            "d2_5"
+          ]
+        }
+      ]
+    },
+    "roll_cup_3": {
+      "id": "roll_cup_3",
+      "type": "button",
+      "x": 1060,
+      "y": 530,
+      "width": 140,
+      "height": 44,
+      "zIndex": 20,
+      "text": "Becher 4 würfeln",
+      "label": "Becher 4 würfeln",
+      "labelKey": "games.tabletop.labels.roll_cup_n",
+      "labelParams": {
+        "n": 4
+      },
+      "pinned": true,
+      "routine": [
+        {
+          "op": "ROLL",
+          "dice": [
+            "d3_1",
+            "d3_2",
+            "d3_3",
+            "d3_4",
+            "d3_5"
+          ]
+        }
+      ]
+    }
+  },
+  "hiddenZones": {
+    "cup_zone_0": {
+      "id": "cup_zone_0",
+      "x": 550,
+      "y": 700,
+      "width": 300,
+      "height": 150,
+      "ownerSeat": 0,
+      "color": "#4e342e"
+    },
+    "cup_zone_1": {
+      "id": "cup_zone_1",
+      "x": 550,
+      "y": 40,
+      "width": 300,
+      "height": 150,
+      "ownerSeat": 1,
+      "color": "#4e342e"
+    },
+    "cup_zone_2": {
+      "id": "cup_zone_2",
+      "x": 40,
+      "y": 370,
+      "width": 300,
+      "height": 150,
+      "ownerSeat": 2,
+      "color": "#4e342e"
+    },
+    "cup_zone_3": {
+      "id": "cup_zone_3",
+      "x": 1060,
+      "y": 370,
+      "width": 300,
+      "height": 150,
+      "ownerSeat": 3,
+      "color": "#4e342e"
     }
   }
 }

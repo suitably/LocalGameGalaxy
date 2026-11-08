@@ -2,9 +2,10 @@
  * The game chosen on the Spieltisch, started by the host once everybody joined [ID: COMP-PARTY-PENDING-GAME]
  */
 import React from 'react';
-import { Box, Button, Card, Typography } from '@mui/material';
+import { Box, Button, Card, Typography, useTheme } from '@mui/material';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import { useTranslation } from 'react-i18next';
+import { AreaSymbol } from '../../../components/brand/AreaSymbol';
 import { TABLETOP_STARTERS, DICE_GAMES } from '../../../games/tabletop/logic/tableCatalog';
 import type { PartyLobbyController } from '../hooks/usePartyLobbyController';
 import { PARTY_GAME_TITLES } from '../logic/partyGameTitles';
@@ -12,6 +13,7 @@ import type { PartyGameType } from '../logic/universalPartyManager';
 
 export const PartyPendingGame: React.FC<{ lobby: PartyLobbyController }> = ({ lobby }) => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const { pendingLaunch, amIHost, players, startPendingGame, clearPendingLaunch } = lobby;
   if (!pendingLaunch || !amIHost) return null;
   const id = pendingLaunch.gameId ?? pendingLaunch.gameType;
@@ -29,8 +31,20 @@ export const PartyPendingGame: React.FC<{ lobby: PartyLobbyController }> = ({ lo
       <Typography variant="overline" color="text.secondary">
         {t('party.pending_game_label', 'Gewähltes Spiel')}
       </Typography>
-      <Typography variant="h6" fontWeight={800} sx={{ mb: 0.5 }}>
-        {starter?.icon} {title}
+      <Typography
+        variant="h6"
+        fontWeight={800}
+        sx={{ mb: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}
+      >
+        {starter && (
+          <AreaSymbol
+            area={starter.icon}
+            color={starter.color}
+            cut={theme.palette.background.paper}
+            size={24}
+          />
+        )}
+        {title}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
         {others === 0

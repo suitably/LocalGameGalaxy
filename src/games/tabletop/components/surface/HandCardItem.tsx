@@ -91,7 +91,7 @@ export const HandCardItem: React.FC<HandCardItemProps> = ({
               left: 2,
               p: 0.3,
               bgcolor: 'rgba(0,0,0,0.65)',
-              color: 'text.primary',
+              color: 'common.white',
               zIndex: 25,
               '&:hover': { bgcolor: 'rgba(0,0,0,0.9)' },
             }}

@@ -167,7 +167,11 @@ export function getPlayerStats(
  * widgets, so pass and play can switch between them. One seat per owner, `index` = `ownerSeat`
  * and `hand` = the holder; nothing is returned once the game has seats.
  */
-export function seatsForHands(widgets: Record<string, TabletopWidget>): SeatWidget[] {
+export function seatsForHands(
+  widgets: Record<string, TabletopWidget>,
+  /** Label of a seat whose hand has none (1-based number); the caller translates it. */
+  fallbackLabel: (n: number) => string = (n) => `Player ${n}`,
+): SeatWidget[] {
   if (getSeatWidgets(widgets).length > 0) return [];
   const byOwner = new Map<number, HolderWidget>();
   for (const w of Object.values(widgets)) {
@@ -187,7 +191,7 @@ export function seatsForHands(widgets: Record<string, TabletopWidget>): SeatWidg
       type: 'seat' as const,
       index: ownerSeat,
       color: DEFAULT_SEAT_COLORS[ownerSeat + 1] || '#dc2626',
-      label: hand.label || `Spieler ${ownerSeat + 1}`,
+      label: hand.label || fallbackLabel(ownerSeat + 1),
       hand: hand.id,
       x: 0,
       y: 0,

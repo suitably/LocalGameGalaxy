@@ -69,6 +69,9 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
         const zoneColor = zone.color || '#212121';
         const canEdit = editing.canEdit(zone);
         const rect = editing.getRect(zone);
+        // A zone you can see into must not cover its pieces: labels go to the top edge and
+        // clicks pass through to the widgets (except in edit mode, where the zone is dragged).
+        const seeThrough = isOwner || isRevealed;
 
         return (
           <Box
@@ -88,10 +91,12 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
               borderRadius: 2,
               boxShadow: isRevealed ? 'none' : isOwner ? 'none' : '0 8px 30px rgba(0, 0, 0, 0.85)',
               display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
+              flexDirection: seeThrough ? 'row' : 'column',
+              alignItems: seeThrough ? 'flex-start' : 'center',
               justifyContent: 'center',
-              pointerEvents: 'auto',
+              gap: 1,
+              pt: seeThrough ? 0.5 : 0,
+              pointerEvents: canEdit || !seeThrough ? 'auto' : 'none',
               cursor: canEdit ? 'move' : 'context-menu',
               touchAction: canEdit ? 'none' : undefined,
               userSelect: 'none',
@@ -101,14 +106,15 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
             <Box
               sx={{
                 bgcolor: 'rgba(0,0,0,0.7)',
-                color: 'text.primary',
+                color: 'common.white',
+                pointerEvents: 'auto',
                 px: 1.5,
                 py: 0.5,
                 borderRadius: 2,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 0.75,
-                border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.2)}`,
+                border: (theme) => `1px solid ${alpha(theme.palette.common.white, 0.2)}`,
               }}
             >
               {isRevealed ? (

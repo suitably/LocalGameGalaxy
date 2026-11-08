@@ -39,7 +39,7 @@ export const ZoneRevealToggle: React.FC<ToggleProps> = ({ revealed, onToggle }) 
         e.stopPropagation();
         onToggle();
       }}
-      sx={{ minHeight: HANDLE_HIT, minWidth: HANDLE_HIT, mt: 0.75, borderRadius: 5 }}
+      sx={{ minHeight: HANDLE_HIT, minWidth: HANDLE_HIT, borderRadius: 5, pointerEvents: 'auto' }}
     >
       {label}
     </Button>

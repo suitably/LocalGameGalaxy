@@ -16,6 +16,9 @@ interface InspectorFieldsProps {
 
 type Values = Record<string, unknown>;
 
+/** Shown when the widget has no value yet (an unset rotation is 0°). */
+const NUMBER_DEFAULTS: Record<string, number> = { rotation: 0 };
+
 export const InspectorFields: React.FC<InspectorFieldsProps> = ({ widget, onPatch }) => {
   const { t } = useTranslation();
   const values = widget as unknown as Values;
@@ -27,7 +30,7 @@ export const InspectorFields: React.FC<InspectorFieldsProps> = ({ widget, onPatc
       size="small"
       type="number"
       label={label(key)}
-      value={typeof values[key] === 'number' ? values[key] : ''}
+      value={typeof values[key] === 'number' ? values[key] : (NUMBER_DEFAULTS[key] ?? '')}
       onChange={(e) => {
         const n = Number(e.target.value);
         if (e.target.value !== '' && Number.isFinite(n)) onPatch({ [key]: n } as WidgetPatch);
@@ -106,6 +109,7 @@ export const InspectorFields: React.FC<InspectorFieldsProps> = ({ widget, onPatc
         </Stack>
       )}
       {widget.type === 'die' && num('sides')}
+      {widget.type === 'deck' && bool('shuffleOnStart')}
       {widget.type === 'holder' && (
         <>
           <TextField

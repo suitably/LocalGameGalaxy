@@ -26,14 +26,17 @@ export const TabletopPassAndPlay: React.FC<{
   state: TabletopGameState;
   dispatch: React.Dispatch<TabletopAction>;
 }> = ({ state, dispatch }) => {
+  const { t } = useTranslation();
   // Games with private hands but no seats (e.g. the built-in card deck) get one seat per hand.
-  const missingSeats = useMemo(() => seatsForHands(state.game.widgets), [state.game.widgets]);
+  const missingSeats = useMemo(
+    () => seatsForHands(state.game.widgets, (n) => t('games.tabletop.playerN', { n })),
+    [state.game.widgets, t],
+  );
   useEffect(() => {
     if (missingSeats.length > 1)
       dispatch({ type: 'ADD_WIDGETS', payload: { widgets: missingSeats } });
   }, [missingSeats, dispatch]);
 
-  const { t } = useTranslation();
   const theme = useTheme();
   const seatPlayers: HandoverPlayer[] = useMemo(
     () =>

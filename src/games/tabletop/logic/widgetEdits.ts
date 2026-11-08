@@ -29,6 +29,11 @@ export function patchWidgets(
       Object.entries(patch).filter(([key]) => key !== 'id' && key !== 'type'),
     );
     widgets[id] = { ...w, ...safe } as TabletopWidget;
+    // A hand-written label replaces the built-in translated one for good.
+    if ('label' in safe && !('labelKey' in safe)) {
+      delete widgets[id].labelKey;
+      delete widgets[id].labelParams;
+    }
     changed = true;
   }
   return changed ? { ...game, widgets } : game;
