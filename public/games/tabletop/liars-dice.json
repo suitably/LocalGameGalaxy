@@ -12,8 +12,7 @@
   "table": {
     "width": 1400,
     "height": 900,
-    "backgroundColor": "#2e1c14",
-    "gridSnap": 20
+    "backgroundColor": "#2e1c14"
   },
   "widgets": {
     "bid_counter": {

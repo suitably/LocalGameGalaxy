@@ -8,12 +8,16 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   Stack,
+  Switch,
   TextField,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { TabletopTableConfig } from '../../logic/types';
 import { ImageUploadButton } from './ImageUploadButton';
+
+const DEFAULT_GRID_SNAP = 20;
 
 interface TableSettingsDialogProps {
   open: boolean;
@@ -29,6 +33,7 @@ export const TableSettingsDialog: React.FC<TableSettingsDialogProps> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
+  const gridOn = typeof table.gridSnap === 'number' && table.gridSnap > 0;
   const size = (key: 'width' | 'height') => (
     <TextField
       size="small"
@@ -52,6 +57,34 @@ export const TableSettingsDialog: React.FC<TableSettingsDialogProps> = ({
           <Stack direction="row" spacing={1}>
             {size('width')}
             {size('height')}
+          </Stack>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <FormControlLabel
+              sx={{ flex: 1, m: 0 }}
+              control={
+                <Switch
+                  checked={gridOn}
+                  onChange={(e) =>
+                    onChange({ gridSnap: e.target.checked ? DEFAULT_GRID_SNAP : undefined })
+                  }
+                />
+              }
+              label={t('games.tabletop.editor.grid_snap')}
+            />
+            {gridOn && (
+              <TextField
+                size="small"
+                type="number"
+                label={t('games.tabletop.editor.grid_snap_size')}
+                value={table.gridSnap}
+                onChange={(e) => {
+                  const n = Math.round(Number(e.target.value));
+                  if (n >= 5 && n <= 500) onChange({ gridSnap: n });
+                }}
+                inputProps={{ min: 5, max: 500 }}
+                sx={{ width: 120 }}
+              />
+            )}
           </Stack>
           <TextField
             size="small"

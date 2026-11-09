@@ -1,0 +1,1 @@
+- **Tabletop: snap to grid** (#700): dropped widgets snap to the table grid (`table.gridSnap`) once on drop, as part of the same undo step; a widget's own grid (checkers squares) still wins. New "Snap to grid" switch and size in the table settings; the built-in card and Liar's Dice tables keep free placement.

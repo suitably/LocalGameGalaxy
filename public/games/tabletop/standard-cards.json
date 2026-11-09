@@ -14,8 +14,7 @@
   "table": {
     "width": 1600,
     "height": 1000,
-    "backgroundColor": "#1e3d2f",
-    "gridSnap": 20
+    "backgroundColor": "#1e3d2f"
   },
   "widgets": {
     "deck1": {
