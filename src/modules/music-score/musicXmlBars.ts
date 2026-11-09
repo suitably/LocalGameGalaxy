@@ -1,3 +1,4 @@
+import { findCoda, findSegno, readNav, type BarNav } from './musicXmlNav';
 import { kid, kids, num, text } from './xmlDom';
 
 const MAX_PLAYED_BARS = 20000;
@@ -9,6 +10,8 @@ export interface BarInfo {
   times: number;
   endings: number[] | null;
   tempo: number | null;
+  /** Segno, coda, D.C., D.S., To Coda and Fine, merged over all parts. */
+  nav?: BarNav | null;
 }
 
 /** Bar lengths, repeats, endings and tempo marks, read from the first part. */
@@ -78,7 +81,10 @@ export function readBars(firstPart: Element, allParts: Element[], root: Element)
   }
   for (const pe of allParts) {
     kids(pe, 'measure').forEach((m, i) => {
-      if (i >= bars.length || bars[i].tempo) return;
+      if (i >= bars.length) return;
+      const nav = readNav(m);
+      if (nav) bars[i].nav = { ...nav, ...bars[i].nav };
+      if (bars[i].tempo) return;
       for (const s of Array.from(m.getElementsByTagName('sound'))) {
         const t = Number(s.getAttribute('tempo'));
         if (t > 0) {
@@ -95,16 +101,40 @@ export function readBars(firstPart: Element, allParts: Element[], root: Element)
   return bars;
 }
 
-/** Order in which written bars are played, with repeats and 1st/2nd endings written out. */
-export function playOrder(
-  bars: Pick<BarInfo, 'forward' | 'backward' | 'times' | 'endings'>[],
-): number[] {
+type PlayBar = Pick<BarInfo, 'forward' | 'backward' | 'times' | 'endings' | 'nav'>;
+
+const sameEndings = (a: number[] | null, b: number[] | null) =>
+  !!a && !!b && a.length === b.length && a.every((n, k) => n === b[k]);
+
+/** True when the ending bracket that holds bar `i` does not repeat back, i.e. it is the last pass. */
+function isFinalEnding(bars: PlayBar[], i: number): boolean {
+  for (let j = i; j < bars.length && sameEndings(bars[j].endings, bars[i].endings); j++)
+    if (bars[j].backward) return false;
+  return true;
+}
+
+/**
+ * Order in which written bars are played: repeats and 1st/2nd endings written out, then
+ * D.C. / D.S. jumps (each taken once), "To Coda" and "Fine" (both only after such a jump).
+ * After a D.C. / D.S. repeats are not taken again and only final endings are played.
+ */
+export function playOrder(bars: PlayBar[]): number[] {
   const order: number[] = [];
   const counts = new Map<number, number>();
+  const navs = bars.map((b) => b.nav);
+  const taken = new Set<string>();
   let i = 0;
   let repeatStart = 0;
   let pass = 1;
   let jumped = false;
+  let afterJump = false;
+  const jumpTo = (target: number) => {
+    i = target;
+    repeatStart = target;
+    pass = 1;
+    jumped = false;
+    counts.clear();
+  };
   while (i < bars.length && order.length < MAX_PLAYED_BARS) {
     const bar = bars[i];
     if (bar.forward && !jumped) {
@@ -112,14 +142,19 @@ export function playOrder(
       pass = 1;
     }
     jumped = false;
-    if (bar.endings && !bar.endings.includes(pass)) {
+    const skip = bar.endings
+      ? afterJump
+        ? !isFinalEnding(bars, i)
+        : !bar.endings.includes(pass)
+      : false;
+    if (skip) {
       i++;
       continue;
     }
     order.push(i);
     if (bar.backward) {
       const c = counts.get(i) ?? 1;
-      if (c < bar.times) {
+      if (!afterJump && c < bar.times) {
         counts.set(i, c + 1);
         pass = c + 1;
         i = repeatStart;
@@ -129,6 +164,25 @@ export function playOrder(
       counts.delete(i);
       pass = 1;
       repeatStart = i + 1;
+    }
+    const nav = bar.nav;
+    if (afterJump && nav?.fine) break;
+    if (afterJump && nav?.tocoda !== undefined && !taken.has(`c${i}`)) {
+      const target = findCoda(navs, nav.tocoda, i);
+      if (target >= 0) {
+        taken.add(`c${i}`);
+        jumpTo(target);
+        continue;
+      }
+    }
+    if ((nav?.dacapo || nav?.dalsegno !== undefined) && !taken.has(`j${i}`)) {
+      const target = nav.dacapo ? 0 : findSegno(navs, nav.dalsegno ?? '', i);
+      if (target >= 0) {
+        taken.add(`j${i}`);
+        afterJump = true;
+        jumpTo(target);
+        continue;
+      }
     }
     i++;
   }

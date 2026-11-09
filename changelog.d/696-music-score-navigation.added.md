@@ -1,0 +1,1 @@
+- **Sheet music plays more real-world MusicXML**: songs with several lyric verses sing verse 1 on the first pass of a repeat and verse 2 on the second; D.C., D.S., "To Coda", coda and Fine marks are followed (as `<sound>` attributes or plain "D.C." / "D.S." / "Fine" / "To Coda" text); chord symbols (`<harmony>`) are read with their beats for future chord and strum modes.
