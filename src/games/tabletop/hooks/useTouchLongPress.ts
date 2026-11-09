@@ -16,13 +16,16 @@ export const movedTooFar = (
 
 /**
  * Pointer handlers (capture phase) that call `onLongPress` after a still touch press. A native
- * `contextmenu` (Android, desktop) cancels it, so the menu never opens twice.
+ * `contextmenu` (Android, desktop) cancels it, so the menu never opens twice. Moves are also
+ * watched on `window`: during a drag the touch pointer's events stop reaching the widget, and a
+ * moving finger opened the menu mid-drag (#684).
  */
 export function useTouchLongPress(
   onLongPress: (pos: { clientX: number; clientY: number }) => void,
 ) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
+  const stopWatching = useRef<(() => void) | null>(null);
   const callback = useRef(onLongPress);
   useEffect(() => {
     callback.current = onLongPress;
@@ -32,8 +35,17 @@ export function useTouchLongPress(
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
     start.current = null;
+    stopWatching.current?.();
+    stopWatching.current = null;
   }, []);
   useEffect(() => cancel, [cancel]);
+
+  const onPointerMoveCapture = useCallback(
+    (e: { clientX: number; clientY: number }) => {
+      if (start.current && movedTooFar(start.current, { x: e.clientX, y: e.clientY })) cancel();
+    },
+    [cancel],
+  );
 
   const onPointerDownCapture = useCallback(
     (e: React.PointerEvent) => {
@@ -41,20 +53,15 @@ export function useTouchLongPress(
       if (e.pointerType !== 'touch') return;
       const pos = { clientX: e.clientX, clientY: e.clientY };
       start.current = { x: e.clientX, y: e.clientY };
+      window.addEventListener('pointermove', onPointerMoveCapture, true);
+      stopWatching.current = () =>
+        window.removeEventListener('pointermove', onPointerMoveCapture, true);
       timer.current = setTimeout(() => {
-        timer.current = null;
-        start.current = null;
+        cancel();
         callback.current(pos);
       }, LONG_PRESS_MS);
     },
-    [cancel],
-  );
-
-  const onPointerMoveCapture = useCallback(
-    (e: React.PointerEvent) => {
-      if (start.current && movedTooFar(start.current, { x: e.clientX, y: e.clientY })) cancel();
-    },
-    [cancel],
+    [cancel, onPointerMoveCapture],
   );
 
   return {

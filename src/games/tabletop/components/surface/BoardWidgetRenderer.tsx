@@ -1,5 +1,8 @@
 /**
  * Presenter component for individual tabletop board widgets [ID: GAME-TABLETOP-BOARD-WIDGET-RENDERER]
+ *
+ * Memoised (#684): the handlers take the widget, so the parent passes the same functions to every
+ * widget and only changed widgets re-render during a drag.
  */
 import React from 'react';
 import { Box } from '@mui/material';
@@ -30,27 +33,41 @@ import { SpinnerWidgetView } from '../widgets/SpinnerWidgetView';
 import { ButtonWidgetView } from '../widgets/ButtonWidgetView';
 import { ObscuredPlaceholder } from './ObscuredPlaceholder';
 
+const CONTENTS_SX = { display: 'contents' } as const;
+const LIFTED_SX = { display: 'contents', '& > *': { opacity: 0 } } as const;
+
+export type BoardContextMenuEvent = Pick<
+  React.MouseEvent,
+  'clientX' | 'clientY' | 'preventDefault' | 'stopPropagation'
+>;
+
 interface BoardWidgetRendererProps {
   widget: TabletopWidget;
   isDragging: boolean;
-  onPointerDown: (e: React.PointerEvent) => void;
+  onPointerDown: (e: React.PointerEvent, widget: TabletopWidget) => void;
   /** Right click, native long press, or the touch long-press fallback (iOS sends no contextmenu). */
-  onContextMenu: (
-    e: Pick<React.MouseEvent, 'clientX' | 'clientY' | 'preventDefault' | 'stopPropagation'>,
-  ) => void;
+  onContextMenu: (e: BoardContextMenuEvent, widget: TabletopWidget) => void;
   dispatch: React.Dispatch<TabletopAction>;
   /** Inside a hidden zone the viewer may not see: render an inert placeholder only. */
   obscured?: boolean;
+  /**
+   * Lifted and drawn by the drag overlay: transparent, but still hit-testable, so a touch pointer
+   * keeps its implicit capture on it (`visibility: hidden` lost it).
+   */
+  hidden?: boolean;
 }
 
-export const BoardWidgetRenderer: React.FC<BoardWidgetRendererProps> = ({
+export const BoardWidgetRenderer = React.memo(function BoardWidgetRenderer({
   widget: w,
   isDragging,
-  onPointerDown,
-  onContextMenu,
+  onPointerDown: onPointerDownWidget,
+  onContextMenu: onContextMenuWidget,
   dispatch,
   obscured = false,
-}) => {
+  hidden = false,
+}: BoardWidgetRendererProps) {
+  const onPointerDown = (e: React.PointerEvent) => onPointerDownWidget(e, w);
+  const onContextMenu = (e: BoardContextMenuEvent) => onContextMenuWidget(e, w);
   const longPress = useTouchLongPress(({ clientX, clientY }) =>
     onContextMenu({ clientX, clientY, preventDefault: () => {}, stopPropagation: () => {} }),
   );
@@ -72,9 +89,10 @@ export const BoardWidgetRenderer: React.FC<BoardWidgetRendererProps> = ({
     <Box
       data-widget-id={w.id}
       data-widget-wrapper
+      data-dragging={isDragging || undefined}
       onContextMenu={onContextMenu}
       {...longPress}
-      sx={{ display: 'contents' }}
+      sx={hidden ? LIFTED_SX : CONTENTS_SX}
     >
       {(() => {
         switch (w.type) {
@@ -187,4 +205,4 @@ export const BoardWidgetRenderer: React.FC<BoardWidgetRendererProps> = ({
       })()}
     </Box>
   );
-};
+});
