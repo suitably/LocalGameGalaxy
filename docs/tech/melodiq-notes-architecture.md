@@ -30,6 +30,7 @@ Melodiq Notes (`src/games/melodiq-notes`, registry id `melodiq-notes`) is a band
 - Rules live in pure helpers that take the engine as argument: `stage/engine/advance.ts` (per-frame advance, misses, learn-mode waiting), `stage/engine/transport.ts` (seek, loops, practice bars, recording sync), `stage/engine/input.ts` (a played lane or pitch becomes a judgement), `stage/engine/players.ts` (seats, `MAX_PLAYERS = 4`), `stage/engine/remote.ts` (pult events applied to the stage). Scoring and windows are in `stage/logic/judging.ts` (`PERFECT_SEC` 0.06, `GOOD_SEC` 0.14, `LEARN_EARLY_SEC` 0.25, `stars`, `multiplier`); charts in `stage/logic/charts.ts` (`buildChart`).
 - Renderer: canvas, one view per instrument family in `stage/render/` (`keysView`, `stringsView`, `drumsView`, `pitchView`, `notationView`), driven by `stageRenderer.ts`.
 - Sound: `BrowserStageSound` (`stage/engine/browserSound.ts`) behind the `StageSound` interface; recording playback via `stage/engine/browserRecording.ts`.
+- Shared audio (#698): soundfont/oscillator synth (`SoundfontPlayer`, `playSynthesizedNote`), sound settings (`getStoredSoundConfig`, `resolveSoundfontName`), `useAudioSynth` (settings previews, on `getSharedAudioContext()`), `useMidiInput` and `midiPorts` live in `src/modules/audio/synth/`, no longer in this game. `BrowserStageSound` keeps its own `AudioContext` on purpose (master compressor chain, `outputLatency()`, closed with the stage); its click and drum oscillators (`browserSound.ts`) are the only oscillators left here.
 
 ## 2. Timing and latency model
 

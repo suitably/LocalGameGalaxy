@@ -9,7 +9,7 @@ generated:
   by: claude-code
 verified:
   at: 2026-11-07
-  method: 'read wrangler.jsonc, cloudflare/worker.ts, src/modules/sync/MqttMailboxService.ts, src/lib/push/, src/games/melodiq/gameplay/youtubeApi.ts, src/games/melodiq-notes/logic/soundSettings.ts, src/modules/audio/MicrophoneManager.ts, @excalidraw/excalidraw dist (esm.sh default), docs/tech/webrtc-signaling.md §6, docs/references/external-sources.md'
+  method: 'read wrangler.jsonc, cloudflare/worker.ts, src/modules/sync/MqttMailboxService.ts, src/lib/push/, src/games/melodiq/gameplay/youtubeApi.ts, src/modules/audio/synth/soundSettings.ts, src/modules/audio/MicrophoneManager.ts, @excalidraw/excalidraw dist (esm.sh default), docs/tech/webrtc-signaling.md §6, docs/references/external-sources.md'
 sources:
   - 'public/datenschutz.html'
   - 'public/privacy.html'

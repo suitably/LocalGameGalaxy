@@ -1,6 +1,9 @@
 import type { InstrumentKind } from '../../../../modules/music-score';
-import { SoundfontPlayer } from '../../logic/soundfontPlayer';
-import { getStoredSoundConfig, resolveSoundfontName } from '../../logic/soundSettings';
+import {
+  SoundfontPlayer,
+  getStoredSoundConfig,
+  resolveSoundfontName,
+} from '../../../../modules/audio/synth';
 import { STAGE_INSTRUMENTS } from '../logic/instruments';
 import type { StageSound } from './types';
 
