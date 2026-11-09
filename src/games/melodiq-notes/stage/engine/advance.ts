@@ -1,7 +1,9 @@
 import { lowerBound, type Judgement, type StageNote } from '../logic/charts';
 import {
+  centsOff,
   GOOD_SEC,
   LEARN_LATE_SEC,
+  onPitch,
   pendingNotes,
   pitchJudgement,
   type BeatRange,
@@ -9,7 +11,6 @@ import {
 import type { StageEngine } from './StageEngine';
 import type { StagePlayer } from './types';
 
-const PITCH_TOLERANCE = 0.8;
 const HISTORY_BEATS = 4;
 
 type Judge = (p: StagePlayer, n: StageNote, kind: Judgement) => void;
@@ -30,8 +31,15 @@ export function advanceSinging(
     k++
   ) {
     const n = p.notes[k];
-    if (!n.judged && beat < n.t + n.dur && singing && Math.abs(pitch - n.pitch) <= PITCH_TOLERANCE)
-      n.acc += beatsPassed;
+    if (!n.judged && beat < n.t + n.dur && singing && onPitch(pitch, n.pitch)) {
+      // the mean deviation over the time held on pitch, weighted by that time
+      const held = n.acc + beatsPassed;
+      if (held > 0)
+        n.cents = Math.round(
+          ((n.cents ?? 0) * n.acc + centsOff(pitch, n.pitch) * beatsPassed) / held,
+        );
+      n.acc = held;
+    }
   }
   while (p.missIdx < p.notes.length && beat >= p.notes[p.missIdx].t + p.notes[p.missIdx].dur) {
     const n = p.notes[p.missIdx++];
@@ -49,8 +57,7 @@ export function trackVoice(p: StagePlayer, beat: number) {
 /** Learn mode, pitch view: the song may go on once the player sings the awaited note. */
 export function startAwaitedNote(p: StagePlayer) {
   const n = p.pending[0];
-  if (n && p.voice.singing && Math.abs(p.voice.pitch - n.pitch) <= PITCH_TOLERANCE)
-    n.started = true;
+  if (n && p.voice.singing && onPitch(p.voice.pitch, n.pitch)) n.started = true;
 }
 
 /**
@@ -102,6 +109,7 @@ export function resetRange(p: StagePlayer, from: number, to: number, restartBeat
       n.judged = null;
       n.acc = 0;
       n.started = false;
+      delete n.cents;
     }
   }
   p.missIdx = lowerBound(p.notes, restartBeat);

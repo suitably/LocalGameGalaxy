@@ -58,10 +58,14 @@ const opts = args();
 const parser = await loadParser();
 try {
   const { saves, errors } = await loadSaves(opts, parser);
-  const { parseTtsSaveFile, sanitizeTtsUrl } = parser.mod;
+  const { parseTtsSaveFile, sanitizeTtsUrl, classifyTtsObject } = parser.mod;
   const mods = {};
   for (const { id, save } of saves) {
-    const result = analyzeSave(save, { parse: parseTtsSaveFile, sanitizeUrl: sanitizeTtsUrl });
+    const result = analyzeSave(save, {
+      parse: parseTtsSaveFile,
+      classify: classifyTtsObject,
+      sanitizeUrl: sanitizeTtsUrl,
+    });
     if (opts.checkImages) await checkImageHosts(save, result, sanitizeTtsUrl);
     mods[id] = result;
   }

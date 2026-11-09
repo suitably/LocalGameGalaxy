@@ -27,6 +27,7 @@ import {
   type ScriptZone,
 } from './types';
 import { validateAndSanitizeGame } from './gameValidator';
+import { buildImportReport, extractScripts } from './ttsImportReport';
 import {
   assignSeats,
   cardOrientation,
@@ -775,6 +776,8 @@ export function parseTtsSaveFile(
     ruleText,
     ...(Object.keys(hiddenZones).length > 0 ? { hiddenZones } : {}),
     ...(Object.keys(scriptZones).length > 0 ? { scriptZones } : {}),
+    importReport: buildImportReport(save, sanitizeTtsUrl),
+    scripts: extractScripts(save),
   });
 }
 

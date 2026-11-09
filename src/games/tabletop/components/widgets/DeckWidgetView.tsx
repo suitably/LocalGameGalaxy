@@ -49,10 +49,9 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
       <Box
         onPointerDown={onPointerDown}
         onClick={!onPointerDown && !isEmpty ? onDraw : undefined}
+        style={{ left: widget.x, top: widget.y }}
         sx={{
           position: 'absolute',
-          left: widget.x,
-          top: widget.y,
           width: widget.width,
           height: widget.height,
           zIndex: widget.zIndex,

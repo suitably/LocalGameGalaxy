@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { useMidiInput } from '../useMidiInput';
 import { lostMidiInstrument, midiInstrument } from '../logic/midiPorts';
-import { useMicPitch } from '../hooks/useMicPitch';
+import { useMicPitch, type MicHeard } from '../hooks/useMicPitch';
 import type { StageEngine } from './engine/StageEngine';
 import { GM_DRUM_CHANNEL } from './engine/players';
 
@@ -60,18 +60,19 @@ export function useStageInput(engine: StageEngine) {
   useEffect(() => {
     sourceRef.current = source;
   }, [source]);
-  const mic = useMicPitch();
-
-  const lastMic = useRef<number | null>(null);
-  useEffect(() => {
-    if (source !== 'mic') return;
-    const pitch = mic.micPitch;
-    const focus = engine.focus;
-    if (focus?.instrument.view === 'pitch')
-      engine.setVoice(pitch ?? focus.voice.pitch, pitch !== null);
-    else if (pitch !== null && pitch !== lastMic.current) engine.hitPitch(pitch, true);
-    lastMic.current = pitch;
-  }, [engine, source, mic.micPitch]);
+  // A sung line follows the fractional pitch; an instrument gets a hit per onset (repeated notes
+  // too), with its cents. Straight to the engine, without a render per poll.
+  const onHeard = useCallback(
+    ({ pitch, onset }: MicHeard) => {
+      if (sourceRef.current !== 'mic') return;
+      const focus = engine.focus;
+      if (focus?.instrument.view === 'pitch')
+        engine.setVoice(pitch ?? focus.voice.pitch, pitch !== null);
+      else if (onset !== null) engine.hitPitch(onset, true);
+    },
+    [engine],
+  );
+  const mic = useMicPitch(onHeard);
 
   const choose = (next: StageInputSource) => {
     if ((next === 'mic') !== mic.isMicActive) void mic.toggleMicrophone();

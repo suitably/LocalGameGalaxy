@@ -25,10 +25,9 @@ export const ButtonWidgetView: React.FC<ButtonWidgetViewProps> = ({
       e.stopPropagation();
       onRun();
     }}
+    style={{ left: widget.x, top: widget.y }}
     sx={{
       position: 'absolute',
-      left: widget.x,
-      top: widget.y,
       width: widget.width,
       height: widget.height,
       zIndex: widget.zIndex + (isDragging ? 100 : 0),

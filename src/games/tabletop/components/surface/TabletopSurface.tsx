@@ -10,8 +10,7 @@ import { useViewportCulling } from '../../hooks/useViewportCulling';
 import { useTabletopSelection } from '../../hooks/useTabletopSelection';
 import { useObscuredWidgetIds } from '../../hooks/useObscuredWidgetIds';
 import { useSeatView } from '../../hooks/useSeatView';
-import { HolderWidgetView } from '../widgets/HolderWidgetView';
-import { BoardWidgetRenderer } from './BoardWidgetRenderer';
+import { BoardWidgetLayer } from './BoardWidgetLayer';
 import { SelectionHighlightLayer } from './SelectionHighlightLayer';
 import { SelectionFloatingBar } from './SelectionFloatingBar';
 import { HiddenZoneLayer } from './HiddenZoneLayer';
@@ -64,7 +63,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     setTransform,
     activeDragId,
     isDraggingActive,
-    dragPointer,
+    dragFrames,
     grabOffset,
     handlePointerDownWidget,
     handleStartPan,
@@ -79,9 +78,10 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     currentSeatIndex: activeSeat?.index,
     handHolderId: handHolder?.id,
     canDraw: !isSpectator,
-    onMoveWidget: (id, x, y) => dispatch({ type: 'MOVE_WIDGET', payload: { id, x, y } }),
-    onSnapToHolder: (widgetId, holderId) =>
-      dispatch({ type: 'SNAP_TO_HOLDER', payload: { widgetId, holderId } }),
+    onMoveWidget: (id, x, y, gesture) =>
+      dispatch({ type: 'MOVE_WIDGET', payload: { id, x, y, gesture } }),
+    onSnapToHolder: (widgetId, holderId, gesture) =>
+      dispatch({ type: 'SNAP_TO_HOLDER', payload: { widgetId, holderId, gesture } }),
     onDoubleClickWidget: (cardId) => dispatch({ type: 'FLIP_CARD', payload: { cardId } }),
     onDrawCardAt: (deckId, x, y, cardId, faceUp) =>
       dispatch({ type: 'DRAW_CARD', payload: { deckId, position: { x, y }, cardId, faceUp } }),
@@ -151,28 +151,24 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
           transition: isTvMode ? 'transform 0.3s ease' : 'none',
         }}
       >
-        {boardHolders.map((w) => (
-          <HolderWidgetView key={w.id} widget={w} isHovered={w.id === hoveredTargetId} />
-        ))}
-
-        {boardWidgets.map((w: TabletopWidget) => (
-          <BoardWidgetRenderer
-            key={w.id}
-            widget={w}
-            isDragging={isDraggingActive && activeDragId === w.id}
-            onPointerDown={(e) => onPointerDownBoardWidget(e, w)}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (isSpectator) return;
-              // Touch long press on a deck/bag picks it up; its menu opens on release.
-              if (isPressingSource()) return;
-              setContextMenuPos({ mouseX: e.clientX, mouseY: e.clientY, widgetId: w.id });
-            }}
-            dispatch={dispatch}
-            obscured={obscuredIds.has(w.id)}
-          />
-        ))}
+        <BoardWidgetLayer
+          holders={boardHolders}
+          widgets={boardWidgets}
+          hoveredTargetId={hoveredTargetId}
+          draggingId={isDraggingActive ? activeDragId : null}
+          dragFrames={dragFrames}
+          obscuredIds={obscuredIds}
+          dispatch={dispatch}
+          onPointerDownWidget={onPointerDownBoardWidget}
+          onContextMenuWidget={(e, w) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (isSpectator) return;
+            // Touch long press on a deck/bag picks it up; its menu opens on release.
+            if (isPressingSource()) return;
+            setContextMenuPos({ mouseX: e.clientX, mouseY: e.clientY, widgetId: w.id });
+          }}
+        />
         <SelectionHighlightLayer
           selectedWidgetIds={selection.selectedWidgetIds}
           widgets={game.widgets}
@@ -229,7 +225,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
 
       <BoardDragOverlay
         widget={activeDragId && isDraggingActive ? game.widgets[activeDragId] : null}
-        pointerPos={dragPointer}
+        dragFrames={dragFrames}
         grabOffset={grabOffset}
         scale={transform.scale}
         obscured={activeDragId !== null && obscuredIds.has(activeDragId)}

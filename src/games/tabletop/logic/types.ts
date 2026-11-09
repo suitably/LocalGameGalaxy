@@ -306,6 +306,9 @@ export interface ScriptZone {
   label?: string;
 }
 
+import type { ImportReport, GameScripts } from './importTypes';
+export type { ImportTypeCount, ImportReport, ScriptEntry, GameScripts } from './importTypes';
+
 export interface TabletopGameDefinition extends TabletopGameMetadata {
   version: string;
   minPlayers: number;
@@ -318,6 +321,8 @@ export interface TabletopGameDefinition extends TabletopGameMetadata {
   ruleText?: string;
   hiddenZones?: Record<string, HiddenZone>;
   scriptZones?: Record<string, ScriptZone>;
+  importReport?: ImportReport;
+  scripts?: GameScripts;
 }
 
 export interface TabletopGameSummary extends TabletopGameMetadata {

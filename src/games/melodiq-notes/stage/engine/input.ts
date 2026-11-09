@@ -5,7 +5,13 @@ import {
   type DrumVoice,
 } from '../../../../modules/music-score';
 import { lowerBound, type StageNote } from '../logic/charts';
-import { LEARN_EARLY_SEC, nearestOpenNote, pendingNotes, timingJudgement } from '../logic/judging';
+import {
+  centsOff,
+  LEARN_EARLY_SEC,
+  nearestOpenNote,
+  pendingNotes,
+  timingJudgement,
+} from '../logic/judging';
 import type { StageEngine } from './StageEngine';
 import type { StagePlayer } from './types';
 
@@ -34,12 +40,16 @@ export const focused = (e: StageEngine): PlayAt => ({
   silent: false,
 });
 
-/** A player played `lane` (MIDI key, string or drum lane). */
+/**
+ * A player played `lane` (MIDI key, string or drum lane). `cents`: how far off pitch a microphone
+ * hit was; the judged note keeps it.
+ */
 export function playLane(
   e: StageEngine,
   lane: number,
   played?: DrumVoice,
   at: PlayAt = focused(e),
+  cents?: number,
 ) {
   const p = at.player;
   if (!p) return;
@@ -48,7 +58,7 @@ export function playLane(
   if (!at.silent && view === 'drums') e.sound.playDrum(lane, 1);
   else if (!at.silent && view === 'keys') e.sound.playNote(p.instrument.kind, lane, 0.5, 1);
   if (e.state !== 'playing') return;
-  if (e.mode === 'learn') return playLaneLearning(e, p, lane, played, at);
+  if (e.mode === 'learn') return playLaneLearning(e, p, lane, played, at, cents);
   const found = nearestOpenNote(p.notes, lane, at.beat, e.secPerBeat(at.beat), played);
   const kind = found ? timingJudgement(found.deltaSec) : null;
   if (!found || !kind) return;
@@ -59,6 +69,7 @@ export function playLane(
       found.note.dur * e.secPerBeat(found.note.t),
       1,
     );
+  if (cents !== undefined) found.note.cents = cents;
   e.judge(p, found.note, kind);
 }
 
@@ -68,6 +79,7 @@ function playLaneLearning(
   lane: number,
   played: DrumVoice | undefined,
   at: PlayAt,
+  cents: number | undefined,
 ) {
   const rank = (n: StageNote) => (played && n.drum ? drumMatchRank(played, n.drum) : 0);
   const onLane = p.pending.filter((n) => n.lane === lane);
@@ -82,6 +94,7 @@ function playLaneLearning(
   if (target && inTime) {
     if (!at.silent && p.instrument.view === 'strings')
       e.sound.playNote(p.instrument.kind, target.pitch, target.dur * e.secPerBeat(target.t), 1);
+    if (cents !== undefined) target.cents = cents;
     e.judge(p, target, 'learn');
     p.pending = pendingNotes(p.notes, e.loop);
   } else if (e.waitingFor === p && p.pending[0]) {
@@ -91,19 +104,24 @@ function playLaneLearning(
   }
 }
 
-/** A pitch from MIDI or microphone: a key, a drum lane, a string (the one the open note is on) or a sung pitch. */
-export function playPitch(e: StageEngine, midi: number, at: PlayAt = focused(e)) {
+/**
+ * A pitch from MIDI or microphone: a key, a drum lane, a string (the one the open note is on) or a
+ * sung pitch. A fractional pitch (microphone) plays the nearest semitone and keeps its cents.
+ */
+export function playPitch(e: StageEngine, pitch: number, at: PlayAt = focused(e)) {
   const p = at.player;
   if (!p) return;
   const view = p.instrument.view;
   if (view === 'pitch') {
-    p.voice = { pitch: midi, singing: true };
+    p.voice = { pitch, singing: true };
     return;
   }
+  const midi = Math.round(pitch);
   if (view === 'drums') return playLane(e, drumLaneOf(midi), drumVoiceOfKey(midi), at);
-  if (view === 'keys') return playLane(e, midi, undefined, at);
+  const cents = Number.isInteger(pitch) ? undefined : centsOff(pitch, midi);
+  if (view === 'keys') return playLane(e, midi, undefined, at, cents);
   const near = p.notes
     .slice(lowerBound(p.notes, at.beat - 1))
     .find((n) => !n.judged && n.pitch === midi && Math.abs(n.t - at.beat) < 1);
-  playLane(e, near ? near.lane : -1, undefined, at);
+  playLane(e, near ? near.lane : -1, undefined, at, cents);
 }
