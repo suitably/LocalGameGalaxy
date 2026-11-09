@@ -3,7 +3,7 @@
  * A stored song keeps the file as read — MusicXML text, or the raw bytes of a .mid / .gp / .mxl —
  * and opens through `readScoreFile`, like a song from the companion server.
  */
-import { readScoreFile, type LoadedScore } from '../stage/loadScore';
+import { readMusicXmlText, readScoreFile, type LoadedScore } from '../stage/loadScore';
 import type { StoredSheetMusic } from './db';
 
 const SCORE_FILE = /\.(xml|musicxml|mxl|mid|midi|gp)$/i;
@@ -32,19 +32,14 @@ export function storedSongFromScore(
   };
 }
 
-/** The bytes `readScoreFile` needs for a stored song, or null when the row holds no score. */
-function storedBytes(stored: StoredSheetMusic): ArrayBuffer | null {
-  if (stored.scoreData) return stored.scoreData;
-  if (stored.xmlContent === undefined) return null;
-  const bytes = new TextEncoder().encode(stored.xmlContent);
-  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-}
-
-/** Opens a stored song. Throws when the row is empty or the score no longer parses. */
+/**
+ * Opens a stored song. Throws when the row is empty or the score no longer parses.
+ * Text rows are MusicXML whatever the file name says (older rows hold the text of an extracted .mxl).
+ */
 export function loadStoredSong(stored: StoredSheetMusic): LoadedScore {
-  const data = storedBytes(stored);
-  if (!data) throw new Error(`"${stored.fileName}" holds no score`);
-  return readScoreFile(stored.fileName, data);
+  if (stored.scoreData) return readScoreFile(stored.fileName, stored.scoreData);
+  if (stored.xmlContent === undefined) throw new Error(`"${stored.fileName}" holds no score`);
+  return readMusicXmlText(stored.xmlContent, stored.fileName);
 }
 
 /** The stored song a remembered device song points at (file name; ids change on re-sync). */
