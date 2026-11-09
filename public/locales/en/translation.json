@@ -1196,6 +1196,8 @@
         "table_width": "Table width",
         "table_height": "Table height",
         "background_color": "Background colour",
+        "grid_snap": "Snap to grid",
+        "grid_snap_size": "Grid size (px)",
         "background_image": "Background image URL",
         "close": "Close",
         "kind_token": "Token",
