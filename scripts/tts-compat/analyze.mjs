@@ -4,32 +4,6 @@
  */
 import { analyzeLua } from './lua.mjs';
 
-/** TTS object names the importer drops on purpose (parseTtsSaveFile skips them). */
-const DROPPED = (name) =>
-  name === 'Custom_Assetbundle' ||
-  name === 'Custom_PDF' ||
-  name === 'Custom_Model' ||
-  name.startsWith('Notecard') ||
-  name.startsWith('Tablet');
-
-const CONVERTED = (name) =>
-  [
-    'Deck',
-    'DeckCustom',
-    'Card',
-    'Bag',
-    'Infinite_Bag',
-    'HandTrigger',
-    'FogOfWarTrigger',
-    'Custom_Tile',
-    'Custom_Board',
-    'Figurine_Custom',
-    'Custom_Token',
-  ].includes(name) ||
-  /^Die_\d+$/i.test(name) ||
-  name.startsWith('backgammon_piece') ||
-  name.startsWith('PiecePack_');
-
 /** Slice 8 translator (planned): Lua calls that become routine ops. getObjectFromGUID addresses the targets. */
 export const PLANNED_TRANSLATABLE = new Set([
   'createButton',
@@ -125,13 +99,14 @@ function luaSources(save) {
 
 /**
  * @param {object} save TTS save (parsed JSON)
- * @param {{ parse: (save: object) => any, sanitizeUrl?: (u: string) => string }} deps
+ * @param {{ parse: (save: object) => any, classify: (name: string) => 'converted' | 'degraded' | 'dropped', sanitizeUrl?: (u: string) => string }} deps
+ *   `classify` is the importer's own `classifyTtsObject` (ttsImportReport.ts), not a copy.
  */
-export function analyzeSave(save, { parse, sanitizeUrl = (u) => u }) {
+export function analyzeSave(save, { parse, classify, sanitizeUrl = (u) => u }) {
   const top = save.ObjectStates ?? [];
   const objects = { total: top.length, converted: 0, degraded: 0, dropped: 0, byType: {} };
   for (const obj of top) {
-    const kind = DROPPED(obj.Name) ? 'dropped' : CONVERTED(obj.Name) ? 'converted' : 'degraded';
+    const kind = classify(obj.Name);
     objects[kind] += 1;
     const t = (objects.byType[obj.Name] ??= { converted: 0, degraded: 0, dropped: 0 });
     t[kind] += 1;

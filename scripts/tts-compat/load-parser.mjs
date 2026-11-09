@@ -14,6 +14,7 @@ export async function loadParser() {
   await build({
     stdin: {
       contents: `export { parseTtsSaveFile, isTtsSaveFile, sanitizeTtsUrl } from './ttsParser';
+export { classifyTtsObject } from './ttsImportReport';
 export { decodeModBuffer } from './steamWorkshopApi';`,
       resolveDir: logic,
       loader: 'ts',

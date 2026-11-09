@@ -7,6 +7,8 @@ import { analyzeSave, aggregate, tierRegressions } from './analyze.mjs';
 import { analyzeLua } from './lua.mjs';
 import { loadParser } from './load-parser.mjs';
 
+// Stand-in for the importer's classifyTtsObject in tests that do not load the real parser.
+const classify = () => 'converted';
 const DIR = path.dirname(fileURLToPath(import.meta.url));
 const fixture = () => JSON.parse(fs.readFileSync(path.join(DIR, 'fixture.save.json'), 'utf8'));
 
@@ -30,14 +32,18 @@ test('analyzeLua: reports syntax errors instead of throwing', () => {
 test('fixture: parsed by the real importer, tier A, scripts and hosts reported', async () => {
   const parser = await loadParser();
   try {
-    const { parseTtsSaveFile, sanitizeTtsUrl } = parser.mod;
-    const r = analyzeSave(fixture(), { parse: parseTtsSaveFile, sanitizeUrl: sanitizeTtsUrl });
+    const { parseTtsSaveFile, sanitizeTtsUrl, classifyTtsObject } = parser.mod;
+    const r = analyzeSave(fixture(), {
+      parse: parseTtsSaveFile,
+      classify: classifyTtsObject,
+      sanitizeUrl: sanitizeTtsUrl,
+    });
     assert.equal(r.tier, 'A');
     assert.deepEqual(r.objects, {
       ...r.objects,
       total: 5,
-      converted: 3,
-      degraded: 1,
+      converted: 4,
+      degraded: 0,
       dropped: 1,
     });
     assert.deepEqual(r.decks, [{ guid: 'deck01', expected: 3, actual: 3 }]);
@@ -53,12 +59,14 @@ test('fixture: parsed by the real importer, tier A, scripts and hosts reported',
 });
 
 test('tier: parse error, GUID collision, http image, assetbundle', () => {
-  const ok = (save) => analyzeSave(save, { parse: () => ({ widgets: {}, maxPlayers: 4 }) });
+  const ok = (save) =>
+    analyzeSave(save, { parse: () => ({ widgets: {}, maxPlayers: 4 }), classify });
   const obj = (GUID, Name, extra = {}) => ({ GUID, Name, ...extra });
   assert.equal(
     analyzeSave(
       { ObjectStates: [] },
       {
+        classify,
         parse: () => {
           throw new Error('boom');
         },
@@ -85,6 +93,7 @@ test('tier: parse error, GUID collision, http image, assetbundle', () => {
 test('deck completeness compares cards with DeckIDs', () => {
   const save = { ObjectStates: [{ GUID: 'd', Name: 'Deck', DeckIDs: [1, 2, 3] }] };
   const r = analyzeSave(save, {
+    classify,
     parse: () => ({ widgets: { deck_1: { type: 'deck', cardIds: ['a'] } }, maxPlayers: 4 }),
   });
   assert.deepEqual(r.decks, [{ guid: 'd', expected: 3, actual: 1 }]);

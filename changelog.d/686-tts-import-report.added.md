@@ -1,0 +1,1 @@
+Tabletop: a Steam Workshop import now shows a report of what was converted, degraded or dropped (with image hosts and scripts found), and keeps the mod's scripts, which can be read in the editor inspector. Scripts are not run yet.

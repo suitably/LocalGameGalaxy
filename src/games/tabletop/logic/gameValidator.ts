@@ -13,6 +13,7 @@ import {
   type HiddenZone,
   type ScriptZone,
 } from './types';
+import { sanitizeImportReport, sanitizeScripts } from './importSanitizers';
 import { isPersonalHolder, isSupplyReserveHolder } from './boardFilter';
 
 export type RawTabletopGameInput =
@@ -279,5 +280,7 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
     ruleText: typeof raw.ruleText === 'string' ? raw.ruleText : undefined,
     hiddenZones: Object.keys(cleanHiddenZones).length > 0 ? cleanHiddenZones : undefined,
     scriptZones: Object.keys(cleanScriptZones).length > 0 ? cleanScriptZones : undefined,
+    importReport: sanitizeImportReport(raw.importReport),
+    scripts: sanitizeScripts(raw.scripts),
   };
 }
