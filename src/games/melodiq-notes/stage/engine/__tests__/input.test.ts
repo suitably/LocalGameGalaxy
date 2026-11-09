@@ -23,3 +23,26 @@ describe('hitPitch sound', () => {
     expect(e.players[0].pressed.has(60)).toBe(true);
   });
 });
+
+describe('microphone pitch with cents', () => {
+  it('judges a hit 30 cents sharp or flat on the nearest semitone and keeps its cents', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    e.start();
+    for (let t = 0; t < 2.1; t += 0.02) e.tick(0.02);
+    e.hitPitch(60.3, true);
+    const n = e.players[0].notes[0];
+    expect(n.judged).toBe('learn');
+    expect(n.cents).toBe(30);
+    expect(e.players[0].pressed.has(60)).toBe(true);
+  });
+
+  it('keeps no cents for an exact MIDI pitch', () => {
+    const e = new StageEngine(fakeSound());
+    e.loadSong(song());
+    e.start();
+    for (let t = 0; t < 2.1; t += 0.02) e.tick(0.02);
+    e.hitPitch(60, true);
+    expect(e.players[0].notes[0].cents).toBeUndefined();
+  });
+});

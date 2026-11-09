@@ -1,0 +1,1 @@
+- **Melodiq Notes hears repeated notes from a real instrument** (#692): a guitar, ukulele or piano played into the microphone registers every pluck (energy onset detection, not only pitch changes) and is judged on the nearest semitone with its deviation in cents; sung notes keep their cents too.
