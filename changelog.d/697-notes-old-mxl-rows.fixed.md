@@ -1,0 +1,1 @@
+- **Melodiq Notes library songs saved before #697** (#697 follow-up): rows that hold the extracted text of a `.mxl` open again instead of failing until the folder is re-synced.
