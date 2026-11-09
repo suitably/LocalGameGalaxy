@@ -24,7 +24,10 @@ import { pieceReducer } from './reducers/pieceReducer';
 import { viewReducer } from './reducers/viewReducer';
 import { editReducer } from './reducers/editReducer';
 import { tableToolReducer } from './reducers/tableToolReducer';
-import { routineToActions } from './routines';
+import { runRoutine, MAX_STEPS_PER_ACTION, type RoutineContext } from './routineRunner';
+import { runTriggers } from './routineTriggers';
+import { seededRng } from './rng';
+import { moveTurn, seatIndexOf } from './turnOrder';
 import { raiseWidget, type ZOrderOp } from './zOrder';
 import type { WidgetPatch } from './widgetEdits';
 
@@ -41,11 +44,29 @@ export interface TabletopGameState {
   currentSeatId?: string;
 }
 
-export type TabletopAction =
+/**
+ * What the host adds to an action before applying it (`hostActions.ts`): the seed every random
+ * result of this action is drawn from, and the seat of the device that sent it. Never trusted
+ * from a phone; the host overwrites it.
+ */
+export interface HostStamp {
+  seed: number;
+  /** Sender's seat; null = a sender without seat; absent = this device's own viewer. */
+  seat?: number | null;
+  now: number;
+}
+
+export type TabletopAction = TabletopActionBody & { host?: HostStamp };
+
+type TabletopActionBody =
   | { type: 'LOAD_GAME'; payload: TabletopGameDefinition }
   | { type: 'MOVE_WIDGET'; payload: { id: string; x: number; y: number; zIndex?: number } }
   | { type: 'FLIP_CARD'; payload: { cardId: string } }
-  | { type: 'SHUFFLE_DECK'; payload: { deckId: string; newCardIds?: string[] } }
+  /** `order`: the shuffled result, decided by the host; ignored unless it is the same cards. */
+  | {
+      type: 'SHUFFLE_DECK';
+      payload: { deckId: string; newCardIds?: string[]; order?: string[] };
+    }
   | {
       type: 'DRAW_CARD';
       payload: {
@@ -77,6 +98,9 @@ export type TabletopAction =
   | { type: 'RESET_TIMER'; payload: { timerId: string } }
   | { type: 'SPIN_SPINNER'; payload: { spinnerId: string; index?: number } }
   | { type: 'NEXT_STATE'; payload: { widgetId: string } }
+  | { type: 'SET_STATE'; payload: { widgetId: string; index: number } }
+  /** Gives `seat` the turn, or moves it `step` seats on (default 1); writes `seat.turn`. */
+  | { type: 'NEXT_TURN'; payload: { seat?: number; step?: 1 | -1 } }
   | { type: 'RUN_ROUTINE'; payload: { buttonId: string; now: number } }
   | { type: 'DELETE_WIDGETS'; payload: { ids: string[] } }
   | { type: 'UPDATE_TABLE'; payload: { changes: Partial<TabletopTableConfig> } }
@@ -106,9 +130,51 @@ export type TabletopAction =
     }
   | { type: 'TOGGLE_ZONE_REVEAL'; payload: { id: string } };
 
+/** Actions that never fire routine triggers: loading, remote results, editing, local UI. */
+const NO_TRIGGER_ACTIONS = new Set<TabletopAction['type']>([
+  'LOAD_GAME',
+  'APPLY_REMOTE_DELTA',
+  'APPLY_EDIT_DELTA',
+  'PATCH_WIDGETS',
+  'ADD_WIDGET',
+  'ADD_WIDGETS',
+  'DELETE_WIDGETS',
+  'UPDATE_TABLE',
+  'FINISH_ANIMATION',
+  'SELECT_SEAT',
+]);
+
+/** Seeded randomness and caller seat for routines run by this action. */
+function routineContext(state: TabletopGameState, action: TabletopAction): RoutineContext {
+  const host = action.host;
+  return {
+    rng: host ? seededRng(host.seed) : Math.random,
+    seat:
+      host?.seat !== undefined ? host.seat : seatIndexOf(state.game.widgets, state.currentSeatId),
+    now: action.type === 'RUN_ROUTINE' ? action.payload.now : (host?.now ?? Date.now()),
+    budget: { steps: MAX_STEPS_PER_ACTION },
+  };
+}
+
+/**
+ * The table reducer: applies the action, then runs the routines of buttons whose triggers the
+ * action fired (`routineTriggers.ts`). Remote deltas never fire triggers; they carry the results.
+ */
 export function tabletopReducer(
   state: TabletopGameState,
   action: TabletopAction,
+): TabletopGameState {
+  const ctx = routineContext(state, action);
+  const apply = (s: TabletopGameState, a: TabletopAction) => applyAction(s, a, ctx);
+  const next = apply(state, action);
+  if (next === state || NO_TRIGGER_ACTIONS.has(action.type)) return next;
+  return runTriggers(state, next, ctx, apply);
+}
+
+function applyAction(
+  state: TabletopGameState,
+  action: TabletopAction,
+  ctx: RoutineContext,
 ): TabletopGameState {
   switch (action.type) {
     case 'LOAD_GAME':
@@ -341,12 +407,13 @@ export function tabletopReducer(
       };
 
       // Also snap to holder immediately in state
-      return tabletopReducer(
+      return applyAction(
         { ...state, flyingCards: [...state.flyingCards, flying] },
         {
           type: 'SNAP_TO_HOLDER',
           payload: { widgetId: action.payload.cardId, holderId: action.payload.targetHolderId },
         },
+        ctx,
       );
     }
 
@@ -388,7 +455,7 @@ export function tabletopReducer(
       return bagReducer(state, action);
     case 'TAKE_PIECE_FROM_SUPPLY':
     case 'PLAY_CARD_FROM_HAND':
-      return pieceReducer(state, action, tabletopReducer);
+      return pieceReducer(state, action, (s, a) => applyAction(s, a, ctx));
     case 'SCALE_WIDGETS':
     case 'RESET_WIDGET_SCALE':
     case 'SET_WIDGET_SHOW_ALWAYS':
@@ -412,15 +479,22 @@ export function tabletopReducer(
     case 'RESET_TIMER':
     case 'SPIN_SPINNER':
     case 'NEXT_STATE':
+    case 'SET_STATE':
       return tableToolReducer(state, action);
+
+    case 'NEXT_TURN': {
+      const widgets = moveTurn(state.game.widgets, action.payload);
+      return widgets === state.game.widgets
+        ? state
+        : { ...state, game: { ...state.game, widgets } };
+    }
 
     case 'RUN_ROUTINE': {
       // The routine's steps are ordinary actions, applied in order on the device that owns state.
       const button = state.game.widgets[action.payload.buttonId];
       if (!button || button.type !== 'button') return state;
-      return routineToActions((button as ButtonWidget).routine, action.payload.now).reduce(
-        tabletopReducer,
-        state,
+      return runRoutine(state, (button as ButtonWidget).routine, ctx, (s, a) =>
+        applyAction(s, a, ctx),
       );
     }
 

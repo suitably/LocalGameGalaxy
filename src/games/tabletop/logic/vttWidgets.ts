@@ -4,7 +4,7 @@
  * Label, button, spinner and timer keep their type instead of becoming plain tokens; dice use
  * their `faces`; basic widgets with several `faces` become switchable `states`. Property names
  * follow the VirtualTabletop file format (format only; no code is taken from that project).
- * Routines are not translated yet (open question Q15), so buttons import without one.
+ * A button's `clickRoutine` maps to a routine when it uses the trivial subset (`vttRoutines.ts`).
  */
 import type {
   ButtonWidget,
@@ -16,6 +16,7 @@ import type {
   TokenWidget,
   WidgetStateFace,
 } from './types';
+import { vttClickRoutine } from './vttRoutines';
 
 export interface VttWidgetPlacement {
   id: string;
@@ -74,7 +75,7 @@ export function normalizeVttTypedWidget(
         text: String(raw.text ?? ''),
         color: typeof raw.backgroundColor === 'string' ? raw.backgroundColor : undefined,
         image: p.resolveImage(raw.image),
-        routine: [],
+        routine: vttClickRoutine(raw.clickRoutine),
       } as ButtonWidget;
     case 'spinner': {
       const options = (Array.isArray(raw.options) ? raw.options : [1, 2, 3, 4, 5, 6]).map(String);
