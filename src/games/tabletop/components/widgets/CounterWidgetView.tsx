@@ -19,10 +19,9 @@ export const CounterWidgetView: React.FC<CounterWidgetViewProps> = ({
   const { t } = useTranslation();
   return (
     <Box
+      style={{ left: widget.x, top: widget.y }}
       sx={{
         position: 'absolute',
-        left: widget.x,
-        top: widget.y,
         width: widget.width,
         height: widget.height,
         zIndex: widget.zIndex,

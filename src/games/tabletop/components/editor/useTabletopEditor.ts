@@ -34,7 +34,8 @@ export function useTabletopEditor(
   const prevGameRef = useRef(game);
   const skipRecordRef = useRef(false);
 
-  // Record every change (except undo/redo itself).
+  // Record every change (except undo/redo itself); one drag gesture stays one entry (#684).
+  const { gesture } = state;
   useEffect(() => {
     const prev = prevGameRef.current;
     prevGameRef.current = game;
@@ -43,8 +44,8 @@ export function useTabletopEditor(
       skipRecordRef.current = false;
       return;
     }
-    setHistory((h) => recordChange(h, prev, game));
-  }, [game]);
+    setHistory((h) => recordChange(h, prev, game, undefined, gesture));
+  }, [game, gesture]);
 
   const selected = selectedId ? (game.widgets[selectedId] ?? null) : null;
 

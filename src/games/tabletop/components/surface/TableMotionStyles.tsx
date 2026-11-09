@@ -2,7 +2,8 @@
  * Smooth table motion: widgets glide to new positions, cards flip [ID: COMP-TABLETOP-MOTION]
  *
  * Applies to every board widget (moves from other devices, holder re-layouts, undo), so the
- * widget views need no per-type animation code. Respects reduced-motion settings.
+ * widget views need no per-type animation code. Respects reduced-motion settings. The widget
+ * dragged on this device does not glide; it follows the pointer.
  */
 import React from 'react';
 import { GlobalStyles } from '@mui/material';
@@ -16,7 +17,9 @@ export const TableMotionStyles: React.FC = () => (
         '100%': { transform: 'scaleX(1)' },
       },
       '@media (prefers-reduced-motion: no-preference)': {
-        '#tabletop-board-canvas [data-widget-wrapper] > *': {
+        // Not the widget this device drags: gliding its own moves would lay out the table every
+        // frame of the drag (#684).
+        '#tabletop-board-canvas [data-widget-wrapper]:not([data-dragging]) > *': {
           transitionProperty: 'left, top, width, height, transform, box-shadow, filter',
           transitionDuration: '0.25s',
           transitionTimingFunction: 'ease-out',

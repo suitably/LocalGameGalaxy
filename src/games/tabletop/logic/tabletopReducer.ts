@@ -27,6 +27,7 @@ import { tableToolReducer } from './reducers/tableToolReducer';
 import { routineToActions } from './routines';
 import { raiseWidget, type ZOrderOp } from './zOrder';
 import type { WidgetPatch } from './widgetEdits';
+import { gestureOf } from './dragGesture';
 
 export interface FlyingCardAnimation {
   id: string;
@@ -39,11 +40,16 @@ export interface TabletopGameState {
   game: TabletopGameDefinition;
   flyingCards: FlyingCardAnimation[];
   currentSeatId?: string;
+  /** Drag gesture of the last action (`dragGesture.ts`); the undo history merges by it. */
+  gesture?: string;
 }
 
 export type TabletopAction =
   | { type: 'LOAD_GAME'; payload: TabletopGameDefinition }
-  | { type: 'MOVE_WIDGET'; payload: { id: string; x: number; y: number; zIndex?: number } }
+  | {
+      type: 'MOVE_WIDGET';
+      payload: { id: string; x: number; y: number; zIndex?: number; gesture?: string };
+    }
   | { type: 'FLIP_CARD'; payload: { cardId: string } }
   | { type: 'SHUFFLE_DECK'; payload: { deckId: string; newCardIds?: string[] } }
   | {
@@ -66,7 +72,7 @@ export type TabletopAction =
         targetHolderId?: string;
       };
     }
-  | { type: 'SNAP_TO_HOLDER'; payload: { widgetId: string; holderId: string } }
+  | { type: 'SNAP_TO_HOLDER'; payload: { widgetId: string; holderId: string; gesture?: string } }
   | { type: 'APPLY_REMOTE_DELTA'; payload: GameDelta }
   /** Undo/redo from the editor; unlike APPLY_REMOTE_DELTA it is synced as an intent. */
   | { type: 'APPLY_EDIT_DELTA'; payload: GameDelta }
@@ -106,10 +112,17 @@ export type TabletopAction =
     }
   | { type: 'TOGGLE_ZONE_REVEAL'; payload: { id: string } };
 
+/** Applies an action and records its drag gesture (#684). */
 export function tabletopReducer(
   state: TabletopGameState,
   action: TabletopAction,
 ): TabletopGameState {
+  const next = reduceAction(state, action);
+  const gesture = gestureOf(action);
+  return next.gesture === gesture ? next : { ...next, gesture };
+}
+
+function reduceAction(state: TabletopGameState, action: TabletopAction): TabletopGameState {
   switch (action.type) {
     case 'LOAD_GAME':
       return {
@@ -341,7 +354,7 @@ export function tabletopReducer(
       };
 
       // Also snap to holder immediately in state
-      return tabletopReducer(
+      return reduceAction(
         { ...state, flyingCards: [...state.flyingCards, flying] },
         {
           type: 'SNAP_TO_HOLDER',

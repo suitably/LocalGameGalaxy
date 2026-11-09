@@ -39,10 +39,9 @@ export const CardWidgetView: React.FC<CardWidgetViewProps> = ({
     <Box
       onPointerDown={onPointerDown}
       onDoubleClick={onDoubleClick}
+      style={{ left: widget.x, top: widget.y }}
       sx={{
         position: 'absolute',
-        left: widget.x,
-        top: widget.y,
         width: widget.width,
         height: widget.height,
         zIndex: widget.zIndex + (isDragging ? 500000 : 0),
@@ -57,7 +56,11 @@ export const CardWidgetView: React.FC<CardWidgetViewProps> = ({
         touchAction: 'none',
         userSelect: 'none',
         transition: isDragging ? 'none' : 'box-shadow 0.2s, transform 0.2s',
-        transform: `rotate(${widget.rotation || 0}deg) ${isDragging ? 'scale(1.05)' : ''}`,
+        // no transform at rest: each card would add a compositor node (#684)
+        transform:
+          widget.rotation || isDragging
+            ? `rotate(${widget.rotation || 0}deg)${isDragging ? ' scale(1.05)' : ''}`
+            : undefined,
         border: isUnstyledContainer ? 'none' : '1.5px solid rgba(0,0,0,0.18)',
         overflow:
           showFaceObjects || showBackFaceObjects || showFallbackObjects ? 'visible' : 'hidden',

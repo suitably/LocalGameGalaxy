@@ -9,8 +9,7 @@ import type {
   TokenWidget,
   BagWidget,
 } from './types';
-import { isCardInHand } from './handLayout';
-import { isHandHolder } from './handHolder';
+import { isHandHolder, isHandHolderWidget } from './handHolder';
 
 export { isHandHolder };
 
@@ -197,29 +196,55 @@ export function filterBoardHolders(
     });
 }
 
+/** Ids stored in a deck, a hand holder or a bag, collected in one pass over the widgets. */
+export interface MembershipSets {
+  inDeck: Set<string>;
+  inHand: Set<string>;
+  inBag: Set<string>;
+}
+
+/**
+ * Builds the in-deck / in-hand / in-bag sets once per widget map (#684): checking each widget
+ * with `isCardInDeck` / `isCardInHand` / `isItemInBag` scanned every widget again (O(n²)).
+ */
+export function buildMembershipSets(widgets: Record<string, TabletopWidget>): MembershipSets {
+  const sets: MembershipSets = { inDeck: new Set(), inHand: new Set(), inBag: new Set() };
+  const addAll = (target: Set<string>, ids: string[] | undefined) => {
+    if (Array.isArray(ids)) for (const id of ids) target.add(id);
+  };
+  for (const w of Object.values(widgets)) {
+    if (w.type === 'deck') addAll(sets.inDeck, (w as DeckWidget).cardIds);
+    else if (w.type === 'bag') addAll(sets.inBag, (w as BagWidget).itemIds);
+    else if (isHandHolderWidget(w)) addAll(sets.inHand, (w as HolderWidget).childIds);
+  }
+  return sets;
+}
+
 /**
  * Returns non-holder widgets that should be rendered on the table canvas.
  * Filters out cards currently in hand and unplaced reserve tokens when running with dock/local mode.
+ * Keeps the widget map's order: every widget view sets its CSS `z-index`, so stacking needs no
+ * sort, and a sort would move the DOM node of a raised (dragged) widget, which drops the touch
+ * pointer's capture mid-drag (#684).
  */
 export function filterBoardWidgets(
   widgets: Record<string, TabletopWidget>,
   visibleIds: Set<string>,
   isTvMode = false,
 ): TabletopWidget[] {
-  return Object.values(widgets)
-    .filter((w) => {
-      if (w.type === 'holder') return false;
-      if (!visibleIds.has(w.id)) return false;
-      if (w.type === 'card') {
-        const card = w as CardWidget;
-        if (card.inPile || isCardInDeck(w.id, widgets)) return false;
-        if (!isTvMode && isCardInHand(w.id, widgets)) return false;
-      }
-      if (!isTvMode && w.type === 'token' && isPieceInSupplyReserve(w, widgets)) return false;
-      if (isItemInBag(w.id, widgets)) return false;
-      return true;
-    })
-    .sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+  const { inDeck, inHand, inBag } = buildMembershipSets(widgets);
+  return Object.values(widgets).filter((w) => {
+    if (w.type === 'holder') return false;
+    if (!visibleIds.has(w.id)) return false;
+    if (w.type === 'card') {
+      const card = w as CardWidget;
+      if (card.inPile || inDeck.has(w.id)) return false;
+      if (!isTvMode && inHand.has(w.id)) return false;
+    }
+    if (!isTvMode && w.type === 'token' && isPieceInSupplyReserve(w, widgets)) return false;
+    if (inBag.has(w.id)) return false;
+    return true;
+  });
 }
 
 /** Snap target (deck or board holder) under the centre of a widget at x/y, if any. */

@@ -4,6 +4,10 @@
  * Decks and bags are sources (see `sourcePress.ts`): tap deals, drag deals and drags the
  * item, a long press picks up the whole source. Shaking a dragged deck or die calls
  * `onShake` with the shuffle / roll action; dragging alone never rolls or shuffles.
+ *
+ * A drag shows its live position through `dragFrames` every pointer move, but commits
+ * `onMoveWidget` at most every 50 ms (`moveCoalescer.ts`); all moves and the final snap of one
+ * drag carry the same gesture id, so the undo history keeps one entry per drag (#684).
  */
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { TabletopWidget, GridSnapDef, TokenWidget } from '../logic/types';
@@ -20,6 +24,9 @@ import type { TabletopAction } from '../logic/tabletopReducer';
 import { snapToGridCoords } from '../logic/gridLogic';
 import { dealFromSource, tapSource, type SourcePress } from './sourcePress';
 import { usePanPinch } from './usePanPinch';
+import { useCoalescedMove } from './useCoalescedMove';
+import { createDragFrameStore, type DragPosition } from './dragFrameStore';
+import { generateUUID } from '../../../lib/uuid';
 export type { GridSnapDef };
 export type { TransformState } from './usePanPinch';
 export { snapToGridCoords };
@@ -33,8 +40,8 @@ export interface TabletopEngineOptions {
   handHolderId?: string;
   /** False for spectators: decks and bags behave like ordinary widgets and never deal. */
   canDraw?: boolean;
-  onMoveWidget: (id: string, x: number, y: number) => void;
-  onSnapToHolder: (widgetId: string, holderId: string) => void;
+  onMoveWidget: (id: string, x: number, y: number, gesture?: string) => void;
+  onSnapToHolder: (widgetId: string, holderId: string, gesture?: string) => void;
   onDoubleClickWidget?: (widgetId: string) => void;
   onDrawCardAt?: (deckId: string, x: number, y: number, cardId?: string, faceUp?: boolean) => void;
   onDrawFromBag?: (bagId: string, position?: { x: number; y: number }, spawnedId?: string) => void;
@@ -52,7 +59,11 @@ interface DragStart {
   widgetX: number;
   widgetY: number;
   source?: SourcePress;
+  /** Tags every move and the drop of this drag (`dragGesture.ts`). */
+  gesture: string;
 }
+
+export type { DragPosition };
 
 /** Height of the hand dock below the table: dropping there puts a widget in the hand. */
 const DOCK_HEIGHT = 156;
@@ -64,22 +75,21 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
   const { transform, endPan } = view;
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [isDraggingActive, setIsDraggingActive] = useState(false);
-  const [dragPointer, setDragPointer] = useState<{ x: number; y: number } | null>(null);
+  /** Pointer and live position of the drag; changes every pointer move (`dragFrameStore.ts`). */
+  const [dragFrames] = useState(createDragFrameStore);
   const [grabOffset, setGrabOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [hoveredTargetId, setHoveredTargetId] = useState<string | null>(null);
+  const mover = useCoalescedMove((m) => options.onMoveWidget(m.id, m.x, m.y, m.gesture));
 
   const dragStartRef = useRef<DragStart | null>(null);
   const hasMovedRef = useRef(false);
   const lastClickRef = useRef<{ id: string; time: number } | null>(null);
-  const rafRef = useRef<number | null>(null);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shakeRef = useRef(createShakeTracker());
 
   const clearTimers = useCallback(() => {
     if (longPressTimerRef.current !== null) clearTimeout(longPressTimerRef.current);
     longPressTimerRef.current = null;
-    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-    rafRef.current = null;
   }, []);
 
   const screenToBoard = useCallback(
@@ -100,6 +110,7 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
       widgetX: widget.x,
       widgetY: widget.y,
       source,
+      gesture: generateUUID().slice(0, 8),
     };
     hasMovedRef.current = false;
     shakeRef.current.reset();
@@ -113,7 +124,7 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
       navigator.vibrate?.(15);
       // Lift the source under the finger as feedback.
       setIsDraggingActive(true);
-      setDragPointer({ x: start.pointerX, y: start.pointerY });
+      dragFrames.set({ pointer: { x: start.pointerX, y: start.pointerY }, position: null });
     }, LONG_PRESS_MS);
   };
 
@@ -172,7 +183,6 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
     if (!prepareSourceDrag(start)) return;
     hasMovedRef.current = true;
     setIsDraggingActive(true);
-    setDragPointer({ x: e.clientX, y: e.clientY });
     const dragId = start.id;
     const newX = Math.round(start.widgetX + (e.clientX - start.pointerX) / transform.scale);
     const newY = Math.round(start.widgetY + (e.clientY - start.pointerY) / transform.scale);
@@ -184,25 +194,26 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
       if (shake && shakeRef.current.push(e.clientX, e.clientY, e.timeStamp))
         options.onShake?.(shake);
     }
-    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(() => {
-      options.onMoveWidget(dragId, newX, newY);
-      rafRef.current = null;
+    dragFrames.set({
+      pointer: { x: e.clientX, y: e.clientY },
+      position: { id: dragId, x: newX, y: newY },
     });
+    mover.push({ id: dragId, x: newX, y: newY, gesture: start.gesture });
   };
 
   const endDrag = useCallback(() => {
+    mover.flush();
     clearTimers();
     setActiveDragId(null);
     setIsDraggingActive(false);
-    setDragPointer(null);
     setHoveredTargetId(null);
+    dragFrames.set(null);
     dragStartRef.current = null;
     endPan();
-  }, [clearTimers, endPan]);
+  }, [mover, clearTimers, endPan, dragFrames]);
 
   /** Dropped on the dock: tokens go back to their supply, everything else into the hand. */
-  const dropOnDock = (dragId: string): boolean => {
+  const dropOnDock = (dragId: string, gesture: string): boolean => {
     const dragged = options.widgets[dragId];
     const supply =
       dragged?.type === 'token'
@@ -214,7 +225,7 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
         : undefined;
     const target =
       supply ?? (options.handHolderId ? options.widgets[options.handHolderId] : undefined);
-    if (target) options.onSnapToHolder(dragId, target.id);
+    if (target) options.onSnapToHolder(dragId, target.id, gesture);
     return Boolean(target);
   };
 
@@ -230,15 +241,16 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
     }
   };
 
-  const dropOnTable = (dragId: string) => {
+  /** `drop` is the last dragged position: the rendered widget may still lag behind it. */
+  const dropOnTable = (dragId: string, gesture: string, drop: DragPosition | null) => {
     const widget = options.widgets[dragId];
     if (!widget) return;
-    let { x, y } = widget;
+    let { x, y } = drop?.id === dragId ? drop : widget;
     if (Array.isArray(widget.grid) && widget.grid.length > 0) {
       const snapped = snapToGridCoords(widget, x, y, widget.grid as GridSnapDef[]);
       if (snapped) {
         ({ x, y } = snapped);
-        options.onMoveWidget(dragId, x, y);
+        options.onMoveWidget(dragId, x, y, gesture);
       }
     }
     const targetId = findSnapTargetAt(
@@ -249,12 +261,11 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
       widget.height,
       widget.type,
     );
-    if (targetId && targetId !== dragId) options.onSnapToHolder(dragId, targetId);
+    if (targetId && targetId !== dragId) options.onSnapToHolder(dragId, targetId, gesture);
   };
 
   const handlePointerUp = (e: PointerEvent | React.PointerEvent) => {
-    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-    rafRef.current = null;
+    const drop = mover.flush();
     view.endPinch();
     if (!e.isPrimary) return;
     const start = dragStartRef.current;
@@ -272,8 +283,10 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
       else if (source) tapSource(options, source);
     } else if (isClick) {
       registerClick(dragId);
-    } else if (!(e.clientY >= window.innerHeight - DOCK_HEIGHT && dropOnDock(dragId))) {
-      dropOnTable(dragId);
+    } else if (!(
+      e.clientY >= window.innerHeight - DOCK_HEIGHT && dropOnDock(dragId, start.gesture)
+    )) {
+      dropOnTable(dragId, start.gesture, drop);
     }
     endDrag();
   };
@@ -311,7 +324,7 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
     setTransform: view.setTransform,
     activeDragId,
     isDraggingActive,
-    dragPointer,
+    dragFrames,
     grabOffset,
     screenToBoard,
     hoveredTargetId,

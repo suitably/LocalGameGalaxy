@@ -3,6 +3,10 @@ import { alpha, Box, Typography } from '@mui/material';
 import type { TokenWidget } from '../../logic/types';
 import { recolorSvgDataUri, fetchAndRecolorSvg } from '../../logic/svgColorUtils';
 
+/** No `transform` on a flat, resting token: each one would add a compositor node (#684). */
+const liftTransform = (rot: number, lifted: boolean | undefined, scale: number) =>
+  rot || lifted ? `rotate(${rot}deg)${lifted ? ` scale(${scale})` : ''}` : undefined;
+
 interface TokenWidgetViewProps {
   widget: TokenWidget;
   isDragging?: boolean;
@@ -52,10 +56,9 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
       <Box
         onPointerDown={onPointerDown}
         onDoubleClick={onDoubleClick}
+        style={{ left: widget.x, top: widget.y }}
         sx={{
           position: 'absolute',
-          left: widget.x,
-          top: widget.y,
           width: widget.width,
           height: widget.height,
           zIndex: widget.zIndex + (isDragging ? 100 : 0),
@@ -103,10 +106,9 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
       <Box
         onPointerDown={onPointerDown}
         onDoubleClick={onDoubleClick}
+        style={{ left: widget.x, top: widget.y }}
         sx={{
           position: 'absolute',
-          left: widget.x,
-          top: widget.y,
           width: widget.width,
           height: widget.height,
           zIndex: widget.zIndex + (isDragging ? 100 : 0),
@@ -121,7 +123,7 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          transform: `rotate(${rot}deg) ${isDragging ? 'scale(1.15)' : ''}`,
+          transform: liftTransform(rot, isDragging, 1.15),
           transition: isDragging ? 'none' : 'box-shadow 0.2s, transform 0.15s ease',
         }}
       >
@@ -158,10 +160,9 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
     <Box
       onPointerDown={onPointerDown}
       onDoubleClick={onDoubleClick}
+      style={{ left: widget.x, top: widget.y }}
       sx={{
         position: 'absolute',
-        left: widget.x,
-        top: widget.y,
         width: widget.width,
         height: widget.height,
         zIndex: widget.zIndex + (isDragging ? 100 : 0),
@@ -177,7 +178,7 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
         justifyContent: 'center',
         border: (theme) => `3px solid ${alpha(theme.palette.text.primary, 0.8)}`,
         transition: isDragging ? 'none' : 'box-shadow 0.2s, transform 0.15s ease',
-        transform: `rotate(${rot}deg) ${isDragging ? 'scale(1.15)' : ''}`,
+        transform: liftTransform(rot, isDragging, 1.15),
       }}
     >
       <Box
