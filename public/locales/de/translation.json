@@ -1196,6 +1196,8 @@
         "table_width": "Tischbreite",
         "table_height": "Tischhöhe",
         "background_color": "Hintergrundfarbe",
+        "grid_snap": "Am Raster ausrichten",
+        "grid_snap_size": "Rastergröße (px)",
         "background_image": "Hintergrundbild-URL",
         "close": "Schließen",
         "kind_token": "Spielstein",

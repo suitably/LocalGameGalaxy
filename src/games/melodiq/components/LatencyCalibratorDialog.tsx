@@ -15,6 +15,7 @@ import MicIcon from '@mui/icons-material/MicRounded';
 import CheckCircleIcon from '@mui/icons-material/CheckCircleRounded';
 import { useTranslation } from 'react-i18next';
 import { useMelodiqSettings } from '../hooks/SettingsContext';
+import { scheduleBeep } from '../../../modules/audio/latency';
 
 interface LatencyCalibratorDialogProps {
   open: boolean;
@@ -98,21 +99,15 @@ export const LatencyCalibratorDialog: React.FC<LatencyCalibratorDialogProps> = (
         if (isCancelledRef.current) break;
 
         // Play short pulse beep
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-
-        gain.gain.setValueAtTime(0, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.7, audioCtx.currentTime + 0.01);
-        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.05);
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
         const emissionTimestamp = performance.now();
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.06);
+        scheduleBeep(audioCtx, {
+          type: 'sine',
+          frequencyHz: 880,
+          durationSec: 0.05,
+          peakGain: 0.7,
+          envelope: 'ramp',
+          rampSec: 0.01,
+        });
 
         // Sample mic input for peak response within next 450ms
         const startTime = performance.now();

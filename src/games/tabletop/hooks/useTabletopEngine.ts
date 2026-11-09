@@ -21,7 +21,7 @@ import {
   sourceKind,
 } from '../logic/tableGestures';
 import type { TabletopAction } from '../logic/tabletopReducer';
-import { snapToGridCoords } from '../logic/gridLogic';
+import { snapDropPosition, snapToGridCoords } from '../logic/gridLogic';
 import { dealFromSource, tapSource, type SourcePress } from './sourcePress';
 import { usePanPinch } from './usePanPinch';
 import { useCoalescedMove } from './useCoalescedMove';
@@ -34,6 +34,8 @@ export { snapToGridCoords };
 export interface TabletopEngineOptions {
   tableWidth: number;
   tableHeight: number;
+  /** `table.gridSnap`: dropped widgets without their own `grid` snap to this step (px); off if unset. */
+  tableGridSnap?: number;
   widgets: Record<string, TabletopWidget>;
   currentSeatIndex?: number;
   /** Viewer's hand (tap on a deck, drop on the dock); none for spectators. */
@@ -246,12 +248,10 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
     const widget = options.widgets[dragId];
     if (!widget) return;
     let { x, y } = drop?.id === dragId ? drop : widget;
-    if (Array.isArray(widget.grid) && widget.grid.length > 0) {
-      const snapped = snapToGridCoords(widget, x, y, widget.grid as GridSnapDef[]);
-      if (snapped) {
-        ({ x, y } = snapped);
-        options.onMoveWidget(dragId, x, y, gesture);
-      }
+    const snapped = snapDropPosition(widget, x, y, options.tableGridSnap);
+    if (snapped) {
+      ({ x, y } = snapped);
+      options.onMoveWidget(dragId, x, y, gesture);
     }
     const targetId = findSnapTargetAt(
       options.widgets,

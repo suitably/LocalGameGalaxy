@@ -2,7 +2,12 @@ import { DOMParser } from '@xmldom/xmldom';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { ODE_TO_JOY_XML } from '../../demoSongs';
 import { buildMidi, vlq } from '../../../../modules/music-score/__tests__/fixtures';
-import { findDeviceSong, isScoreFileName, loadStoredSong, storedSongFromScore } from '../deviceSong';
+import {
+  findDeviceSong,
+  isScoreFileName,
+  loadStoredSong,
+  storedSongFromScore,
+} from '../deviceSong';
 import { lastSongOf, parseLastSong } from '../../stage/logic/lastSession';
 
 const toBuffer = (u: Uint8Array) =>
@@ -41,6 +46,18 @@ describe('device songs (#697)', () => {
     const loaded = loadStoredSong(stored);
     expect(loaded.xml).toBeNull();
     expect(loaded.song.parts[0].notes).toHaveLength(1);
+  });
+
+  it('opens an older row that holds the extracted text of a .mxl', () => {
+    const old = {
+      ...extra,
+      title: 'Ode',
+      artist: '',
+      baseBpm: 100,
+      fileName: 'ode.mxl',
+      xmlContent: ODE_TO_JOY_XML,
+    };
+    expect(loadStoredSong(old).song.parts.length).toBeGreaterThan(0);
   });
 
   it('rejects a file that is not a score', () => {

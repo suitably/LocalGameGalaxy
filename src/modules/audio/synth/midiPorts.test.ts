@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isVirtualMidiPort, midiInstrument, pickMidiInput, lostMidiInstrument } from '../midiPorts';
+import { isVirtualMidiPort, midiInstrument, pickMidiInput, lostMidiInstrument } from './midiPorts';
 
 const through = { id: 'through', name: 'Midi Through Port-0', state: 'connected' };
 const drums = { id: 'td11', name: 'TD-11 MIDI 1', state: 'connected' };

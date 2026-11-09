@@ -43,6 +43,20 @@ export interface ScorePart {
   phraseBreaks?: number[];
 }
 
+/** A chord symbol (MusicXML `<harmony>`) on the song timeline, for chord / strum display. */
+export interface ScoreChord {
+  /** Quarter-note beat from the start of bar 1, like `ScoreNote.t`. */
+  t: number;
+  /** Lead-sheet symbol as written, e.g. "C", "F#m7", "G/B"; "N.C." for no chord. */
+  symbol: string;
+  /** Pitch class of the root (0 = C); null for "N.C.". */
+  root: number | null;
+  /** Pitch class of the bass note of a slash chord. */
+  bass?: number;
+  /** MusicXML `<kind>` value, e.g. "major", "minor-seventh", "none". */
+  kind: string;
+}
+
 export interface TempoEvent {
   beat: number;
   bpm: number;
@@ -65,6 +79,8 @@ export interface ScoreSong {
   measureNumbers: number[];
   end: number;
   parts: ScorePart[];
+  /** Chord symbols in play order (MusicXML `<harmony>` of the first part that has any). */
+  chords?: ScoreChord[];
 }
 
 /** Where a score beat sits in a recording, one mark per bar (plus one at the end). */

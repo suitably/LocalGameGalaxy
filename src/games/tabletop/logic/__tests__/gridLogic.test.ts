@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { snapToGridCoords } from '../gridLogic';
+import checkers from '../../../../../public/games/tabletop/checkers.json';
+import { snapDropPosition, snapToGridCoords, snapToTableGrid } from '../gridLogic';
 import type { GridSnapDef } from '../types';
 
 describe('gridLogic - snapToGridCoords', () => {
@@ -41,5 +42,45 @@ describe('gridLogic - snapToGridCoords', () => {
     expect(inBounds).not.toBeNull();
     expect(inBounds?.x).toBe(200);
     expect(inBounds?.y).toBe(200);
+  });
+});
+
+describe('gridLogic - table grid snap (#700)', () => {
+  const token = { width: 70, height: 70 };
+
+  it('snapToTableGrid rounds to the nearest multiple', () => {
+    expect(snapToTableGrid(123, 38, 50)).toEqual({ x: 100, y: 50 });
+    expect(snapToTableGrid(125, 25, 50)).toEqual({ x: 150, y: 50 });
+  });
+
+  it('snapToTableGrid leaves positions untouched when the grid is off', () => {
+    for (const size of [undefined, 0, -10, Number.NaN]) {
+      expect(snapToTableGrid(123, 38, size)).toEqual({ x: 123, y: 38 });
+    }
+  });
+
+  it('snapDropPosition returns null without any grid', () => {
+    expect(snapDropPosition(token, 123, 38)).toBeNull();
+    expect(snapDropPosition(token, 123, 38, 0)).toBeNull();
+  });
+
+  it('snapDropPosition uses the table grid for widgets without their own', () => {
+    expect(snapDropPosition(token, 123, 38, 50)).toEqual({ x: 100, y: 50 });
+  });
+
+  it('a widget grid wins over the table grid: checkers piece lands on a square centre', () => {
+    const widgets = (
+      Array.isArray(checkers.widgets) ? checkers.widgets : Object.values(checkers.widgets)
+    ) as Array<{
+      type: string;
+      width: number;
+      height: number;
+      grid?: GridSnapDef[];
+    }>;
+    const piece = widgets.find((w) => w.type === 'token' && w.grid)!;
+    const snapped = snapDropPosition(piece, 233, 171, checkers.table.gridSnap)!;
+    // Squares are 100 px starting at 50: centres at 100, 200, 300 ...
+    expect((snapped.x + piece.width / 2 - 50) % 100).toBe(50);
+    expect((snapped.y + piece.height / 2 - 50) % 100).toBe(50);
   });
 });
