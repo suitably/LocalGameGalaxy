@@ -40,7 +40,8 @@ export const useSongLibrary = () => {
     isSyncing,
     supportsDirectoryPicker: supportsDirectoryPicker(),
     handleSyncFolder: () => runSync(pickAndSyncFolder),
-    handleResyncFolders: () => runSync(resyncAllFolders),
+    // the folders come from the live query so the permission prompt is still inside the click
+    handleResyncFolders: () => runSync(() => resyncAllFolders(storedFolders)),
     handleFolderFileInput,
     handleRemoveFolder: removeFolder,
   };

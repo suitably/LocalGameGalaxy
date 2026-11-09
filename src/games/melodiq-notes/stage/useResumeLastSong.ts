@@ -1,7 +1,8 @@
 /**
  * Opens the song last on stage again (#635). A demo song is on stage from the first render
  * (`initialExample`); a song from the companion server loads once it answers, unless the
- * player picked another song meanwhile. A song that is gone keeps the demo on stage.
+ * player picked another song meanwhile. A song of the device library (#697) reloads from this
+ * browser. A song that is gone keeps the demo on stage.
  */
 import { useEffect, useRef } from 'react';
 import {
@@ -10,6 +11,8 @@ import {
   isCompanionEnabled,
 } from '../../../lib/companion/songScoresApi';
 import { DEMO_SONGS } from '../demoSongs';
+import { db } from '../logic/db';
+import { findDeviceSong } from '../logic/deviceSong';
 import { readLastSong } from './logic/lastSession';
 import type { StageSongState } from './useStageSong';
 
@@ -22,19 +25,35 @@ export function initialExample() {
 }
 
 export function useResumeLastSong(
-  state: Pick<StageSongState, 'origin' | 'loadCatalogScore' | 'loadKaraoke'>,
+  state: Pick<StageSongState, 'origin' | 'loadCatalogScore' | 'loadKaraoke' | 'loadDeviceSong'>,
 ) {
   const startOrigin = useRef(state.origin);
   const current = useRef(state.origin);
   useEffect(() => {
     current.current = state.origin;
   }, [state.origin]);
-  const { loadCatalogScore, loadKaraoke } = state;
+  const { loadCatalogScore, loadKaraoke, loadDeviceSong } = state;
 
   useEffect(() => {
     const last = readLastSong();
-    if (!last || last.kind === 'example' || !isCompanionEnabled()) return;
+    if (!last || last.kind === 'example') return;
     let cancelled = false;
+    if (last.kind === 'device') {
+      db.songs
+        .toArray()
+        .then((songs) => {
+          const stored = findDeviceSong(songs, last.fileName);
+          if (stored && !cancelled && current.current === startOrigin.current)
+            void loadDeviceSong(stored);
+        })
+        .catch(() => {
+          // library unavailable: the demo stays
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+    if (!isCompanionEnabled()) return;
     getCompanionSong(last.songId)
       .then((song) => {
         // the player chose something else while the server answered
@@ -53,5 +72,5 @@ export function useResumeLastSong(
     return () => {
       cancelled = true;
     };
-  }, [loadCatalogScore, loadKaraoke]);
+  }, [loadCatalogScore, loadKaraoke, loadDeviceSong]);
 }

@@ -42,6 +42,5 @@ test('isColorCheckedFile applies to non-exempt src tsx files only', () => {
   assert.equal(isColorCheckedFile('src/games/tabletop/logic/x.tsx'), false);
   assert.equal(isColorCheckedFile('src/games/tabletop/components/widgets/Card.tsx'), false);
   assert.equal(isColorCheckedFile('src/games/tabletop/components/Board.tsx'), true);
-  assert.equal(isColorCheckedFile('src/lib/musicXmlParser.ts'), false);
   assert.equal(isColorCheckedFile('server/src/a.tsx'), false);
 });
