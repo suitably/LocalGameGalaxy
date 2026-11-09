@@ -1,0 +1,1 @@
+- **Melodiq Notes batch import no longer stores an unreviewed YouTube hit** (#691): a hit is only downloaded when its length is within max(8 s, 10 %) of the score's; otherwise you pick one of the hits or skip the score, and a search without hits is reported as skipped.

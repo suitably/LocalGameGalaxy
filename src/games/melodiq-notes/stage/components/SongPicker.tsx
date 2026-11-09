@@ -66,7 +66,7 @@ export function SongPicker({ open, onClose, state }: SongPickerProps) {
         {tab === 'device' && (
           <DeviceTab
             onOpenFile={(file) => closeIfLoaded(state.loadFile(file))}
-            onPlay={(song) => closeIfLoaded(state.loadExample(song.title, song.xmlContent))}
+            onPlay={(song) => closeIfLoaded(state.loadDeviceSong(song))}
           />
         )}
         {state.error && (

@@ -76,6 +76,8 @@ export interface TTSObjectState {
   HideWhenFaceDown?: boolean;
   SidewaysCard?: boolean;
   FogColor?: string;
+  /** `3DText`: the text and its size. */
+  Text?: { Text?: string; colorstate?: TTSColorDiffuse; fontSize?: number };
   Value?: number;
 
   /** Card-specific: ID encoding deck + position */

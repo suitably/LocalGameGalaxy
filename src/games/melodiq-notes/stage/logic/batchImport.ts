@@ -5,7 +5,9 @@ import type {
   StoredBarMarks,
 } from '../../../../lib/companion/songScoresApi';
 import type { YouTubeResult } from '../../../../lib/companion/songDownloadApi';
+import { songSeconds } from '../../../../modules/music-score/timing';
 import { pickRecording } from '../serverScoreLoad';
+import { chooseRecording, type RecordingChoice } from './recordingMatch';
 import { freshMarks } from './folderAlignment';
 import { findSongFolder } from './scoreCatalog';
 import {
@@ -53,9 +55,45 @@ export function scoreMeta(song: ScoreSong, fileName: string): { title: string; a
   return { title, artist: '' };
 }
 
-/** The search for a song's recording and the hit a batch takes without asking: the top one. */
+/** The YouTube search for a song's recording. */
 export const recordingQuery = (title: string, artist: string) => `${artist} ${title}`.trim();
-export const topHit = (results: YouTubeResult[]) => results[0]?.url ?? null;
+
+/** Hits a person must look at because none matches the score's length. */
+export interface RecordingReview {
+  title: string;
+  artist: string;
+  scoreSec: number;
+  candidates: YouTubeResult[];
+}
+
+/** The chosen hit's URL, or null to skip this score. */
+export type AskRecording = (review: RecordingReview) => Promise<string | null>;
+
+/** A score the batch left alone on purpose (no hit, or nobody confirmed one); not a failure. */
+export class BatchSkipped extends Error {
+  readonly reason: 'none' | 'declined' | 'unreviewed';
+  constructor(reason: BatchSkipped['reason'], message: string) {
+    super(message);
+    this.reason = reason;
+  }
+}
+
+/**
+ * The URL to download: a hit within the duration tolerance, else the one `askUser` picks.
+ * No path returns a hit that is neither matched nor confirmed.
+ */
+async function recordingUrl(
+  choice: RecordingChoice,
+  review: Omit<RecordingReview, 'candidates'>,
+  askUser: AskRecording | undefined,
+): Promise<string> {
+  if (choice.kind === 'match') return choice.hit.url;
+  if (choice.kind === 'none') throw new BatchSkipped('none', 'no recording found on YouTube');
+  if (!askUser) throw new BatchSkipped('unreviewed', 'no hit matches the score length');
+  const url = await askUser({ ...review, candidates: choice.candidates });
+  if (!url) throw new BatchSkipped('declined', 'no recording chosen');
+  return url;
+}
 
 /** Aligns one stored score to the folder's recording and stores the marks; false if it could not. */
 async function alignScore(
@@ -84,14 +122,16 @@ async function folderAudio(song: CompanionSong, api: BatchApi) {
 }
 
 /**
- * One score of a batch: finds its song folder by title and artist, downloads the top YouTube hit
- * into it unless the folder already has a recording, stores the score there and aligns it.
+ * One score of a batch: finds its song folder by title and artist, downloads the YouTube hit whose
+ * length matches the score (or the one `askUser` picks) unless the folder already has a recording,
+ * stores the score there and aligns it. Throws BatchSkipped when no hit is taken.
  */
 export async function importScoreFile(
   file: File,
   api: BatchApi,
   onProgress: (p: BatchProgress) => void = () => {},
   signal?: AbortSignal,
+  askUser?: AskRecording,
 ): Promise<BatchResult> {
   onProgress({ stage: 'read' });
   const scoreSong = api.readScore(file.name, await file.arrayBuffer());
@@ -101,8 +141,13 @@ export async function importScoreFile(
   let youtubeUrl: string | null = null;
   if (plan.kind !== 'reuse') {
     onProgress({ stage: 'search' });
-    youtubeUrl = topHit(await api.search(recordingQuery(meta.title, meta.artist)));
-    if (!youtubeUrl) throw new Error('no recording found on YouTube');
+    const results = await api.search(recordingQuery(meta.title, meta.artist));
+    const scoreSec = songSeconds(scoreSong);
+    youtubeUrl = await recordingUrl(
+      chooseRecording(results, scoreSec),
+      { ...meta, scoreSec },
+      askUser,
+    );
   }
   if (signal?.aborted) throw aborted();
   const { song, score } = await importRecording(

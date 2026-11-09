@@ -10,7 +10,6 @@ const EXEMPT_PATTERNS = [
   /^src\/theme\.ts$/,
   /^src\/games\/tabletop\/logic\//,
   /^src\/games\/tabletop\/components\/widgets\//,
-  /(^|\/)musicXmlParser\.ts$/,
   /\.(test|spec)\.[cm]?[jt]sx?$/,
 ];
 
