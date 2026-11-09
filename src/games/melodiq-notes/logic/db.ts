@@ -12,8 +12,10 @@ export interface StoredSheetMusic {
     artist: string;
     /** Detected or inferred BPM from the score. */
     baseBpm: number;
-    /** Full MusicXML text content (already extracted from .mxl if necessary). */
-    xmlContent: string;
+    /** MusicXML text of a .xml / .musicxml file. Older rows hold the text of an extracted .mxl too. */
+    xmlContent?: string;
+    /** The file as read, for .mid / .midi / .gp / .mxl (#697). Either this or `xmlContent` is set. */
+    scoreData?: ArrayBuffer;
     /** Original file name, for display purposes. */
     fileName: string;
     /** ID of the folder this song came from, if any. */

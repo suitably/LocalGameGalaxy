@@ -10,6 +10,7 @@ import { useStage, useStageTexts } from './stage/useStage';
 import { useStageSong } from './stage/useStageSong';
 import { useStageInput } from './stage/useStageInput';
 import { useImmersive } from './stage/useImmersive';
+import { useStageLifecycle } from './stage/useStageLifecycle';
 import { StageCanvas } from './stage/components/StageCanvas';
 import { StageOverlay } from './stage/components/StageOverlay';
 import { TransportBar } from './stage/components/TransportBar';
@@ -71,6 +72,8 @@ export const MelodiqNotesGame: React.FC<{ roomId?: string | null }> = ({ roomId 
     return playCalibrationClicks(engine);
   }, [engine, unlockAudio]);
   const immersive = useImmersive();
+  const leaveStage = useCallback(() => navigate(-1), [navigate]);
+  useStageLifecycle(engine, { leave: leaveStage, immersive });
   const portrait = useMediaQuery('(orientation: portrait)');
 
   const openPicker = useCallback(() => setPickerOpen(true), []);

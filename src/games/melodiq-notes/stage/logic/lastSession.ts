@@ -9,7 +9,9 @@ import type { SongOrigin } from '../serverScoreLoad';
 export type LastSong =
   | { kind: 'example'; title: string }
   | { kind: 'notes'; songId: string; scoreFile: string }
-  | { kind: 'karaoke'; songId: string };
+  | { kind: 'karaoke'; songId: string }
+  /** Looked up by file name: ids of the local library change with every folder re-sync. */
+  | { kind: 'device'; fileName: string };
 
 const INSTRUMENTS: readonly InstrumentKind[] = [
   'keyboard',
@@ -30,6 +32,8 @@ export function lastSongOf(origin: SongOrigin): LastSong | null {
       return { kind: 'notes', songId: origin.songId, scoreFile: origin.scoreFile };
     case 'karaoke':
       return { kind: 'karaoke', songId: origin.songId };
+    case 'device':
+      return { kind: 'device', fileName: origin.fileName };
     default:
       return null;
   }
@@ -45,6 +49,7 @@ export function parseLastSong(raw: unknown): LastSong | null {
   if (v.kind === 'notes' && isText(v.songId) && isText(v.scoreFile))
     return { kind: 'notes', songId: v.songId, scoreFile: v.scoreFile };
   if (v.kind === 'karaoke' && isText(v.songId)) return { kind: 'karaoke', songId: v.songId };
+  if (v.kind === 'device' && isText(v.fileName)) return { kind: 'device', fileName: v.fileName };
   return null;
 }
 

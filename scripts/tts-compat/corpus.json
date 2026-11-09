@@ -1,0 +1,4 @@
+{
+  "description": "Tabletop Simulator Workshop ids only (public identifiers, no content, Q21). Saves are fetched at run time into the git-ignored scripts/tts-compat/.cache/. Add ids here; never commit a save.",
+  "ids": ["2500271578"]
+}

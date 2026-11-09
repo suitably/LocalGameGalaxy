@@ -15,6 +15,8 @@ verified:
 
 # Melodiq Architecture
 
+> Melodiq **Notes** (band stage, sheet music, pults) is a separate game: see [melodiq-notes-architecture.md](melodiq-notes-architecture.md).
+
 > [!IMPORTANT]
 > This document details the specific architecture of the **Melodiq** game module. It outlines the core components, state synchronization mechanisms, and architectural guidelines.
 

@@ -33,9 +33,13 @@ describe('boardFilter', () => {
 
   it('identifies pieces in supply reserve correctly', () => {
     const widgets: Record<string, TabletopWidget> = {
-      'Player 1 - Roads': { id: 'Player 1 - Roads', type: 'holder', childIds: ['road1'] } as HolderWidget,
-      'road1': { id: 'road1', type: 'token', parent: 'Player 1 - Roads' } as TokenWidget,
-      'roadPlaced': { id: 'roadPlaced', type: 'token', parent: undefined } as TokenWidget,
+      'Player 1 - Roads': {
+        id: 'Player 1 - Roads',
+        type: 'holder',
+        childIds: ['road1'],
+      } as HolderWidget,
+      road1: { id: 'road1', type: 'token', parent: 'Player 1 - Roads' } as TokenWidget,
+      roadPlaced: { id: 'roadPlaced', type: 'token', parent: undefined } as TokenWidget,
     };
 
     expect(isPieceInSupplyReserve(widgets['road1'], widgets)).toBe(true);
@@ -44,9 +48,9 @@ describe('boardFilter', () => {
 
   it('filters board holders excluding hand holders and supply containers in local mode', () => {
     const widgets: Record<string, TabletopWidget> = {
-      'Hand': { id: 'Hand', type: 'holder', isHand: true } as HolderWidget,
+      Hand: { id: 'Hand', type: 'holder', isHand: true } as HolderWidget,
       'Player 1 - Roads': { id: 'Player 1 - Roads', type: 'holder' } as HolderWidget,
-      'Discard': { id: 'Discard', type: 'holder' } as HolderWidget,
+      Discard: { id: 'Discard', type: 'holder' } as HolderWidget,
     };
     const visibleIds = new Set(['Hand', 'Player 1 - Roads', 'Discard']);
 
@@ -59,12 +63,20 @@ describe('boardFilter', () => {
 
   it('filters board widgets excluding cards in hand and reserve pieces in local mode', () => {
     const widgets: Record<string, TabletopWidget> = {
-      'Hand': { id: 'Hand', type: 'holder', isHand: true, childIds: ['cardInHand'] } as HolderWidget,
-      'Player 1 - Roads': { id: 'Player 1 - Roads', type: 'holder', childIds: ['roadInReserve'] } as HolderWidget,
-      'cardInHand': { id: 'cardInHand', type: 'card', parent: 'Hand' } as CardWidget,
-      'cardOnTable': { id: 'cardOnTable', type: 'card' } as CardWidget,
-      'roadInReserve': { id: 'roadInReserve', type: 'token', parent: 'Player 1 - Roads' } as TokenWidget,
-      'roadOnTable': { id: 'roadOnTable', type: 'token' } as TokenWidget,
+      Hand: { id: 'Hand', type: 'holder', isHand: true, childIds: ['cardInHand'] } as HolderWidget,
+      'Player 1 - Roads': {
+        id: 'Player 1 - Roads',
+        type: 'holder',
+        childIds: ['roadInReserve'],
+      } as HolderWidget,
+      cardInHand: { id: 'cardInHand', type: 'card', parent: 'Hand' } as CardWidget,
+      cardOnTable: { id: 'cardOnTable', type: 'card' } as CardWidget,
+      roadInReserve: {
+        id: 'roadInReserve',
+        type: 'token',
+        parent: 'Player 1 - Roads',
+      } as TokenWidget,
+      roadOnTable: { id: 'roadOnTable', type: 'token' } as TokenWidget,
     };
     const visibleIds = new Set(['cardInHand', 'cardOnTable', 'roadInReserve', 'roadOnTable']);
 
@@ -79,10 +91,10 @@ describe('boardFilter', () => {
 
   it('filters out cards that are inside a deck or pile from board widgets in all modes', () => {
     const widgets: Record<string, TabletopWidget> = {
-      'deck1': { id: 'deck1', type: 'deck', cardIds: ['cardInDeck'] } as DeckWidget,
-      'cardInDeck': { id: 'cardInDeck', type: 'card' } as CardWidget,
-      'cardInPile': { id: 'cardInPile', type: 'card', inPile: true } as CardWidget,
-      'cardFree': { id: 'cardFree', type: 'card', inPile: false } as CardWidget,
+      deck1: { id: 'deck1', type: 'deck', cardIds: ['cardInDeck'] } as DeckWidget,
+      cardInDeck: { id: 'cardInDeck', type: 'card' } as CardWidget,
+      cardInPile: { id: 'cardInPile', type: 'card', inPile: true } as CardWidget,
+      cardFree: { id: 'cardFree', type: 'card', inPile: false } as CardWidget,
     };
     const visibleIds = new Set(['cardInDeck', 'cardInPile', 'cardFree']);
 
@@ -102,7 +114,11 @@ describe('boardFilter', () => {
     const handHolder = { id: 'player1Hand', type: 'holder', isHand: true } as TabletopWidget;
     const supplyHolder = { id: 'Player 1 - Roads', type: 'holder' } as TabletopWidget;
     const playerAreaHolder = { id: 'area1', type: 'holder', ownerSeat: 0 } as TabletopWidget;
-    const spielerbereichHolder = { id: 'sb', label: 'Spielerbereich', type: 'holder' } as TabletopWidget;
+    const spielerbereichHolder = {
+      id: 'sb',
+      label: 'Spielerbereich',
+      type: 'holder',
+    } as TabletopWidget;
     const card = { id: 'c1', type: 'card' } as TabletopWidget;
 
     expect(isBoardSnapTarget(deck)).toBe(true);

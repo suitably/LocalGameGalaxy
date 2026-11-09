@@ -44,7 +44,10 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
 
   const handleCardFlick = (cardId: string) => {
     if (dropTargets.length === 0) {
-      dispatch({ type: 'MOVE_WIDGET', payload: { id: cardId, x: 700, y: 400 } });
+      dispatch({
+        type: 'MOVE_WIDGET',
+        payload: { id: cardId, x: state.game.table.width / 2, y: state.game.table.height / 2 },
+      });
     } else if (dropTargets.length === 1) {
       triggerPlay(cardId, dropTargets[0].id);
     } else {
@@ -100,7 +103,7 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
           />
           {topDiscardCard && (
             <Typography variant="caption" color="text.secondary" fontWeight={600}>
-              Tisch: {topDiscardCard.frontContent.value}
+              {t('games.tabletop.table_card', { card: topDiscardCard.frontContent.value })}
             </Typography>
           )}
         </Box>

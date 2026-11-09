@@ -243,7 +243,7 @@ describe('VirtualTabletop / Frontiers Normalization', () => {
           movable: false,
         },
         cardTypes: {
-          '3:1': { image: '/assets/ship.png' }
+          '3:1': { image: '/assets/ship.png' },
         },
         faceTemplates: [
           {},
@@ -297,7 +297,9 @@ describe('VirtualTabletop / Frontiers Normalization', () => {
     expect(harbor.pinned).toBe(true);
     expect(harbor.zIndex).toBeLessThan(1000000); // Layer -5 -> 500001
     expect(harbor.faceObjects?.length).toBe(2);
-    expect(harbor.faceObjects?.[0].clipPath).toBe('polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)');
+    expect(harbor.faceObjects?.[0].clipPath).toBe(
+      'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+    );
     expect(harbor.faceObjects?.[1].rotation).toBe(90);
     expect(harbor.faceObjects?.[1].value).toBe('/assets/ship.png');
 
@@ -318,25 +320,25 @@ describe('VirtualTabletop / Frontiers Normalization', () => {
         id: 'ResourcesDeck',
         type: 'deck',
         cardTypes: {
-          Wood: { background: '/bg.png', resource: '/wood.png' }
+          Wood: { background: '/bg.png', resource: '/wood.png' },
         },
         faceTemplates: [
           {},
           {
             objects: [
               { type: 'image', dynamicProperties: { value: 'background' } },
-              { type: 'image', dynamicProperties: { value: 'resource' }, x: 10, y: 30 }
-            ]
-          }
-        ]
+              { type: 'image', dynamicProperties: { value: 'resource' }, x: 10, y: 30 },
+            ],
+          },
+        ],
       },
       woodCard: {
         id: 'woodCard',
         type: 'card',
         deck: 'ResourcesDeck',
         cardType: 'Wood',
-        activeFace: 1
-      }
+        activeFace: 1,
+      },
     };
     const norm = normalizePcioWidgets(rawWidgets);
     const card = norm.woodCard as CardWidget;
@@ -353,7 +355,7 @@ describe('VirtualTabletop / Frontiers Normalization', () => {
       card1: { type: 'card', activeFace: 1 },
       card0: { type: 'card', activeFace: 0 },
       cardUndef: { type: 'card' },
-      cardInPile: { type: 'card', parent: 'pile1' }
+      cardInPile: { type: 'card', parent: 'pile1' },
     };
     const norm = normalizePcioWidgets(rawWidgets);
     expect((norm.card1 as CardWidget).faceUp).toBe(true);
@@ -370,8 +372,8 @@ describe('VirtualTabletop / Frontiers Normalization', () => {
         cardTypes: {
           Knight: {
             image: '/assets/knight.png',
-            text: 'Move the robber.'
-          }
+            text: 'Move the robber.',
+          },
         },
         faceTemplates: [
           {},
@@ -379,32 +381,32 @@ describe('VirtualTabletop / Frontiers Normalization', () => {
             objects: [
               {
                 type: 'image',
-                dynamicProperties: { value: 'image' }
+                dynamicProperties: { value: 'image' },
               },
               {
                 type: 'text',
                 fontSize: 16,
                 color: 'white',
                 textAlign: 'center',
-                dynamicProperties: { value: 'cardType' }
+                dynamicProperties: { value: 'cardType' },
               },
               {
                 type: 'text',
                 fontSize: 10,
                 color: 'white',
-                dynamicProperties: { value: 'text' }
-              }
-            ]
-          }
-        ]
+                dynamicProperties: { value: 'text' },
+              },
+            ],
+          },
+        ],
       },
       knightCard: {
         id: 'knightCard',
         type: 'card',
         deck: 'DevDeck',
         cardType: 'Knight',
-        activeFace: 1
-      }
+        activeFace: 1,
+      },
     };
     const norm = normalizePcioWidgets(rawWidgets);
     const card = norm.knightCard as CardWidget;
@@ -420,7 +422,7 @@ describe('VirtualTabletop / Frontiers Normalization', () => {
   it('does not accumulate rotation or rotate positions', () => {
     const rawWidgets = {
       parent1: { id: 'parent1', type: 'holder', x: 10, y: 20, rotation: 45 },
-      child1: { id: 'child1', type: 'card', x: 5, y: 5, rotation: 30, parent: 'parent1' }
+      child1: { id: 'child1', type: 'card', x: 5, y: 5, rotation: 30, parent: 'parent1' },
     };
     const norm = normalizePcioWidgets(rawWidgets);
     const child = norm.child1 as CardWidget;
@@ -454,9 +456,7 @@ describe('VirtualTabletop / Frontiers Normalization', () => {
         faceTemplates: [
           {},
           {
-            objects: [
-              { type: 'text', dynamicProperties: { value: 'number' } },
-            ],
+            objects: [{ type: 'text', dynamicProperties: { value: 'number' } }],
           },
         ],
       },
@@ -532,4 +532,3 @@ describe('VirtualTabletop / Frontiers Normalization', () => {
     }
   });
 });
-

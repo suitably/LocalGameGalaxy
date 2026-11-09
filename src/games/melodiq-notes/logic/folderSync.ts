@@ -5,25 +5,18 @@
  *   1. `pickAndSyncFolder()` — uses the File System Access API (modern browsers).
  *   2. `syncFilesFromInput()` — accepts a FileList from an <input webkitdirectory> (fallback).
  *
- * Both functions scan the picked tree for .xml / .musicxml / .mxl files, parse them
- * via `loadMusicXmlFile`, persist results in the Dexie DB, and return the list of
- * successfully imported songs.
+ * Both functions scan the picked tree for .xml / .musicxml / .mxl / .mid / .gp files, read them
+ * via `readScoreFile` (through `storedSongFromScore`), persist results in the Dexie DB, and
+ * return the list of successfully imported songs.
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { loadMusicXmlFile } from './musicXmlParser';
+import { isScoreFileName, storedSongFromScore } from './deviceSong';
 import { db, type StoredSheetMusic, type StoredFolderHandle } from './db';
 
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
-
-const SHEET_MUSIC_EXTENSIONS = new Set(['.xml', '.musicxml', '.mxl']);
-
-function isSheetMusicFile(name: string): boolean {
-    const lower = name.toLowerCase();
-    return [...SHEET_MUSIC_EXTENSIONS].some(ext => lower.endsWith(ext));
-}
 
 /**
  * Converts a browser File handle to a StoredSheetMusic row.
@@ -34,17 +27,11 @@ async function fileToStoredSong(
     folderId?: string,
 ): Promise<StoredSheetMusic | null> {
     try {
-        const parsed = await loadMusicXmlFile(file);
-        return {
+        return storedSongFromScore(file.name, await file.arrayBuffer(), {
             id: uuidv4(),
-            title: parsed.title,
-            artist: parsed.artist,
-            baseBpm: parsed.baseBpm,
-            xmlContent: parsed.xmlContent,
-            fileName: file.name,
             folderId,
             addedAt: Date.now(),
-        };
+        });
     } catch (err) {
         console.warn(`[MelodiqNotes] Could not parse "${file.name}":`, err);
         return null;
@@ -70,7 +57,7 @@ async function* walkDirectory(
     const iterable = (dirHandle as unknown as DirectoryHandleWithEntries).entries();
     for await (const [, entry] of iterable) {
         if (entry.kind === 'file') {
-            if (isSheetMusicFile(entry.name)) {
+            if (isScoreFileName(entry.name)) {
                 yield await (entry as FileSystemFileHandle).getFile();
             }
         } else if (entry.kind === 'directory') {
@@ -129,22 +116,29 @@ export async function pickAndSyncFolder(): Promise<SyncResult> {
 }
 
 /**
- * Re-syncs all previously persisted folder handles.
- * Silently skips handles whose permissions have been revoked.
+ * Asks for read permission on a persisted handle. Browsers allow the prompt only while the
+ * click that caused it is fresh, so call this synchronously from the click handler (#697).
+ * `requestPermission` is a non-standard extension not yet in the TS DOM types.
  */
-export async function resyncAllFolders(): Promise<SyncResult> {
-    const folders = await db.folders.toArray();
+function requestReadPermission(handle: FileSystemDirectoryHandle): Promise<string> {
+    type HandleWithPermission = { requestPermission: (opts: { mode: string }) => Promise<string> };
+    return (handle as unknown as HandleWithPermission).requestPermission({ mode: 'read' });
+}
+
+/**
+ * Re-syncs the given persisted folder handles (pass the already loaded list: reading the
+ * database first would use up the click). Call it directly from a user gesture; every permission
+ * prompt is raised before the first file is read. Silently skips handles whose permission was
+ * denied or whose directory is gone. Handle persistence works in Chromium only.
+ */
+export async function resyncAllFolders(folders: readonly StoredFolderHandle[]): Promise<SyncResult> {
+    const permissions = folders.map(folder => requestReadPermission(folder.handle).catch(() => 'denied'));
     const imported: StoredSheetMusic[] = [];
     let skipped = 0;
 
-    for (const folder of folders) {
+    for (const [index, folder] of folders.entries()) {
         try {
-            // Request read permission — may reject if the user denies or the
-            // directory no longer exists.
-            // `requestPermission` is a non-standard extension not yet in the TS DOM types.
-            type HandleWithPermission = { requestPermission: (opts: { mode: string }) => Promise<string> };
-            const permissionState = await (folder.handle as unknown as HandleWithPermission).requestPermission({ mode: 'read' });
-            if (permissionState !== 'granted') continue;
+            if ((await permissions[index]) !== 'granted') continue;
 
             const result = await syncFromDirectoryHandle(folder.handle, folder.id);
             imported.push(...result.imported);
@@ -169,7 +163,7 @@ export async function syncFilesFromInput(files: FileList): Promise<SyncResult> {
 
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        if (!isSheetMusicFile(file.name)) continue;
+        if (!isScoreFileName(file.name)) continue;
 
         const song = await fileToStoredSong(file);
         if (song) {

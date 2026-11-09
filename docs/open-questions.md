@@ -38,6 +38,11 @@ Resolve: replace local constants with the registry entries (same string values, 
 
 ADR-0004 says "Demucs via PyTorch". `server/src/plugins/melodiq/services/separator.ts` runs `audio-separator[cpu]` with model `UVR-MDX-NET-Inst_HQ_3.onnx` and aligns lyrics with `whisper-timestamped` (`server/src/scripts/align_lyrics.py`). The ADR now carries a note; a superseding ADR is a maintainer decision.
 
+## Q22 — Deleting a saved tabletop game reuses `allowSongDeletion`
+
+`DELETE /api/tabletop/games/:id` (`server/src/plugins/tabletop/routes/library.ts`) checks the song-oriented `allowSongDeletion` flag; the admin UI labels it `server.admin.perm_delete`, so a key meant for song deletion can also delete saved games. A separate `allowTabletopGameDeletion` flag would need a config migration and an admin-UI entry (#687 left it unchanged).
+Resolve: decide whether the generic "deletion" flag is intended (then rename the flag/label in docs and UI) or add a dedicated flag. See [server-security](tech/server-security.md).
+
 ## Resolved 2026-11-08
 
 - Q15 VirtualTabletop routines on import → maintainer decision (by best practice, 2026-11-08): routines stay the canonical executable model and gain triggers, conditions and new ops; VTT/PCIO trivial subsets and straight-line TTS Lua idioms are translated into them, the rest is listed in an import report; a host-only sandboxed Lua runtime follows behind a flag. [ADR-0005](adr/0005-tabletop-scripting-for-imported-games.md), [TTS compatibility plan](reports/2026-11-08-tts-compatibility-plan.md) slices 7–9.

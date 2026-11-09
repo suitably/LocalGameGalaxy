@@ -13,6 +13,8 @@ import { readScoreFile, type LoadedScore } from './loadScore';
 export type SongOrigin =
   | { kind: 'example'; title: string }
   | { kind: 'file'; title: string }
+  /** A score kept in this browser's library, imported from a device folder (#697). */
+  | { kind: 'device'; title: string; fileName: string }
   /** A score in a song folder (#568). */
   | { kind: 'notes'; title: string; songId: string; scoreFile: string }
   /** The vocal part of a Melodiq song's karaoke `.txt` (#566). */

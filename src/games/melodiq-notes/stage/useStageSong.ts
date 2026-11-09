@@ -22,6 +22,8 @@ import type { StageEngine } from './engine/StageEngine';
 import { defaultSeats } from './engine/players';
 import { useExactRecordingUrl } from './useExactRecordingUrl';
 import { readInstrument, rememberSong } from './logic/lastSession';
+import type { StoredSheetMusic } from '../logic/db';
+import { loadStoredSong } from '../logic/deviceSong';
 import {
   browserXml,
   downloadText,
@@ -112,6 +114,21 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
       run(async () => {
         const loaded = readMusicXmlText(xmlText, title);
         show(loaded.song, loaded.xml, { kind: 'example', title });
+        replaceRecording(null);
+      }),
+    [run, show, replaceRecording],
+  );
+
+  /** Opens a score from the device library (folder import) and remembers it for the next visit. */
+  const loadDeviceSong = useCallback(
+    (stored: StoredSheetMusic) =>
+      run(async () => {
+        const loaded = loadStoredSong(stored);
+        show(loaded.song, loaded.xml, {
+          kind: 'device',
+          title: loaded.song.title,
+          fileName: stored.fileName,
+        });
         replaceRecording(null);
       }),
     [run, show, replaceRecording],
@@ -290,6 +307,7 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     canExport: !!xml && !!played,
     loadExample,
     loadFile,
+    loadDeviceSong,
     loadCatalogScore,
     loadKaraoke,
     setRecordingFile,
