@@ -59,3 +59,11 @@ export function applyGameDelta(
   }
   return { ...game, ...delta.fields, widgets };
 }
+
+/** One delta that has the effect of applying `first`, then `second` (later values win). */
+export function composeDeltas(first: GameDelta, second: GameDelta): GameDelta {
+  const widgets = { ...first.widgets, ...second.widgets };
+  return first.fields || second.fields
+    ? { widgets, fields: { ...first.fields, ...second.fields } }
+    : { widgets };
+}

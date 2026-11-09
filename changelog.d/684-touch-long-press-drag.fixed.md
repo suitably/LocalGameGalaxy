@@ -1,0 +1,1 @@
+- **No context menu in the middle of a touch drag** (#684): on touch devices, dragging a piece on the Spieltisch could open its context menu after half a second.

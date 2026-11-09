@@ -97,7 +97,8 @@ export interface TTSObjectState {
   /** Attached snap points relative to object origin */
   AttachedSnapPoints?: TTSSnapPoint[];
 
-  /** Lua scripting (ignored for import) */
+  /** Script layer: kept verbatim in the game's `scripts` sidecar, never executed (ADR-0005). */
+  Tags?: string[];
   LuaScript?: string;
   LuaScriptState?: string;
   XmlUI?: string;
