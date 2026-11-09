@@ -1233,7 +1233,7 @@
         "kind_button": "Button",
         "routine": "Routine (JSON)",
         "routine_save": "Save routine",
-        "routine_help": "A list of steps, e.g. [{\"op\":\"SHUFFLE\",\"deck\":\"deck_id\"},{\"op\":\"DRAW\",\"deck\":\"deck_id\",\"count\":5,\"to\":\"hand_id\"}]. Steps: SHUFFLE, DRAW, ROLL, FLIP, MOVE, SET, COUNTER, TIMER, SPIN, NEXT_STATE. Widget ids are shown in the list above.",
+        "routine_help": "A list of steps, e.g. [{\"op\":\"SHUFFLE\",\"deck\":\"deck_id\"},{\"op\":\"DRAW\",\"deck\":\"deck_id\",\"count\":5,\"to\":\"hand_id\"}]. Steps: SHUFFLE, DRAW, DEAL, ROLL, FLIP, MOVE, SET, COUNTER, TIMER, SPIN, NEXT_STATE, SET_STATE, TAKE_FROM_BAG, PLACE_IN_HOLDER, TURN, IF. ROLL and COUNTER also take \"seat\":\"caller\" or \"turn\". Widget ids are shown in the list above.",
         "routine_error_invalid_json": "Not valid JSON.",
         "routine_error_not_array": "The routine must be a list [ … ].",
         "routine_error_too_many_steps": "At most 50 steps.",
@@ -1241,7 +1241,11 @@
         "routine_error_unknown_op": "Step {{step}}: unknown \"op\".",
         "routine_error_missing_field": "Step {{step}}: a required field is missing or wrong.",
         "routine_error_bad_count": "Step {{step}}: count must be 1–60.",
-        "routine_error_forbidden_prop": "Step {{step}}: id, type and routine cannot be set.",
+        "routine_error_forbidden_prop": "Step {{step}}: id, type, routine and triggers cannot be set.",
+        "routine_error_too_deep": "Step {{step}}: IF can be nested at most 3 deep.",
+        "routine_error_bad_condition": "Step {{step}}: the IF condition is incomplete or wrong.",
+        "routine_error_bad_trigger": "Trigger {{step}}: unknown event or a required field is missing.",
+        "routine_error_too_many_triggers": "At most 8 triggers per button.",
         "shuffleOnStart": "Shuffle when a game starts"
       },
       "workshop": {

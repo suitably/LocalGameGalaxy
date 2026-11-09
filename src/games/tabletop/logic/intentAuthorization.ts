@@ -10,6 +10,7 @@ import type { TabletopAction } from './tabletopReducer';
 import type { HolderWidget, TabletopGameDefinition, TabletopWidget } from './types';
 import { isHandHolder } from './handHolder';
 import { privateCardOwners } from './handPrivacy';
+import { turnSeatIndex } from './turnOrder';
 
 /** Who sent an intent, as the host knows it. `seat` null = no seat (owns no hand, no zone). */
 export interface IntentSender {
@@ -41,6 +42,10 @@ function handOwner(widget: TabletopWidget | undefined): number | undefined {
     ? holder.ownerSeat
     : undefined;
 }
+
+/** A seat's own button (`ownerSeat`): only that seat may press it. */
+const buttonSeat = (w: TabletopWidget | undefined): number | undefined =>
+  w?.type === 'button' && typeof w.ownerSeat === 'number' ? w.ownerSeat : undefined;
 
 /** Widgets an action reads or changes, and the holders it puts something into. */
 function touchedIds(action: TabletopAction, widgets: Widgets): { ids: string[]; into: string[] } {
@@ -78,7 +83,10 @@ function touchedIds(action: TabletopAction, widgets: Widgets): { ids: string[]; 
       return { ids: action.payload.widgetIds, into: [] };
     case 'SET_WIDGET_SHOW_ALWAYS':
     case 'NEXT_STATE':
+    case 'SET_STATE':
       return { ids: [action.payload.widgetId], into: [] };
+    case 'RUN_ROUTINE':
+      return { ids: [action.payload.buttonId], into: [] };
     default:
       return { ids: [], into: [] };
   }
@@ -107,6 +115,20 @@ function zoneAllowed(
 }
 
 /**
+ * A phone may only pass its own turn on (`NEXT_TURN` without a target); everything else about
+ * turns runs through a button routine, which the game's author wrote.
+ */
+function turnAllowed(
+  action: TabletopAction,
+  widgets: Widgets,
+  seat: number | null,
+): boolean | undefined {
+  if (action.type !== 'NEXT_TURN') return undefined;
+  const { seat: target, step } = action.payload;
+  return seat !== null && target === undefined && step !== -1 && turnSeatIndex(widgets) === seat;
+}
+
+/**
  * Whether a seated, non-spectator sender may apply this action on the host's game. Spectator,
  * local-only and redacted checks stay in `acceptIntent` (`syncProtocol.ts`).
  */
@@ -120,9 +142,14 @@ export function authorizeSeatIntent(
   if (zone !== undefined) return zone;
 
   const widgets = game.widgets ?? {};
+  const turn = turnAllowed(action, widgets, sender.seat);
+  if (turn !== undefined) return turn;
   const owners = privateCardOwners(widgets);
   const foreign = (seat: number | undefined) => seat !== undefined && seat !== sender.seat;
+  const foreignButton = (w: TabletopWidget | undefined) => foreign(buttonSeat(w));
   const { ids, into } = touchedIds(action, widgets);
-  if (ids.some((id) => foreign(owners.get(id)) || foreign(handOwner(widgets[id])))) return false;
+  const ownSeat = (id: string) =>
+    foreign(owners.get(id)) || foreign(handOwner(widgets[id])) || foreignButton(widgets[id]);
+  if (ids.some(ownSeat)) return false;
   return !into.some((id) => foreign(handOwner(widgets[id])));
 }

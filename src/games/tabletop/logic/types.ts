@@ -1,6 +1,16 @@
 /**
  * Tabletop Game Types & Domain Model [ID: GAME-TABLETOP-TYPES]
  */
+import type { RoutineStep, RoutineTrigger } from './routineTypes';
+
+export type {
+  RoutineCmp,
+  RoutineCondition,
+  RoutineOperand,
+  RoutineSeatRef,
+  RoutineStep,
+  RoutineTrigger,
+} from './routineTypes';
 
 export type TabletopPlayMode = 'party_multi_device' | 'local_pass_and_play' | 'solo';
 
@@ -230,25 +240,14 @@ export interface SpinnerWidget extends BaseWidget {
   angle: number;
 }
 
-/** One step of a button routine; see `logic/routines.ts` for limits and validation. */
-export type RoutineStep =
-  | { op: 'SHUFFLE'; deck: string }
-  | { op: 'DRAW'; deck: string; count?: number; to?: string }
-  | { op: 'ROLL'; dice: string[] }
-  | { op: 'FLIP'; cards: string[] }
-  | { op: 'MOVE'; widget: string; x: number; y: number }
-  | { op: 'SET'; widget: string; props: Record<string, unknown> }
-  | { op: 'COUNTER'; counter: string; delta: number }
-  | { op: 'TIMER'; timer: string; action: 'toggle' | 'reset' }
-  | { op: 'SPIN'; spinner: string }
-  | { op: 'NEXT_STATE'; widget: string };
-
 /** Clickable button that runs a fixed list of table actions (no code). */
 export interface ButtonWidget extends BaseWidget {
   type: 'button';
   text: string;
   color?: string;
   routine: RoutineStep[];
+  /** Events that run the routine without a click. */
+  triggers?: RoutineTrigger[];
 }
 
 export type TabletopWidget =

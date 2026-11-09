@@ -1,6 +1,7 @@
 /**
  * Deck actions: shuffle, draw, return to deck [ID: LOGIC-TABLETOP-DECK-REDUCER]
  */
+import { shuffled } from '../rng';
 import type { TabletopWidget, CardWidget, DeckWidget, HolderWidget } from '../types';
 import { applyLayout, layoutHand } from '../holderLayout';
 import { isHandHolderWidget } from '../handHolder';
@@ -47,6 +48,19 @@ export function placeCardInDeck(
   };
 }
 
+/** Whether `order` holds exactly the cards of `base`. */
+function isSameCards(order: string[], base: string[]): boolean {
+  if (order.length !== base.length) return false;
+  const counts = new Map<string, number>();
+  for (const id of base) counts.set(id, (counts.get(id) ?? 0) + 1);
+  for (const id of order) {
+    const n = counts.get(id);
+    if (!n) return false;
+    counts.set(id, n - 1);
+  }
+  return true;
+}
+
 export function deckReducer(state: TabletopGameState, action: DeckAction): TabletopGameState {
   switch (action.type) {
     case 'SHUFFLE_DECK': {
@@ -54,12 +68,10 @@ export function deckReducer(state: TabletopGameState, action: DeckAction): Table
       if (!widget || widget.type !== 'deck') return state;
       const deck = widget as DeckWidget;
 
-      const newIds = action.payload.newCardIds ? [...action.payload.newCardIds] : [...deck.cardIds];
-
-      for (let i = newIds.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [newIds[i], newIds[j]] = [newIds[j], newIds[i]];
-      }
+      const base = action.payload.newCardIds ?? deck.cardIds;
+      // The host decides the order (`hostActions.ts`); a phone's optimistic copy shuffles itself.
+      const order = action.payload.order;
+      const newIds = order && isSameCards(order, base) ? [...order] : shuffled(base, Math.random);
 
       return {
         ...state,

@@ -137,4 +137,48 @@ describe('intentAuthorization (#685)', () => {
       ),
     ).toBe(false);
   });
+
+  it("routines (#694): a phone presses table buttons and its own, not another seat's", () => {
+    const withButtons = {
+      ...game,
+      widgets: {
+        ...game.widgets,
+        deal: w('deal', { type: 'button', routine: [] }),
+        b1: w('b1', { type: 'button', routine: [], ownerSeat: 1 }),
+        st: w('st', { type: 'token', states: [{}, {}] }),
+      },
+    };
+    const run = (buttonId: string): TabletopAction => ({
+      type: 'RUN_ROUTINE',
+      payload: { buttonId, now: 0 },
+    });
+    expect(authorizeSeatIntent(run('deal'), seat0, withButtons)).toBe(true);
+    expect(authorizeSeatIntent(run('b1'), seat0, withButtons)).toBe(false);
+    expect(authorizeSeatIntent(run('b1'), { spectator: false, seat: 1 }, withButtons)).toBe(true);
+    expect(
+      authorizeSeatIntent(
+        { type: 'SET_STATE', payload: { widgetId: 'st', index: 1 } },
+        seat0,
+        withButtons,
+      ),
+    ).toBe(true);
+  });
+
+  it('turns (#694): a phone only passes its own turn on', () => {
+    const seats = (turn: number) => ({
+      ...game,
+      widgets: {
+        ...game.widgets,
+        s0: w('s0', { type: 'seat', index: 0, color: '', turn: turn === 0 }),
+        s1: w('s1', { type: 'seat', index: 1, color: '', turn: turn === 1 }),
+      },
+    });
+    const next: TabletopAction = { type: 'NEXT_TURN', payload: {} };
+    expect(authorizeSeatIntent(next, seat0, seats(0))).toBe(true);
+    expect(authorizeSeatIntent(next, seat0, seats(1))).toBe(false);
+    expect(authorizeSeatIntent({ type: 'NEXT_TURN', payload: { seat: 0 } }, seat0, seats(1))).toBe(
+      false,
+    );
+    expect(authorizeSeatIntent(next, { spectator: false, seat: null }, seats(0))).toBe(false);
+  });
 });

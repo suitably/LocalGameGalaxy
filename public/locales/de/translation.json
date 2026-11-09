@@ -1233,7 +1233,7 @@
         "kind_button": "Knopf",
         "routine": "Ablauf (JSON)",
         "routine_save": "Ablauf speichern",
-        "routine_help": "Eine Liste von Schritten, z. B. [{\"op\":\"SHUFFLE\",\"deck\":\"deck_id\"},{\"op\":\"DRAW\",\"deck\":\"deck_id\",\"count\":5,\"to\":\"hand_id\"}]. Schritte: SHUFFLE, DRAW, ROLL, FLIP, MOVE, SET, COUNTER, TIMER, SPIN, NEXT_STATE. Die Element-IDs stehen in der Liste oben.",
+        "routine_help": "Eine Liste von Schritten, z. B. [{\"op\":\"SHUFFLE\",\"deck\":\"deck_id\"},{\"op\":\"DRAW\",\"deck\":\"deck_id\",\"count\":5,\"to\":\"hand_id\"}]. Schritte: SHUFFLE, DRAW, DEAL, ROLL, FLIP, MOVE, SET, COUNTER, TIMER, SPIN, NEXT_STATE, SET_STATE, TAKE_FROM_BAG, PLACE_IN_HOLDER, TURN, IF. ROLL und COUNTER nehmen auch \"seat\":\"caller\" oder \"turn\". Die Element-IDs stehen in der Liste oben.",
         "routine_error_invalid_json": "Kein gültiges JSON.",
         "routine_error_not_array": "Der Ablauf muss eine Liste [ … ] sein.",
         "routine_error_too_many_steps": "Höchstens 50 Schritte.",
@@ -1241,7 +1241,11 @@
         "routine_error_unknown_op": "Schritt {{step}}: unbekanntes „op“.",
         "routine_error_missing_field": "Schritt {{step}}: ein Pflichtfeld fehlt oder ist falsch.",
         "routine_error_bad_count": "Schritt {{step}}: count muss 1–60 sein.",
-        "routine_error_forbidden_prop": "Schritt {{step}}: id, type und routine lassen sich nicht setzen.",
+        "routine_error_forbidden_prop": "Schritt {{step}}: id, type, routine und triggers lassen sich nicht setzen.",
+        "routine_error_too_deep": "Schritt {{step}}: IF lässt sich höchstens 3-fach verschachteln.",
+        "routine_error_bad_condition": "Schritt {{step}}: die IF-Bedingung ist unvollständig oder falsch.",
+        "routine_error_bad_trigger": "Auslöser {{step}}: unbekanntes Ereignis oder ein Pflichtfeld fehlt.",
+        "routine_error_too_many_triggers": "Höchstens 8 Auslöser pro Knopf.",
         "shuffleOnStart": "Beim Spielstart mischen"
       },
       "workshop": {
