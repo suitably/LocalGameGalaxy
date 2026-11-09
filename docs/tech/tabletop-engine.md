@@ -58,7 +58,7 @@ Holder positions (hand, stack, fan, grid) come from `logic/holderLayout.ts`; a h
 
 Declarative routines are the only executable model the tabletop persists and syncs ([ADR-0005](../adr/0005-tabletop-scripting-for-imported-games.md) decision 1; TTS plan slice 7, #694). Workshop Lua is out of scope here (slices 8–9).
 
-**Steps.** `ButtonWidget.routine` is a JSON list of steps (`RoutineStep` in `logic/types.ts`) — no expressions, no code:
+**Steps.** `ButtonWidget.routine` is a JSON list of steps (`RoutineStep` in `logic/routineTypes.ts`, re-exported by `types.ts`) — no expressions, no code:
 
 | Op                                                        | Does                                                                                |
 | --------------------------------------------------------- | ----------------------------------------------------------------------------------- |
