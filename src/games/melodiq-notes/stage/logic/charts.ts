@@ -29,6 +29,11 @@ export interface StageNote {
   judged: Judgement | null;
   /** Beats sung on pitch (pitch view). */
   acc: number;
+  /**
+   * Signed pitch deviation in cents: the hit's (microphone) or the mean while sung on pitch;
+   * absent for exact inputs (MIDI, keys) and notes never sounded.
+   */
+  cents?: number;
   /** Learn mode, pitch view: the player found the note, so the song may move on. */
   started: boolean;
 }

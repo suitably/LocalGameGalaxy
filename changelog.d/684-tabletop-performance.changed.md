@@ -1,0 +1,1 @@
+- **Smoother Spieltisch with large imported games** (#684): dragging a piece on a table with 800 widgets no longer re-renders and restyles the whole table on every pointer move, a drag sends at most one move every 50 ms to the other devices, and one drag is one undo step. `npm run perf:tabletop` measures frame times with 800 widgets.

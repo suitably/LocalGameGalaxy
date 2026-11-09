@@ -36,10 +36,9 @@ export const SpinnerWidgetView: React.FC<SpinnerWidgetViewProps> = ({
         e.stopPropagation();
         onSpin();
       }}
+      style={{ left: widget.x, top: widget.y }}
       sx={{
         position: 'absolute',
-        left: widget.x,
-        top: widget.y,
         width: size,
         height: size,
         zIndex: widget.zIndex + (isDragging ? 100 : 0),

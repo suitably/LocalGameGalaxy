@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import type { TabletopGameDefinition } from '../../logic/types';
 import { InspectorFields } from './InspectorFields';
 import { WidgetJsonEditor } from './WidgetJsonEditor';
+import { ScriptViewer } from './ScriptViewer';
 import type { TabletopEditorApi } from './useTabletopEditor';
 
 interface WidgetInspectorProps {
@@ -32,6 +33,9 @@ export const WidgetInspector: React.FC<WidgetInspectorProps> = ({ game, editor }
   const { t } = useTranslation();
   const [showJson, setShowJson] = useState(false);
   const { selected } = editor;
+  const [showGlobal, setShowGlobal] = useState(false);
+  const globalScript = game.scripts?.global;
+  const selectedScript = selected ? game.scripts?.objects[selected.id] : undefined;
 
   const options = useMemo(
     () =>
@@ -121,11 +125,26 @@ export const WidgetInspector: React.FC<WidgetInspectorProps> = ({ game, editor }
               />
             </Box>
           </Collapse>
+          {selectedScript && (
+            <Box sx={{ mt: 2 }}>
+              <ScriptViewer title={t('games.tabletop.scripts.widget')} entry={selectedScript} />
+            </Box>
+          )}
         </>
       ) : (
         <Typography variant="body2" color="text.secondary">
           {t('games.tabletop.editor.select_hint')}
         </Typography>
+      )}
+      {globalScript && (
+        <Box sx={{ mt: 2 }}>
+          <Button size="small" onClick={() => setShowGlobal((v) => !v)}>
+            {t('games.tabletop.scripts.global_toggle')}
+          </Button>
+          <Collapse in={showGlobal} unmountOnExit>
+            <ScriptViewer title={t('games.tabletop.scripts.global')} entry={globalScript} />
+          </Collapse>
+        </Box>
       )}
     </Paper>
   );

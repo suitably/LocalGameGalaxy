@@ -30,6 +30,7 @@ import { seededRng } from './rng';
 import { moveTurn, seatIndexOf } from './turnOrder';
 import { raiseWidget, type ZOrderOp } from './zOrder';
 import type { WidgetPatch } from './widgetEdits';
+import { gestureOf } from './dragGesture';
 
 export interface FlyingCardAnimation {
   id: string;
@@ -42,6 +43,8 @@ export interface TabletopGameState {
   game: TabletopGameDefinition;
   flyingCards: FlyingCardAnimation[];
   currentSeatId?: string;
+  /** Drag gesture of the last action (`dragGesture.ts`); the undo history merges by it. */
+  gesture?: string;
 }
 
 /**
@@ -60,7 +63,10 @@ export type TabletopAction = TabletopActionBody & { host?: HostStamp };
 
 type TabletopActionBody =
   | { type: 'LOAD_GAME'; payload: TabletopGameDefinition }
-  | { type: 'MOVE_WIDGET'; payload: { id: string; x: number; y: number; zIndex?: number } }
+  | {
+      type: 'MOVE_WIDGET';
+      payload: { id: string; x: number; y: number; zIndex?: number; gesture?: string };
+    }
   | { type: 'FLIP_CARD'; payload: { cardId: string } }
   /** `order`: the shuffled result, decided by the host; ignored unless it is the same cards. */
   | {
@@ -87,7 +93,7 @@ type TabletopActionBody =
         targetHolderId?: string;
       };
     }
-  | { type: 'SNAP_TO_HOLDER'; payload: { widgetId: string; holderId: string } }
+  | { type: 'SNAP_TO_HOLDER'; payload: { widgetId: string; holderId: string; gesture?: string } }
   | { type: 'APPLY_REMOTE_DELTA'; payload: GameDelta }
   /** Undo/redo from the editor; unlike APPLY_REMOTE_DELTA it is synced as an intent. */
   | { type: 'APPLY_EDIT_DELTA'; payload: GameDelta }
@@ -158,7 +164,8 @@ function routineContext(state: TabletopGameState, action: TabletopAction): Routi
 
 /**
  * The table reducer: applies the action, then runs the routines of buttons whose triggers the
- * action fired (`routineTriggers.ts`). Remote deltas never fire triggers; they carry the results.
+ * action fired (`routineTriggers.ts`), and records the action's drag gesture (#684). Remote
+ * deltas never fire triggers; they carry the results.
  */
 export function tabletopReducer(
   state: TabletopGameState,
@@ -166,9 +173,13 @@ export function tabletopReducer(
 ): TabletopGameState {
   const ctx = routineContext(state, action);
   const apply = (s: TabletopGameState, a: TabletopAction) => applyAction(s, a, ctx);
-  const next = apply(state, action);
-  if (next === state || NO_TRIGGER_ACTIONS.has(action.type)) return next;
-  return runTriggers(state, next, ctx, apply);
+  const applied = apply(state, action);
+  const next =
+    applied === state || NO_TRIGGER_ACTIONS.has(action.type)
+      ? applied
+      : runTriggers(state, applied, ctx, apply);
+  const gesture = gestureOf(action);
+  return next.gesture === gesture ? next : { ...next, gesture };
 }
 
 function applyAction(

@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { useWorkshopImport } from '../../hooks/useWorkshopImport';
 import { isValidWorkshopInput } from '../../logic/steamWorkshopApi';
 import { WorkshopMetaPreview } from './WorkshopMetaPreview';
+import { ImportReportView } from './ImportReportView';
 
 interface ImportWorkshopDialogProps {
   open: boolean;
@@ -185,6 +186,10 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
                 name: game.name,
               })}
             </Alert>
+          )}
+
+          {status === 'success' && game?.importReport && (
+            <ImportReportView report={game.importReport} />
           )}
         </Stack>
       </DialogContent>

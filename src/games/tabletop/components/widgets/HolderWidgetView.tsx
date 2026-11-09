@@ -9,7 +9,11 @@ interface HolderWidgetViewProps {
   isHovered?: boolean;
 }
 
-export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({ widget, isHovered }) => {
+/** Memoised (#684): a drag re-renders the surface every pointer move, not every holder. */
+export const HolderWidgetView = React.memo(function HolderWidgetView({
+  widget,
+  isHovered,
+}: HolderWidgetViewProps) {
   const { t } = useTranslation();
   const isHand = Boolean(widget.isHand);
   const childCount = widget.childIds?.length || 0;
@@ -23,10 +27,9 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({ widget, isHo
     return (
       <Box
         data-widget-id={widget.id}
+        style={{ left: widget.x, top: widget.y }}
         sx={{
           position: 'absolute',
-          left: widget.x,
-          top: widget.y,
           width: widget.width,
           height: widget.height,
           zIndex: widget.zIndex,
@@ -61,10 +64,9 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({ widget, isHo
   return (
     <Box
       data-widget-id={widget.id}
+      style={{ left: widget.x, top: widget.y }}
       sx={{
         position: 'absolute',
-        left: widget.x,
-        top: widget.y,
         width: widget.width,
         height: widget.height,
         zIndex: widget.zIndex,
@@ -204,4 +206,4 @@ export const HolderWidgetView: React.FC<HolderWidgetViewProps> = ({ widget, isHo
       )}
     </Box>
   );
-};
+});
