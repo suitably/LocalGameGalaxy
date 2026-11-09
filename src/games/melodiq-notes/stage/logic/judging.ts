@@ -69,6 +69,19 @@ export function timingJudgement(deltaSec: number): 'perfect' | 'good' | null {
   return null;
 }
 
+/**
+ * Pitch view: how far (cents) a sung or played pitch may be from the written one and still count.
+ * 80 cents is the old 0.8-semitone window, so dragged and sung pitches keep their leeway; a pitch
+ * nearer to the neighbouring semitone than to this one is still never needed (that would be ≥ 50).
+ */
+export const PITCH_TOLERANCE_CENTS = 80;
+
+/** Signed deviation of a played or sung pitch (fractional MIDI) from the written one, in cents. */
+export const centsOff = (pitch: number, target: number) => Math.round((pitch - target) * 100);
+
+export const onPitch = (pitch: number, target: number) =>
+  Math.abs(centsOff(pitch, target)) <= PITCH_TOLERANCE_CENTS;
+
 /** Sung note: share of its length held on pitch. */
 export const pitchJudgement = (fraction: number): Judgement =>
   fraction >= 0.7 ? 'perfect' : fraction >= 0.35 ? 'good' : 'miss';

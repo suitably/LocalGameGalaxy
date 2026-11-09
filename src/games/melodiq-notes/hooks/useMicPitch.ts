@@ -1,20 +1,30 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { MicrophoneManager } from '../../../modules/audio';
+import { initialMicOnsetState, nextMicFrame, type MicOnsetResult } from '../logic/micOnset';
 
 const PITCH_POLL_INTERVAL_MS = 80;
 
-/** Microphone on/off plus the currently detected MIDI pitch (polled). */
-export const useMicPitch = () => {
+/** What one microphone poll heard: the pitch (fractional MIDI) and a note that started now. */
+export type MicHeard = Omit<MicOnsetResult, 'state'>;
+
+/**
+ * Microphone on/off. Every poll calls `onHeard` with the fractional pitch and, when a note
+ * started (energy onset, see `logic/micOnset.ts`), its onset, so repeated notes register too.
+ */
+export const useMicPitch = (onHeard: (heard: MicHeard) => void) => {
   const [isMicActive, setIsMicActive] = useState<boolean>(false);
-  const [micPitch, setMicPitch] = useState<number | null>(null);
   const micManagerRef = useRef<MicrophoneManager | null>(null);
+  const onHeardRef = useRef(onHeard);
+  useEffect(() => {
+    onHeardRef.current = onHeard;
+  }, [onHeard]);
 
   const toggleMicrophone = useCallback(async () => {
     if (isMicActive && micManagerRef.current) {
       await micManagerRef.current.stop();
       micManagerRef.current = null;
       setIsMicActive(false);
-      setMicPitch(null);
+      onHeardRef.current({ pitch: null, onset: null });
       return;
     }
     try {
@@ -29,9 +39,15 @@ export const useMicPitch = () => {
 
   useEffect(() => {
     if (!isMicActive) return;
+    let state = initialMicOnsetState();
     const interval = setInterval(() => {
-      const res = micManagerRef.current?.getPitch() ?? null;
-      setMicPitch(res && res.note > 0 ? Math.round(res.note) : null);
+      const mic = micManagerRef.current;
+      if (!mic) return;
+      const rms = mic.getCurrentVolume();
+      const res = mic.getPitch();
+      const next = nextMicFrame(state, { rms, pitch: res && res.note > 0 ? res.note : null });
+      state = next.state;
+      onHeardRef.current({ pitch: next.pitch, onset: next.onset });
     }, PITCH_POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [isMicActive]);
@@ -43,5 +59,5 @@ export const useMicPitch = () => {
     [],
   );
 
-  return { isMicActive, micPitch, toggleMicrophone };
+  return { isMicActive, toggleMicrophone };
 };
