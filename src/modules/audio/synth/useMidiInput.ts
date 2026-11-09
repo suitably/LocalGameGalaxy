@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { isVirtualMidiPort, pickMidiInput } from './logic/midiPorts';
+import { isVirtualMidiPort, pickMidiInput } from './midiPorts';
 
 export interface MidiDevice {
   id: string;

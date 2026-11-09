@@ -4,3 +4,4 @@ export * from './playCalibrationBeep';
 export * from './useLatencyCalibration';
 export * from './tapAlong';
 export * from './useTapAlong';
+export * from './scheduleBeep';

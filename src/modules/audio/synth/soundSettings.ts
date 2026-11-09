@@ -1,5 +1,5 @@
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
-import type { InstrumentCategory } from '../types';
+import type { InstrumentCategory } from './types';
 
 export type SoundfontProvider = 'fluid' | 'musyng' | 'synth' | 'custom';
 

@@ -6,7 +6,7 @@
 import React from 'react';
 import { FormControl, InputLabel, MenuItem, Select, TextField } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import type { InstrumentSoundConfig, SoundfontProvider } from '../logic/soundSettings';
+import type { InstrumentSoundConfig, SoundfontProvider } from '../../../modules/audio/synth';
 
 interface SoundfontProviderFieldsProps {
   config: InstrumentSoundConfig;
