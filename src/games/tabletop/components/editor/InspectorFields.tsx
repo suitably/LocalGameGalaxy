@@ -4,13 +4,16 @@
 import React from 'react';
 import { FormControlLabel, MenuItem, Stack, Switch, TextField } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import type { TabletopWidget } from '../../logic/types';
+import type { TabletopGameDefinition, TabletopWidget } from '../../logic/types';
 import type { WidgetPatch } from '../../logic/widgetEdits';
 import { ImageUploadButton } from './ImageUploadButton';
 import { RoutineEditor } from './RoutineEditor';
+import { TriggerEditor } from './TriggerEditor';
 
 interface InspectorFieldsProps {
   widget: TabletopWidget;
+  /** The game, for routine templates, conditions and trigger targets. */
+  game: Pick<TabletopGameDefinition, 'widgets' | 'hiddenZones'>;
   onPatch: (patch: WidgetPatch) => void;
 }
 
@@ -19,7 +22,7 @@ type Values = Record<string, unknown>;
 /** Shown when the widget has no value yet (an unset rotation is 0°). */
 const NUMBER_DEFAULTS: Record<string, number> = { rotation: 0 };
 
-export const InspectorFields: React.FC<InspectorFieldsProps> = ({ widget, onPatch }) => {
+export const InspectorFields: React.FC<InspectorFieldsProps> = ({ widget, game, onPatch }) => {
   const { t } = useTranslation();
   const values = widget as unknown as Values;
   const label = (key: string) => t(`games.tabletop.editor.${key}`);
@@ -176,7 +179,14 @@ export const InspectorFields: React.FC<InspectorFieldsProps> = ({ widget, onPatc
           <RoutineEditor
             key={widget.id}
             widget={widget}
+            widgets={game.widgets}
             onSave={(routine) => onPatch({ routine } as WidgetPatch)}
+          />
+          <TriggerEditor
+            key={`${widget.id}-triggers`}
+            widget={widget}
+            game={game}
+            onSave={(triggers) => onPatch({ triggers } as WidgetPatch)}
           />
         </>
       )}

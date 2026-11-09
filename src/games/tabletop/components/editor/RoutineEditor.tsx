@@ -5,17 +5,24 @@ import React, { useState } from 'react';
 import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { parseRoutine } from '../../logic/routines';
-import type { ButtonWidget, RoutineStep } from '../../logic/types';
+import { appendSteps } from '../../logic/routineTemplates';
+import type { ButtonWidget, RoutineStep, TabletopWidget } from '../../logic/types';
+import { RoutineTemplateMenu } from './RoutineTemplateMenu';
+import { ConditionBuilder } from './ConditionBuilder';
 
 interface RoutineEditorProps {
   widget: ButtonWidget;
+  /** The game's widgets, for templates and the condition builder. */
+  widgets: Record<string, TabletopWidget>;
   onSave: (routine: RoutineStep[]) => void;
 }
 
-export const RoutineEditor: React.FC<RoutineEditorProps> = ({ widget, onSave }) => {
+export const RoutineEditor: React.FC<RoutineEditorProps> = ({ widget, widgets, onSave }) => {
   const { t } = useTranslation();
   const [text, setText] = useState(() => JSON.stringify(widget.routine, null, 2));
   const [error, setError] = useState<string | null>(null);
+  const [showCondition, setShowCondition] = useState(false);
+  const insert = (steps: RoutineStep[]) => setText((current) => appendSteps(current, steps));
 
   const save = () => {
     const result = parseRoutine(text);
@@ -44,9 +51,16 @@ export const RoutineEditor: React.FC<RoutineEditorProps> = ({ widget, onSave }) 
         InputProps={{ sx: { fontFamily: 'monospace', fontSize: '0.75rem' } }}
       />
       {error && <Alert severity="error">{error}</Alert>}
-      <Button size="small" variant="outlined" onClick={save}>
-        {t('games.tabletop.editor.routine_save')}
-      </Button>
+      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        <RoutineTemplateMenu widgets={widgets} onInsert={insert} />
+        <Button size="small" onClick={() => setShowCondition((v) => !v)}>
+          {t('games.tabletop.editor.condition_add')}
+        </Button>
+        <Button size="small" variant="outlined" onClick={save}>
+          {t('games.tabletop.editor.routine_save')}
+        </Button>
+      </Stack>
+      {showCondition && <ConditionBuilder widgets={widgets} onInsert={insert} />}
     </Stack>
   );
 };
