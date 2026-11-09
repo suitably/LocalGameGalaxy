@@ -1644,6 +1644,48 @@
         "suit": "clubs"
       },
       "deckId": "deck1"
+    },
+    "deal_hands": {
+      "id": "deal_hands",
+      "type": "button",
+      "x": 660,
+      "y": 580,
+      "width": 150,
+      "height": 44,
+      "zIndex": 20,
+      "text": "Mischen & 5 austeilen",
+      "label": "Mischen & 5 austeilen",
+      "labelKey": "games.tabletop.labels.deal_five",
+      "pinned": true,
+      "routine": [
+        {
+          "op": "SHUFFLE",
+          "deck": "deck1"
+        },
+        {
+          "op": "DEAL",
+          "deck": "deck1",
+          "count": 5
+        }
+      ]
+    },
+    "next_turn": {
+      "id": "next_turn",
+      "type": "button",
+      "x": 820,
+      "y": 580,
+      "width": 130,
+      "height": 44,
+      "zIndex": 20,
+      "text": "Nächster Zug",
+      "label": "Nächster Zug",
+      "labelKey": "games.tabletop.labels.next_turn",
+      "pinned": true,
+      "routine": [
+        {
+          "op": "TURN"
+        }
+      ]
     }
   }
 }

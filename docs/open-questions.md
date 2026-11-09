@@ -45,7 +45,7 @@ Resolve: decide whether the generic "deletion" flag is intended (then rename the
 
 ## Resolved 2026-11-08
 
-- Q15 VirtualTabletop routines on import → maintainer decision (by best practice, 2026-11-08): routines stay the canonical executable model and gain triggers, conditions and new ops; VTT/PCIO trivial subsets and straight-line TTS Lua idioms are translated into them, the rest is listed in an import report; a host-only sandboxed Lua runtime follows behind a flag. [ADR-0005](adr/0005-tabletop-scripting-for-imported-games.md), [TTS compatibility plan](reports/2026-11-08-tts-compatibility-plan.md) slices 7–9.
+- Q15 VirtualTabletop routines on import → maintainer decision (by best practice, 2026-11-08): routines stay the canonical executable model and gain triggers, conditions and new ops; VTT/PCIO trivial subsets and straight-line TTS Lua idioms are translated into them, the rest is listed in an import report; a host-only sandboxed Lua runtime follows behind a flag. [ADR-0005](adr/0005-tabletop-scripting-for-imported-games.md), [TTS compatibility plan](reports/2026-11-08-tts-compatibility-plan.md) slices 7–9. Part 1 (routines++, VTT/PCIO trivial subset, starters as routines) done in #694.
 
 ## Resolved 2026-10-27
 

@@ -82,7 +82,11 @@ export const WidgetInspector: React.FC<WidgetInspectorProps> = ({ game, editor }
 
       {selected ? (
         <>
-          <InspectorFields widget={selected} onPatch={(p) => editor.patch(selected.id, p)} />
+          <InspectorFields
+            widget={selected}
+            game={game}
+            onPatch={(p) => editor.patch(selected.id, p)}
+          />
           <Divider sx={{ my: 2 }} />
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             <Button size="small" startIcon={<ContentCopyIcon />} onClick={editor.duplicateSelected}>
