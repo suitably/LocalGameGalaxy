@@ -46,6 +46,9 @@ export const TriggerEditor: React.FC<TriggerEditorProps> = ({ widget, game, onSa
             label={t('games.tabletop.editor.trigger_target')}
             value={row.target}
             onChange={(e) => update(i, { target: e.target.value })}
+            // '' is a real choice for turn starts ("any seat"), so show it
+            SelectProps={{ displayEmpty: row.on === 'onTurnStart' }}
+            InputLabelProps={row.on === 'onTurnStart' ? { shrink: true } : undefined}
             sx={{ flex: 1, minWidth: 0 }}
           >
             {triggerTargets(row.on, game).map((o) => (
