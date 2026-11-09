@@ -4,6 +4,7 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import type { BagWidget } from '../../logic/types';
+import { useAssetUrl } from '../../hooks/useAssetUrls';
 
 interface BagWidgetViewProps {
   widget: BagWidget;
@@ -18,6 +19,7 @@ export const BagWidgetView: React.FC<BagWidgetViewProps> = ({
   onPointerDown,
   onDraw,
 }) => {
+  const previewImage = useAssetUrl(widget.previewImage);
   const count = widget.isInfinite ? '∞' : String(widget.itemCount ?? widget.itemIds?.length ?? 0);
   const empty = !widget.isInfinite && count === '0';
 
@@ -42,7 +44,7 @@ export const BagWidgetView: React.FC<BagWidgetViewProps> = ({
         zIndex: widget.zIndex + (isDragging ? 100 : 0),
         borderRadius: '50% 50% 45% 45%',
         bgcolor: widget.color || 'grey.700',
-        backgroundImage: widget.previewImage ? `url(${widget.previewImage})` : undefined,
+        backgroundImage: previewImage ? `url(${previewImage})` : undefined,
         backgroundSize: '60%',
         backgroundPosition: 'center 60%',
         backgroundRepeat: 'no-repeat',

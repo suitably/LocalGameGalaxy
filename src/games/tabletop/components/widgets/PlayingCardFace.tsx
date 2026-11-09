@@ -2,6 +2,7 @@ import React from 'react';
 import { alpha, Box, Typography } from '@mui/material';
 import type { CardContent } from '../../logic/types';
 import { StandardSuitCardFace, parseCardText } from './StandardSuitCardFace';
+import { useAssetResolver, type AssetUrlResolver } from '../../hooks/useAssetUrls';
 
 interface PlayingCardFaceProps {
   frontContent: CardContent;
@@ -15,7 +16,8 @@ interface PlayingCardFaceProps {
 
 const renderSpriteSheetBox = (
   sheet: NonNullable<CardContent['spriteSheet']>,
-  clipPath?: string,
+  clipPath: string | undefined,
+  resolve: AssetUrlResolver,
 ) => {
   const { url, col, row, numWidth, numHeight } = sheet;
   const posX = numWidth > 1 ? (col / (numWidth - 1)) * 100 : 0;
@@ -25,7 +27,7 @@ const renderSpriteSheetBox = (
       sx={{
         width: '100%',
         height: '100%',
-        backgroundImage: `url(${url})`,
+        backgroundImage: `url(${resolve(url)})`,
         backgroundSize: `${numWidth * 100}% ${numHeight * 100}%`,
         backgroundPosition: `${posX}% ${posY}%`,
         backgroundRepeat: 'no-repeat',
@@ -42,15 +44,16 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
   label,
   clipPath,
 }) => {
+  const resolve = useAssetResolver();
   if (!isFaceUp) {
     if (backContent?.type === 'image' && backContent.value) {
       if (backContent.spriteSheet) {
-        return renderSpriteSheetBox(backContent.spriteSheet, clipPath);
+        return renderSpriteSheetBox(backContent.spriteSheet, clipPath, resolve);
       }
       return (
         <Box
           component="img"
-          src={backContent.value}
+          src={resolve(backContent.value)}
           alt="Card back"
           draggable={false}
           sx={{
@@ -122,14 +125,14 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
   }
 
   if (frontContent.type === 'image' && frontContent.spriteSheet) {
-    return renderSpriteSheetBox(frontContent.spriteSheet, clipPath);
+    return renderSpriteSheetBox(frontContent.spriteSheet, clipPath, resolve);
   }
 
   if (frontContent.type === 'image') {
     return (
       <Box
         component="img"
-        src={frontContent.value}
+        src={resolve(frontContent.value)}
         alt={label || 'Card'}
         draggable={false}
         sx={{

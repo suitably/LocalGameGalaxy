@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { alpha, Box, Typography } from '@mui/material';
 import type { TokenWidget } from '../../logic/types';
 import { recolorSvgDataUri, fetchAndRecolorSvg } from '../../logic/svgColorUtils';
+import { useAssetUrl } from '../../hooks/useAssetUrls';
 
 /** No `transform` on a flat, resting token: each one would add a compositor node (#684). */
 const liftTransform = (rot: number, lifted: boolean | undefined, scale: number) =>
@@ -23,6 +24,7 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
   const isCircle = widget.shape === 'circle' || !widget.shape;
   const isChip = Boolean(widget.subText !== undefined && widget.label);
   const rot = widget.rotation || 0;
+  const cachedImage = useAssetUrl(widget.image);
 
   const [recoloredSrc, setRecoloredSrc] = useState<string | undefined>(() => {
     if (!widget.image || !widget.color) return widget.image;
@@ -86,7 +88,7 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
       >
         <Box
           component="img"
-          src={recoloredSrc || widget.image}
+          src={recoloredSrc && recoloredSrc !== widget.image ? recoloredSrc : cachedImage}
           alt={widget.label || 'Token'}
           sx={{
             width: '100%',

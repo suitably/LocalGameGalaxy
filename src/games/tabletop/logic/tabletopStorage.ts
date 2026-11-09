@@ -9,7 +9,7 @@ import {
 import type { TabletopGameDefinition, TabletopGameSummary } from './types';
 
 const DB_NAME = 'galaxy_tabletop_db';
-const DB_VERSION = 5;
+const DB_VERSION = 6;
 const STORE_GAMES = 'custom_games';
 /** Running games, keyed by `sessionKey()`; v3. */
 const STORE_SESSIONS = 'sessions';
@@ -17,6 +17,8 @@ const STORE_SESSIONS = 'sessions';
 const STORE_NAMED_SAVES = 'named_saves';
 /** This device's default template per device-only or starter game (#547), keyed by `gameId`; v5. */
 const STORE_LOCAL_TEMPLATES = 'local_templates';
+/** Per-device copies of remote images, keyed by URL (#693, `assetCacheStore.ts`); v6. */
+export const STORE_ASSET_CACHE = 'asset_cache';
 
 let dbInstance: IDBDatabase | null = null;
 
@@ -43,6 +45,9 @@ export async function openTabletopDb(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(STORE_LOCAL_TEMPLATES)) {
         db.createObjectStore(STORE_LOCAL_TEMPLATES, { keyPath: 'gameId' });
+      }
+      if (!db.objectStoreNames.contains(STORE_ASSET_CACHE)) {
+        db.createObjectStore(STORE_ASSET_CACHE, { keyPath: 'url' });
       }
     };
 

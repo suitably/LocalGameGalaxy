@@ -59,6 +59,18 @@ describe('prepareGameForServer', () => {
     expect(out.assetFiles).toEqual({ 'logo.png': 'data:image/png;base64,AA==' });
   });
 
+  it('keeps remote images of imported games remote (per-device cache, #693)', async () => {
+    const fetchAsset = vi.fn(async () => new Blob(['x']));
+    const remote = 'https://i.imgur.com/elfenland.png';
+    const out = await prepareGameForServer(
+      game({ t: { type: 'token', image: remote } }),
+      BASE,
+      fetchAsset,
+    );
+    expect(fetchAsset).not.toHaveBeenCalled();
+    expect((out.widgets.t as unknown as { image: string }).image).toBe(remote);
+  });
+
   it('reports images that cannot be loaded', async () => {
     const fetchAsset = vi.fn(async () => {
       throw new Error('gone');

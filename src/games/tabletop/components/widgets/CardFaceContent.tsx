@@ -2,6 +2,7 @@ import React from 'react';
 import { Box } from '@mui/material';
 import type { CardWidget, FaceObject } from '../../logic/types';
 import { PlayingCardFace } from './PlayingCardFace';
+import { useAssetResolver } from '../../hooks/useAssetUrls';
 
 const parseCss = (cssStr?: string) => {
   if (!cssStr) return {};
@@ -23,6 +24,7 @@ const parseCss = (cssStr?: string) => {
 };
 
 export const FaceObjectsLayer: React.FC<{ objects: FaceObject[] }> = ({ objects }) => {
+  const resolve = useAssetResolver();
   return (
     <>
       {objects.map((obj, i) => {
@@ -57,7 +59,7 @@ export const FaceObjectsLayer: React.FC<{ objects: FaceObject[] }> = ({ objects 
 
         if (obj.type === 'image') {
           if (obj.value) {
-            sx.backgroundImage = `url("${obj.value}")`;
+            sx.backgroundImage = `url("${resolve(obj.value)}")`;
           }
           return <Box key={i} sx={sx} />;
         }
@@ -85,6 +87,7 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
   width,
   height,
 }) => {
+  const resolve = useAssetResolver();
   const showFaceObjects = Boolean(card.faceObjects && card.faceObjects.length > 0 && isFaceUp);
   const showBackFaceObjects = Boolean(
     card.backFaceObjects && card.backFaceObjects.length > 0 && !isFaceUp,
@@ -122,7 +125,7 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
     return (
       <Box
         component="img"
-        src={card.frontContent.value}
+        src={resolve(card.frontContent.value)}
         alt={card.label || 'Card'}
         draggable={false}
         sx={{
@@ -155,7 +158,7 @@ export const CardFaceContent: React.FC<CardFaceContentProps> = ({
       return (
         <Box
           component="img"
-          src={card.backContent.value}
+          src={resolve(card.backContent.value)}
           alt={card.label || 'Card'}
           draggable={false}
           sx={{

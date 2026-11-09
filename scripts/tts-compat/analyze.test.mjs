@@ -43,8 +43,8 @@ test('fixture: parsed by the real importer, tier A, scripts and hosts reported',
       ...r.objects,
       total: 5,
       converted: 4,
-      degraded: 0,
-      dropped: 1,
+      degraded: 1,
+      dropped: 0,
     });
     assert.deepEqual(r.decks, [{ guid: 'deck01', expected: 3, actual: 3 }]);
     assert.equal(r.images.insecure, 0);

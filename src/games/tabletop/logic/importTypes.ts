@@ -17,6 +17,17 @@ export interface ImportReport {
   scripts: { global: boolean; objects: number; xmlUi: boolean };
   /** Image URLs per host (after URL rewriting). */
   imageHosts: Record<string, number>;
+  /** Result of caching the images on this device at import (#693); absent before it ran. */
+  assets?: AssetCacheSummary;
+}
+
+/** Summary of one per-device image cache run (`logic/assetCache.ts`). */
+export interface AssetCacheSummary {
+  total: number;
+  cached: number;
+  failed: number;
+  /** Failed URLs per host (dead or CORS-blocked without proxy). */
+  deadHosts: Record<string, number>;
 }
 
 /** Script layer of one TTS object (or the save itself), kept verbatim and never executed. */

@@ -997,6 +997,7 @@
       "workshop_loading_meta": "Loading mod information...",
       "workshop_downloading": "Downloading mod...",
       "workshop_parsing": "Converting game...",
+      "workshop_caching": "Saving images on this device… {{done}}/{{total}}",
       "workshop_import_via_server": "Import & save locally",
       "workshop_no_file_url": "Steam has no direct download URL. Please upload the JSON file manually.",
       "scripts": {
@@ -1022,7 +1023,9 @@
         "scripts_note": "Scripts are kept and viewable in the editor, but not run yet.",
         "yes": "yes",
         "no": "no",
-        "hosts": "Image hosts: {{hosts}}"
+        "hosts": "Image hosts: {{hosts}}",
+        "assets_cached": "{{cached}} of {{total}} images saved on this device (available offline).",
+        "assets_dead": "{{count}} images unavailable (host): {{hosts}}"
       },
       "workshop_play_now": "Play Now",
       "workshop_success": "Successfully imported \"{{name}}\"!",
@@ -1305,6 +1308,7 @@
         "card_n": "Card {{n}}",
         "card_pile": "Card pile",
         "board": "Board",
+        "model": "Model",
         "zone": "Zone",
         "hand_n": "Player {{n}}",
         "roll_cup_n": "Roll cup {{n}}",

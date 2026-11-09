@@ -66,6 +66,24 @@ export const ImportReportView: React.FC<{ report: ImportReport }> = ({ report })
           })}
         </Typography>
       )}
+      {report.assets && (
+        <Typography variant="body2" data-testid="tabletop-import-assets">
+          {t('games.tabletop.import_report.assets_cached', {
+            cached: report.assets.cached,
+            total: report.assets.total,
+          })}
+        </Typography>
+      )}
+      {report.assets && report.assets.failed > 0 && (
+        <Typography variant="body2" color="warning.main">
+          {t('games.tabletop.import_report.assets_dead', {
+            count: report.assets.failed,
+            hosts: Object.entries(report.assets.deadHosts)
+              .map(([h, n]) => `${h} (${n})`)
+              .join(', '),
+          })}
+        </Typography>
+      )}
     </Stack>
   );
 };

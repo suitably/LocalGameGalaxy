@@ -23,6 +23,7 @@ import { filterBoardHolders, filterBoardWidgets } from '../../logic/boardFilter'
 import { SurfaceSeatControls } from './SurfaceSeatControls';
 import { useFitToScreen } from '../../hooks/useFitToScreen';
 import { BoardDragOverlay } from './BoardDragOverlay';
+import { useAssetUrl } from '../../hooks/useAssetUrls';
 
 interface TabletopSurfaceProps {
   state: TabletopGameState;
@@ -49,6 +50,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
   const [contextMenuPos, setContextMenuPos] = useState<WidgetContextMenuPosition | null>(null);
 
   const { game, flyingCards } = state;
+  const tableImage = useAssetUrl(game.table.backgroundImageUrl);
   const seats = useMemo(() => getSeatWidgets(game.widgets), [game.widgets]);
   // Spectators are read-only: only the seat picker (a local view choice) keeps the real dispatch.
   const { activeSeat, isSpectator, handHolder, dispatch } = useSeatView(state, {
@@ -142,9 +144,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
           transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
           transformOrigin: '0 0',
           bgcolor: game.table.backgroundColor || '#1e3d2f',
-          backgroundImage: game.table.backgroundImageUrl
-            ? `url(${game.table.backgroundImageUrl})`
-            : undefined,
+          backgroundImage: tableImage ? `url(${tableImage})` : undefined,
           backgroundSize: 'cover',
           boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
           borderRadius: 5,

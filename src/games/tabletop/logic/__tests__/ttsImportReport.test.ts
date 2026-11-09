@@ -38,7 +38,7 @@ describe('classifyTtsObject', () => {
     expect(classifyTtsObject('3DText')).toBe('converted');
     expect(classifyTtsObject('ScriptingTrigger')).toBe('converted');
     expect(classifyTtsObject('Checker_White')).toBe('degraded');
-    expect(classifyTtsObject('Custom_Model')).toBe('dropped');
+    expect(classifyTtsObject('Custom_Model')).toBe('degraded');
     expect(classifyTtsObject('Notecard')).toBe('dropped');
   });
 });
@@ -60,10 +60,10 @@ describe('buildImportReport', () => {
 
   it('counts per type and in total', () => {
     const r = buildImportReport(s);
-    expect(r.totals).toEqual({ objects: 8, converted: 5, degraded: 1, dropped: 2 });
+    expect(r.totals).toEqual({ objects: 8, converted: 5, degraded: 2, dropped: 1 });
     expect(r.byType.Card).toEqual({ converted: 2, degraded: 0, dropped: 0 });
     expect(r.byType.Checker_White).toEqual({ converted: 0, degraded: 1, dropped: 0 });
-    expect(r.byType.Custom_Model).toEqual({ converted: 0, degraded: 0, dropped: 1 });
+    expect(r.byType.Custom_Model).toEqual({ converted: 0, degraded: 1, dropped: 0 });
   });
 
   it('lists image hosts after URL rewriting, including nested objects', () => {
@@ -134,7 +134,7 @@ describe('import → save/load round-trip', () => {
 
   it('parseTtsSaveFile attaches report and sidecar', () => {
     const game = parseTtsSaveFile(s);
-    expect(game.importReport?.totals.dropped).toBe(1);
+    expect(game.importReport?.totals.degraded).toBe(1);
     expect(game.scripts?.global?.lua).toBe('g=1');
     expect(game.scripts?.objects.a).toEqual({ lua: 'x=1', tags: ['t'] });
   });
@@ -144,6 +144,14 @@ describe('import → save/load round-trip', () => {
     const loaded = validateAndSanitizeGame(JSON.parse(JSON.stringify(game)));
     expect(loaded.importReport).toEqual(game.importReport);
     expect(loaded.scripts).toEqual(game.scripts);
+  });
+
+  it('keeps the asset cache summary through save/load (#693)', () => {
+    const game = parseTtsSaveFile(s);
+    const assets = { total: 3, cached: 2, failed: 1, deadHosts: { 'i.imgur.com': 1 } };
+    const withAssets = { ...game, importReport: { ...game.importReport!, assets } };
+    const loaded = validateAndSanitizeGame(JSON.parse(JSON.stringify(withAssets)));
+    expect(loaded.importReport?.assets).toEqual(assets);
   });
 
   it('drops malformed report and sidecar fields', () => {

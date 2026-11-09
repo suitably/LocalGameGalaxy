@@ -1,4 +1,4 @@
-import { useState, useEffect, useReducer } from 'react';
+import { useState, useEffect, useReducer, type ReactNode } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Box, CircularProgress, Typography, Button } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBackRounded';
@@ -18,6 +18,7 @@ import { TabletopLobbyView } from './components/views/TabletopLobbyView';
 import { useTabletopSync } from './hooks/useTabletopSync';
 import { usePartyLobbyReturn } from './hooks/usePartyLobbyReturn';
 import { useTabletopAutosave } from './hooks/useTabletopAutosave';
+import { AssetUrlContext, useAssetUrls } from './hooks/useAssetUrls';
 import { TabletopPassAndPlay } from './components/views/TabletopPassAndPlay';
 import { TableGameMenu } from './components/views/TableGameMenu';
 import { TvThemeProvider } from '../../components/common/TvThemeProvider';
@@ -120,6 +121,11 @@ export function TabletopGame() {
     ready: !loading,
     onSnapshot: () => setError(null),
   });
+  // this device's cached copies of the game's images (#693)
+  const resolveAsset = useAssetUrls(gameState.game);
+  const withAssets = (node: ReactNode) => (
+    <AssetUrlContext.Provider value={resolveAsset}>{node}</AssetUrlContext.Provider>
+  );
 
   if (loading) {
     return (
@@ -155,7 +161,7 @@ export function TabletopGame() {
 
   // 1. In Room: TV / Shared Table Mode
   if (roomId && role === 'tv') {
-    return (
+    return withAssets(
       <TvThemeProvider>
         <Box position="relative" width="100%" height="100%">
           <TableGameMenu
@@ -170,13 +176,13 @@ export function TabletopGame() {
           />
           <TabletopEditor state={gameState} dispatch={syncedDispatch} isTvMode={true} />
         </Box>
-      </TvThemeProvider>
+      </TvThemeProvider>,
     );
   }
 
   // 2. In Room: Smartphone Controller Mode (`role=spectator`: no seat, no hand, no drawing)
   if (roomId && (seat !== null || isSpectator)) {
-    return (
+    return withAssets(
       <TabletopControllerView
         state={gameState}
         dispatch={syncedDispatch}
@@ -191,13 +197,13 @@ export function TabletopGame() {
           });
           dispatch({ type: 'ANIMATE_CARD_TO_TABLE', payload: { cardId, targetHolderId } });
         }}
-      />
+      />,
     );
   }
 
   // 3. Local Single Device Pass-and-Play
   if (isLocal) {
-    return (
+    return withAssets(
       <Box display="flex" flexDirection="column" width="100%" height="100%" overflow="hidden">
         <Box flex={1} position="relative" minHeight={0}>
           <TableGameMenu
@@ -210,7 +216,7 @@ export function TabletopGame() {
           <TabletopPassAndPlay state={gameState} dispatch={syncedDispatch} />
         </Box>
         <HandDockStrip state={gameState} dispatch={syncedDispatch} />
-      </Box>
+      </Box>,
     );
   }
 

@@ -517,6 +517,23 @@ function convertToken(
   };
 }
 
+/**
+ * `Custom_Model` (D7): the mesh's diffuse texture as a sprite, else a labelled token. Same rule
+ * top level, in bags and in states; a top-down render of the mesh is slice 11.
+ */
+function convertModel(
+  obj: TTSObjectState,
+  pos: { x: number; y: number; zIndex: number },
+): TokenWidget {
+  const diffuse = sanitizeTtsUrl(obj.CustomMesh?.DiffuseURL) || undefined;
+  return {
+    ...convertToken(obj, pos),
+    image: diffuse,
+    label: obj.Nickname || undefined,
+    ...(obj.Nickname ? {} : { labelKey: 'games.tabletop.labels.model' }),
+  };
+}
+
 function convertHandTrigger(
   obj: TTSObjectState,
   pos: { x: number; y: number; zIndex: number },
@@ -590,6 +607,10 @@ export function parseTtsSaveFile(
   /** Objects inside bags: cards, dice and tiles keep their kind, the rest become tokens. */
   const convertChild = (child: TTSObjectState, p: { x: number; y: number; zIndex: number }) => {
     if (child.Name === 'Card') return convertCard(child, p, globalDecks);
+    if (child.Name === 'Custom_Model') {
+      const model = convertModel(child, p);
+      return { ...model, id: claimId(model.id) };
+    }
     const sides = parseDieSides(child.Name);
     if (sides !== null) {
       const die = convertDie(child, p, sides);
@@ -707,8 +728,11 @@ export function parseTtsSaveFile(
       continue;
     }
 
-    // Custom_Model → ignore (3D meshes can't be rendered in 2D)
-    if (name === 'Custom_Model') continue;
+    // Custom_Model → diffuse texture as sprite, else labelled token (D7)
+    if (name === 'Custom_Model') {
+      putClaimed(convertModel(obj, pos));
+      continue;
+    }
 
     // Figurine_Custom, Custom_Token, backgammon_piece_*, PiecePack_* → Token
     if (
@@ -784,25 +808,21 @@ export function parseTtsSaveFile(
 // ─── Helpers ─────────────────────────────────────────────────────────
 
 /**
- * Rewrites legacy or blocked Steam UGC URLs to modern working CDN endpoints with CORS support.
- * Legacy: http://cloud-3.steamusercontent.com/ugc/... (returns 403 Forbidden)
- * Modern: https://steamusercontent-a.akamaihd.net/ugc/... (returns 200 OK + Access-Control-Allow-Origin: *)
+ * Rewrites TTS asset URLs so the HTTPS PWA can load them (#693, D3):
+ * - legacy Steam UGC `http(s)://cloud-N.steamusercontent.com/…` (403) → the CORS-enabled CDN
+ *   `https://steamusercontent-a.akamaihd.net/…`;
+ * - `http://` → `https://` for **every** host (mixed content is blocked on the PWA; a host
+ *   without HTTPS shows up as dead in the asset report instead of silently blank).
  */
 export function sanitizeTtsUrl(url?: string): string {
-  if (!url) return '';
-  return url
+  const trimmed = url?.trim();
+  if (!trimmed) return '';
+  return trimmed
     .replace(
       /^https?:\/\/cloud-\d+\.steamusercontent\.com\//i,
       'https://steamusercontent-a.akamaihd.net/',
     )
-    .replace(
-      /^http:\/\/steamusercontent-a\.akamaihd\.net\//i,
-      'https://steamusercontent-a.akamaihd.net/',
-    )
-    .replace(
-      /^http:\/\/steamuserimages-a\.akamaihd\.net\//i,
-      'https://steamuserimages-a.akamaihd.net/',
-    );
+    .replace(/^http:\/\//i, 'https://');
 }
 
 /** Recursively collects all CustomDeck entries from the object tree */

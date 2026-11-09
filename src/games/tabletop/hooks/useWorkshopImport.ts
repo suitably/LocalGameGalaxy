@@ -7,6 +7,7 @@ import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { parsePcioFile } from '../logic/pcioParser';
 import { parseTtsSaveFile } from '../logic/ttsParser';
 import { saveTabletopGame } from '../logic/tabletopStorage';
+import { withCachedImages } from '../logic/gameAssetCache';
 import {
   extractWorkshopId,
   fetchWorkshopDetails,
@@ -18,7 +19,14 @@ import type { WorkshopItemDetails } from '../logic/steamWorkshopApi';
 import type { TabletopGameDefinition } from '../logic/types';
 
 export type WorkshopImportStatus =
-  'idle' | 'loading_meta' | 'meta_loaded' | 'downloading' | 'parsing' | 'success' | 'error';
+  | 'idle'
+  | 'loading_meta'
+  | 'meta_loaded'
+  | 'downloading'
+  | 'parsing'
+  | 'caching'
+  | 'success'
+  | 'error';
 
 export interface WorkshopImportState {
   status: WorkshopImportStatus;
@@ -26,6 +34,8 @@ export interface WorkshopImportState {
   game: TabletopGameDefinition | null;
   error: string | null;
   serverAvailable: boolean;
+  /** Images cached so far while `status === 'caching'` (#693). */
+  progress: { done: number; total: number } | null;
 }
 
 export function useWorkshopImport() {
@@ -50,7 +60,18 @@ export function useWorkshopImport() {
     game: null,
     error: null,
     serverAvailable: storage.isHelperActive(),
+    progress: null,
   });
+
+  /** Caches the game's images on this device (with progress), then saves it. */
+  const cacheAndSave = useCallback(async (parsed: TabletopGameDefinition) => {
+    setState((s) => ({ ...s, status: 'caching', progress: null }));
+    const game = await withCachedImages(parsed, (done, total) =>
+      setState((s) => ({ ...s, progress: { done, total } })),
+    );
+    await saveTabletopGame(game);
+    setState((s) => ({ ...s, status: 'success', game, progress: null }));
+  }, []);
 
   const reset = useCallback(() => {
     setState({
@@ -59,6 +80,7 @@ export function useWorkshopImport() {
       game: null,
       error: null,
       serverAvailable: storage.isHelperActive(),
+      progress: null,
     });
   }, []);
 
@@ -135,8 +157,7 @@ export function useWorkshopImport() {
         throw new WorkshopError('no_download_url');
       }
 
-      await saveTabletopGame(game);
-      setState((s) => ({ ...s, status: 'success', game }));
+      await cacheAndSave(game);
     } catch (err) {
       setState((s) => ({
         ...s,
@@ -144,7 +165,7 @@ export function useWorkshopImport() {
         error: errorText(err),
       }));
     }
-  }, [state.meta, errorText]);
+  }, [state.meta, errorText, cacheAndSave]);
 
   /** Parse a manually uploaded TTS JSON file */
   const importFromFile = useCallback(
@@ -158,8 +179,7 @@ export function useWorkshopImport() {
         const game = await parsePcioFile(source, {
           defaultName: file.name.replace(/\.(json|vtt|pcio|zip)$/i, ''),
         });
-        await saveTabletopGame(game);
-        setState((s) => ({ ...s, status: 'success', game }));
+        await cacheAndSave(game);
       } catch (err) {
         setState((s) => ({
           ...s,
@@ -168,7 +188,7 @@ export function useWorkshopImport() {
         }));
       }
     },
-    [errorText],
+    [errorText, cacheAndSave],
   );
 
   return {
