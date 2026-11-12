@@ -1,0 +1,1 @@
+- **Melodiq phone welcome page:** the first time a phone joins, it shows a welcome page to set name, colour and microphone. Phones no longer see the "Profiles" settings section; it stays on the host for local singers.

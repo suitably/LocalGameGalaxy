@@ -13,10 +13,11 @@ import { isPartyRoomCode } from '../../features/party/logic/partyRoom';
 import { universalPartyManager } from '../../features/party/logic/universalPartyManager';
 import { getOrCreatePlayerName } from '../../features/party/logic/playerName';
 import { useFollowPartyLobby } from '../../features/party/hooks/useFollowPartyLobby';
+import { publishClientEngine, useMountedClientEngine } from './hooks/clientEngineStore';
 
 export type { ClientProfile } from './logic/clientProfile';
 
-interface ClientEngineContextType {
+export interface ClientEngineContextType {
   isConnected: boolean;
   statusMessage: string;
   isSessionPlaying: boolean;
@@ -36,7 +37,7 @@ interface ClientEngineContextType {
   updateClientProfile: (updates: Partial<ClientProfile>) => void;
 }
 
-export const ClientEngineContext = createContext<ClientEngineContextType>({
+const DEFAULT_CLIENT_ENGINE: ClientEngineContextType = {
   isConnected: false,
   statusMessage: 'Not connected',
   isSessionPlaying: false,
@@ -52,9 +53,16 @@ export const ClientEngineContext = createContext<ClientEngineContextType>({
   promptedSongId: null,
   setPromptedSongId: () => {},
   updateClientProfile: () => {},
-});
+};
 
-export const useClientEngine = () => useContext(ClientEngineContext);
+const ClientEngineContext = createContext<ClientEngineContextType | null>(null);
+
+/** The phone engine: from the React tree, else the mounted one (settings sheet), else defaults. */
+export const useClientEngine = (): ClientEngineContextType => {
+  const fromTree = useContext(ClientEngineContext);
+  const mounted = useMountedClientEngine();
+  return fromTree ?? mounted ?? DEFAULT_CLIENT_ENGINE;
+};
 
 /** Blocks the phone UI until the WebRTC link to the host is up. */
 const ConnectionOverlay: React.FC<{ message: string }> = ({ message }) => (
@@ -185,26 +193,28 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clientProfile.name, clientProfile.hue, clientProfile.latency, isConnected, resendIdentity]);
 
+  const value: ClientEngineContextType = {
+    isConnected,
+    statusMessage,
+    isSessionPlaying,
+    activeSongId,
+    sendClientCommand,
+    sendClientData: sendData,
+    clientProfile,
+    hostSettings,
+    isHostSettingsOpen,
+    setHostSettingsOpen,
+    updateClientProfile,
+    clientRole,
+    setClientRole,
+    promptedSongId,
+    setPromptedSongId,
+  };
+  useEffect(() => publishClientEngine(value));
+  useEffect(() => () => publishClientEngine(null), []);
+
   return (
-    <ClientEngineContext.Provider
-      value={{
-        isConnected,
-        statusMessage,
-        isSessionPlaying,
-        activeSongId,
-        sendClientCommand,
-        sendClientData: sendData,
-        clientProfile,
-        hostSettings,
-        isHostSettingsOpen,
-        setHostSettingsOpen,
-        updateClientProfile,
-        clientRole,
-        setClientRole,
-        promptedSongId,
-        setPromptedSongId,
-      }}
-    >
+    <ClientEngineContext.Provider value={value}>
       {!isConnected && <ConnectionOverlay message={statusMessage} />}
       {children}
       {clientRole === 'admin' && <RemoteHostSettingsModal />}

@@ -53,6 +53,8 @@ export const GAME_SETTINGS_SECTIONS: Record<string, GameSettingsSectionDefinitio
       titleKey: 'settings.sections.profiles',
       icon: icon(PeopleIcon),
       component: MelodiqProfilesSection,
+      // local singer profiles for the host device; a phone has one profile (client section)
+      audience: 'host',
     },
     {
       id: 'gameplay',
