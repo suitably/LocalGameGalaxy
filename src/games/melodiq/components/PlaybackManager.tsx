@@ -1,5 +1,4 @@
 import { useState, useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
-import { Box } from '@mui/material';
 import { type Song, type SongMeta } from '../db';
 import { type MelodiqSessionHandle } from '../gameplay/MelodiqSession';
 import { PersistentSessionLayer } from './PersistentSessionLayer';
@@ -190,54 +189,52 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         )}
 
         {currentView === 'Home' && (
-          <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1500 }}>
-            <MiniPlayer
-              song={miniPlayerSong}
-              isPlaying={actualIsPlaying}
-              progress={isInRestoredMode ? 0 : playbackState.progress}
-              onTogglePlay={() => {
-                if (isInRestoredMode) {
-                  handleResume(false);
-                } else if (isClient && sendClientCommand) {
-                  sendClientCommand(actualIsPlaying ? 'pause' : 'play');
-                } else if (selectedSong) {
-                  sessionRef.current?.togglePlay();
-                  if (!actualIsPlaying && !isTVConnected) {
-                    onRestoreSession();
-                  }
-                } else if (remoteSong && isTVConnected) {
-                  setPlaybackState((prev) => ({ ...prev, isPlaying: !prev.isPlaying }));
-                  if (actualIsPlaying) {
-                    sendRemoteCommand('PAUSE', {});
-                  } else {
-                    sendRemoteCommand('RESUME', {});
-                  }
-                } else {
-                  // No song selected, try to play from queue
-                  handleMiniPlayerNext();
-                }
-              }}
-              onNext={handleMiniPlayerNext}
-              onMaximize={() => {
-                if (selectedSong) {
+          <MiniPlayer
+            song={miniPlayerSong}
+            isPlaying={actualIsPlaying}
+            progress={isInRestoredMode ? 0 : playbackState.progress}
+            onTogglePlay={() => {
+              if (isInRestoredMode) {
+                handleResume(false);
+              } else if (isClient && sendClientCommand) {
+                sendClientCommand(actualIsPlaying ? 'pause' : 'play');
+              } else if (selectedSong) {
+                sessionRef.current?.togglePlay();
+                if (!actualIsPlaying && !isTVConnected) {
                   onRestoreSession();
-                } else {
-                  // If remote, show feedback
-                  setFeedbackMessage(t('melodiq.playing_on_tv'));
                 }
-              }}
-              onShowQueue={onShowQueue}
-              queueLength={queue.length}
-              isRestored={isInRestoredMode}
-              onRestart={
-                isInRestoredMode && (restoredSong?.currentTime ?? 0) > 0
-                  ? () => handleResume(true)
-                  : undefined
+              } else if (remoteSong && isTVConnected) {
+                setPlaybackState((prev) => ({ ...prev, isPlaying: !prev.isPlaying }));
+                if (actualIsPlaying) {
+                  sendRemoteCommand('PAUSE', {});
+                } else {
+                  sendRemoteCommand('RESUME', {});
+                }
+              } else {
+                // No song selected, try to play from queue
+                handleMiniPlayerNext();
               }
-              isClient={isClient}
-              canControlPlayback={canControlPlayback}
-            />
-          </Box>
+            }}
+            onNext={handleMiniPlayerNext}
+            onMaximize={() => {
+              if (selectedSong) {
+                onRestoreSession();
+              } else {
+                // If remote, show feedback
+                setFeedbackMessage(t('melodiq.playing_on_tv'));
+              }
+            }}
+            onShowQueue={onShowQueue}
+            queueLength={queue.length}
+            isRestored={isInRestoredMode}
+            onRestart={
+              isInRestoredMode && (restoredSong?.currentTime ?? 0) > 0
+                ? () => handleResume(true)
+                : undefined
+            }
+            isClient={isClient}
+            canControlPlayback={canControlPlayback}
+          />
         )}
 
         <PlaybackFeedback message={feedbackMessage} onClose={() => setFeedbackMessage(null)} />
