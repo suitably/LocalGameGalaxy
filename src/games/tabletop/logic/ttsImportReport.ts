@@ -11,11 +11,13 @@ import type { TTSObjectState, TTSSaveFile } from './ttsTypes';
 
 export type ImportOutcome = 'converted' | 'degraded' | 'dropped';
 
-/** Object names `parseTtsSaveFile` skips on purpose (Notecards keep their text as rules). */
+/**
+ * Object names `parseTtsSaveFile` skips on purpose (Notecards keep their text as rules).
+ * `Custom_Model` is not among them: it becomes a sprite or labelled token (#693, D7) → degraded.
+ */
 const isDropped = (name: string) =>
   name === 'Custom_Assetbundle' ||
   name === 'Custom_PDF' ||
-  name === 'Custom_Model' ||
   name.startsWith('Notecard') ||
   name.startsWith('Tablet');
 

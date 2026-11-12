@@ -1,7 +1,7 @@
 /**
  * Sanitizers for the import report and script sidecar [ID: LOGIC-TABLETOP-IMPORT-SANITIZERS]
  */
-import type { ImportReport, GameScripts, ScriptEntry } from './importTypes';
+import type { AssetCacheSummary, ImportReport, GameScripts, ScriptEntry } from './importTypes';
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   Boolean(v) && typeof v === 'object' && !Array.isArray(v);
@@ -47,6 +47,20 @@ function sanitizeCounts(raw: unknown) {
   };
 }
 
+function sanitizeAssetSummary(raw: unknown): AssetCacheSummary | undefined {
+  if (!isRecord(raw)) return undefined;
+  const deadHosts: Record<string, number> = {};
+  for (const [host, n] of Object.entries(isRecord(raw.deadHosts) ? raw.deadHosts : {})) {
+    deadHosts[host] = countOf(n);
+  }
+  return {
+    total: countOf(raw.total),
+    cached: countOf(raw.cached),
+    failed: countOf(raw.failed),
+    deadHosts,
+  };
+}
+
 export function sanitizeImportReport(raw: unknown): ImportReport | undefined {
   if (!isRecord(raw) || raw.source !== 'tts') return undefined;
   const byType: ImportReport['byType'] = {};
@@ -71,5 +85,6 @@ export function sanitizeImportReport(raw: unknown): ImportReport | undefined {
       xmlUi: Boolean(scripts.xmlUi),
     },
     imageHosts,
+    ...(isRecord(raw.assets) ? { assets: sanitizeAssetSummary(raw.assets) } : {}),
   };
 }

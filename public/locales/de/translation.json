@@ -997,6 +997,7 @@
       "workshop_loading_meta": "Lade Mod-Informationen...",
       "workshop_downloading": "Mod wird heruntergeladen...",
       "workshop_parsing": "Spiel wird konvertiert...",
+      "workshop_caching": "Bilder werden auf diesem Gerät gespeichert … {{done}}/{{total}}",
       "workshop_import_via_server": "Importieren & lokal speichern",
       "workshop_no_file_url": "Steam hat keine direkte Download-URL. Bitte lade die JSON-Datei manuell hoch.",
       "scripts": {
@@ -1022,7 +1023,9 @@
         "scripts_note": "Skripte bleiben erhalten und sind im Editor lesbar, werden aber noch nicht ausgeführt.",
         "yes": "ja",
         "no": "nein",
-        "hosts": "Bild-Hosts: {{hosts}}"
+        "hosts": "Bild-Hosts: {{hosts}}",
+        "assets_cached": "{{cached}} von {{total}} Bildern auf diesem Gerät gespeichert (auch offline verfügbar).",
+        "assets_dead": "{{count}} Bilder nicht erreichbar (Host): {{hosts}}"
       },
       "workshop_play_now": "Jetzt spielen",
       "workshop_success": "„{{name}}“ erfolgreich importiert!",
@@ -1338,6 +1341,7 @@
         "card_n": "Karte {{n}}",
         "card_pile": "Kartenstapel",
         "board": "Spielbrett",
+        "model": "Modell",
         "zone": "Ablage",
         "hand_n": "Spieler {{n}}",
         "roll_cup_n": "Becher {{n}} würfeln",

@@ -11,6 +11,7 @@ import {
   CircularProgress,
   Alert,
   Stack,
+  LinearProgress,
 } from '@mui/material';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownloadRounded';
 import UploadFileIcon from '@mui/icons-material/UploadFileRounded';
@@ -35,7 +36,7 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
   const { t } = useTranslation();
   const [url, setUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { status, meta, game, error, loadMeta, importViaServer, importFromFile, reset } =
+  const { status, meta, game, error, progress, loadMeta, importViaServer, importFromFile, reset } =
     useWorkshopImport();
 
   const handleClose = () => {
@@ -55,7 +56,11 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
     if (file) importFromFile(file);
   };
 
-  const isLoading = status === 'loading_meta' || status === 'downloading' || status === 'parsing';
+  const isLoading =
+    status === 'loading_meta' ||
+    status === 'downloading' ||
+    status === 'parsing' ||
+    status === 'caching';
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -131,6 +136,21 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
                 {t('games.tabletop.workshop_parsing', 'Spiel wird konvertiert...')}
               </Typography>
             </Box>
+          )}
+
+          {status === 'caching' && (
+            <Stack spacing={1} data-testid="tabletop-import-caching">
+              <Typography variant="body2">
+                {t('games.tabletop.workshop_caching', {
+                  done: progress?.done ?? 0,
+                  total: progress?.total ?? 0,
+                })}
+              </Typography>
+              <LinearProgress
+                variant={progress ? 'determinate' : 'indeterminate'}
+                value={progress ? (100 * progress.done) / Math.max(1, progress.total) : undefined}
+              />
+            </Stack>
           )}
 
           {/* Error */}

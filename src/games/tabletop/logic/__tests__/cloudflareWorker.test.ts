@@ -65,6 +65,35 @@ describe('Cloudflare worker (Steam Workshop proxy)', () => {
     expect(isSteamFileHost('steamusercontent.com.evil.example')).toBe(false);
   });
 
+  it('proxies images only from allow-listed hosts, over https, image types only (#693)', async () => {
+    const image = (url: string) =>
+      worker.fetch(
+        new Request(`https://nexumia.de/api/steam/image?url=${encodeURIComponent(url)}`),
+        env,
+      );
+    const fetchMock = vi.fn(
+      async () => new Response('png', { headers: { 'Content-Type': 'image/png' } }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const ok = await image('http://i.imgur.com/a.png');
+    expect(ok.status).toBe(200);
+    expect(ok.headers.get('Content-Type')).toBe('image/png');
+    expect((fetchMock.mock.calls[0] as unknown as [string])[0]).toBe('https://i.imgur.com/a.png');
+    expect((await image('https://cdn.akamaihd.net/a.png')).status).toBe(403);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('<html>', { headers: { 'Content-Type': 'text/html' } })),
+    );
+    expect((await image('https://i.imgur.com/removed.png')).status).toBe(415);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('', { status: 404 })),
+    );
+    expect((await image('https://i.imgur.com/gone.png')).status).toBe(502);
+  });
+
   it('serves everything else from the static assets', async () => {
     const res = await worker.fetch(new Request('https://nexumia.de/games/tabletop'), env);
     expect(await res.text()).toBe('app');

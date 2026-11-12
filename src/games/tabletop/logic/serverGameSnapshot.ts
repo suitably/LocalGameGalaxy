@@ -5,6 +5,8 @@
  * from a local folder, `/tabletop/media?…&token=` from the server's asset folders and
  * `/tabletop/proxy-image?url=…&token=`. Before a save these become data URLs (or the original
  * remote URL), so the stored game.json works for every device and never contains a token.
+ * Remote `https://` images (TTS imports) stay remote: each device keeps its own copy in the
+ * per-device cache (`assetCache.ts`, #693) instead of the companion redistributing them.
  */
 import type { TabletopGameDefinition } from './types';
 

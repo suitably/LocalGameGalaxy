@@ -149,6 +149,24 @@ tabletopWorkshopRouter.get('/api/tabletop/workshop/:workshopId', async (c) => {
   }
 });
 
+/**
+ * Image hosts `/tabletop/proxy-image` fetches (#693). Mirrors `PROXY_IMAGE_DOMAINS` in the web
+ * app's `logic/assetCache.ts` and `cloudflare/worker.ts`; only the two Steam Akamai CDN hosts,
+ * not every `*.akamaihd.net` customer.
+ */
+export const PROXY_IMAGE_DOMAINS = [
+  'steamusercontent.com',
+  'steamcommunity.com',
+  'steamusercontent-a.akamaihd.net',
+  'steamuserimages-a.akamaihd.net',
+  'imgur.com',
+];
+
+export function isProxyImageHost(hostname: string): boolean {
+  const host = hostname.toLowerCase();
+  return PROXY_IMAGE_DOMAINS.some((d) => host === d || host.endsWith(`.${d}`));
+}
+
 tabletopWorkshopRouter.get('/tabletop/proxy-image', async (c) => {
   const url = c.req.query('url');
 
@@ -177,15 +195,7 @@ tabletopWorkshopRouter.get('/tabletop/proxy-image', async (c) => {
     const parsedUrl = new URL(url);
     const host = parsedUrl.hostname.toLowerCase();
 
-    const allowedDomains = [
-      'steamusercontent.com',
-      'steamcommunity.com',
-      'imgur.com',
-      'akamaihd.net',
-    ];
-    const isAllowed = allowedDomains.some((d) => host === d || host.endsWith('.' + d));
-
-    if (!isAllowed) {
+    if (!isProxyImageHost(host)) {
       return c.text('Domain not allowed', 403);
     }
 

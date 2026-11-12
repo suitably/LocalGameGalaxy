@@ -3,6 +3,7 @@ import { alpha, Box, Typography, Chip } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { HolderWidget } from '../../logic/types';
 import { transitionOf } from '../../../../lib/motion';
+import { useAssetUrl } from '../../hooks/useAssetUrls';
 
 interface HolderWidgetViewProps {
   widget: HolderWidget;
@@ -22,6 +23,7 @@ export const HolderWidgetView = React.memo(function HolderWidgetView({
     widget.label?.toLowerCase().includes('schachbrett') ||
     widget.label?.toLowerCase().includes('checker');
   const rot = widget.rotation || 0;
+  const image = useAssetUrl(widget.image);
 
   if (widget.image) {
     return (
@@ -40,7 +42,7 @@ export const HolderWidgetView = React.memo(function HolderWidgetView({
       >
         <Box
           component="img"
-          src={widget.image}
+          src={image}
           alt={widget.label || 'Holder'}
           sx={{
             width: '100%',
