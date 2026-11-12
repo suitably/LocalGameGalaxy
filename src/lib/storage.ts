@@ -25,6 +25,8 @@ export const STORAGE_KEYS = {
 
   // Client connection states
   CLIENT_PROFILE: 'melodiq_client_profile',
+  /** Set once the phone has seen the Melodiq welcome page (first join). */
+  MELODIQ_CLIENT_WELCOMED: 'melodiq_client_welcomed',
   PROFILES: 'melodiq_profiles',
   ACTIVE_SESSION: 'melodiq_active_session',
   CURRENT_SONG_PARTICIPANTS: 'melodiq_current_song_participants',

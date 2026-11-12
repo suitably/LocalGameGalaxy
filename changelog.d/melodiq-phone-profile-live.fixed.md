@@ -1,0 +1,1 @@
+- **Melodiq phone profile edits apply live:** changing name, colour, microphone or latency in a phone's game settings did nothing, because the settings sheet sat outside the phone engine. The changes now save and reach the host while connected.

@@ -27,6 +27,7 @@ import { HostQueueDrawer } from './components/HostQueueDrawer';
 import { SongActionDialogs } from './components/SongActionDialogs';
 import { useMelodiqHeader } from './hooks/useMelodiqHeader';
 import { DownloadWaitScreen } from './components/DownloadWaitScreen';
+import { PhoneWelcomeDialog } from './components/PhoneWelcomeDialog';
 
 // Initialize i18n bundles at module load time to prevent setState side-effects during render
 initMelodiqI18n();
@@ -229,6 +230,7 @@ export const MelodiqGame: React.FC = () => {
     </WebRTCProvider>
   ) : (
     <PhoneClientEngine>
+      <PhoneWelcomeDialog />
       <WebRTCMockProvider>
         <SongsProvider>
           <QueueProvider>

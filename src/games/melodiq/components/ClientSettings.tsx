@@ -21,9 +21,11 @@ type DisplayMode = 'lyrics' | 'self' | 'all';
 interface ClientSettingsProps {
   /** Called after Save / on Cancel. Omit when embedded in a settings section (no back button). */
   onBack?: () => void;
+  /** Label of the back button (default: Cancel). */
+  backLabel?: string;
 }
 
-export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack }) => {
+export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack, backLabel }) => {
   const { t } = useTranslation();
   const { clientProfile, updateClientProfile, sendClientCommand, activeSongId } = useClientEngine();
 
@@ -191,7 +193,7 @@ export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack }) => {
         <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
           {onBack && (
             <Button variant="outlined" onClick={onBack} fullWidth>
-              {t('common.cancel', 'Cancel')}
+              {backLabel ?? t('common.cancel', 'Cancel')}
             </Button>
           )}
           <Button variant="contained" onClick={handleSave} fullWidth>

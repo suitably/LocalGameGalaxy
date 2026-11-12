@@ -7,6 +7,11 @@ export const melodiqResources = {
         load: 'Load YouTube video',
         hint: 'The background video comes from YouTube (Google). Loading it sends your IP address to Google. Your choice is remembered on this device.',
       },
+      welcome: {
+        title: 'Welcome to Melodiq!',
+        body: 'Set up your profile: name, colour and microphone. You can change it later in the settings.',
+        skip: 'Skip',
+      },
       join_prompt: {
         title: 'Session in progress',
         body: 'A song is currently playing. How would you like to join?',
@@ -361,6 +366,11 @@ export const melodiqResources = {
       youtube_consent: {
         load: 'YouTube-Video laden',
         hint: 'Das Hintergrundvideo kommt von YouTube (Google). Beim Laden erhält Google deine IP-Adresse. Deine Wahl wird auf diesem Gerät gespeichert.',
+      },
+      welcome: {
+        title: 'Willkommen bei Melodiq!',
+        body: 'Richte dein Profil ein: Name, Farbe und Mikrofon. Du kannst es später in den Einstellungen ändern.',
+        skip: 'Überspringen',
       },
       join_prompt: {
         title: 'Session läuft',
