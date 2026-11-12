@@ -6,9 +6,14 @@ import { type PlayerRuntime } from '../hooks/PlayerRuntime';
 import { useMelodiqSettings } from '../../hooks/SettingsContext';
 import type { LyricsRows } from '../logic/lyricsFit';
 import { HostPartToggle } from './HostPartToggle';
+import { useStackedStage } from '../hooks/useStackedStage';
 
 /** Wide enough that each duet lane keeps a readable font on a 1080p TV. */
 const LYRICS_MAX_WIDTH = '1800px';
+
+/** Centered lyrics on a big screen; a portrait phone's lane is narrow, so they grow less there. */
+const CENTER_LYRICS_SCALE = 1.45;
+const STACKED_CENTER_LYRICS_SCALE = 1.2;
 
 /** TV lyrics relative to the x2 TV UI (`uiScale`, only set by MelodiqTV): 54px instead of 72px on 1080p. */
 const TV_LYRICS_SCALE = 0.75;
@@ -87,6 +92,7 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
 }) => {
   const { settings } = useMelodiqSettings();
   const { lyricsRows, lyricsMinFit } = settings;
+  const stacked = useStackedStage();
   const trackNames = (parsedSong.tracks ?? []).map((t) => t.name);
   const lyricsScale = lyricsUiScale * (uiScale > 1 ? TV_LYRICS_SCALE : 1);
   const lyricsProps: LyricsBarProps = {
@@ -100,7 +106,8 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
   };
 
   if (visiblePlayers.length === 0) {
-    if (activeLyricsPosition === 'center') {
+    // Without pitch lanes a phone would show an empty stage above a small bar: centre the lyrics.
+    if (activeLyricsPosition === 'center' || stacked) {
       return (
         <Box
           sx={{
@@ -118,7 +125,7 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
             <LyricsDisplay
               song={parsedSong}
               audioRef={timeProxyRef}
-              uiScale={lyricsScale * 1.45}
+              uiScale={lyricsScale * (stacked ? STACKED_CENTER_LYRICS_SCALE : CENTER_LYRICS_SCALE)}
               enableZoom={activeLyricsZoom}
               lyricsLines={activeLyricsLines}
               lyricsRows={lyricsRows}

@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Box, useMediaQuery, useTheme } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { type SongWithNotes } from './PitchVisualizer';
 import { LyricsLane } from './lyrics/LyricsLane';
 import { useSongLyricsFit } from './lyrics/useSongLyricsFit';
 import { useLyricsPartChoice } from './lyrics/LyricsPartContext';
 import { PartMicButton } from './lyrics/PartMicButton';
+import { DuetPart } from './lyrics/DuetPart';
+import { useStackedStage } from './hooks/useStackedStage';
 import { DEFAULT_LYRICS_MIN_FIT, type LyricsRows } from './logic/lyricsFit';
 
 export interface LyricsDisplayProps {
@@ -60,6 +62,7 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(
 
     const isDuet = !!song.tracks && song.tracks.length > 1;
     const isSmallScreen = useMediaQuery('(max-width:600px), (max-height:500px)');
+    const stacked = useStackedStage();
     // Singer colours come from the piece palette: solo = teal, duet = blue / pink.
     const { piece } = theme.palette;
     // Phones only: a mic per part to pick it, or to join the song while watching.
@@ -97,7 +100,8 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(
           width: '100%',
           maxWidth: '100%',
           boxSizing: 'border-box',
-          flexDirection: isDuet ? 'row' : 'column', // Duets: 50/50 split, Solo: centered column
+          // Duets: 50/50 split, stacked on a portrait phone. Solo: centered column.
+          flexDirection: isDuet && !stacked ? 'row' : 'column',
         }}
       >
         {isDuet ? (
@@ -105,48 +109,25 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(
             { track: song.tracks![0], color: piece.blue, fallback: 'Player 1' },
             { track: song.tracks![1], color: piece.pink, fallback: 'Player 2' },
           ].map(({ track, color, fallback }, idx) => (
-            <Box
+            <DuetPart
               key={idx}
-              sx={{
-                flex: 1,
-                minWidth: 0, // Long no-wrap lines must shrink to the lane, not push it off screen
-                px: { xs: 1, md: 2 },
-                ...(idx === 0 && { borderRight: 1, borderColor: 'divider' }),
-              }}
-            >
-              <LyricsLane
-                notes={track.notes}
-                color={color}
-                align="center"
-                laneRef={idx === 0 ? laneRef : undefined}
-                {...laneProps}
-              />
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 1,
-                  mt: 0.5,
-                }}
-              >
-                {partChoice && (
-                  <PartMicButton
-                    color={color}
-                    active={partChoice.activeTrack === idx}
-                    partName={track.name || fallback}
-                    onClick={() => partChoice.select(idx, trackCount)}
-                  />
-                )}
-                {/* Track name pairs with the lane colour, so colour is never the only signal. */}
-                <Typography
-                  variant="caption"
-                  sx={{ color, fontSize: isSmallScreen ? '0.75rem' : '0.875rem' }}
-                >
-                  {track.name || fallback}
-                </Typography>
-              </Box>
-            </Box>
+              notes={track.notes}
+              color={color}
+              partName={track.name || fallback}
+              stacked={stacked}
+              first={idx === 0}
+              isSmallScreen={isSmallScreen}
+              laneRef={idx === 0 ? laneRef : undefined}
+              laneProps={laneProps}
+              mic={
+                partChoice
+                  ? {
+                      active: partChoice.activeTrack === idx,
+                      onClick: () => partChoice.select(idx, trackCount),
+                    }
+                  : undefined
+              }
+            />
           ))
         ) : (
           <>

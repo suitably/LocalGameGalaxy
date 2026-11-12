@@ -36,10 +36,11 @@ export const SessionTopControls: React.FC<SessionTopControlsProps> = ({
           left: 0,
           width: '100%',
           zIndex: 20,
-          p: 2,
+          p: { xs: 1, sm: 2 },
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          gap: 1,
           bgcolor: 'rgba(0,0,0,0.5)',
           pointerEvents: isUIVisible ? 'auto' : 'none',
           opacity: isUIVisible ? 1 : 0,
@@ -53,11 +54,23 @@ export const SessionTopControls: React.FC<SessionTopControlsProps> = ({
             </IconButton>
           )}
         </Box>
-        {/* the TV theme scales the variant (x1.5, 20px floor); no hard-coded size (#554) */}
-        <Typography variant="h6">
-          {artist} - {title}
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 4, pointerEvents: 'none' }}>
+        {isTVMode ? (
+          // the TV theme scales the variant (x1.5, 20px floor); no hard-coded size (#554)
+          <Typography variant="h6">
+            {artist} - {title}
+          </Typography>
+        ) : (
+          // Phone and desktop: one line each, so a long title never pushes the stage down.
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="subtitle1" noWrap sx={{ fontWeight: 600, lineHeight: 1.3 }}>
+              {title}
+            </Typography>
+            <Typography variant="body2" noWrap sx={{ color: 'text.secondary' }}>
+              {artist}
+            </Typography>
+          </Box>
+        )}
+        <Box sx={{ display: 'flex', gap: 4, pointerEvents: 'none', flexShrink: 0 }}>
           <ScoreDisplay
             ref={scoreDisplayRef}
             players={visiblePlayers.map((p) => ({
