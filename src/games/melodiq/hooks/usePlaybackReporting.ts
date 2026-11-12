@@ -23,6 +23,8 @@ export const IDLE_PLAYBACK_STATE: PlaybackState = {
 export function usePlaybackReporting(
   selectedSong: Song | null,
   sendGameUpdate?: (state: Record<string, unknown>) => void,
+  /** Host only: whether the session shows its results, so phones switch to them too. */
+  isSessionFinished?: () => boolean,
 ) {
   const [playbackState, setPlaybackState] = useState<PlaybackState>(IDLE_PLAYBACK_STATE);
 
@@ -30,10 +32,12 @@ export function usePlaybackReporting(
   // This ref allows the playback callback to access broadcast without being a dependency
   const sendGameUpdateRef = useRef(sendGameUpdate);
   const selectedSongRef = useRef(selectedSong);
+  const isSessionFinishedRef = useRef(isSessionFinished);
 
   useEffect(() => {
     sendGameUpdateRef.current = sendGameUpdate;
     selectedSongRef.current = selectedSong;
+    isSessionFinishedRef.current = isSessionFinished;
   });
 
   // Send stop state when song is deselected or sendGameUpdate changes
@@ -63,6 +67,7 @@ export function usePlaybackReporting(
       if (sendGameUpdateRef.current && song) {
         sendGameUpdateRef.current({
           ...state,
+          ...(isSessionFinishedRef.current ? { isFinished: isSessionFinishedRef.current() } : {}),
           activeSongId: song.id,
           activeSong: { id: song.id, title: song.title, artist: song.artist },
         });

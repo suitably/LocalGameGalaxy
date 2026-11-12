@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
+import { useTranslation } from 'react-i18next';
 
 interface ScoreBoardFooterProps {
   isPassive?: boolean;
@@ -10,6 +11,8 @@ interface ScoreBoardFooterProps {
   onExit: (forceHome?: boolean) => void;
   onResume?: () => void;
   onCancelAutoPlay: () => void;
+  /** Passive phones: leave the results for this device only; the host keeps the session. */
+  onMainMenu?: () => void;
 }
 
 export const ScoreBoardFooter: React.FC<ScoreBoardFooterProps> = ({
@@ -20,13 +23,31 @@ export const ScoreBoardFooter: React.FC<ScoreBoardFooterProps> = ({
   onExit,
   onResume,
   onCancelAutoPlay,
+  onMainMenu,
 }) => {
+  const { t } = useTranslation();
+  // Without host rights there is no continue / next: only the host advances the queue
   if (isPassive) {
     return (
-      <Box sx={{ mt: 3, pt: 2, display: 'flex', justifyContent: 'center' }}>
+      <Box
+        sx={{
+          mt: 3,
+          pt: 2,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+          gap: 2,
+        }}
+      >
         <Typography variant="h6" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-          Waiting for Host to continue...
+          {t('melodiq.scoreboard_waiting_host')}
         </Typography>
+        {onMainMenu && (
+          <Button variant="outlined" color="inherit" size="large" onClick={onMainMenu}>
+            {t('melodiq.scoreboard_main_menu')}
+          </Button>
+        )}
       </Box>
     );
   }

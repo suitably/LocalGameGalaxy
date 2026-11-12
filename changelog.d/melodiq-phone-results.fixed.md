@@ -1,0 +1,1 @@
+- **Phones show the results** (Melodiq): phones now switch to the results with the host when a song ends instead of staying on the lyrics; they show the points, cannot continue or skip, and can leave to the main menu on their own.
