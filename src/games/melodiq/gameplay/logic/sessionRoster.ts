@@ -101,3 +101,38 @@ export function isWantedByHost(
   const keys = collectSessionKeys(override);
   return ids.some((id) => Boolean(id) && keys.has(id as string));
 }
+
+/** A connected phone as the host knows it. */
+export interface JoiningPhone {
+  deviceId?: string;
+  peerId: string;
+  name?: string;
+  hue?: number;
+}
+
+/**
+ * Host list with a phone that tapped a part mic added as a guest singer (same entry shape as a
+ * phone toggled in the participant dialog). Null when nothing changes: no host list (everyone
+ * sings already) or the phone is listed.
+ */
+export function addJoiningPhone(
+  override: ActivePlayer[] | null | undefined,
+  phone: JoiningPhone,
+): ActivePlayer[] | null {
+  if (!override) return null;
+  if (isWantedByHost(override, [phone.deviceId, phone.peerId])) return null;
+  const id = phone.deviceId || phone.peerId;
+  return [
+    ...override,
+    {
+      profileId: id,
+      deviceId: id,
+      volume: 0.8,
+      muted: false,
+      latency: 0,
+      isRemote: true,
+      name: phone.name,
+      hue: phone.hue,
+    },
+  ];
+}

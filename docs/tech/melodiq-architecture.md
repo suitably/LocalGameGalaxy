@@ -9,7 +9,7 @@ generated:
   at: 2026-09-27T10:00:00Z
   by: previous-agent
 verified:
-  at: 2026-10-18
+  at: 2026-11-12
   method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
@@ -64,11 +64,12 @@ Melodiq follows a strict separation of concerns, divided into domains:
 - `useQueue.ts` persists the running song as `STORAGE_KEYS.NOW_PLAYING`; `usePlaybackReporting.ts` writes its position about once per second to `STORAGE_KEYS.MELODIQ_SAVED_TIME` (`{ id, time }`).
 - `useMelodiqPlayback.ts` seeds `restoredSong` from `NOW_PLAYING` plus the saved position (`logic/savedPlayback.ts`). The MiniPlayer shows it as "Paused"; resume (`useRestoredResume.ts`) continues at that position, the restart button plays it from the beginning and drops the saved position.
 
-### 2.6 Duet part choice on the phone
+### 2.6 Part choice and joining on the phone
 
-- Duet songs have several `parsedSong.tracks`. The host sends each phone that has a singer `songInfo` with the part names and that singer's `trackIndex` (`useBroadcastSongInfo.ts`); it is re-sent when players join or leave and whenever a remote singer's part changes, also when the host switched it itself.
-- On a phone (`isClient`), `usePhoneClientMessages.ts` reads it (`parseAssignedTrack` in `gameplay/logic/trackChoice.ts`) and hands it to `usePhoneTrackChoice.ts` (`reportTrackAssignment`). The hook shows `PhoneTrackPicker.tsx` (P1 / P2) for a duet once the host has reported a part (and, when a host session list exists, the phone is on it), and sends `{ type: 'trackSelect', trackIndex }` through `sendClientData` of `PhoneClientEngine.tsx`. The phone does not parse the song for this.
-- The host maps it to the phone's singer by peer id (`usePeerSessionMessages.ts`) and calls `switchTrack`, which triggers the next `songInfo`. The choice is re-sent after a reconnect.
+- The host sends every phone that has a player `songInfo` with the part names, that player's `trackIndex` and `singing` (false while the player is hidden, i.e. a spectator) (`useBroadcastSongInfo.ts`); it is re-sent when players join or leave and whenever a remote player's part or visibility changes.
+- On a phone (`isClient`), `usePhoneClientMessages.ts` reads it (`parseAssignedTrack` in `gameplay/logic/trackChoice.ts`) and hands it to `usePhoneTrackChoice.ts` (`reportTrackAssignment`). `PhonePartChoiceProvider.tsx` (mounted by `PersistentSessionLayer.tsx` only on phones) puts the hook's result in `LyricsPartContext`; `LyricsDisplay.tsx` then shows a `PartMicButton` per duet lane in the lane colour (blue / pink), filled for the part the phone sings, and for solo songs a join mic while the phone only watches. Host and TV render no mics.
+- Tapping a mic sends `{ type: 'trackSelect', trackIndex }` through `sendClientData` of `PhoneClientEngine.tsx`. On the host, `usePeerSessionMessages.ts` unhides a hidden player the host list allows and calls `switchTrack`; `useHostPhoneJoin.ts` adds a phone that is not on the host's singer list (`addJoiningPhone` in `logic/sessionRoster.ts`, same entry as the participant dialog), so `useSessionOverrideSync` creates its singer. The phone asks for its part again until `songInfo` reports it (`pendingTrackRequest`), and re-sends it after a reconnect.
+- The host's own P1 / P2 switch (`HostPartToggle.tsx`) is shown only for local-mic singers; phone singers pick their own part.
 
 ### 2.7 Remote host settings (phone to host RPC)
 

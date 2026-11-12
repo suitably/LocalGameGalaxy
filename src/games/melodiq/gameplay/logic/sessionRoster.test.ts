@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { storage, STORAGE_KEYS } from '../../../../lib/storage';
 import {
   BOT_PLAYER_CONFIG,
+  addJoiningPhone,
   assignMicSlots,
   buildInitialConfigs,
   isWantedByHost,
@@ -83,5 +84,36 @@ describe('sessionRoster (#418)', () => {
     expect(isWantedByHost(list, [undefined, 'd1'])).toBe(true);
     expect(isWantedByHost(list, ['a'])).toBe(true);
     expect(isWantedByHost(list, ['z', undefined])).toBe(false);
+  });
+
+  it('adds a joining phone to the host list once', () => {
+    const list: ActivePlayer[] = [{ profileId: 'a', deviceId: 'd1' }];
+    const phone = { deviceId: 'dev-9', peerId: 'peer-9', name: 'Max', hue: 300 };
+    expect(addJoiningPhone(list, phone)).toEqual([
+      ...list,
+      {
+        profileId: 'dev-9',
+        deviceId: 'dev-9',
+        volume: 0.8,
+        muted: false,
+        latency: 0,
+        isRemote: true,
+        name: 'Max',
+        hue: 300,
+      },
+    ]);
+    expect(addJoiningPhone([...list, { profileId: 'dev-9', deviceId: 'dev-9' }], phone)).toBeNull();
+  });
+
+  it('leaves sessions without a host list alone', () => {
+    expect(addJoiningPhone(null, { peerId: 'p' })).toBeNull();
+    expect(addJoiningPhone(undefined, { peerId: 'p' })).toBeNull();
+  });
+
+  it('falls back to the peer id for phones without a device id', () => {
+    expect(addJoiningPhone([], { peerId: 'p1' })?.[0]).toMatchObject({
+      profileId: 'p1',
+      deviceId: 'p1',
+    });
   });
 });

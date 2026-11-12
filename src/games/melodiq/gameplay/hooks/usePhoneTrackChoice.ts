@@ -4,12 +4,13 @@ import type { ActivePlayer } from '../../types';
 import { isWantedByHost } from '../logic/sessionRoster';
 import {
   buildTrackSelectMessage,
-  isDuet,
+  pendingTrackRequest,
   TRACK_ASSIGNED_EVENT,
   type TrackAssignment,
 } from '../logic/trackChoice';
+import type { LyricsPartChoice } from '../lyrics/LyricsPartContext';
 
-// The host's last `songInfo` may arrive before the picker mounts.
+// The host's last `songInfo` may arrive before the lyrics mount.
 let lastAssignment: TrackAssignment | null = null;
 
 /** Called by the phone's message router for every `songInfo` with a part. */
@@ -19,62 +20,73 @@ export function reportTrackAssignment(assignment: TrackAssignment) {
 }
 
 interface Args {
-  isClient: boolean;
   clientDeviceId?: string;
   activeSessionOverride?: ActivePlayer[] | null;
 }
 
 /**
- * Phone side of the duet part choice: keeps the chosen part (P1 = 0, P2 = 1) and sends it to the
- * host as `trackSelect`. The host maps it to this phone's singer by peer id
- * (`usePeerSessionMessages`). Re-sent after a reconnect, because the host then creates a new singer.
- * Part names and the current part come from the host's `songInfo` (sent only to phones that have a
- * singer), so the phone does not parse the song for this and a switch made on the host shows here.
+ * Phone side of the part choice behind the lyrics' part mics: the singer picks its own part, a
+ * spectator joins the song with it. Both send `trackSelect`; the host switches this phone's singer
+ * (`usePeerSessionMessages`) or first adds the phone to its singer list (`useHostPhoneJoin`). The
+ * wanted part is asked for again until the host's `songInfo` reports it, because a joining phone
+ * gets its singer (on P1) only after the list change. Re-sent after a reconnect, too.
  */
-export function usePhoneTrackChoice({ isClient, clientDeviceId, activeSessionOverride }: Args) {
+export function usePhoneTrackChoice({
+  clientDeviceId,
+  activeSessionOverride,
+}: Args): LyricsPartChoice {
   const { sendClientData, isConnected } = useClientEngine();
   const [assignment, setAssignment] = useState<TrackAssignment | null>(() => lastAssignment);
-  const trackNames = assignment?.tracks ?? [];
-  const trackIndex = assignment?.trackIndex ?? 0;
-  const trackCount = trackNames.length;
+  const desiredRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!isClient) return;
     const onAssigned = (e: Event) => setAssignment((e as CustomEvent<TrackAssignment>).detail);
     window.addEventListener(TRACK_ASSIGNED_EVENT, onAssigned);
     return () => window.removeEventListener(TRACK_ASSIGNED_EVENT, onAssigned);
-  }, [isClient]);
+  }, []);
 
-  // `songInfo` already means the host has a singer for this phone; a host list must agree too.
-  const canChoose =
-    isClient &&
-    isDuet(trackCount) &&
+  // `songInfo` means the host has a player for this phone; it sings unless hidden or unlisted.
+  const singing =
+    !!assignment?.singing &&
     (!activeSessionOverride || isWantedByHost(activeSessionOverride, [clientDeviceId]));
+  const current = singing ? assignment : null;
 
   const send = useCallback(
-    (index: number) => {
+    (index: number, trackCount: number) => {
       const message = buildTrackSelectMessage(index, trackCount);
       if (message) sendClientData(message);
     },
-    [sendClientData, trackCount],
+    [sendClientData],
   );
 
   const select = useCallback(
-    (index: number) => {
-      setAssignment((prev) => {
-        lastAssignment = prev && { ...prev, trackIndex: index };
-        return lastAssignment;
-      });
-      send(index);
+    (index: number, trackCount: number) => {
+      desiredRef.current = index;
+      if (singing) {
+        setAssignment((prev) => {
+          lastAssignment = prev && { ...prev, trackIndex: index };
+          return lastAssignment;
+        });
+      }
+      send(index, trackCount);
     },
-    [send],
+    [send, singing],
   );
+
+  // A joining phone first gets a singer on the host's default part: ask for the wanted one again.
+  useEffect(() => {
+    const pending = pendingTrackRequest(desiredRef.current, current);
+    desiredRef.current = pending;
+    if (pending !== null && current) send(pending, current.tracks.length);
+  }, [current, send]);
 
   const wasConnectedRef = useRef(isConnected);
   useEffect(() => {
-    if (isConnected && !wasConnectedRef.current && canChoose && trackIndex > 0) send(trackIndex);
+    if (isConnected && !wasConnectedRef.current && current && current.trackIndex > 0) {
+      send(current.trackIndex, current.tracks.length);
+    }
     wasConnectedRef.current = isConnected;
-  }, [isConnected, canChoose, trackIndex, send]);
+  }, [isConnected, current, send]);
 
-  return { canChoose, trackIndex, select, trackNames };
+  return { activeTrack: current ? current.trackIndex : null, select };
 }

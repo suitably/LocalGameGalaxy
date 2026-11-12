@@ -25,13 +25,27 @@ export const TRACK_ASSIGNED_EVENT = 'melodiq_track_assigned';
 export interface TrackAssignment {
   tracks: string[];
   trackIndex: number;
+  /** False while the phone's player is hidden (spectator); older hosts omit it. */
+  singing: boolean;
 }
 
 /** Reads the host's `songInfo`; null without a valid part (e.g. a host that does not send one). */
 export function parseAssignedTrack(data: Record<string, unknown>): TrackAssignment | null {
-  const { trackIndex, tracks } = data;
+  const { trackIndex, tracks, singing } = data;
   if (!Array.isArray(tracks) || !tracks.every((t) => typeof t === 'string')) return null;
   if (typeof trackIndex !== 'number' || !Number.isInteger(trackIndex)) return null;
   if (trackIndex < 0 || trackIndex >= tracks.length) return null;
-  return { tracks, trackIndex };
+  return { tracks, trackIndex, singing: singing !== false };
+}
+
+/**
+ * Part this phone still has to ask the host for: `desired` while the host reports another part
+ * (e.g. right after a spectator joined and got a new singer on P1), otherwise null.
+ */
+export function pendingTrackRequest(
+  desired: number | null,
+  assignment: TrackAssignment | null,
+): number | null {
+  if (desired === null || !assignment || !assignment.singing) return desired;
+  return assignment.trackIndex === desired ? null : desired;
 }

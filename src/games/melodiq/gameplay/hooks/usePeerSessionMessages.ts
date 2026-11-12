@@ -125,6 +125,17 @@ export function usePeerSessionMessages<R extends RemoteResultEntry>(
       const msg = (data ?? {}) as PeerMessage;
       const { playersRef, switchTrack, setResults } = propsRef.current;
       if (msg.type === 'trackSelect' && typeof msg.trackIndex === 'number') {
+        // A spectator's part mic also means "I sing now"; a phone off the host list is added
+        // there first (useHostPhoneJoin) and becomes visible through the override sync.
+        const { activeSessionOverride } = propsRef.current;
+        updatePhonePlayer(peerId, (p) => {
+          if (!p.config.hidePitch) return false;
+          if (!isWantedByHost(activeSessionOverride, [p.config.deviceId, p.config.id, peerId])) {
+            return false;
+          }
+          p.config.hidePitch = false;
+          return true;
+        });
         const idx = playersRef.current.findIndex((p) => p.remotePeerId === peerId);
         if (idx !== -1) switchTrack(idx, msg.trackIndex);
       } else if (msg.type === 'history_report') {

@@ -1,8 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { type SongWithNotes } from './PitchVisualizer';
 import { LyricsLane } from './lyrics/LyricsLane';
 import { useSongLyricsFit } from './lyrics/useSongLyricsFit';
+import { useLyricsPartChoice } from './lyrics/LyricsPartContext';
+import { PartMicButton } from './lyrics/PartMicButton';
 import { DEFAULT_LYRICS_MIN_FIT, type LyricsRows } from './logic/lyricsFit';
 
 export interface LyricsDisplayProps {
@@ -51,6 +54,7 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(
     lyricsMinFit = DEFAULT_LYRICS_MIN_FIT,
   }) => {
     const theme = useTheme();
+    const { t } = useTranslation();
     const bpm = song.bpm || 120;
     const currentBeat = useCurrentBeat(audioRef, song.gap || 0, bpm);
 
@@ -58,6 +62,9 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(
     const isSmallScreen = useMediaQuery('(max-width:600px), (max-height:500px)');
     // Singer colours come from the piece palette: solo = teal, duet = blue / pink.
     const { piece } = theme.palette;
+    // Phones only: a mic per part to pick it, or to join the song while watching.
+    const partChoice = useLyricsPartChoice();
+    const trackCount = song.tracks?.length ?? 1;
 
     const trackNotes = useMemo(() => {
       if (song.tracks && song.tracks.length > 0) return song.tracks.map((track) => track.notes);
@@ -114,29 +121,53 @@ export const LyricsDisplay: React.FC<LyricsDisplayProps> = React.memo(
                 laneRef={idx === 0 ? laneRef : undefined}
                 {...laneProps}
               />
-              {/* Track name pairs with the lane colour, so colour is never the only signal. */}
-              <Typography
-                variant="caption"
+              <Box
                 sx={{
-                  display: 'block',
-                  textAlign: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1,
                   mt: 0.5,
-                  color,
-                  fontSize: isSmallScreen ? '0.75rem' : '0.875rem',
                 }}
               >
-                {track.name || fallback}
-              </Typography>
+                {partChoice && (
+                  <PartMicButton
+                    color={color}
+                    active={partChoice.activeTrack === idx}
+                    partName={track.name || fallback}
+                    onClick={() => partChoice.select(idx, trackCount)}
+                  />
+                )}
+                {/* Track name pairs with the lane colour, so colour is never the only signal. */}
+                <Typography
+                  variant="caption"
+                  sx={{ color, fontSize: isSmallScreen ? '0.75rem' : '0.875rem' }}
+                >
+                  {track.name || fallback}
+                </Typography>
+              </Box>
             </Box>
           ))
         ) : (
-          <LyricsLane
-            notes={trackNotes[0]}
-            laneRef={laneRef}
-            color={piece.teal}
-            align="center"
-            {...laneProps}
-          />
+          <>
+            <LyricsLane
+              notes={trackNotes[0]}
+              laneRef={laneRef}
+              color={piece.teal}
+              align="center"
+              {...laneProps}
+            />
+            {partChoice && partChoice.activeTrack === null && (
+              <Box sx={{ mt: 0.5 }}>
+                <PartMicButton
+                  color={piece.teal}
+                  active={false}
+                  partName={song.tracks?.[0]?.name || t('melodiq.solo_part')}
+                  onClick={() => partChoice.select(0, trackCount)}
+                />
+              </Box>
+            )}
+          </>
         )}
       </Box>
     );

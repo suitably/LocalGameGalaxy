@@ -1,10 +1,11 @@
 import React from 'react';
-import { alpha, Box, Button } from '@mui/material';
+import { alpha, Box } from '@mui/material';
 import { LyricsDisplay } from '../LyricsDisplay';
 import { PitchVisualizer, type SongWithNotes } from '../PitchVisualizer';
 import { type PlayerRuntime } from '../hooks/PlayerRuntime';
 import { useMelodiqSettings } from '../../hooks/SettingsContext';
 import type { LyricsRows } from '../logic/lyricsFit';
+import { HostPartToggle } from './HostPartToggle';
 
 /** Wide enough that each duet lane keeps a readable font on a 1080p TV. */
 const LYRICS_MAX_WIDTH = '1800px';
@@ -86,6 +87,7 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
 }) => {
   const { settings } = useMelodiqSettings();
   const { lyricsRows, lyricsMinFit } = settings;
+  const trackNames = (parsedSong.tracks ?? []).map((t) => t.name);
   const lyricsScale = lyricsUiScale * (uiScale > 1 ? TV_LYRICS_SCALE : 1);
   const lyricsProps: LyricsBarProps = {
     song: parsedSong,
@@ -188,53 +190,13 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
                 trackIndex={player.trackIndex}
                 scale={uiScale}
               />
-              {parsedSong.tracks && parsedSong.tracks.length > 1 && (
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: 10,
-                    right: 10,
-                    zIndex: 10,
-                    pointerEvents: 'auto',
-                  }}
-                >
-                  <Box
-                    sx={{
-                      bgcolor: 'rgba(0,0,0,0.6)',
-                      borderRadius: 2,
-                      p: 0.5,
-                      display: 'flex',
-                      gap: 0.5,
-                    }}
-                  >
-                    {parsedSong.tracks.map((t: any, tIdx: number) => (
-                      <Button
-                        key={tIdx}
-                        variant={player.trackIndex === tIdx ? 'contained' : 'text'}
-                        size="small"
-                        sx={{
-                          minWidth: 30,
-                          p: '2px 8px',
-                          fontSize: '0.75rem',
-                          bgcolor:
-                            player.trackIndex === tIdx
-                              ? `hsl(${player.config.hue}, 80%, 40%)`
-                              : 'transparent',
-                          color: 'text.primary',
-                          '&:hover': {
-                            bgcolor:
-                              player.trackIndex === tIdx
-                                ? `hsl(${player.config.hue}, 80%, 50%)`
-                                : 'action.hover',
-                          },
-                        }}
-                        onClick={() => onSwitchTrack(allPlayers.indexOf(player), tIdx)}
-                      >
-                        {t.name || `P${tIdx + 1}`}
-                      </Button>
-                    ))}
-                  </Box>
-                </Box>
+              {!player.config.isRemote && trackNames.length > 1 && (
+                <HostPartToggle
+                  trackNames={trackNames}
+                  value={player.trackIndex}
+                  hue={player.config.hue}
+                  onChange={(tIdx) => onSwitchTrack(allPlayers.indexOf(player), tIdx)}
+                />
               )}
             </Box>
           );

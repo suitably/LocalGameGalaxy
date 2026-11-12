@@ -5,6 +5,7 @@ import { type Song, type SongMeta } from '../db';
 import { type TVEvent } from './useTVMode';
 import { useClientSessionSync } from './useClientSessionSync';
 import { useRemoteConfigListener } from './useRemoteConfigListener';
+import { useHostPhoneJoin } from './useHostPhoneJoin';
 import { playCalibrationBeep } from '../../../modules/audio/latency';
 
 interface UseMelodiqGlobalEventsProps {
@@ -184,6 +185,7 @@ export const useMelodiqGlobalEvents = ({
   }, [manager, isTVConnected, sendRemoteCommand]);
 
   useRemoteConfigListener(manager, currentView, setFeedbackMessage);
+  useHostPhoneJoin({ manager, isClient, activeParticipants, setActiveParticipants });
 
   useClientSessionSync({
     isClient,
