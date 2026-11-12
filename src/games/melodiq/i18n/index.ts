@@ -11,6 +11,8 @@ export const melodiqResources = {
         privacy_link: 'Privacy notice',
         allow: 'Load videos',
         deny: 'Not now',
+        own_background: 'Use my own background image or video instead',
+        use_own_background: 'Use my background',
         setting: 'Allow YouTube background videos',
         setting_desc:
           'Loads background videos from YouTube (Google receives your IP address). Applies to this device only.',
@@ -381,6 +383,8 @@ export const melodiqResources = {
         privacy_link: 'Datenschutzhinweise',
         allow: 'Videos laden',
         deny: 'Nicht jetzt',
+        own_background: 'Stattdessen eigenes Hintergrundbild oder -video verwenden',
+        use_own_background: 'Meinen Hintergrund nutzen',
         setting: 'YouTube-Hintergrundvideos erlauben',
         setting_desc:
           'Lädt Hintergrundvideos von YouTube (Google erhält deine IP-Adresse). Gilt nur für dieses Gerät.',
