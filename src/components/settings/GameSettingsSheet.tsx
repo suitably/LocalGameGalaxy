@@ -82,6 +82,8 @@ export const GameSettingsSheet: React.FC<GameSettingsSheetProps> = ({
         anchor="right"
         open={open}
         onClose={onClose}
+        // Modal layer like the phone Dialog, so in-game bars (e.g. Melodiq's mini player) never cover it.
+        sx={{ zIndex: (t) => t.zIndex.modal }}
         PaperProps={{ sx: { width: 420, maxWidth: '100vw' } }}
       >
         {body}

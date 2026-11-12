@@ -60,7 +60,7 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
     <Card
       elevation={0}
       sx={{
-        position: 'absolute',
+        position: 'fixed',
         bottom: 0,
         left: 0,
         right: 0,
@@ -70,7 +70,8 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
         px: 2,
         bgcolor: (theme) => alpha(theme.palette.background.default, 0.95),
         borderTop: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
-        zIndex: 1200, // Higher than FAB but below Dialogs
+        // Above Melodiq's drawers (history, queue), below modals, dialogs and snackbars.
+        zIndex: (theme) => theme.zIndex.drawer + 1,
         borderRadius: 0,
       }}
     >
