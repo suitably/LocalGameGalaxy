@@ -18,7 +18,7 @@ interface UseBroadcastSongInfoProps {
 const remoteTracksKey = (players: PlayerRuntime[]) =>
   players
     .filter((p) => p.config.isRemote)
-    .map((p) => `${p.remotePeerId}:${p.trackIndex}`)
+    .map((p) => `${p.remotePeerId}:${p.trackIndex}:${p.config.hidePitch ? 0 : 1}`)
     .join(',');
 
 export function useBroadcastSongInfo({
@@ -41,8 +41,13 @@ export function useBroadcastSongInfo({
       const peerId = p.remotePeerId;
       if (!p.config.isRemote || !p.webRtcManager || !peerId) continue;
       if (p.webRtcManager.getConnectedPeers().some((cp) => cp.peerId === peerId)) {
-        // the phone shows the part its singer has, also when the host switched it
-        p.webRtcManager.sendToPeer(peerId, { ...payload, trackIndex: p.trackIndex });
+        // the phone shows the part its singer has, also when the host switched it, and whether
+        // it sings at all (a hidden player is a spectator that can still tap a part mic)
+        p.webRtcManager.sendToPeer(peerId, {
+          ...payload,
+          trackIndex: p.trackIndex,
+          singing: !p.config.hidePitch,
+        });
       }
     }
     // Re-send when players join or leave or a remote part changes, not on every config change.

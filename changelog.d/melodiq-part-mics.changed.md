@@ -1,0 +1,1 @@
+- **Melodiq: sing your part from your phone**: in a duet, each phone's lyrics show a mic per part in the part's colour (blue / pink); tap it to pick your part. Spectators see both parts and join the running song by tapping a mic, also when the host had not listed them. The host's P1 / P2 switch now only appears for singers on the host's own microphones.

@@ -328,7 +328,9 @@ export const melodiqResources = {
       paused: 'Paused',
       select_song_hint: 'Select a song or play from queue',
       resume_song: 'Resume song',
-      duet_part: 'Duet part',
+      sing_part: 'Sing {{part}}',
+      singing_part: 'You sing {{part}}',
+      solo_part: 'the song',
       remote_host: {
         title: 'Host settings',
         loading: 'Loading host settings...',
@@ -692,7 +694,9 @@ export const melodiqResources = {
       paused: 'Pausiert',
       select_song_hint: 'Song auswählen oder aus der Warteschlange starten',
       resume_song: 'Song fortsetzen',
-      duet_part: 'Duett-Stimme',
+      sing_part: '{{part}} singen',
+      singing_part: 'Du singst {{part}}',
+      solo_part: 'den Song',
       remote_host: {
         title: 'Host-Einstellungen',
         loading: 'Host-Einstellungen werden geladen...',
