@@ -19,8 +19,8 @@ import {
   getStoredSoundConfig,
   saveStoredSoundConfig,
   type InstrumentSoundConfig,
-} from '../logic/soundSettings';
-import { useAudioSynth } from '../useAudioSynth';
+  useAudioSynth,
+} from '../../../modules/audio/synth';
 import { INSTRUMENT_LIST, type InstrumentPreset } from './instruments';
 
 /** Per-instrument custom sample URL, volume and preview. Reads the stored config on every change. */

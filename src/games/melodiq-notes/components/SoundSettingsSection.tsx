@@ -7,8 +7,8 @@ import {
   getStoredSoundConfig,
   saveStoredSoundConfig,
   type InstrumentSoundConfig,
-} from '../logic/soundSettings';
-import { useAudioSynth } from '../useAudioSynth';
+  useAudioSynth,
+} from '../../../modules/audio/synth';
 
 interface SoundSettingsSectionProps {
   onSoundConfigChanged?: () => void;

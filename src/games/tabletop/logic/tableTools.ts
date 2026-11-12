@@ -63,8 +63,13 @@ export function stateFaceOf(w: TabletopWidget): WidgetStateFace {
 
 /** Switches to the next state (wrapping); unchanged when there is nothing to switch to. */
 export function nextState<W extends TabletopWidget>(w: W): W {
+  const count = w.states?.length ?? 0;
+  return count < 2 ? w : setState(w, ((w.stateIndex ?? 0) + 1) % count);
+}
+
+/** The widget showing state `index`; unchanged when there is no such state or it is shown. */
+export function setState<W extends TabletopWidget>(w: W, index: number): W {
   const states = w.states;
-  if (!states || states.length < 2) return w;
-  const index = ((w.stateIndex ?? 0) + 1) % states.length;
+  if (!states || states.length < 2 || !states[index] || (w.stateIndex ?? 0) === index) return w;
   return { ...w, ...states[index], stateIndex: index };
 }

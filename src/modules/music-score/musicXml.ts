@@ -1,8 +1,17 @@
 import { DRUM_VOICE_KEY, parseSticking, resolveDrumVoice, type DrumVoice } from './drumVoices';
 import { guessInstrument } from './instruments';
 import { playOrder, readBars } from './musicXmlBars';
+import { readHarmony, writeOutChords, type BarChord } from './musicXmlHarmony';
 import { kid, kids, num, text } from './xmlDom';
-import type { ScoreNote, ScorePart, ScoreSong, TabPosition, TempoEvent, XmlParser } from './types';
+import type {
+  ScoreChord,
+  ScoreNote,
+  ScorePart,
+  ScoreSong,
+  TabPosition,
+  TempoEvent,
+  XmlParser,
+} from './types';
 
 const STEP: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 export class ScoreImportError extends Error {}
@@ -51,6 +60,8 @@ export interface BarEvent {
   tieStart: boolean;
   tieStop: boolean;
   syl: string;
+  /** Syllables by verse (`<lyric number>`); when set, `writeOutNotes` picks one per pass. */
+  verses?: Record<number, string>;
   drum?: DrumVoice;
   hand?: 'R' | 'L';
   tab?: TabPosition;
@@ -61,8 +72,11 @@ function readPartBars(pe: Element, info: PartInfo) {
   let transpose = 0;
   let hasLyrics = false;
   let isDrum = info.channel === 10;
+  const chords: BarChord[][] = [];
   const bars = kids(pe, 'measure').map((m) => {
     const evs: BarEvent[] = [];
+    const barChords: BarChord[] = [];
+    chords.push(barChords);
     let pos = 0;
     let last = 0;
     for (const c of kids(m)) {
@@ -72,7 +86,10 @@ function readPartBars(pe: Element, info: PartInfo) {
         if (tr) transpose = num(tr, 'chromatic') + 12 * num(tr, 'octave-change');
       } else if (c.tagName === 'backup') pos -= num(c, 'duration');
       else if (c.tagName === 'forward') pos += num(c, 'duration');
-      else if (c.tagName === 'note') {
+      else if (c.tagName === 'harmony') {
+        const chord = readHarmony(c, pos, div, transpose);
+        if (chord) barChords.push(chord);
+      } else if (c.tagName === 'note') {
         if (kid(c, 'grace')) continue;
         const d = num(c, 'duration');
         const isChord = !!kid(c, 'chord');
@@ -120,15 +137,18 @@ function readPartBars(pe: Element, info: PartInfo) {
         }
         if (pitch === null) continue;
         const ties = Array.from(c.getElementsByTagName('tie')).map((x) => x.getAttribute('type'));
-        const lyric = c.getElementsByTagName('lyric')[0];
+        const lyrics = kids(c, 'lyric');
         let syl = '';
-        const lyricHand = u ? parseSticking(text(lyric ?? null, 'text')) : null;
+        let verses: Record<number, string> | undefined;
+        const lyricHand = u ? parseSticking(text(lyrics[0] ?? null, 'text')) : null;
         if (lyricHand) hand ??= lyricHand;
-        else if (lyric && text(lyric, 'text')) {
-          hasLyrics = true;
-          syl =
-            (text(lyric, 'text') || '') +
-            (/begin|middle/.test(text(lyric, 'syllabic') || '') ? '-' : '');
+        else {
+          verses = readVerses(lyrics);
+          const nums = Object.keys(verses).map(Number);
+          if (nums.length) {
+            hasLyrics = true;
+            syl = verses[Math.min(...nums)];
+          } else verses = undefined;
         }
         evs.push({
           rel: start / div,
@@ -138,6 +158,7 @@ function readPartBars(pe: Element, info: PartInfo) {
           tieStart: ties.includes('start'),
           tieStop: ties.includes('stop'),
           syl,
+          verses,
           drum,
           hand,
         });
@@ -145,14 +166,39 @@ function readPartBars(pe: Element, info: PartInfo) {
     }
     return evs;
   });
-  return { bars, hasLyrics, isDrum };
+  return { bars, chords, hasLyrics, isDrum };
+}
+
+/** Syllable of every `<lyric>` of a note by verse; a missing or non-numeric `number` counts by position. */
+function readVerses(lyrics: Element[]): Record<number, string> {
+  const out: Record<number, string> = {};
+  lyrics.forEach((l, k) => {
+    const t = text(l, 'text');
+    if (!t) return;
+    const verse = Number(/\d+/.exec(l.getAttribute('number') ?? '')?.[0]) || k + 1;
+    out[verse] ??= t + (/begin|middle/.test(text(l, 'syllabic') || '') ? '-' : '');
+  });
+  return out;
+}
+
+/**
+ * Verse sung in the `pass`-th play of a written bar: that verse when the bar has it,
+ * else the bar's first verse (a chorus written once, or a pass beyond the last verse).
+ */
+function verseOf(evs: BarEvent[], pass: number): number {
+  const nums = evs.flatMap((e) => (e.verses ? Object.keys(e.verses).map(Number) : []));
+  return nums.includes(pass) || !nums.length ? pass : Math.min(...nums);
 }
 
 /** Lays written bars out in play order and merges tied notes. */
 export function writeOutNotes(bars: BarEvent[][], order: number[], starts: number[]): ScoreNote[] {
   const notes: ScoreNote[] = [];
   const open = new Map<string, ScoreNote>();
+  const plays = new Map<number, number>();
   order.forEach((k, idx) => {
+    const pass = (plays.get(k) ?? 0) + 1;
+    plays.set(k, pass);
+    const verse = verseOf(bars[k] ?? [], pass);
     for (const ev of bars[k] ?? []) {
       const t = starts[idx] + ev.rel;
       const key = `${ev.pitch}|${ev.voice}`;
@@ -163,7 +209,8 @@ export function writeOutNotes(bars: BarEvent[][], order: number[], starts: numbe
         continue;
       }
       const note: ScoreNote = { t, dur: Math.max(0.05, ev.dur), pitch: ev.pitch };
-      if (ev.syl) note.syl = ev.syl;
+      const syl = ev.verses ? ev.verses[verse] : ev.syl;
+      if (syl) note.syl = syl;
       if (ev.drum) note.drum = ev.drum;
       if (ev.hand) note.hand = ev.hand;
       if (ev.tab) note.tab = ev.tab;
@@ -204,6 +251,7 @@ export function parseMusicXml(xml: string, fileName: string, parseXml: XmlParser
   if (!tempoMap.length || tempoMap[0].beat > 0)
     tempoMap.unshift({ beat: 0, bpm: tempoMap[0]?.bpm ?? 120 });
 
+  let chords: ScoreChord[] = [];
   const parts: ScorePart[] = partEls
     .map((pe) => {
       const id = pe.getAttribute('id') || '';
@@ -215,6 +263,7 @@ export function parseMusicXml(xml: string, fileName: string, parseXml: XmlParser
         names: {},
       };
       const read = readPartBars(pe, info);
+      if (!chords.length) chords = writeOutChords(read.chords, order, starts);
       return {
         id,
         name: info.name,
@@ -240,5 +289,6 @@ export function parseMusicXml(xml: string, fileName: string, parseXml: XmlParser
     measureNumbers: order.map((k) => k + 1),
     end,
     parts,
+    ...(chords.length ? { chords } : {}),
   };
 }

@@ -42,7 +42,7 @@ Registry order = hub order. The dice games in `DICE_GAMES` (`src/games/tabletop/
 | `party`         | `party`                                                                                                    | party            | `src/features/party` (not a game folder) | —              | 1          |
 | `wordle`        | `games/wordle`                                                                                             | puzzle           | `src/games/wordle`                       | 1 786          | 2          |
 | `sudoku`        | `games/sudoku`                                                                                             | puzzle           | `src/games/sudoku`                       | 1 305          | 1          |
-| `tabletop`      | `games/tabletop`                                                                                           | cards            | `src/games/tabletop`                     | 11 463         | 12         |
+| `tabletop`      | `games/tabletop`                                                                                           | cards            | `src/games/tabletop`                     | 20 998         | 52         |
 | _(garticphone)_ | launched from the Party lobby only; route `games/garticphone` is registered in `src/App.tsx` (no hub card) | —                | `src/games/garticphone`                  | 1 839          | 1          |
 
 Melodiq also registers standalone routes (`MelodiqQueue`, `MelodiqTV`) via `standaloneRoutes`. **Unverified:** whether PR #387 (tests for Kniffel, Darts, Imposter) has landed when you read this.

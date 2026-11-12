@@ -76,6 +76,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
   } = useTabletopEngine({
     tableWidth: game.table.width,
     tableHeight: game.table.height,
+    tableGridSnap: game.table.gridSnap,
     widgets: game.widgets,
     currentSeatIndex: activeSeat?.index,
     handHolderId: handHolder?.id,

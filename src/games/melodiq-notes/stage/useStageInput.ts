@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
-import { useMidiInput } from '../useMidiInput';
-import { lostMidiInstrument, midiInstrument } from '../logic/midiPorts';
+import { useMidiInput, lostMidiInstrument, midiInstrument } from '../../../modules/audio/synth';
 import { useMicPitch, type MicHeard } from '../hooks/useMicPitch';
 import type { StageEngine } from './engine/StageEngine';
 import { GM_DRUM_CHANNEL } from './engine/players';

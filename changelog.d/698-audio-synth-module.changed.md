@@ -1,0 +1,1 @@
+- **Audio: shared synth module** (#698): the Notes synth, soundfont loading, sound settings and MIDI input now live in `src/modules/audio/synth`; settings previews share one `AudioContext` and the Melodiq latency calibrators use the shared beep helper. No behaviour change.

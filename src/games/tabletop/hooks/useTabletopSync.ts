@@ -21,6 +21,7 @@ import {
 } from '../logic/syncProtocol';
 import { diffGame } from '../logic/stateDelta';
 import { authorizeSeatIntent } from '../logic/intentAuthorization';
+import { prepareHostAction } from '../logic/hostActions';
 import { PrivateHandChannel } from '../logic/privateHandChannel';
 import type { TabletopGameDefinition } from '../logic/types';
 import type { TabletopAction } from '../logic/tabletopReducer';
@@ -114,11 +115,13 @@ export function useTabletopSync({
       };
 
       switch (action.type) {
-        case 'INTENT':
-          if (isHost && acceptIntent(action.action, sender(action), gameRef.current)) {
-            dispatch(action.action);
+        case 'INTENT': {
+          const from = isHost ? sender(action) : null;
+          if (from && acceptIntent(action.action, from, gameRef.current)) {
+            dispatch(prepareHostAction(action.action, gameRef.current, from.seat));
           }
           break;
+        }
         case 'STATE_DELTA':
           if (isHost) break;
           enqueue(async () => {
@@ -244,7 +247,12 @@ export function useTabletopSync({
   const syncedDispatch = useCallback<React.Dispatch<TabletopAction>>(
     (action) => {
       if (spectator && isSyncedIntent(action)) return;
-      dispatch(action);
+      // The host (and a device without room) decides random results itself (ADR-0005).
+      dispatch(
+        (isHost || !roomId) && isSyncedIntent(action)
+          ? prepareHostAction(action, gameRef.current, seat ?? undefined)
+          : action,
+      );
       if (roomId && !isHost && isSyncedIntent(action)) {
         broadcastAction({
           type: 'INTENT',

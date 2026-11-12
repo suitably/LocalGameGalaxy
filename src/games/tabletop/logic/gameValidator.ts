@@ -272,7 +272,7 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
       height: raw.table?.height && raw.table.height > 200 ? raw.table.height : 1000,
       backgroundColor: raw.table?.backgroundColor || '#1e3d2f', // Classic green felt
       backgroundImageUrl: sanitizeLegacyUrl(rawBg) || undefined,
-      gridSnap: raw.table?.gridSnap && raw.table.gridSnap > 0 ? raw.table.gridSnap : 20,
+      gridSnap: raw.table?.gridSnap && raw.table.gridSnap > 0 ? raw.table.gridSnap : undefined,
     },
     widgets: cleanWidgets,
     assetFiles: raw.assetFiles || {},
