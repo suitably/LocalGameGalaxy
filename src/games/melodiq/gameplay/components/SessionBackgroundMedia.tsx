@@ -1,8 +1,8 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, Typography, Snackbar, Alert } from '@mui/material';
 import { YouTubeBackgroundPlayer, getYouTubeVideoId } from '../YouTubeBackgroundPlayer';
-import { grantYouTubeConsent, hasYouTubeConsent } from '../youtubeConsent';
-import { YouTubeConsentButton } from './YouTubeConsentButton';
+import { useYouTubeConsentGate } from '../hooks/useYouTubeConsentGate';
+import { YouTubeConsentDialog } from './YouTubeConsentDialog';
 
 export interface SessionBackgroundMediaProps {
   videoSrc?: string | null;
@@ -33,11 +33,8 @@ export const SessionBackgroundMedia: React.FC<SessionBackgroundMediaProps> = ({
 }) => {
   const youTubeVideoId = useMemo(() => getYouTubeVideoId(videoSrc || undefined), [videoSrc]);
   const [youTubeFailed, setYouTubeFailed] = useState(false);
-  const [youTubeAllowed, setYouTubeAllowed] = useState(hasYouTubeConsent);
-  const allowYouTube = useCallback(() => {
-    grantYouTubeConsent();
-    setYouTubeAllowed(true);
-  }, []);
+  const youTubeConsent = useYouTubeConsentGate(videoSrc, hideBackgroundVideo);
+  const youTubeAllowed = youTubeConsent.allowed;
   // without consent a YouTube background is skipped like a failed one: the fallback shows
   const youTubeBlocked = !!youTubeVideoId && (youTubeFailed || !youTubeAllowed);
 
@@ -62,6 +59,11 @@ export const SessionBackgroundMedia: React.FC<SessionBackgroundMediaProps> = ({
 
   return (
     <>
+      <YouTubeConsentDialog
+        open={youTubeConsent.pending}
+        onAllow={youTubeConsent.allow}
+        onDeny={youTubeConsent.deny}
+      />
       {videoSrc &&
         !hideBackgroundVideo &&
         (youTubeVideoId ? (
@@ -98,9 +100,6 @@ export const SessionBackgroundMedia: React.FC<SessionBackgroundMediaProps> = ({
             }}
           />
         ))}
-      {videoSrc && !hideBackgroundVideo && youTubeVideoId && !youTubeAllowed && (
-        <YouTubeConsentButton onAllow={allowYouTube} />
-      )}
       {(!videoSrc || youTubeBlocked) &&
         !hideBackgroundVideo &&
         fallbackBackgroundUrl &&

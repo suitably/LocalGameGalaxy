@@ -4,8 +4,16 @@ export const melodiqResources = {
   en: {
     melodiq: {
       youtube_consent: {
-        load: 'Load YouTube video',
-        hint: 'The background video comes from YouTube (Google). Loading it sends your IP address to Google. Your choice is remembered on this device.',
+        title: 'Load YouTube videos?',
+        body: 'Some songs use a YouTube video as background. Loading it sends your IP address to YouTube (Google). Without it, the fallback background shows instead.',
+        settings_hint:
+          'Your choice is remembered on this device and can be changed in the game settings.',
+        privacy_link: 'Privacy notice',
+        allow: 'Load videos',
+        deny: 'Not now',
+        setting: 'Allow YouTube background videos',
+        setting_desc:
+          'Loads background videos from YouTube (Google receives your IP address). Applies to this device only.',
       },
       welcome: {
         title: 'Welcome to Melodiq!',
@@ -366,8 +374,16 @@ export const melodiqResources = {
   de: {
     melodiq: {
       youtube_consent: {
-        load: 'YouTube-Video laden',
-        hint: 'Das Hintergrundvideo kommt von YouTube (Google). Beim Laden erhält Google deine IP-Adresse. Deine Wahl wird auf diesem Gerät gespeichert.',
+        title: 'YouTube-Videos laden?',
+        body: 'Manche Songs nutzen ein YouTube-Video als Hintergrund. Beim Laden erhält YouTube (Google) deine IP-Adresse. Ohne Video wird der Ersatzhintergrund angezeigt.',
+        settings_hint:
+          'Deine Wahl wird auf diesem Gerät gespeichert und kann in den Spieleinstellungen geändert werden.',
+        privacy_link: 'Datenschutzhinweise',
+        allow: 'Videos laden',
+        deny: 'Nicht jetzt',
+        setting: 'YouTube-Hintergrundvideos erlauben',
+        setting_desc:
+          'Lädt Hintergrundvideos von YouTube (Google erhält deine IP-Adresse). Gilt nur für dieses Gerät.',
       },
       welcome: {
         title: 'Willkommen bei Melodiq!',

@@ -15,6 +15,7 @@ import { AutoplaySettings } from './AutoplaySettings';
 import { AudioSettingsSection } from './AudioSettingsSection';
 import { LyricsSettingsSection } from './LyricsSettingsSection';
 import { FallbackBackgroundField } from './FallbackBackgroundField';
+import { YouTubeConsentSetting } from './YouTubeConsentSetting';
 import { SettingSlider, SettingSwitch, SettingToggleGroup } from '../../../components/settings';
 
 interface GameSettingsPanelProps {
@@ -122,6 +123,8 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
           onChange={(checked) => onUpdateSetting('hideBackgroundVideo', checked)}
           label={t('melodiq.settings_panel.hide_video', 'Hide Background Video')}
         />
+
+        <YouTubeConsentSetting />
 
         <FallbackBackgroundField
           value={settings.fallbackBackgroundUrl || ''}
