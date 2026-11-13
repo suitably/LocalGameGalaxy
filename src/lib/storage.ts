@@ -125,6 +125,7 @@ export const STORAGE_KEYS = {
   /** This device's Web Push subscription with the site's own sender (`lib/push/siteWebPush.ts`). */
   PUSH_SITE_SUBSCRIPTION: 'galaxy_push_site_subscription',
   NOTIFICATION_METHOD: 'galaxy_notification_method',
+  NOTIFICATION_CHOICE_DISMISSED: 'galaxy_notification_choice_dismissed',
   NTFY_SERVER_URL: 'galaxy_ntfy_server_url',
   NTFY_TOPIC: 'galaxy_ntfy_topic',
 

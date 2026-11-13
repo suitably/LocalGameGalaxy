@@ -27,6 +27,16 @@ export function setNotificationMethod(method: NotificationMethod): void {
   storage.set(STORAGE_KEYS.NOTIFICATION_METHOD, method);
 }
 
+/** Whether the user answered the "how do you want to be notified" dialog with "Not now". */
+export function isNotificationChoiceDismissed(): boolean {
+  return storage.get(STORAGE_KEYS.NOTIFICATION_CHOICE_DISMISSED, '') === '1';
+}
+
+export function setNotificationChoiceDismissed(dismissed: boolean): void {
+  if (dismissed) storage.set(STORAGE_KEYS.NOTIFICATION_CHOICE_DISMISSED, '1');
+  else storage.remove(STORAGE_KEYS.NOTIFICATION_CHOICE_DISMISSED);
+}
+
 export function getNtfyServerUrl(): string {
   return storage.get(STORAGE_KEYS.NTFY_SERVER_URL, DEFAULT_NTFY_SERVER_URL);
 }

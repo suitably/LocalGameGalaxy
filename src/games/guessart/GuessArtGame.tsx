@@ -1,3 +1,4 @@
+import { NotificationChoiceDialog } from '../../components/push/NotificationChoiceDialog';
 import { useEffect, useCallback } from 'react';
 import { Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
@@ -18,7 +19,6 @@ import { useGuessArtShareDialog } from './hooks/useGuessArtShareDialog';
 import { cleanWindowUrlQuery, parseGameUrlParams } from '../../modules/sharing';
 import { GuessArtRoomGame } from './components/GuessArtRoomGame';
 import { playerAssignment } from './logic/playerAssignment';
-import { guessArtNotificationService } from './logic/notificationService';
 
 const GuessArtLocalGame: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -53,11 +53,6 @@ const GuessArtLocalGame: React.FC = () => {
     deleteGame,
     loadActiveGames,
   } = useGuessArtLobby();
-
-  // Request browser notifications for async turn handoffs
-  useEffect(() => {
-    guessArtNotificationService.requestPermission().catch(() => {});
-  }, []);
 
   const {
     game,
@@ -157,6 +152,7 @@ const GuessArtLocalGame: React.FC = () => {
   if (!activeGameId || !game) {
     return (
       <Box sx={{ width: '100%', height: '100%', overflowY: 'auto' }}>
+        <NotificationChoiceDialog />
         <GameSetup
           players={lobbyPlayers}
           onAddPlayer={addPlayer}
@@ -189,30 +185,33 @@ const GuessArtLocalGame: React.FC = () => {
 
   // Active Game Session View
   return (
-    <GuessArtSessionView
-      game={game}
-      round={round}
-      gameLoading={gameLoading}
-      language={language}
-      seat={seat}
-      completedRound={completedRound}
-      actions={{ selectWord, submitDrawing, requestHint, refresh }}
-      joinedNames={joinedNames}
-      onClearJoined={clearJoined}
-      onExit={handleExitActiveGame}
-      onOpenHistory={() => handleOpenHistory(activeGameId)}
-      onEditGame={() => handleOpenEdit(game)}
-      onOpenCatalogue={() => setCatalogueEditorOpen(true)}
-      onOpenShareLinks={() => handleOpenShareLinks(game, round)}
-    >
-      <GuessArtDialogs
-        {...dialogProps}
-        editGame={editGameRecord || game}
-        isHost={seat.isHost}
-        localPlayerIds={seat.localPlayerIds}
-        historyGameId={historyGameId || activeGameId}
-      />
-    </GuessArtSessionView>
+    <>
+      <NotificationChoiceDialog />
+      <GuessArtSessionView
+        game={game}
+        round={round}
+        gameLoading={gameLoading}
+        language={language}
+        seat={seat}
+        completedRound={completedRound}
+        actions={{ selectWord, submitDrawing, requestHint, refresh }}
+        joinedNames={joinedNames}
+        onClearJoined={clearJoined}
+        onExit={handleExitActiveGame}
+        onOpenHistory={() => handleOpenHistory(activeGameId)}
+        onEditGame={() => handleOpenEdit(game)}
+        onOpenCatalogue={() => setCatalogueEditorOpen(true)}
+        onOpenShareLinks={() => handleOpenShareLinks(game, round)}
+      >
+        <GuessArtDialogs
+          {...dialogProps}
+          editGame={editGameRecord || game}
+          isHost={seat.isHost}
+          localPlayerIds={seat.localPlayerIds}
+          historyGameId={historyGameId || activeGameId}
+        />
+      </GuessArtSessionView>
+    </>
   );
 };
 

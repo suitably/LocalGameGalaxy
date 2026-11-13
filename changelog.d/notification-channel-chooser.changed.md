@@ -1,0 +1,2 @@
+- **Notifications**: before the browser asks for permission, a chooser now asks how you want to be notified — on this device (recommended where available), via the ntfy app, or not now. Blocked or unsupported browsers and iPhones without the installed app get a matching hint instead of a dead button.
+- **GuessArt, Storyteller**: opening the game no longer triggers the browser's permission prompt; the chooser appears once as a dialog instead.
