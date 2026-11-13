@@ -3,4 +3,5 @@ export * from './EditSessionDialog';
 export * from './parseGameUrlParams';
 export * from './useGameJoinUrl';
 export * from './useSessionSharing';
+export * from './sessionLink';
 export * from './useShareOrCopy';

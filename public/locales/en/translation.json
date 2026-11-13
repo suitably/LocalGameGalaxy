@@ -1427,7 +1427,17 @@
       "menu": "Menu"
     },
     "copyLink": "Copy link",
-    "you": "you"
+    "you": "you",
+    "share": "Share",
+    "qrCode": "QR code",
+    "showQrCode": "Show QR code",
+    "hideQrCode": "Hide QR code",
+    "shareLinksDesc": "Players can join on their own device via QR code or link.",
+    "scanQrToPlayAs": "Scan this code to play as {{name}}!",
+    "qrLinkTooLong": "This link is too long for a QR code. Please copy or share it instead.",
+    "playHereInsteadShort": "Play on this device",
+    "hostDeviceBadge": "Your device",
+    "shareMessage": "Hi {{name}}! Here is your player link: {{link}}"
   },
   "settings": {
     "game_sheet_title": "{{game}} · Settings",
@@ -1617,7 +1627,8 @@
     },
     "privacy_title": "Privacy",
     "privacy_desc": "Which data the games use, which services they contact and your rights.",
-    "privacy_open": "Privacy Notice"
+    "privacy_open": "Privacy Notice",
+    "notify_open": "Set up notifications"
   },
   "server": {
     "title": "Nexumia Server Connection",
@@ -2106,7 +2117,9 @@
     "spectatorChoosing": "{{name}} is choosing a word",
     "spectatorDrawing": "{{name}} is drawing",
     "spectatorGuessing": "{{name}} is guessing",
-    "spectatorIdle": "It is not {{name}}'s turn right now."
+    "spectatorIdle": "It is not {{name}}'s turn right now.",
+    "joinLoading": "Loading game …",
+    "joinFailed": "The game could not be loaded. Check your internet connection and scan the code again – or ask for the link instead."
   },
   "party": {
     "hubBannerTitle": "Party Mode (Multiplayer Lobby)",

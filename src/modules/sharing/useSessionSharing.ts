@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import LZString from 'lz-string';
 import { gameRelayStorage } from '../../lib/push/gameRelayStorage';
 import { inviteSeat, reclaimSeat } from '../player-management/seatActions';
+import { buildSessionLink, pickQrLink } from './sessionLink';
 
 export interface UseSessionSharingOptions<TGame, TSnapshot> {
   game: (TGame & { id: string; players: any[] }) | null;
@@ -26,20 +27,30 @@ export function useSessionSharing<TGame, TSnapshot>({
   publishSync,
 }: UseSessionSharingOptions<TGame, TSnapshot>) {
   const buildPlayerLink = useCallback(
-    (playerId: string) => {
+    (playerId: string, withSnapshot = true) => {
       if (!game) return '';
-      // The link carries the player as invited, so the opening device takes the seat.
-      const snapshot = buildSnapshot(inviteSeat(game.players, playerId));
-      const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(snapshot));
       const playerObj = game.players.find((p) => p.id === playerId);
-      const relay = gameRelayStorage.getEffectiveRelay(game.id, playerObj?.relayUrl);
-      let link = `${window.location.origin}${window.location.pathname}#${basePath}?gameId=${game.id}&player=${playerId}&data=${compressed}`;
-      if (relay) {
-        link += `&gameRelay=${encodeURIComponent(relay)}`;
-      }
-      return link;
+      return buildSessionLink({
+        appUrl: `${window.location.origin}${window.location.pathname}`,
+        basePath,
+        gameId: game.id,
+        playerId,
+        // The link carries the player as invited, so the opening device takes the seat.
+        data: withSnapshot
+          ? LZString.compressToEncodedURIComponent(
+              JSON.stringify(buildSnapshot(inviteSeat(game.players, playerId))),
+            )
+          : undefined,
+        relay: gameRelayStorage.getEffectiveRelay(game.id, playerObj?.relayUrl),
+      });
     },
     [game, basePath, buildSnapshot],
+  );
+
+  /** Link for the QR code: without game data once the full link is too long to scan. */
+  const buildPlayerQrLink = useCallback(
+    (playerId: string) => pickQrLink(buildPlayerLink(playerId), buildPlayerLink(playerId, false)),
+    [buildPlayerLink],
   );
 
   const updateAndSyncPlayer = useCallback(
@@ -100,6 +111,7 @@ export function useSessionSharing<TGame, TSnapshot>({
 
   return {
     buildPlayerLink,
+    buildPlayerQrLink,
     markPlayerRemote,
     markPlayerLocal,
   };

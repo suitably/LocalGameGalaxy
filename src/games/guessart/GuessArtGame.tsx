@@ -8,6 +8,7 @@ import { useGuessArtLobby } from './hooks/useGuessArtLobby';
 import { useGuessArtUrlParam } from './hooks/useGuessArtUrlParam';
 import { useGuessArtGame } from './hooks/useGuessArtGame';
 import { useGuessArtJoinLink } from './hooks/useGuessArtJoinLink';
+import { JoinLinkNotice } from './components/JoinLinkNotice';
 import { useGuessArtTurnSeat } from './hooks/useGuessArtTurnSeat';
 import { useHeaderLayout } from '../../context/HeaderLayoutContext';
 import { GameSetup } from './components/GameSetup';
@@ -83,7 +84,7 @@ const GuessArtLocalGame: React.FC = () => {
     handleCloseShare,
   } = useGuessArtShareDialog(language, triggerLocalUpdate, reloadAfterPlayersChanged);
 
-  useGuessArtJoinLink(language, async (gameId) => {
+  const joinStatus = useGuessArtJoinLink(language, async (gameId) => {
     triggerLocalUpdate();
     await loadActiveGames();
     setActiveGameId(gameId);
@@ -153,6 +154,7 @@ const GuessArtLocalGame: React.FC = () => {
     return (
       <Box sx={{ width: '100%', height: '100%', overflowY: 'auto' }}>
         <NotificationChoiceDialog />
+        <JoinLinkNotice status={joinStatus} />
         <GameSetup
           players={lobbyPlayers}
           onAddPlayer={addPlayer}

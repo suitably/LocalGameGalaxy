@@ -71,6 +71,7 @@ export interface MqttEnvelope<T> {
 ```
 
 - Published with `{ qos: 1, retain: true }` — the **last message per topic is retained by the broker** and delivered to late joiners.
+- **Player join links** (`src/modules/sharing/sessionLink.ts`, `useSessionSharing`): the copied / shared link is `#<route>?gameId=…&player=…&data=<LZ snapshot>[&gameRelay=…]` and works without a broker. The QR code uses the same link without `data` once it exceeds `QR_LINK_MAX_LENGTH` (a full snapshot does not fit a scannable QR code); pass it as `buildQrLink`. GuessArt then loads the game from the retained mailbox snapshot (`importFromMailbox` in `src/games/guessart/logic/joinFromMailbox.ts`, 15 s timeout, notice `JoinLinkNotice`). Storyteller does not pass `buildQrLink` yet: its QR code keeps the full link, and the dialog shows a hint instead of a QR code when the link exceeds the QR capacity.
 - With `useCompression` (default `true`) the JSON is sent as `LZ:` + `LZString.compressToUTF16(...)`.
 - Receive side drops: empty / `{}` messages, envelopes whose `channelId` does not match the topic, own echoes (`senderClientId === clientId`), and an exact repeat of the last processed payload per channel.
 - Listeners: per channel (`subscribe(channelId, fn)` returns an unsubscribe) and global.

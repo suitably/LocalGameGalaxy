@@ -42,17 +42,18 @@ export const SharePlayerLinksDialog: React.FC<SharePlayerLinksDialogProps> = ({
     }
   }, [game, round]);
 
-  const { buildPlayerLink, markPlayerRemote, markPlayerLocal } = useSessionSharing({
-    game,
-    basePath: '/games/guessart',
-    buildSnapshot: (updatedPlayers) => ({
-      game: { ...game!, players: updatedPlayers },
-      round: activeRound || round || null,
-    }),
-    onPlayerChanged,
-    updateGameDetails: LocalGameEngine.updateGameDetails.bind(LocalGameEngine),
-    publishSync: guessArtMailbox.publish.bind(guessArtMailbox),
-  });
+  const { buildPlayerLink, buildPlayerQrLink, markPlayerRemote, markPlayerLocal } =
+    useSessionSharing({
+      game,
+      basePath: '/games/guessart',
+      buildSnapshot: (updatedPlayers) => ({
+        game: { ...game!, players: updatedPlayers },
+        round: activeRound || round || null,
+      }),
+      onPlayerChanged,
+      updateGameDetails: LocalGameEngine.updateGameDetails.bind(LocalGameEngine),
+      publishSync: guessArtMailbox.publish.bind(guessArtMailbox),
+    });
 
   const isPlayerLocal = (playerId: string) => !game || playerAssignment.isLocal(game, playerId);
 
@@ -72,8 +73,13 @@ export const SharePlayerLinksDialog: React.FC<SharePlayerLinksDialogProps> = ({
   return (
     <ShareSessionLinksDialog
       {...sharedProps}
+      buildQrLink={buildPlayerQrLink}
       shareMessageText={(player: SessionPlayerItem, link: string) =>
-        `🎨 Hallo ${player.name}! Hier ist dein Mitspieler-Link: ${link}`
+        `🎨 ${t('common.shareMessage', {
+          name: player.name,
+          link,
+          defaultValue: `Hallo ${player.name}! Hier ist dein Mitspieler-Link: ${link}`,
+        })}`
       }
       descriptionText={t(
         'guessart.shareLinksDesc',

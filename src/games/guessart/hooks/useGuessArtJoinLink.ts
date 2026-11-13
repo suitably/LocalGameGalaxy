@@ -2,13 +2,16 @@
  * Opening a shared GuessArt player link [ID: HOOK-GUESSART-JOIN-LINK]
  *
  * Imports the game from the link and takes the player's seat on this device, then publishes
- * so the inviting device sees that the player joined.
+ * so the inviting device sees that the player joined. A short link (QR code) carries no game
+ * data: the game is then loaded from its retained mailbox snapshot.
  */
+import { useState } from 'react';
 import { gameRelayStorage } from '../../../lib/push/gameRelayStorage';
 import { joinSeatFromLink } from '../../../modules/player-management';
 import { useGameJoinUrl } from '../../../modules/sharing';
 import { LocalGameEngine } from '../logic/engine';
 import { guessArtMailbox } from '../logic/guessArtMailbox';
+import { importFromMailbox } from '../logic/joinFromMailbox';
 import type { GameSnapshot } from '../logic/types';
 
 const playerParam = (params: URLSearchParams) => params.get('player') || params.get('playerId');
@@ -29,7 +32,21 @@ async function takeSeatHere(
   guessArtMailbox.publish(gameId, snap).catch(() => {});
 }
 
+export type JoinLinkStatus = 'idle' | 'loading' | 'failed';
+
+const hasLocalGame = (gameId: string, language: string) =>
+  LocalGameEngine.getGameSnapshot(gameId, language).then(
+    () => true,
+    () => false,
+  );
+
+const mailboxDeps = (language: string) => ({
+  subscribe: guessArtMailbox.subscribe.bind(guessArtMailbox),
+  importSnapshot: (snapshot: GameSnapshot) => LocalGameEngine.importSnapshot(snapshot, language),
+});
+
 export function useGuessArtJoinLink(language: string, onOpened: (gameId: string) => Promise<void>) {
+  const [joinStatus, setJoinStatus] = useState<JoinLinkStatus>('idle');
   useGameJoinUrl<GameSnapshot>({
     defaultHashPath: '#/games/guessart',
     onSnapshotLoaded: async (snapshot, params) => {
@@ -46,9 +63,16 @@ export function useGuessArtJoinLink(language: string, onOpened: (gameId: string)
       const relay = relayParam(params);
       if (relay) gameRelayStorage.setGameRelay(gameId, relay);
       const playerId = playerParam(params);
-      // Without a snapshot the game must already be on this device.
+      if (playerId && !(await hasLocalGame(gameId, language))) {
+        setJoinStatus('loading');
+        const loaded = await importFromMailbox(gameId, mailboxDeps(language));
+        setJoinStatus(loaded ? 'idle' : 'failed');
+        // Thrown so the link stays in the address bar and a reload tries again.
+        if (!loaded) throw new Error('Game snapshot not received from the mailbox');
+      }
       if (playerId) await takeSeatHere(gameId, playerId, relay, language).catch(() => {});
       await onOpened(gameId);
     },
   });
+  return joinStatus;
 }
