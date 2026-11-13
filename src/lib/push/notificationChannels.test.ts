@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { getDeviceChannelStatus, methodForChoice, recommendedChoice } from './notificationChannels';
+import {
+  getDeviceChannelStatus,
+  methodForChoice,
+  recommendedChoice,
+  shouldAskForChannel,
+} from './notificationChannels';
 
 describe('getDeviceChannelStatus', () => {
   it('is available while the browser has not been asked yet', () => {
@@ -53,5 +58,25 @@ describe('methodForChoice', () => {
     expect(methodForChoice('device', 'auto')).toBe('auto');
     expect(methodForChoice('device', 'webpush')).toBe('webpush');
     expect(methodForChoice('device', 'both')).toBe('both');
+  });
+});
+
+describe('shouldAskForChannel', () => {
+  it('asks while nothing is decided', () => {
+    expect(shouldAskForChannel('available', 'auto', false)).toBe(true);
+    expect(shouldAskForChannel('blocked', 'auto', false)).toBe(true);
+    expect(shouldAskForChannel('install-first', 'both', false)).toBe(true);
+  });
+
+  it('stays quiet once the device channel is on', () => {
+    expect(shouldAskForChannel('active', 'auto', false)).toBe(false);
+  });
+
+  it('stays quiet once ntfy was chosen', () => {
+    expect(shouldAskForChannel('available', 'ntfy', false)).toBe(false);
+  });
+
+  it('stays quiet after "Not now"', () => {
+    expect(shouldAskForChannel('available', 'auto', true)).toBe(false);
   });
 });

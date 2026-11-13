@@ -23,10 +23,16 @@ interface PushNotificationBannerProps {
   gameId?: string;
   playerId?: string;
   showNtfyOption?: boolean;
+  /** Replaces the collapsed "notifications are off" row, e.g. to close a surrounding dialog. */
+  onDismiss?: () => void;
+  /** Called once the user turned on the device channel or picked ntfy. */
+  onChosen?: () => void;
 }
 
 export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
   showNtfyOption = true,
+  onDismiss,
+  onChosen,
 }) => {
   const { t } = useTranslation();
   const [state, setState] = useState<PushPermissionState>(getPermissionState);
@@ -35,11 +41,15 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
   const [dismissed, setDismissed] = useState(false);
   const status = getDeviceChannelStatus(state, installFirst);
 
-  const choose = useCallback((choice: 'device' | 'ntfy') => {
-    const next = methodForChoice(choice, storage.getNotificationMethod());
-    storage.setNotificationMethod(next);
-    setMethod(next);
-  }, []);
+  const choose = useCallback(
+    (choice: 'device' | 'ntfy') => {
+      const next = methodForChoice(choice, storage.getNotificationMethod());
+      storage.setNotificationMethod(next);
+      setMethod(next);
+      onChosen?.();
+    },
+    [onChosen],
+  );
 
   // Allowed earlier: make sure this device is also subscribed with the site's push sender.
   useEffect(() => {
@@ -122,7 +132,7 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
       ntfyUrl={pushClient.getUserNtfyUrl()}
       onEnableDevice={handleEnable}
       onChooseNtfy={() => choose('ntfy')}
-      onDismiss={() => setDismissed(true)}
+      onDismiss={onDismiss ?? (() => setDismissed(true))}
     />
   );
 };

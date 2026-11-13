@@ -45,3 +45,15 @@ export function methodForChoice(
   if (choice === 'ntfy') return 'ntfy';
   return current === 'ntfy' ? 'auto' : current;
 }
+
+/**
+ * Whether to open the chooser unasked (e.g. when a game with turn notifications opens): only
+ * while nothing is decided yet — not granted, not on ntfy, and not answered with "Not now".
+ */
+export function shouldAskForChannel(
+  status: DeviceChannelStatus,
+  method: NotificationMethod,
+  dismissed: boolean,
+): boolean {
+  return status !== 'active' && method !== 'ntfy' && !dismissed;
+}

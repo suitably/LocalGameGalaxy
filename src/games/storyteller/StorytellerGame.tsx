@@ -1,3 +1,4 @@
+import { NotificationChoiceDialog } from '../../components/push/NotificationChoiceDialog';
 import React, { useState, useEffect, useCallback } from 'react';
 import { Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +10,6 @@ import { useStorytellerLobby } from './hooks/useStorytellerLobby';
 import { StoryLobby } from './components/StoryLobby';
 import { StoryActiveView } from './components/StoryActiveView';
 import { LocalStoryEngine } from './logic/engine';
-import { storytellerNotificationService } from './logic/notificationService';
 import { storytellerMailboxService, type StorytellerSyncMessage } from './logic/mailboxService';
 import { useMultiChannelSync } from '../../modules/sync';
 import { parseGameUrlParams } from '../../modules/sharing';
@@ -50,11 +50,6 @@ const StorytellerLocalGame: React.FC = () => {
     setHeaderHidden(isGameActive);
     return () => setHeaderHidden(false);
   }, [isGameActive, setHeaderHidden]);
-
-  // Request browser notification permission on mount
-  useEffect(() => {
-    storytellerNotificationService.requestPermission().catch(() => {});
-  }, []);
 
   // Shared player links: import the story and take the player's seat here
   useStoryJoinLink(async (joinedGame, joinedEntries) => {
@@ -180,6 +175,7 @@ const StorytellerLocalGame: React.FC = () => {
   if (!game) {
     return (
       <Box sx={{ width: '100%', height: '100%', overflowY: 'auto' }}>
+        <NotificationChoiceDialog />
         <StoryLobby
           players={lobbyPlayers}
           modifiers={modifiers}
@@ -196,22 +192,25 @@ const StorytellerLocalGame: React.FC = () => {
   }
 
   return (
-    <StoryActiveView
-      game={game}
-      entries={entries}
-      gameLoading={gameLoading}
-      readerOpen={readerOpen}
-      setReaderOpen={setReaderOpen}
-      joinedNames={joinedNames}
-      clearJoined={clearJoined}
-      isCurrentTurnLocal={isCurrentTurnLocal}
-      claimPlayer={claimPlayer}
-      toggleCurrentTurn={toggleCurrentTurn}
-      onExit={handleBack}
-      onSubmitTurn={handleSubmitTurn}
-      onFinishStory={handleFinishStory}
-      broadcastSnapshot={broadcastSnapshot}
-    />
+    <>
+      <NotificationChoiceDialog />
+      <StoryActiveView
+        game={game}
+        entries={entries}
+        gameLoading={gameLoading}
+        readerOpen={readerOpen}
+        setReaderOpen={setReaderOpen}
+        joinedNames={joinedNames}
+        clearJoined={clearJoined}
+        isCurrentTurnLocal={isCurrentTurnLocal}
+        claimPlayer={claimPlayer}
+        toggleCurrentTurn={toggleCurrentTurn}
+        onExit={handleBack}
+        onSubmitTurn={handleSubmitTurn}
+        onFinishStory={handleFinishStory}
+        broadcastSnapshot={broadcastSnapshot}
+      />
+    </>
   );
 };
 
