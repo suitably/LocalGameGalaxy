@@ -1,0 +1,1 @@
+- **Notifications**: before the browser asks for permission, a chooser now asks how you want to be notified — on this device (recommended where available), via the ntfy app, or not now. Blocked or unsupported browsers and iPhones without the installed app get a matching hint instead of a dead button.
