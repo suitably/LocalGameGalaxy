@@ -15,6 +15,15 @@ import {
 } from '../../lib/push/notificationChannels';
 import { NotificationChannelChooser } from './NotificationChannelChooser';
 
+/** On a narrow screen the action button wraps below the text instead of squeezing it. */
+const alertSx = {
+  borderRadius: 2,
+  width: '100%',
+  flexWrap: 'wrap',
+  '& .MuiAlert-message': { flex: '1 1 10rem', minWidth: 0 },
+  '& .MuiAlert-action': { ml: 'auto', pl: 1, pt: 0, alignItems: 'center' },
+} as const;
+
 function getPermissionState(): PushPermissionState {
   return localNotificationPresenter.getPermission() as PushPermissionState;
 }
@@ -80,7 +89,7 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
         icon={<CheckCircleRoundedIcon />}
         severity="success"
         variant="outlined"
-        sx={{ borderRadius: 2, width: '100%' }}
+        sx={alertSx}
         action={
           <Button
             size="small"
@@ -107,7 +116,7 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
         icon={<NotificationsOffRoundedIcon />}
         severity="info"
         variant="outlined"
-        sx={{ borderRadius: 2, width: '100%' }}
+        sx={alertSx}
         action={
           <Button
             size="small"

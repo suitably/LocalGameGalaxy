@@ -1427,7 +1427,17 @@
       "menu": "Menü"
     },
     "copyLink": "Link kopieren",
-    "you": "Du"
+    "you": "Du",
+    "share": "Teilen",
+    "qrCode": "QR-Code",
+    "showQrCode": "QR-Code anzeigen",
+    "hideQrCode": "QR-Code ausblenden",
+    "shareLinksDesc": "Mitspieler können per QR-Code oder Link auf ihrem eigenen Gerät mitspielen.",
+    "scanQrToPlayAs": "Scanne diesen Code, um als {{name}} mitzuspielen!",
+    "qrLinkTooLong": "Dieser Link ist zu lang für einen QR-Code. Bitte kopiere oder teile ihn.",
+    "playHereInsteadShort": "Auf diesem Gerät spielen",
+    "hostDeviceBadge": "Dein Gerät",
+    "shareMessage": "Hallo {{name}}! Hier ist dein Mitspieler-Link: {{link}}"
   },
   "settings": {
     "game_sheet_title": "{{game}} · Einstellungen",
@@ -2106,7 +2116,9 @@
     "spectatorChoosing": "{{name}} wählt ein Wort",
     "spectatorDrawing": "{{name}} zeichnet",
     "spectatorGuessing": "{{name}} rät",
-    "spectatorIdle": "{{name}} ist gerade nicht dran."
+    "spectatorIdle": "{{name}} ist gerade nicht dran.",
+    "joinLoading": "Spiel wird geladen …",
+    "joinFailed": "Das Spiel konnte nicht geladen werden. Prüfe die Internetverbindung und scanne den Code erneut – oder lass dir den Link schicken."
   },
   "party": {
     "hubBannerTitle": "Party-Modus (Mehrspieler-Lobby)",

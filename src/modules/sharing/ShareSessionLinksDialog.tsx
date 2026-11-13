@@ -1,28 +1,23 @@
 import React, { useState } from 'react';
 import {
-  Avatar,
   Box,
   Button,
-  Chip,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Paper,
+  IconButton,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
-import TransferWithinAStationRoundedIcon from '@mui/icons-material/TransferWithinAStationRounded';
-import { QRCodeSVG } from 'qrcode.react';
 import { useTranslation } from 'react-i18next';
 import { PushNotificationBanner } from '../../components/push/PushNotificationBanner';
 import type { PlayerSeat } from '../player-management';
-import { SeatStatusChip } from './SeatStatusChip';
-import { SharePlayerActions } from './SharePlayerActions';
+import { SharePlayerRow } from './SharePlayerRow';
+import { COPIED_FEEDBACK_MS } from './useShareOrCopy';
 
 export interface SessionPlayerItem {
   id: string;
@@ -39,6 +34,8 @@ export interface ShareSessionLinksDialogProps {
   sessionTitle: string;
   players: SessionPlayerItem[];
   buildLink: (playerId: string) => string;
+  /** Link shown as QR code; defaults to `buildLink`. Pass a short link when that one gets long. */
+  buildQrLink?: (playerId: string) => string;
   isPlayerLocal: (playerId: string) => boolean;
   onMarkPlayerRemote: (playerId: string) => void;
   onMarkPlayerLocal?: (playerId: string) => void;
@@ -55,6 +52,7 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
   sessionTitle,
   players,
   buildLink,
+  buildQrLink = buildLink,
   isPlayerLocal,
   onMarkPlayerRemote,
   onMarkPlayerLocal,
@@ -64,6 +62,8 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
   enablePushBanner = true,
 }) => {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const phone = useMediaQuery(theme.breakpoints.down('sm'));
   const [copiedPlayerId, setCopiedPlayerId] = useState<string | null>(null);
   const [activeQrPlayerId, setActiveQrPlayerId] = useState<string | null>(null);
 
@@ -75,12 +75,21 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
     }
   };
 
+  const copyForPlayer = async (playerId: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (e) {
+      // No clipboard access (insecure context or denied): no "copied" feedback.
+      console.warn('[ShareSessionLinksDialog] Copy failed:', e);
+      return;
+    }
+    setCopiedPlayerId(playerId);
+    setTimeout(() => setCopiedPlayerId(null), COPIED_FEEDBACK_MS);
+  };
+
   const handleCopyLink = (playerId: string) => {
     onMarkPlayerRemote(playerId);
-    const link = buildLink(playerId);
-    navigator.clipboard.writeText(link);
-    setCopiedPlayerId(playerId);
-    setTimeout(() => setCopiedPlayerId(null), 2500);
+    void copyForPlayer(playerId, buildLink(playerId));
   };
 
   const handleNativeShare = async (player: SessionPlayerItem) => {
@@ -89,144 +98,95 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
     const title = shareMessageTitle || `${sessionTitle}`;
     const text = shareMessageText
       ? shareMessageText(player, link)
-      : `🎮 Hallo ${player.name}! Spiele mit uns mit: ${link}`;
+      : t('common.shareMessage', {
+          name: player.name,
+          link,
+          defaultValue: `Hallo ${player.name}! Hier ist dein Mitspieler-Link: ${link}`,
+        });
 
     if (navigator.share) {
       try {
-        await navigator.share({ title, text, url: link });
+        // The link is part of the text; passing `url` as well makes share targets repeat it.
+        await navigator.share({ title, text });
       } catch {
         // User cancelled or share failed
       }
     } else {
-      navigator.clipboard.writeText(text);
-      setCopiedPlayerId(player.id);
-      setTimeout(() => setCopiedPlayerId(null), 2500);
+      await copyForPlayer(player.id, text);
     }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      fullScreen={phone}
+      aria-labelledby="share-session-links-title"
+    >
+      <DialogTitle
+        id="share-session-links-title"
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          pt: phone ? 'max(16px, env(safe-area-inset-top))' : 2,
+        }}
+      >
         <ShareRoundedIcon color="primary" />
-        <Typography variant="h6" fontWeight={800} component="div">
+        <Typography variant="h6" fontWeight={800} component="span" sx={{ flex: 1, minWidth: 0 }}>
           {sessionTitle}
         </Typography>
+        <IconButton edge="end" onClick={onClose} aria-label={t('common.close', 'Schließen')}>
+          <CloseRoundedIcon />
+        </IconButton>
       </DialogTitle>
 
-      <DialogContent dividers>
+      <DialogContent dividers sx={{ px: { xs: 2, sm: 3 } }}>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
           {descriptionText ||
             t(
               'common.shareLinksDesc',
-              'Sobald ein Link oder QR-Code geteilt wird, wird der Spieler als Remote markiert. Mitspieler spielen auf ihrem Smartphone mit.',
+              'Mitspieler können per QR-Code oder Link auf ihrem eigenen Gerät mitspielen.',
             )}
         </Typography>
 
-        {enablePushBanner && sessionId && <PushNotificationBanner gameId={sessionId} />}
-
-        <List disablePadding sx={{ mt: 2 }}>
+        <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0, display: 'grid', gap: 1.5 }}>
           {players.map((p, index) => {
-            const isCopied = copiedPlayerId === p.id;
-            const showQr = activeQrPlayerId === p.id;
-            const link = buildLink(p.id);
             const isLocal = isPlayerLocal(p.id);
-            const isHostUser = index === 0 && isLocal;
-
             return (
-              <Paper
+              <SharePlayerRow
                 key={p.id}
-                variant="outlined"
-                sx={{
-                  mb: 1.5,
-                  p: 1.5,
-                  borderRadius: 3,
-                  bgcolor: 'background.paper',
-                  borderColor: 'divider',
-                }}
-              >
-                <ListItem
-                  disableGutters
-                  secondaryAction={
-                    isHostUser ? (
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        color="success"
-                        label={t('common.hostDeviceBadge', 'Dein Gerät')}
-                        sx={{ fontWeight: 700 }}
-                      />
-                    ) : (
-                      <SharePlayerActions
-                        isCopied={isCopied}
-                        showQr={showQr}
-                        onToggleQr={() => handleToggleQr(p.id)}
-                        onCopy={() => handleCopyLink(p.id)}
-                        onShare={() => handleNativeShare(p)}
-                      />
-                    )
-                  }
-                >
-                  <ListItemAvatar>
-                    <Avatar sx={{ bgcolor: 'primary.main', fontWeight: 'bold' }}>
-                      {p.name.charAt(0).toUpperCase()}
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={
-                      <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
-                        <Typography variant="subtitle1" fontWeight={700}>
-                          {p.name}
-                        </Typography>
-                        <SeatStatusChip player={p} isLocal={isLocal} />
-                      </Box>
-                    }
-                    secondary={
-                      !isLocal && onMarkPlayerLocal ? (
-                        <Button
-                          size="small"
-                          variant="text"
-                          color="inherit"
-                          startIcon={<TransferWithinAStationRoundedIcon fontSize="small" />}
-                          onClick={() => onMarkPlayerLocal(p.id)}
-                          sx={{
-                            textTransform: 'none',
-                            fontSize: '0.75rem',
-                            p: 0,
-                            mt: 0.5,
-                            color: 'text.secondary',
-                          }}
-                        >
-                          {t('common.playHereInsteadShort', 'Auf diesem Gerät spielen')}
-                        </Button>
-                      ) : null
-                    }
-                  />
-                </ListItem>
-
-                {showQr && (
-                  <Box display="flex" flexDirection="column" alignItems="center" py={1.5} gap={1}>
-                    <Paper sx={{ p: 1.5, bgcolor: 'text.primary', borderRadius: 2 }}>
-                      <QRCodeSVG value={link} size={150} />
-                    </Paper>
-                    <Typography variant="caption" color="text.secondary">
-                      {t('common.scanQrToPlayAs', {
-                        name: p.name,
-                        defaultValue: `Scanne diesen Code, um als ${p.name} mitzuspielen!`,
-                      })}
-                    </Typography>
-                  </Box>
-                )}
-              </Paper>
+                player={p}
+                isLocal={isLocal}
+                isHostUser={index === 0 && isLocal}
+                isCopied={copiedPlayerId === p.id}
+                showQr={activeQrPlayerId === p.id}
+                qrLink={activeQrPlayerId === p.id ? buildQrLink(p.id) : ''}
+                onToggleQr={() => handleToggleQr(p.id)}
+                onCopy={() => handleCopyLink(p.id)}
+                onShare={() => handleNativeShare(p)}
+                onPlayHere={onMarkPlayerLocal ? () => onMarkPlayerLocal(p.id) : undefined}
+              />
             );
           })}
-        </List>
+        </Box>
+
+        {enablePushBanner && sessionId && (
+          <Box mt={3}>
+            <PushNotificationBanner gameId={sessionId} />
+          </Box>
+        )}
       </DialogContent>
 
-      <DialogActions sx={{ p: 2 }}>
-        <Button onClick={onClose} variant="contained" sx={{ fontWeight: 700 }}>
-          {t('common.close', 'Schließen')}
-        </Button>
-      </DialogActions>
+      {!phone && (
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={onClose} variant="contained" sx={{ fontWeight: 700 }}>
+            {t('common.close', 'Schließen')}
+          </Button>
+        </DialogActions>
+      )}
     </Dialog>
   );
 };
