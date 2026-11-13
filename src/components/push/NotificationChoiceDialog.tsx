@@ -31,7 +31,7 @@ export const NotificationChoiceDialog: React.FC = () => {
   const [open, setOpen] = useState(shouldOpen);
 
   // Any way out counts as an answer, so the dialog never comes back on its own; the same
-  // chooser stays reachable in the settings and the share dialogs.
+  // chooser stays reachable in the settings and from the share dialogs' button.
   const close = useCallback(() => {
     setNotificationChoiceDismissed(true);
     setOpen(false);

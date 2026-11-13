@@ -1627,7 +1627,8 @@
     },
     "privacy_title": "Privacy",
     "privacy_desc": "Which data the games use, which services they contact and your rights.",
-    "privacy_open": "Privacy Notice"
+    "privacy_open": "Privacy Notice",
+    "notify_open": "Set up notifications"
   },
   "server": {
     "title": "Nexumia Server Connection",

@@ -14,7 +14,7 @@ import {
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
 import { useTranslation } from 'react-i18next';
-import { PushNotificationBanner } from '../../components/push/PushNotificationBanner';
+import { NotificationSettingsButton } from '../../components/push/NotificationSettingsButton';
 import type { PlayerSeat } from '../player-management';
 import { SharePlayerRow } from './SharePlayerRow';
 import { COPIED_FEEDBACK_MS } from './useShareOrCopy';
@@ -174,8 +174,8 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
         </Box>
 
         {enablePushBanner && sessionId && (
-          <Box mt={3}>
-            <PushNotificationBanner gameId={sessionId} />
+          <Box mt={1.5}>
+            <NotificationSettingsButton />
           </Box>
         )}
       </DialogContent>
