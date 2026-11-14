@@ -69,4 +69,4 @@ export const lyricsOnlyLineCount = (setting: number, stacked: boolean, isDuet: b
 
 /** Opacity of the upcoming line at `index` of `count`: fades evenly, the last stays readable. */
 export const upcomingLineOpacity = (index: number, count: number): number =>
-  Math.max(0.15, 0.65 - index * (0.5 / Math.max(2, count - 1)));
+  Math.max(0.25, 0.65 - index * (0.4 / Math.max(2, count - 1)));

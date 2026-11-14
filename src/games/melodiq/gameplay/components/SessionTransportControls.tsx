@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, IconButton } from '@mui/material';
+import { alpha, Box, IconButton, type Theme } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
 import PauseIcon from '@mui/icons-material/PauseRounded';
 import SkipNextIcon from '@mui/icons-material/SkipNextRounded';
@@ -17,6 +17,8 @@ export interface SessionTransportControlsProps {
 const buttonSx = {
   color: 'common.white',
   bgcolor: 'rgba(0,0,0,0.55)',
+  // Outline keeps the button readable over a dark frame or the black stage
+  border: (theme: Theme) => `1px solid ${alpha(theme.palette.common.white, 0.35)}`,
   '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' },
 } as const;
 

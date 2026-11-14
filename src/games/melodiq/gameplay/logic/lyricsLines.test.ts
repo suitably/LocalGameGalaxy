@@ -74,10 +74,10 @@ describe('lyricsOnlyLineCount', () => {
 });
 
 describe('upcomingLineOpacity', () => {
-  it('keeps the two-line fade and spreads longer lists', () => {
+  it('fades evenly and keeps the last line readable', () => {
     expect(upcomingLineOpacity(0, 1)).toBeCloseTo(0.65);
-    expect(upcomingLineOpacity(1, 2)).toBeCloseTo(0.4);
-    expect(upcomingLineOpacity(3, 4)).toBeCloseTo(0.15);
-    expect(upcomingLineOpacity(9, 4)).toBe(0.15);
+    expect(upcomingLineOpacity(1, 2)).toBeCloseTo(0.45);
+    expect(upcomingLineOpacity(3, 4)).toBeCloseTo(0.25);
+    expect(upcomingLineOpacity(9, 4)).toBe(0.25);
   });
 });
