@@ -128,7 +128,7 @@ export const SessionStage: React.FC<SessionStageProps> = ({ session, core }) => 
             flexDirection: 'column',
             position: 'relative',
             minHeight: 0,
-            pt: scoringCtrl.visiblePlayers.length > 0 ? 10 : 0,
+            pt: scoringCtrl.visiblePlayers.length === 0 ? 0 : isTVMode ? 12 : 10,
           }}
         >
           <SessionLyricsVisualizer

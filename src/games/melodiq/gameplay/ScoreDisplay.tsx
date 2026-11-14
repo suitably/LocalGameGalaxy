@@ -2,6 +2,7 @@ import { useState, forwardRef, useImperativeHandle } from 'react';
 import { alpha, Box, Typography } from '@mui/material';
 import { keyframes } from '@emotion/react';
 import { piecePalette, scoreText } from '../../../themeTokens';
+import { useIsTvMode } from '../../../hooks/useIsTvMode';
 
 // --- Types ---
 export type RatingType = 'Perfect' | 'Good' | 'Okay' | 'Miss';
@@ -56,6 +57,8 @@ const PlayerScoreDisplay = ({
   state: PlayerVisualState;
   config: { name: string; hue: number };
 }) => {
+  // TV: read from ~3 m, so the variants step up and the theme's 20px floor applies (DESIGN.md §3.3)
+  const isTv = useIsTvMode();
   const rank = getRank(state.score);
   // Calculate progress to next rank
   const currentRankIdx = RANKS.indexOf(rank);
@@ -111,7 +114,7 @@ const PlayerScoreDisplay = ({
             sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5, justifyContent: 'flex-end' }}
           >
             <Typography
-              variant="caption"
+              variant={isTv ? 'subtitle1' : 'caption'}
               sx={{
                 color: `hsl(${config.hue}, 100%, 80%)`,
                 fontWeight: 'bold',
@@ -121,7 +124,7 @@ const PlayerScoreDisplay = ({
               {config.name}
             </Typography>
             <Typography
-              variant="subtitle1"
+              variant={isTv ? 'h5' : 'subtitle1'}
               sx={{
                 ...scoreText,
                 fontWeight: 800,
@@ -135,7 +138,7 @@ const PlayerScoreDisplay = ({
           </Box>
 
           {/* Rank / Progress Bar (Compact) */}
-          <Box sx={{ width: 100, position: 'relative', mt: 0.2 }}>
+          <Box sx={{ width: isTv ? 180 : 100, position: 'relative', mt: 0.2 }}>
             <Box
               sx={{
                 height: 3,
@@ -157,7 +160,7 @@ const PlayerScoreDisplay = ({
             <Typography
               variant="caption"
               sx={{
-                fontSize: '0.75rem',
+                fontSize: isTv ? undefined : '0.75rem',
                 color: rank.color,
                 fontWeight: 'bold',
                 textShadow: '0 0 2px black',

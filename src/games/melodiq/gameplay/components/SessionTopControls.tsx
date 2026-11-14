@@ -3,6 +3,7 @@ import { alpha, Box, Typography, IconButton } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import { ScoreDisplay, type ScoreDisplayHandle } from '../ScoreDisplay';
 import { type PlayerRuntime } from '../hooks/PlayerRuntime';
+import { TV_GUTTER_PX } from '../../../../themeTv';
 
 export interface SessionTopControlsProps {
   artist: string;
@@ -37,7 +38,8 @@ export const SessionTopControls: React.FC<SessionTopControlsProps> = ({
           left: 0,
           width: '100%',
           zIndex: 20,
-          p: { xs: 1, sm: 2 },
+          // TV: content stays inside the page gutter, clear of a cropped screen edge
+          p: isTVMode ? `24px ${TV_GUTTER_PX}px` : { xs: 1, sm: 2 },
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -48,7 +50,14 @@ export const SessionTopControls: React.FC<SessionTopControlsProps> = ({
           transition: 'background-color 0.5s ease-in-out',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', ...fade }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            flex: isTVMode ? '1 1 0' : undefined,
+            ...fade,
+          }}
+        >
           {onMinimize && !isTVMode && (
             <IconButton onClick={onMinimize} color="inherit" sx={{ ml: 1 }}>
               <KeyboardArrowDownIcon />
@@ -57,7 +66,7 @@ export const SessionTopControls: React.FC<SessionTopControlsProps> = ({
         </Box>
         {isTVMode ? (
           // the TV theme scales the variant (x1.5, 20px floor); no hard-coded size (#554)
-          <Typography variant="h6" sx={fade}>
+          <Typography variant="h5" noWrap sx={{ minWidth: 0, fontWeight: 600, ...fade }}>
             {artist} - {title}
           </Typography>
         ) : (
@@ -71,7 +80,15 @@ export const SessionTopControls: React.FC<SessionTopControlsProps> = ({
             </Typography>
           </Box>
         )}
-        <Box sx={{ display: 'flex', gap: 4, pointerEvents: 'none', flexShrink: 0 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            gap: 4,
+            pointerEvents: 'none',
+            // TV: equal side columns keep the title centred
+            ...(isTVMode ? { flex: '1 1 0', justifyContent: 'flex-end' } : { flexShrink: 0 }),
+          }}
+        >
           <ScoreDisplay
             ref={scoreDisplayRef}
             players={visiblePlayers.map((p) => ({

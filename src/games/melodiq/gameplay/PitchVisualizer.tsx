@@ -199,7 +199,7 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(
           drawOverlays(
             ctx,
             colors,
-            { enabled: showDebugOverlay, beat: currentBeat, centerPitch },
+            { enabled: showDebugOverlay, beat: currentBeat, centerPitch, tv: scale > 1 },
             label,
           );
         } catch (e) {
