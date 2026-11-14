@@ -190,12 +190,17 @@ export const drawCursor = (
   ctx.restore();
 };
 
+/** Singer name in a TV pitch lane: readable from ~3 m and inside the TV gutter. */
+const TV_LABEL = { fontPx: 30, x: 48, y: 52 } as const;
+
 export const drawOverlays = (
   ctx: CanvasRenderingContext2D,
   colors: PitchColors,
-  debug: { enabled: boolean; beat: number; centerPitch: number },
+  /** `tv` (the TV is the only view with a UI scale): larger label inside the 48px page gutter. */
+  debug: { enabled: boolean; beat: number; centerPitch: number; tv?: boolean },
   label?: string,
 ) => {
+  const tv = debug.tv ?? false;
   if (debug.enabled) {
     ctx.globalAlpha = 0.85;
     ctx.fillStyle = colors.debugBackground;
@@ -211,9 +216,9 @@ export const drawOverlays = (
   }
   if (label) {
     ctx.fillStyle = colors.label;
-    ctx.font = `20px ${colors.fontFamily}`;
+    ctx.font = `${tv ? TV_LABEL.fontPx : 20}px ${colors.fontFamily}`;
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
-    ctx.fillText(label, 20, 40);
+    ctx.fillText(label, tv ? TV_LABEL.x : 20, tv ? TV_LABEL.y : 40);
   }
 };

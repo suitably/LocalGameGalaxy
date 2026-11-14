@@ -9,7 +9,7 @@ generated:
   at: 2026-09-27T10:00:00Z
   by: previous-agent
 verified:
-  at: 2026-11-12
+  at: 2026-11-14
   method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
@@ -41,7 +41,10 @@ Melodiq follows a strict separation of concerns, divided into domains:
 ### 2.2 Host & Game Loop
 
 - `PlaybackManager.tsx`: Container component. Manages the audio elements and acts as the bridge between the UI and the actual gameplay session.
-- `MelodiqSession.tsx`: The core game loop container.
+- `MelodiqSession.tsx`: The core game loop container. It picks the screen (load error, loading, folder prompt, score board, stage); the session state (media, audio, players, scoring, passive sync, imperative handle) lives in `gameplay/hooks/useMelodiqSessionCore.ts` and the playing stage in `gameplay/components/SessionStage.tsx`.
+- Stage chrome: `gameplay/hooks/useStageChrome.ts` (rule in `gameplay/logic/stageChrome.ts`) hides the header bar, title and minimize button 3.5 s after the last interaction while a song plays; a tap or mouse move shows them again with `SessionTransportControls` (play/pause, next) on the video. Scores and the progress line stay. The TV view (`isTVMode`) uses the same rule with `TV_STAGE_CHROME_HIDE_MS` (8 s, read from a distance, nobody can recall it) and has no transport buttons: it mirrors the host and has no pointer. TV sizes follow DESIGN.md §3.3: `ScoreDisplay`, `DuetPart` and `SessionTopControls` switch variants and padding on `useIsTvMode()` / `isTVMode` (48 px gutter, no hard-coded font size), the lane label in `drawOverlays` takes a `tv` flag.
+- Lyrics-only stage: without a pitch lane `lyricsOnlyLineCount` (`gameplay/logic/lyricsLines.ts`) raises the line count above the `lyricsLines` setting (portrait phone: 5 solo, 3 per duet part; otherwise 3 in the centred layout).
+- YouTube backgrounds: `disableYouTubeCaptions` (`gameplay/youtubeApi.ts`) unloads the player's caption module on `onReady` and `onApiChange`; no player parameter can turn the video's own subtitles off.
   - _Logic Hooks_: `usePlaybackControls.ts` (Play/Pause), `usePassiveSync.ts` (TV/Client sync), `useSessionEnd.ts` (Scoreboard transitions).
   - _Presentational Components_: `LyricsDisplay.tsx` (lanes in `lyrics/`), `PitchVisualizer.tsx` (canvas drawing in `pitch/`), `ScoreBoard.tsx` (parts in `scoreboard/`).
 

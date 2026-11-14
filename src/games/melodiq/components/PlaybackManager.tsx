@@ -86,16 +86,19 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
       onSelectSong,
     });
 
-    // sendClientCommand is used to control the remote session.
     const clientEngine = useClientEngine();
     const { sendClientCommand, isSessionPlaying } = isClient
       ? clientEngine
       : { sendClientCommand: undefined, isSessionPlaying: false };
 
-    const canControlPlayback = true; // All users can control playback by default now
     const actualIsPlaying = isClient
       ? isSessionPlaying
       : Boolean(selectedSong || remoteSong) && playbackState.isPlaying;
+
+    const clientTogglePlay =
+      isClient && sendClientCommand
+        ? () => sendClientCommand(actualIsPlaying ? 'pause' : 'play')
+        : undefined;
 
     useEffect(() => {
       onPlayingChange?.(actualIsPlaying);
@@ -177,14 +180,14 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
             }}
             onMinimize={onMinimizeSession}
             onPlaybackUpdate={handlePlaybackUpdate}
-            showDebugOverlay={false}
-            showDevSlider={false}
             muteAudio={isTVConnected || isClient}
             suppressResults={false}
             isClient={isClient}
             isPassive={isClient}
             activeSessionOverride={activeParticipants}
             clientDeviceId={clientDeviceId}
+            onRequestTogglePlay={clientTogglePlay}
+            onRequestNext={handleMiniPlayerNext}
           />
         )}
 
@@ -196,8 +199,8 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
             onTogglePlay={() => {
               if (isInRestoredMode) {
                 handleResume(false);
-              } else if (isClient && sendClientCommand) {
-                sendClientCommand(actualIsPlaying ? 'pause' : 'play');
+              } else if (clientTogglePlay) {
+                clientTogglePlay();
               } else if (selectedSong) {
                 sessionRef.current?.togglePlay();
                 if (!actualIsPlaying && !isTVConnected) {
@@ -233,7 +236,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                 : undefined
             }
             isClient={isClient}
-            canControlPlayback={canControlPlayback}
+            canControlPlayback // all users can control playback
           />
         )}
 

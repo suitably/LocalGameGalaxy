@@ -3,6 +3,7 @@ import { Box, Typography } from '@mui/material';
 import type { Note } from '../../parser';
 import { LyricsLane, type LyricsLaneProps } from './LyricsLane';
 import { PartMicButton } from './PartMicButton';
+import { useIsTvMode } from '../../../../hooks/useIsTvMode';
 
 type SharedLaneProps = Omit<LyricsLaneProps, 'notes' | 'color' | 'align' | 'laneRef'>;
 
@@ -33,15 +34,21 @@ export const DuetPart: React.FC<DuetPartProps> = ({
   laneProps,
   mic,
 }) => {
+  const isTv = useIsTvMode();
   const micButton = mic && (
     <PartMicButton color={color} active={mic.active} partName={partName} onClick={mic.onClick} />
   );
   // The name pairs with the lane colour, so colour is never the only signal.
   const name = (
     <Typography
-      variant="caption"
+      variant={isTv ? 'subtitle1' : 'caption'}
       noWrap
-      sx={{ color, fontSize: isSmallScreen ? '0.75rem' : '0.875rem', maxWidth: '100%' }}
+      sx={{
+        color,
+        // TV keeps the variant size (20px floor); a hard-coded size would undercut it
+        fontSize: isTv ? undefined : isSmallScreen ? '0.75rem' : '0.875rem',
+        maxWidth: '100%',
+      }}
     >
       {partName}
     </Typography>

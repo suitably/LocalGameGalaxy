@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { Note } from '../../parser';
-import { groupNotesIntoLines, leadInTiming, upcomingLinesAfter } from './lyricsLines';
+import {
+  groupNotesIntoLines,
+  leadInTiming,
+  lyricsOnlyLineCount,
+  upcomingLineOpacity,
+  upcomingLinesAfter,
+} from './lyricsLines';
 
 const note = (start: number, duration: number, type: string = ':'): Note =>
   ({ start, duration, type, text: 'la', pitch: 0 }) as unknown as Note;
@@ -51,5 +57,27 @@ describe('leadInTiming', () => {
 
   it('is zero without an active line', () => {
     expect(leadInTiming(lines, -1, 0, 100)).toEqual({ timeUntilStartSec: 0, totalGapSec: 0 });
+  });
+});
+
+describe('lyricsOnlyLineCount', () => {
+  it('shows more lines when only lyrics are on stage', () => {
+    expect(lyricsOnlyLineCount(2, true, false)).toBe(5);
+    expect(lyricsOnlyLineCount(2, true, true)).toBe(3);
+    expect(lyricsOnlyLineCount(2, false, false)).toBe(3);
+  });
+
+  it('keeps hidden lyrics hidden and never lowers the setting', () => {
+    expect(lyricsOnlyLineCount(0, true, false)).toBe(0);
+    expect(lyricsOnlyLineCount(6, true, true)).toBe(6);
+  });
+});
+
+describe('upcomingLineOpacity', () => {
+  it('fades evenly and keeps the last line readable', () => {
+    expect(upcomingLineOpacity(0, 1)).toBeCloseTo(0.65);
+    expect(upcomingLineOpacity(1, 2)).toBeCloseTo(0.45);
+    expect(upcomingLineOpacity(3, 4)).toBeCloseTo(0.25);
+    expect(upcomingLineOpacity(9, 4)).toBe(0.25);
   });
 });

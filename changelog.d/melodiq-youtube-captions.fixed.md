@@ -1,0 +1,1 @@
+- **Melodiq: YouTube subtitles no longer cover the lyrics** — a YouTube background video showed its own captions whenever the viewer's YouTube preference or the uploader's `yt:cc=on` tag asked for them (`cc_load_policy: 0` cannot turn them off). The caption module is now unloaded on `onReady` and `onApiChange` (`disableYouTubeCaptions`).
