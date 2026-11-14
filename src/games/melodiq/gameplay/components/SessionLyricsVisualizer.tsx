@@ -5,6 +5,7 @@ import { PitchVisualizer, type SongWithNotes } from '../PitchVisualizer';
 import { type PlayerRuntime } from '../hooks/PlayerRuntime';
 import { useMelodiqSettings } from '../../hooks/SettingsContext';
 import type { LyricsRows } from '../logic/lyricsFit';
+import { lyricsOnlyLineCount } from '../logic/lyricsLines';
 import { HostPartToggle } from './HostPartToggle';
 import { useStackedStage } from '../hooks/useStackedStage';
 
@@ -127,7 +128,11 @@ export const SessionLyricsVisualizer: React.FC<SessionLyricsVisualizerProps> = (
               audioRef={timeProxyRef}
               uiScale={lyricsScale * (stacked ? STACKED_CENTER_LYRICS_SCALE : CENTER_LYRICS_SCALE)}
               enableZoom={activeLyricsZoom}
-              lyricsLines={activeLyricsLines}
+              lyricsLines={lyricsOnlyLineCount(
+                activeLyricsLines ?? 2,
+                stacked,
+                trackNames.length > 1,
+              )}
               lyricsRows={lyricsRows}
               lyricsMinFit={lyricsMinFit}
             />

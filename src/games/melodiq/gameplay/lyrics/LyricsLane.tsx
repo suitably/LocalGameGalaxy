@@ -5,7 +5,12 @@ import { LyricsLine, LeadInIndicator, type LineGroup } from '../LyricsLineView';
 import { LineWords } from './LineWords';
 import { ACTIVE_LINE_REM, type LyricsRows } from '../logic/lyricsFit';
 import { selectActiveLineIndex } from '../logic/lyricsLineSelection';
-import { groupNotesIntoLines, leadInTiming, upcomingLinesAfter } from '../logic/lyricsLines';
+import {
+  groupNotesIntoLines,
+  leadInTiming,
+  upcomingLineOpacity,
+  upcomingLinesAfter,
+} from '../logic/lyricsLines';
 
 export interface LyricsLaneProps {
   notes: Note[];
@@ -44,10 +49,11 @@ const LEGIBILITY_SHADOW = '0 2px 5px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7)';
 const UpcomingLine: React.FC<{
   line: LineGroup;
   index: number;
+  count: number;
   align: 'left' | 'center' | 'right';
   scale: number;
   reservedRows: LyricsRows;
-}> = ({ line, index, align, scale, reservedRows }) => (
+}> = ({ line, index, count, align, scale, reservedRows }) => (
   <Box
     sx={{
       minHeight:
@@ -73,7 +79,7 @@ const UpcomingLine: React.FC<{
         },
         fontWeight: 500,
         color: 'common.white',
-        opacity: Math.max(0.1, 0.65 - index * 0.25),
+        opacity: upcomingLineOpacity(index, count),
         whiteSpace: 'normal',
         textWrap: 'balance',
         width: '100%',
@@ -202,6 +208,7 @@ export const LyricsLane: React.FC<LyricsLaneProps> = React.memo(
             key={idx}
             line={line}
             index={idx}
+            count={upcoming.length}
             align={align}
             scale={scale}
             reservedRows={reservedRows}

@@ -18,7 +18,7 @@ export function getYouTubeVideoId(url?: string): string | null {
 
   // 1. Standard YouTube URL patterns
   const urlMatch = decoded.match(
-    /(?:youtube(?:-nocookie)?\.com\/(?:[^/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+    /(?:youtube(?:-nocookie)?\.com\/(?:[^/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
   );
   if (urlMatch) return urlMatch[1];
 
@@ -90,4 +90,33 @@ export interface YTPlayerInstance {
   setPlaybackRate: (rate: number) => void;
   getPlayerState: () => number;
   destroy: () => void;
+  /** Undocumented but stable: unloads a player module such as the caption renderer. */
+  unloadModule?: (module: string) => void;
+  setOption?: (module: string, option: string, value: unknown) => void;
+}
+
+/** The caption module is called `captions` in the HTML5 player and `cc` in older ones. */
+const CAPTION_MODULES = ['captions', 'cc'] as const;
+
+/**
+ * Turns the video's own subtitles off. There is no player parameter for it: `cc_load_policy`
+ * can only force captions on, and otherwise the viewer's YouTube preference and the uploader's
+ * `yt:cc=on` tag decide. The karaoke lyrics are the subtitles here, so the module is unloaded.
+ * Call it on `onReady` and again on `onApiChange`, which fires when the module (re)loads.
+ */
+export function disableYouTubeCaptions(player: YTPlayerInstance | null | undefined): void {
+  if (!player) return;
+  for (const module of CAPTION_MODULES) {
+    // separate calls: a player without the module throws on either, nothing to turn off then
+    for (const turnOff of [
+      () => player.setOption?.(module, 'track', {}),
+      () => player.unloadModule?.(module),
+    ]) {
+      try {
+        turnOff();
+      } catch {
+        // ignored
+      }
+    }
+  }
 }

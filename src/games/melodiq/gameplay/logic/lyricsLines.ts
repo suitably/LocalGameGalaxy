@@ -49,3 +49,24 @@ export const leadInTiming = (
     totalGapSec: ((active.startBeat - gapStartBeat) * msPerBeat) / 1000,
   };
 };
+
+/** Lines shown when the stage holds nothing but lyrics (no pitch lane), per layout. */
+const LYRICS_ONLY_LINES = { stackedSolo: 5, stackedDuet: 3, wide: 3 } as const;
+
+/**
+ * Line count for a lyrics-only stage: the room a pitch lane would take goes to more upcoming
+ * lines, like a lyrics view in a music app. `0` (lyrics hidden) and larger settings are kept.
+ */
+export const lyricsOnlyLineCount = (setting: number, stacked: boolean, isDuet: boolean): number => {
+  if (setting <= 0) return 0;
+  const room = !stacked
+    ? LYRICS_ONLY_LINES.wide
+    : isDuet
+      ? LYRICS_ONLY_LINES.stackedDuet
+      : LYRICS_ONLY_LINES.stackedSolo;
+  return Math.max(setting, room);
+};
+
+/** Opacity of the upcoming line at `index` of `count`: fades evenly, the last stays readable. */
+export const upcomingLineOpacity = (index: number, count: number): number =>
+  Math.max(0.15, 0.65 - index * (0.5 / Math.max(2, count - 1)));

@@ -27,6 +27,7 @@ export const SessionTopControls: React.FC<SessionTopControlsProps> = ({
   progressLineRef,
   isUIVisible = true,
 }) => {
+  const fade = { opacity: isUIVisible ? 1 : 0, transition: 'opacity 0.5s ease-in-out' };
   return (
     <>
       <Box
@@ -41,13 +42,13 @@ export const SessionTopControls: React.FC<SessionTopControlsProps> = ({
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 1,
-          bgcolor: 'rgba(0,0,0,0.5)',
+          // Only the bar, title and minimize button hide; the scores stay on the video.
+          bgcolor: isUIVisible ? 'rgba(0,0,0,0.5)' : 'transparent',
           pointerEvents: isUIVisible ? 'auto' : 'none',
-          opacity: isUIVisible ? 1 : 0,
-          transition: 'opacity 0.5s ease-in-out',
+          transition: 'background-color 0.5s ease-in-out',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', ...fade }}>
           {onMinimize && !isTVMode && (
             <IconButton onClick={onMinimize} color="inherit" sx={{ ml: 1 }}>
               <KeyboardArrowDownIcon />
@@ -56,12 +57,12 @@ export const SessionTopControls: React.FC<SessionTopControlsProps> = ({
         </Box>
         {isTVMode ? (
           // the TV theme scales the variant (x1.5, 20px floor); no hard-coded size (#554)
-          <Typography variant="h6">
+          <Typography variant="h6" sx={fade}>
             {artist} - {title}
           </Typography>
         ) : (
           // Phone and desktop: one line each, so a long title never pushes the stage down.
-          <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Box sx={{ flex: 1, minWidth: 0, ...fade }}>
             <Typography variant="subtitle1" noWrap sx={{ fontWeight: 600, lineHeight: 1.3 }}>
               {title}
             </Typography>
@@ -93,8 +94,6 @@ export const SessionTopControls: React.FC<SessionTopControlsProps> = ({
           bgcolor: (theme) => alpha(theme.palette.text.primary, 0.2),
           zIndex: 100,
           pointerEvents: 'none',
-          opacity: isUIVisible ? 1 : 0,
-          transition: 'opacity 0.5s ease-in-out',
         }}
       >
         <Box
