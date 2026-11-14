@@ -4,7 +4,7 @@
 
 High-performance Hono companion server (Nexumia server) for **MelodiQ** (karaoke streaming, USDB downloads, automated stem separation with UVR MDX-Net, AI lyrics alignment with Whisper).
 
-WebRTC signaling is handled by the companion **galaxy-signaling** microservice on port `8000`, orchestrated together via Docker Compose.
+WebRTC signaling is built into the server: a WebSocket tracker at `/signaling` on the HTTP port (`ws://localhost:3000/signaling`), so a reverse proxy or tunnel for the server covers signaling too (it must pass WebSocket upgrades). The app detects it through `GET /api/info`. The separate **galaxy-signaling** microservice on port `8000` remains available for setups without the Nexumia server.
 
 > 💡 **Note**: Party games (**GuessArt**, **Gartic Phone**, **Werewolf**, **Qwixx**) run completely serverless peer-to-peer via MQTT/WebSockets and do **not** require the Nexumia server (MelodiQ plugin). For WebRTC microphone audio and screen mirroring in offline or private networks, only the lightweight `signaling` service (port 8000) is required.
 

@@ -13,7 +13,7 @@ export const PhoneJoinPrompt: React.FC = () => {
     activeSongId: contextActiveSongId,
     promptedSongId,
     setPromptedSongId,
-    setClientRole,
+    setSinging,
     updateClientProfile,
     sendClientCommand,
   } = useClientEngine();
@@ -23,7 +23,7 @@ export const PhoneJoinPrompt: React.FC = () => {
   const open = isSessionPlaying && promptedSongId !== activeSongId;
 
   const handleChoice = (mode: 'singer' | 'spectator') => {
-    setClientRole(mode);
+    setSinging(mode === 'singer');
     if (mode === 'spectator') {
       updateClientProfile({ displayMode: 'lyrics' });
     } else {

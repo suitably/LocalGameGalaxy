@@ -5,6 +5,7 @@ import type { ServerConfig, HonoEnv } from './types';
 import { loadPlugins } from './pluginLoader';
 import { pairingStore, registerPairingRoutes } from './pairing';
 import { serverConfig } from '../config';
+import { SIGNALING_PATH } from './signaling';
 
 export async function createGalaxyServer(config: ServerConfig): Promise<Hono<HonoEnv>> {
   const app = new Hono<HonoEnv>();
@@ -57,6 +58,8 @@ export async function createGalaxyServer(config: ServerConfig): Promise<Hono<Hon
       name: 'LocalGameGalaxy Backend Kernel',
       version: '2.0.0',
       activePlugins: config.activePlugins,
+      // Path of the built-in WebRTC signaling tracker (WebSocket) on this server.
+      signaling: SIGNALING_PATH,
     }),
   );
 

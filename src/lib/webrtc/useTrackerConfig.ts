@@ -7,6 +7,7 @@ import {
 } from './trackerLogic';
 import { DEFAULT_PUBLIC_TRACKERS, type TrackerItem } from './trackerTypes';
 import { storage, STORAGE_PREFIXES } from '../storage';
+import { detectHelperSignaling, SIGNALING_DETECTED_EVENT } from './signalingSettings';
 
 /** Persisted tracker configuration (custom URLs, per-URL enabled preferences) and its actions. */
 export function useTrackerConfig(gameId: string) {
@@ -25,10 +26,19 @@ export function useTrackerConfig(gameId: string) {
   const [helperSettingsHash, setHelperSettingsHash] = useState(0);
 
   useEffect(() => {
-    const handleSettingsUpdate = () => setHelperSettingsHash((h) => h + 1);
+    // The companion server may serve the tracker itself; every hook instance re-reads the settings
+    // once that is known (SIGNALING_DETECTED_EVENT).
+    const rereadSettings = () => setHelperSettingsHash((h) => h + 1);
+    const handleSettingsUpdate = () => {
+      rereadSettings();
+      void detectHelperSignaling();
+    };
+    void detectHelperSignaling();
+    window.addEventListener(SIGNALING_DETECTED_EVENT, rereadSettings);
     window.addEventListener('melodiq_settings_updated', handleSettingsUpdate);
     window.addEventListener('server_connection_updated', handleSettingsUpdate);
     return () => {
+      window.removeEventListener(SIGNALING_DETECTED_EVENT, rereadSettings);
       window.removeEventListener('melodiq_settings_updated', handleSettingsUpdate);
       window.removeEventListener('server_connection_updated', handleSettingsUpdate);
     };

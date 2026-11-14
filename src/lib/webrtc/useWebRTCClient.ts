@@ -12,7 +12,10 @@ import { discoveryRetryDelay } from './discoveryRetry';
 import { HEARTBEAT_CHECK_MS, isPeerStale, pongFor } from './heartbeat';
 
 const MAX_CANDIDATES = 4;
-const CONNECTION_TIMEOUT_MS = 6000;
+/** A search younger than this is left alone when the page returns to the foreground. */
+const RESUME_RETRY_MIN_MS = 5000;
+/** Time a candidate gets to connect; ICE over mobile data or a TURN relay takes several seconds. */
+const CONNECTION_TIMEOUT_MS = 10000;
 
 /**
  * Options for configuring the WebRTC Client hook.
@@ -80,6 +83,9 @@ export function useWebRTCClient(
 
   const initiatedTrackersRef = useRef<Set<string>>(new Set());
   const discoveryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Counts connect() calls; an attempt that was overtaken while waiting for the microphone stops. */
+  const connectAttemptRef = useRef(0);
+  const lastConnectAtRef = useRef(0);
 
   const stopDiscoveryRetry = useCallback(() => {
     if (discoveryTimerRef.current) clearTimeout(discoveryTimerRef.current);
@@ -101,6 +107,7 @@ export function useWebRTCClient(
   }, [stopDiscoveryRetry]);
 
   const cleanup = useCallback(() => {
+    connectAttemptRef.current++;
     stopDiscoveryRetry();
     if (peerRef.current) {
       peerRef.current.destroy();
@@ -410,12 +417,20 @@ export function useWebRTCClient(
     if (!partyId || trackerUrls.length === 0) return;
 
     cleanup();
+    const attempt = ++connectAttemptRef.current;
+    lastConnectAtRef.current = Date.now();
 
     try {
       updateStatus('Requesting permissions...', 'status-connecting');
 
       if (optionsRef.current.getMediaStream) {
         const stream = await optionsRef.current.getMediaStream();
+        if (attempt !== connectAttemptRef.current) {
+          // A newer connect() (or unmount) took over meanwhile; a second tracker client would
+          // open duplicate connections to the host.
+          stream?.getTracks().forEach((track) => track.stop());
+          return;
+        }
         mediaStreamRef.current = stream;
       }
 
@@ -493,6 +508,23 @@ export function useWebRTCClient(
       return () => clearTimeout(timeout);
     }
   }, [connect, autoConnect]);
+
+  // Back in the foreground or back online while not connected: search again right away. Timers
+  // were paused meanwhile and the tracker sockets may be dead, with a long backoff before they retry.
+  useEffect(() => {
+    if (!autoConnect) return;
+    const retryNow = () => {
+      if (document.visibilityState !== 'visible' || isWebRTCConnectedRef.current) return;
+      if (Date.now() - lastConnectAtRef.current < RESUME_RETRY_MIN_MS) return;
+      void connectRef.current?.();
+    };
+    document.addEventListener('visibilitychange', retryNow);
+    window.addEventListener('online', retryNow);
+    return () => {
+      document.removeEventListener('visibilitychange', retryNow);
+      window.removeEventListener('online', retryNow);
+    };
+  }, [autoConnect]);
 
   // Sync refs with callbacks
   useEffect(() => {

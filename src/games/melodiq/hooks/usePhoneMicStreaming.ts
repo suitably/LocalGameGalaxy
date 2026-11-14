@@ -1,53 +1,54 @@
 import { useEffect, useRef } from 'react';
 import { MicrophoneManager } from '../audio/MicrophoneManager';
+import { startSteadyTicker } from '../../../lib/utils/steadyTicker';
 
 const SEND_INTERVAL_MS = 33;
 
 interface Options {
   isSessionPlaying: boolean;
-  clientRole: string;
+  /** The host scores this phone in the running song (see `logic/phoneSinging.ts`). */
+  isSinging: boolean;
   micDeviceId?: string;
   sendData: (data: Record<string, unknown>) => void;
 }
 
 /**
  * Streams the singer's pitch to the host (about 30 Hz) while a session is playing and this
- * phone is a singer; the microphone is released otherwise to save battery.
+ * phone sings; the microphone is released otherwise to save battery. The ticks come from
+ * `startSteadyTicker`, so the pitch keeps flowing while the browser is in the background.
  */
 export const usePhoneMicStreaming = ({
   isSessionPlaying,
-  clientRole,
+  isSinging,
   micDeviceId,
   sendData,
 }: Options) => {
   const lastSendRef = useRef(0);
 
   useEffect(() => {
-    if (!isSessionPlaying || clientRole !== 'singer') return;
+    if (!isSessionPlaying || !isSinging) return;
 
     let mounted = true;
     let mic: MicrophoneManager | null = null;
-    let frameId = 0;
+    let stopTicker: (() => void) | null = null;
 
-    const loop = (active: MicrophoneManager) => {
+    const tick = (active: MicrophoneManager) => {
       if (!mounted) return;
       const now = performance.now();
-      if (now - lastSendRef.current > SEND_INTERVAL_MS) {
-        const pitch = active.getPitch();
-        if (pitch) {
-          sendData({
-            type: 'pitch',
-            frequency: pitch.frequency,
-            note: pitch.note,
-            volume: pitch.volume,
-          });
-        } else {
-          sendData({ type: 'pitch', frequency: -1, note: -1, volume: active.getCurrentVolume() });
-        }
-        window.dispatchEvent(new CustomEvent('melodiq_local_pitch', { detail: { pitch } }));
-        lastSendRef.current = now;
+      if (now - lastSendRef.current < SEND_INTERVAL_MS - 5) return;
+      const pitch = active.getPitch();
+      if (pitch) {
+        sendData({
+          type: 'pitch',
+          frequency: pitch.frequency,
+          note: pitch.note,
+          volume: pitch.volume,
+        });
+      } else {
+        sendData({ type: 'pitch', frequency: -1, note: -1, volume: active.getCurrentVolume() });
       }
-      frameId = requestAnimationFrame(() => loop(active));
+      window.dispatchEvent(new CustomEvent('melodiq_local_pitch', { detail: { pitch } }));
+      lastSendRef.current = now;
     };
 
     const start = async () => {
@@ -60,7 +61,7 @@ export const usePhoneMicStreaming = ({
           return;
         }
         console.log('[PhoneClientEngine] Microphone started successfully.');
-        loop(next);
+        stopTicker = startSteadyTicker(SEND_INTERVAL_MS, () => tick(next));
       } catch (err) {
         console.error('[PhoneClientEngine] Failed to start microphone:', err);
       }
@@ -69,8 +70,8 @@ export const usePhoneMicStreaming = ({
 
     return () => {
       mounted = false;
-      cancelAnimationFrame(frameId);
+      stopTicker?.();
       mic?.stop();
     };
-  }, [isSessionPlaying, sendData, micDeviceId, clientRole]);
+  }, [isSessionPlaying, sendData, micDeviceId, isSinging]);
 };
