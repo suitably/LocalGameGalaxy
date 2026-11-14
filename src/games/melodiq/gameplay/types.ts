@@ -38,6 +38,8 @@ export interface MelodiqSessionProps {
   uiScale?: number;
   isClient?: boolean;
   clientDeviceId?: string;
+  /** Host only: a TV shows the stage, so this device keeps every pitch lane as its controller. */
+  hasTv?: boolean;
   /** On-stage play/pause; defaults to the session's own toggle (a phone client sends a command instead). */
   onRequestTogglePlay?: () => void;
   /** On-stage "next"; the button is hidden without it. */

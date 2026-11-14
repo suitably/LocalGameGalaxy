@@ -40,6 +40,8 @@ import { type PitchResult } from './audio/MicrophoneManager';
 import { type RatingType } from './gameplay/ScoreDisplay';
 
 export interface PassivePlayerState {
+  /** The host's player config; passive screens read the device and visibility from it. */
+  config?: { deviceId?: string; hidePitch?: boolean; isRemote?: boolean };
   id: string;
   name: string;
   hue: number;

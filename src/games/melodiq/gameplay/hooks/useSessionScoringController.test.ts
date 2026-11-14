@@ -62,14 +62,25 @@ describe('useSessionScoringController logic', () => {
     it('filters to client device when isClient and clientDeviceId are provided', () => {
       const p1 = createMockPlayer('p1', 'Alice', { deviceId: 'phone-1' });
       const p2 = createMockPlayer('p2', 'Bob', { deviceId: 'phone-2' });
-      const result = filterVisiblePlayers([p1, p2], new Set(), true, 'phone-1');
+      const result = filterVisiblePlayers([p1, p2], new Set(), {
+        kind: 'device',
+        deviceId: 'phone-1',
+      });
       expect(result).toHaveLength(1);
       expect(result[0].config.id).toBe('p1');
     });
 
+    it('keeps only the local-microphone singers on a hosting phone', () => {
+      const own = createMockPlayer('p1', 'Alice');
+      const guest = createMockPlayer('p2', 'Bob', { deviceId: 'phone-2', isRemote: true });
+      (guest as unknown as { webRtcManager: object }).webRtcManager = {};
+      const result = filterVisiblePlayers([own, guest], new Set(), { kind: 'local' });
+      expect(result.map((p) => p.config.id)).toEqual(['p1']);
+    });
+
     it('returns empty array when custom layout rule is 0', () => {
       const p1 = createMockPlayer('p1', 'Alice');
-      const result = filterVisiblePlayers([p1], new Set(), false, undefined, { 1: '0' });
+      const result = filterVisiblePlayers([p1], new Set(), { kind: 'all' }, { 1: '0' });
       expect(result).toHaveLength(0);
     });
   });

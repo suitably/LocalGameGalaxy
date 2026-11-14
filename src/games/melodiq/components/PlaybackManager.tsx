@@ -156,7 +156,6 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
 
     return (
       <>
-        {/* Persistent Session (Hidden or Visible) */}
         {selectedSong && (
           <PersistentSessionLayer
             key={`${selectedSong.id}-${sessionInstanceId}`}
@@ -186,6 +185,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
             isPassive={isClient}
             activeSessionOverride={activeParticipants}
             clientDeviceId={clientDeviceId}
+            hasTv={isTVConnected}
             onRequestTogglePlay={clientTogglePlay}
             onRequestNext={handleMiniPlayerNext}
           />

@@ -4,6 +4,17 @@ import { PlayerRuntime } from './PlayerRuntime';
 import { type PassiveGameState } from '../../types';
 import { type ScoreDisplayHandle } from '../ScoreDisplay';
 import { PASSIVE_PLAY_RETRY_MS, shouldRetryPassivePlay } from '../logic/passivePlayback';
+import { createRemoteClock } from '../logic/remoteClock';
+import { correctDrift, FOLLOWER_DRIFT_POLICY } from '../logic/mediaDrift';
+
+/** Shortest time between two corrective seeks of a passive screen's media. */
+const FOLLOWER_SEEK_COOLDOWN_MS = 1500;
+/** A paused passive screen is put on the host's position when it is further off than this. */
+const RESUME_ALIGN_SEC = 0.02;
+/** WebRTC data channel on a LAN; the phone has no audio of its own to measure against. */
+const PHONE_TRANSPORT_SEC = 0.02;
+/** The phone's lyric clock is re-set when it is further from the host's than this. */
+const PHONE_CLOCK_TOLERANCE_SEC = 0.03;
 
 interface UsePassiveSyncProps {
   isPassive: boolean;
@@ -44,6 +55,8 @@ export function usePassiveSync({
   virtualTimeRef,
 }: UsePassiveSyncProps) {
   const nextPlayAttemptRef = useRef(0);
+  const hostClockRef = useRef(createRemoteClock());
+  const lastFollowerSeekRef = useRef(0);
 
   useEffect(() => {
     if (!isPassive) return;
@@ -63,6 +76,8 @@ export function usePassiveSync({
               name: p.name,
               hue: p.hue,
               isRemote: true,
+              // Lets a phone find its own singer (lane scope)
+              deviceId: p.config?.deviceId,
             }),
         );
         setPlayers(newPlayers);
@@ -94,6 +109,16 @@ export function usePassiveSync({
       });
 
       const now = Date.now();
+      // The host's song position, free of transport jitter (see remoteClock.ts)
+      const perfNow = performance.now();
+      const hostClock = hostClockRef.current;
+      hostClock.update(passiveState.currentTime, passiveState.isPlaying, perfNow);
+      const hostTime = hostClock.now(perfNow);
+      const seekAll = (time: number) => {
+        if (audioRef.current) audioRef.current.currentTime = time;
+        if (vocalsRef?.current) vocalsRef.current.currentTime = time;
+        if (videoRef.current) videoRef.current.currentTime = time;
+      };
       const retryPlay =
         !isClient &&
         shouldRetryPassivePlay(
@@ -110,13 +135,14 @@ export function usePassiveSync({
         }
 
         if (passiveState.isPlaying) {
+          // Paused media seeks for free: start exactly where the host is, stems included
           if (
             audioRef.current &&
-            Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 1.0
+            Math.abs(audioRef.current.currentTime - hostTime) > RESUME_ALIGN_SEC
           ) {
-            audioRef.current.currentTime = passiveState.currentTime;
-            if (vocalsRef?.current) vocalsRef.current.currentTime = passiveState.currentTime;
-            if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
+            seekAll(hostTime);
+          } else if (audioRef.current && vocalsRef?.current) {
+            vocalsRef.current.currentTime = audioRef.current.currentTime;
           }
           const tryPlay = async () => {
             setIsPlaying(true);
@@ -143,29 +169,31 @@ export function usePassiveSync({
         passiveState.isPausedForScore !== prev ? passiveState.isPausedForScore : prev,
       );
 
-      // Drift threshold: 0.5s ensures TV catches up quickly after initial load
-      // (fixes race condition where TV starts behind host due to load delay)
-      if (
-        !isClient &&
-        audioRef.current &&
-        passiveState.isPlaying &&
-        isPlayingRef.current &&
-        !audioRef.current.paused &&
-        Math.abs(audioRef.current.currentTime - passiveState.currentTime) > 0.5
-      ) {
-        audioRef.current.currentTime = passiveState.currentTime;
-        if (vocalsRef?.current) vocalsRef.current.currentTime = passiveState.currentTime;
-        if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
+      // The host's clock scores the singers, this screen's audio is what they hear: keep the
+      // audio on the host's position with small rate changes, and seek only when far off.
+      const audio = audioRef.current;
+      if (!isClient && audio) {
+        const following =
+          passiveState.isPlaying && isPlayingRef.current && !audio.paused && !audio.seeking;
+        if (!following) {
+          if (audio.playbackRate !== 1 && !passiveState.isPlaying) audio.playbackRate = 1;
+        } else {
+          const correction = correctDrift(hostTime - audio.currentTime, 1, FOLLOWER_DRIFT_POLICY);
+          if (correction.kind === 'rate') {
+            if (audio.playbackRate !== correction.rate) audio.playbackRate = correction.rate;
+          } else if (perfNow - lastFollowerSeekRef.current > FOLLOWER_SEEK_COOLDOWN_MS) {
+            lastFollowerSeekRef.current = perfNow;
+            audio.playbackRate = 1;
+            seekAll(hostTime);
+          }
+        }
       }
 
       if (isClient) {
-        // Ignore hostTimestamp because Date.now() on different devices is not synchronized (clock drift)
-        // Assume a fixed ~20ms latency for LAN WebRTC
-        const latency = 0.02;
-        const estimatedHostTime = passiveState.currentTime + latency;
-
+        // The phone plays no audio; its lyrics run on the estimated host clock.
+        const estimatedHostTime = hostTime + PHONE_TRANSPORT_SEC;
         const drift = Math.abs(virtualTimeRef.current! - estimatedHostTime);
-        if (!isPlayingRef.current || drift > 0.15) {
+        if (!isPlayingRef.current || drift > PHONE_CLOCK_TOLERANCE_SEC) {
           (virtualTimeRef as any).current = estimatedHostTime;
         }
       }

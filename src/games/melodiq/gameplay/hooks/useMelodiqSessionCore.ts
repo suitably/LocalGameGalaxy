@@ -35,6 +35,7 @@ export function useMelodiqSessionCore(
     activeSessionOverride = null,
     isClient = false,
     clientDeviceId,
+    hasTv = false,
   } = props;
   const { settings } = useMelodiqSettings();
   const { manager, activePeers } = useWebRTC();
@@ -141,6 +142,8 @@ export function useMelodiqSessionCore(
     activeSessionOverride,
     clientDeviceId,
     customLayouts: settings.customLayouts,
+    hasTv,
+    isTVMode,
   });
 
   usePassiveSync({
