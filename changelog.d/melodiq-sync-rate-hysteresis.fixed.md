@@ -1,0 +1,1 @@
+- **Melodiq vocals and lyrics no longer wander against the music**: the sync between instrumental, vocal track and TV adjusted the playback speed many times per second, which made the vocal track jump by a few hundredths of a second every few seconds. Speed is now corrected rarely and steadily, and only when the offset is audible.
