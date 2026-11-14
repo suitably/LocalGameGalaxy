@@ -1,13 +1,14 @@
 import { useEffect, useRef } from 'react';
 import {
   correctDrift,
+  type DriftDirection,
   smoothDrift,
   STEM_DRIFT_POLICY,
   VIDEO_DRIFT_POLICY,
 } from '../logic/mediaDrift';
 
 /** Shortest time between two corrective seeks of the vocal stem. */
-const STEM_SEEK_COOLDOWN_MS = 400;
+const STEM_SEEK_COOLDOWN_MS = 1000;
 
 interface UseLocalMediaSyncProps {
   audioRef: React.RefObject<HTMLAudioElement | null>;
@@ -25,6 +26,9 @@ export function useLocalMediaSync({
   const rAFRef = useRef<number | null>(null);
   const lastSnapTimeRef = useRef<number>(0);
   const smoothedDriftRef = useRef<number | null>(null);
+  // Running rate corrections (hysteresis state of `correctDrift`)
+  const stemDirectionRef = useRef<DriftDirection>(0);
+  const videoDirectionRef = useRef<DriftDirection>(0);
   // The instrumental is buffering: its clock stands still although it is not paused
   const masterStalledRef = useRef(false);
 
@@ -109,6 +113,8 @@ export function useLocalMediaSync({
         videoRef.current.pause();
       }
       smoothedDriftRef.current = null;
+      stemDirectionRef.current = 0;
+      videoDirectionRef.current = 0;
       return;
     }
 
@@ -137,12 +143,15 @@ export function useLocalMediaSync({
               masterTime - video.currentTime,
               baseRate,
               VIDEO_DRIFT_POLICY,
+              videoDirectionRef.current,
             );
             if (correction.kind === 'seek') {
+              videoDirectionRef.current = 0;
               video.currentTime = masterTime;
-              video.playbackRate = baseRate;
-            } else if (video.playbackRate !== correction.rate) {
-              video.playbackRate = correction.rate;
+              if (video.playbackRate !== baseRate) video.playbackRate = baseRate;
+            } else {
+              videoDirectionRef.current = correction.direction;
+              if (video.playbackRate !== correction.rate) video.playbackRate = correction.rate;
             }
           }
         }
@@ -164,7 +173,12 @@ export function useLocalMediaSync({
             const jumped = Math.abs(rawDrift) > STEM_DRIFT_POLICY.seekAboveSec;
             const drift = jumped ? rawDrift : smoothDrift(smoothedDriftRef.current, rawDrift);
             smoothedDriftRef.current = drift;
-            const correction = correctDrift(drift, baseRate, STEM_DRIFT_POLICY);
+            const correction = correctDrift(
+              drift,
+              baseRate,
+              STEM_DRIFT_POLICY,
+              stemDirectionRef.current,
+            );
 
             if (correction.kind === 'seek') {
               // A seek needs a moment to land; do not stack them
@@ -172,10 +186,12 @@ export function useLocalMediaSync({
                 vocals.currentTime = targetVocalsTime;
                 lastSnapTimeRef.current = now;
                 smoothedDriftRef.current = null;
+                stemDirectionRef.current = 0;
                 if (vocals.playbackRate !== baseRate) vocals.playbackRate = baseRate;
               }
-            } else if (vocals.playbackRate !== correction.rate) {
-              vocals.playbackRate = correction.rate;
+            } else {
+              stemDirectionRef.current = correction.direction;
+              if (vocals.playbackRate !== correction.rate) vocals.playbackRate = correction.rate;
             }
           }
         }

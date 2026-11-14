@@ -8,54 +8,90 @@ import {
 } from './mediaDrift';
 
 describe('correctDrift', () => {
-  it('leaves offsets inside the deadband alone', () => {
-    expect(correctDrift(0.001, 1, STEM_DRIFT_POLICY)).toEqual({ kind: 'rate', rate: 1 });
-    expect(correctDrift(-0.001, 1, STEM_DRIFT_POLICY)).toEqual({ kind: 'rate', rate: 1 });
+  const idle = { kind: 'rate', rate: 1, direction: 0 };
+
+  it('leaves offsets below the engage threshold alone', () => {
+    expect(correctDrift(0.02, 1, STEM_DRIFT_POLICY)).toEqual(idle);
+    expect(correctDrift(-0.02, 1, STEM_DRIFT_POLICY)).toEqual(idle);
   });
 
-  it('speeds a follower that is behind up, in proportion to the offset', () => {
-    const small = correctDrift(0.01, 1, STEM_DRIFT_POLICY);
-    const larger = correctDrift(0.02, 1, STEM_DRIFT_POLICY);
-    expect(small).toEqual({ kind: 'rate', rate: 1.005 });
-    expect(larger).toEqual({ kind: 'rate', rate: 1.01 });
+  it('speeds a follower that is behind up with one fixed rate', () => {
+    expect(correctDrift(0.03, 1, STEM_DRIFT_POLICY)).toEqual({
+      kind: 'rate',
+      rate: 1.01,
+      direction: 1,
+    });
+    expect(correctDrift(0.1, 1, STEM_DRIFT_POLICY)).toEqual({
+      kind: 'rate',
+      rate: 1.01,
+      direction: 1,
+    });
   });
 
   it('slows a follower that is ahead down', () => {
-    expect(correctDrift(-0.01, 1, STEM_DRIFT_POLICY)).toEqual({ kind: 'rate', rate: 0.995 });
+    expect(correctDrift(-0.03, 1, STEM_DRIFT_POLICY)).toEqual({
+      kind: 'rate',
+      rate: 0.99,
+      direction: -1,
+    });
   });
 
-  it('corrects the 11.6 ms rest offset the old 20 ms threshold kept forever', () => {
-    const c = correctDrift(-0.0116, 1, STEM_DRIFT_POLICY);
-    expect(c.kind).toBe('rate');
-    expect(c.kind === 'rate' && c.rate).toBeLessThan(1);
+  it('keeps a running correction until the release threshold', () => {
+    expect(correctDrift(0.01, 1, STEM_DRIFT_POLICY, 1)).toEqual({
+      kind: 'rate',
+      rate: 1.01,
+      direction: 1,
+    });
+    expect(correctDrift(0.004, 1, STEM_DRIFT_POLICY, 1)).toEqual(idle);
   });
 
-  it('caps the rate change', () => {
-    expect(correctDrift(0.05, 1, STEM_DRIFT_POLICY)).toEqual({ kind: 'rate', rate: 1.015 });
-    expect(correctDrift(0.4, 1, VIDEO_DRIFT_POLICY)).toEqual({ kind: 'rate', rate: 1.05 });
+  it('stops a running correction that overshot instead of reversing it', () => {
+    expect(correctDrift(-0.01, 1, STEM_DRIFT_POLICY, 1)).toEqual(idle);
   });
 
   it('seeks when the offset is too large to slew', () => {
-    expect(correctDrift(0.09, 1, STEM_DRIFT_POLICY)).toEqual({ kind: 'seek' });
-    expect(correctDrift(-0.2, 1, FOLLOWER_DRIFT_POLICY)).toEqual({ kind: 'seek' });
+    expect(correctDrift(0.2, 1, STEM_DRIFT_POLICY)).toEqual({ kind: 'seek' });
+    expect(correctDrift(-0.3, 1, FOLLOWER_DRIFT_POLICY)).toEqual({ kind: 'seek' });
+    expect(correctDrift(0.4, 1, VIDEO_DRIFT_POLICY).kind).toBe('rate');
   });
 
   it('scales with the master rate', () => {
-    expect(correctDrift(0.01, 2, STEM_DRIFT_POLICY)).toEqual({ kind: 'rate', rate: 2.01 });
+    expect(correctDrift(0.03, 2, STEM_DRIFT_POLICY)).toEqual({
+      kind: 'rate',
+      rate: 2.02,
+      direction: 1,
+    });
   });
 
   it('keeps the base rate for a non-finite reading', () => {
-    expect(correctDrift(Number.NaN, 1, STEM_DRIFT_POLICY)).toEqual({ kind: 'rate', rate: 1 });
+    expect(correctDrift(Number.NaN, 1, STEM_DRIFT_POLICY, 1)).toEqual(idle);
   });
 
-  it('converges: a 50 ms lag is below 3 ms after 8 s', () => {
+  it('fixes a 50 ms lag within 6 s with two rate changes', () => {
     let drift = 0.05;
+    let direction: 0 | 1 | -1 = 0;
+    let rate = 1;
+    let changes = 0;
     const dt = 1 / 60;
-    for (let i = 0; i < 8 * 60; i++) {
-      const c = correctDrift(drift, 1, STEM_DRIFT_POLICY);
-      if (c.kind === 'rate') drift -= (c.rate - 1) * dt;
+    for (let i = 0; i < 6 * 60; i++) {
+      const c = correctDrift(drift, 1, STEM_DRIFT_POLICY, direction);
+      if (c.kind !== 'rate') throw new Error('unexpected seek');
+      if (c.rate !== rate) changes++;
+      rate = c.rate;
+      direction = c.direction;
+      drift -= (c.rate - 1) * dt;
     }
-    expect(Math.abs(drift)).toBeLessThan(0.003);
+    expect(Math.abs(drift)).toBeLessThanOrEqual(STEM_DRIFT_POLICY.releaseSec);
+    expect(changes).toBe(2);
+  });
+
+  it('does not react to read jitter around zero', () => {
+    let direction: 0 | 1 | -1 = 0;
+    for (let i = 0; i < 200; i++) {
+      const c = correctDrift(i % 2 ? 0.012 : -0.012, 1, STEM_DRIFT_POLICY, direction);
+      expect(c).toEqual(idle);
+      if (c.kind === 'rate') direction = c.direction;
+    }
   });
 });
 

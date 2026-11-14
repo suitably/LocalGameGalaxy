@@ -5,7 +5,12 @@ import { type PassiveGameState } from '../../types';
 import { type ScoreDisplayHandle } from '../ScoreDisplay';
 import { PASSIVE_PLAY_RETRY_MS, shouldRetryPassivePlay } from '../logic/passivePlayback';
 import { createRemoteClock } from '../logic/remoteClock';
-import { correctDrift, FOLLOWER_DRIFT_POLICY } from '../logic/mediaDrift';
+import {
+  correctDrift,
+  type DriftDirection,
+  FOLLOWER_DRIFT_POLICY,
+  smoothDrift,
+} from '../logic/mediaDrift';
 
 /** Shortest time between two corrective seeks of a passive screen's media. */
 const FOLLOWER_SEEK_COOLDOWN_MS = 1500;
@@ -57,6 +62,8 @@ export function usePassiveSync({
   const nextPlayAttemptRef = useRef(0);
   const hostClockRef = useRef(createRemoteClock());
   const lastFollowerSeekRef = useRef(0);
+  const followerDriftRef = useRef<number | null>(null);
+  const followerDirectionRef = useRef<DriftDirection>(0);
 
   useEffect(() => {
     if (!isPassive) return;
@@ -176,14 +183,29 @@ export function usePassiveSync({
         const following =
           passiveState.isPlaying && isPlayingRef.current && !audio.paused && !audio.seeking;
         if (!following) {
+          followerDriftRef.current = null;
+          followerDirectionRef.current = 0;
           if (audio.playbackRate !== 1 && !passiveState.isPlaying) audio.playbackRate = 1;
         } else {
-          const correction = correctDrift(hostTime - audio.currentTime, 1, FOLLOWER_DRIFT_POLICY);
+          const rawDrift = hostTime - audio.currentTime;
+          // Smoothing filters transport and read jitter; a real jump shows at once
+          const jumped = Math.abs(rawDrift) > FOLLOWER_DRIFT_POLICY.seekAboveSec;
+          const drift = jumped ? rawDrift : smoothDrift(followerDriftRef.current, rawDrift, 0.1);
+          followerDriftRef.current = drift;
+          const correction = correctDrift(
+            drift,
+            1,
+            FOLLOWER_DRIFT_POLICY,
+            followerDirectionRef.current,
+          );
           if (correction.kind === 'rate') {
+            followerDirectionRef.current = correction.direction;
             if (audio.playbackRate !== correction.rate) audio.playbackRate = correction.rate;
           } else if (perfNow - lastFollowerSeekRef.current > FOLLOWER_SEEK_COOLDOWN_MS) {
             lastFollowerSeekRef.current = perfNow;
-            audio.playbackRate = 1;
+            followerDriftRef.current = null;
+            followerDirectionRef.current = 0;
+            if (audio.playbackRate !== 1) audio.playbackRate = 1;
             seekAll(hostTime);
           }
         }
