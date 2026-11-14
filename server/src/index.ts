@@ -1,5 +1,7 @@
 import { serve } from '@hono/node-server';
+import type { Server as HttpServer } from 'node:http';
 import { createGalaxyServer } from './core/app';
+import { attachSignaling, SIGNALING_PATH } from './core/signaling';
 import { cloudflareTunnel } from './core/tunnel';
 import type { ServerConfig } from './core/types';
 import { serverConfig } from './config';
@@ -33,6 +35,7 @@ async function main(): Promise<void> {
     console.log(`🌐 Network Access:  http://${localIp}:${info.port}`);
     console.log(`🔑 Security Token:  ${serverConfig.token}`);
     console.log(`🧩 Active Plugins:  ${config.activePlugins.join(', ')}`);
+    console.log(`🛰️  Signaling:       ws://${localIp}:${info.port}${SIGNALING_PATH}`);
     console.log(`======================================================`);
 
     // One-time pairing link: opens the app's server settings, which trade the code for an API key.
@@ -67,6 +70,9 @@ async function main(): Promise<void> {
       );
     }
   });
+
+  // WebRTC signaling tracker on the same port, so one public URL covers API and signaling.
+  attachSignaling(server as HttpServer);
 }
 
 main().catch((err) => {

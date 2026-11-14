@@ -4,6 +4,7 @@ import { parseFeedbackResult } from '../logic/feedbackRpc';
 import { parseAssignedTrack } from '../gameplay/logic/trackChoice';
 import { reportTrackAssignment } from '../gameplay/hooks/usePhoneTrackChoice';
 import { ApiChunkBuffer } from '../logic/apiChunkBuffer';
+import { isPhoneSinging, type HostStatePlayer } from '../logic/phoneSinging';
 import type { ClientProfile } from '../logic/clientProfile';
 import type {
   MelodiqNetworkMessage,
@@ -28,6 +29,8 @@ const emit = (name: string, detail?: unknown) =>
 interface Options {
   getDeviceId: () => string;
   setClientRole: (role: string) => void;
+  /** Whether this phone's microphone is needed for the running song. */
+  setSinging: (singing: boolean) => void;
   updateClientProfile: (updates: Partial<ClientProfile>) => void;
 }
 
@@ -39,6 +42,7 @@ interface Options {
 export const usePhoneClientMessages = ({
   getDeviceId,
   setClientRole,
+  setSinging,
   updateClientProfile,
 }: Options) => {
   const [isSessionPlaying, setIsSessionPlaying] = useState(false);
@@ -57,41 +61,54 @@ export const usePhoneClientMessages = ({
   const chunkBufferRef = useRef(new ApiChunkBuffer());
   const lastSyncedSongIdRef = useRef<string | null>(null);
 
-  const handleGameState = useCallback((state: NonNullable<MelodiqNetworkMessage['state']>) => {
-    if (state.isPlaying !== playingRef.current) {
-      setIsSessionPlaying(state.isPlaying);
-      playingRef.current = state.isPlaying;
-    }
-    const activeId = state.activeSongId || null;
-    if (activeId !== activeSongRef.current) {
-      setActiveSongId(activeId);
-      activeSongRef.current = activeId;
-    }
+  const handleGameState = useCallback(
+    (state: NonNullable<MelodiqNetworkMessage['state']>) => {
+      // The host's player list is the truth for "do I sing": it also reaches a phone that
+      // reconnected or reloaded mid-song and got no session_sync.
+      if (state.isPlaying) {
+        const singing = isPhoneSinging(
+          state.players as HostStatePlayer[] | undefined,
+          getDeviceId(),
+        );
+        if (singing !== null) setSinging(singing);
+      }
 
-    // Full game state for lightweight event listeners (lyrics, etc.)
-    emit('melodiq_tv_game_state', state);
+      if (state.isPlaying !== playingRef.current) {
+        setIsSessionPlaying(state.isPlaying);
+        playingRef.current = state.isPlaying;
+      }
+      const activeId = state.activeSongId || null;
+      if (activeId !== activeSongRef.current) {
+        setActiveSongId(activeId);
+        activeSongRef.current = activeId;
+      }
 
-    // Auto-sync session view if the phone joined late, reloaded, or a new song started
-    const activeSong = state.activeSong || (activeId ? { id: activeId } : null);
-    const players = state.players as unknown as HostPlayer[] | undefined;
-    const participants = players?.map(
-      (p) =>
-        p.config || {
-          profileId: p.id,
-          deviceId: p.deviceId || p.id,
-          name: p.name,
-          hue: p.hue,
-          isRemote: true,
-        },
-    );
-    if (activeId && activeId !== lastSyncedSongIdRef.current) {
-      lastSyncedSongIdRef.current = activeId;
-      emit('melodiq_client_session_sync', { activeSong, participants });
-    } else if (!activeId && lastSyncedSongIdRef.current) {
-      lastSyncedSongIdRef.current = null;
-      emit('melodiq_client_session_sync', { activeSong: null, participants });
-    }
-  }, []);
+      // Full game state for lightweight event listeners (lyrics, etc.)
+      emit('melodiq_tv_game_state', state);
+
+      // Auto-sync session view if the phone joined late, reloaded, or a new song started
+      const activeSong = state.activeSong || (activeId ? { id: activeId } : null);
+      const players = state.players as unknown as HostPlayer[] | undefined;
+      const participants = players?.map(
+        (p) =>
+          p.config || {
+            profileId: p.id,
+            deviceId: p.deviceId || p.id,
+            name: p.name,
+            hue: p.hue,
+            isRemote: true,
+          },
+      );
+      if (activeId && activeId !== lastSyncedSongIdRef.current) {
+        lastSyncedSongIdRef.current = activeId;
+        emit('melodiq_client_session_sync', { activeSong, participants });
+      } else if (!activeId && lastSyncedSongIdRef.current) {
+        lastSyncedSongIdRef.current = null;
+        emit('melodiq_client_session_sync', { activeSong: null, participants });
+      }
+    },
+    [getDeviceId, setSinging],
+  );
 
   const handleSessionSync = useCallback(
     (data: MelodiqNetworkMessage) => {
@@ -100,14 +117,15 @@ export const usePhoneClientMessages = ({
         const isSinger = data.participants.some(
           (p: MelodiqParticipant) => p.deviceId === getDeviceId(),
         );
-        setClientRole(isSinger ? 'singer' : 'spectator');
+        // Not the permission role: that comes with roster.update and must survive a song.
+        setSinging(isSinger);
         updateClientProfile({ displayMode: isSinger ? 'self' : 'lyrics' });
       } else if (!data.activeSong) {
-        setClientRole('spectator');
+        setSinging(false);
         updateClientProfile({ displayMode: 'lyrics' });
       }
     },
-    [getDeviceId, setClientRole, updateClientProfile],
+    [getDeviceId, setSinging, updateClientProfile],
   );
 
   const handleChunk = useCallback((data: MelodiqNetworkMessage) => {

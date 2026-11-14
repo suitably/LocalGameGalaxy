@@ -18,6 +18,8 @@ export const STORAGE_KEYS = {
   /** Docker compose generator choices in Settings → Server. */
   COMPOSE_GENERATOR: 'galaxy_compose_generator',
   SIGNALING_URL: 'galaxy_signaling_url',
+  /** Tracker built into the companion server, as last detected: `{ helperUrl, url }`. */
+  SIGNALING_DETECTED: 'galaxy_signaling_detected',
   WEBRTC_STUN_CUSTOM_URLS: 'galaxy_stun_custom_urls',
   WEBRTC_STUN_PREFERENCES: 'galaxy_stun_preferences',
   /** Optional TURN relay `{ url, username, credential }`, off when absent (#652). */

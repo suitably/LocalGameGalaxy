@@ -56,7 +56,8 @@ function refreshFromPeer(
     if (peer.hue !== undefined) player.config.hue = peer.hue;
     changed = true;
   }
-  if (!player.webRtcManager) {
+  // Also after a reconnect: the phone comes back under a new peer id, and pitch is read by peer id.
+  if (!player.webRtcManager || player.remotePeerId !== peer.peerId) {
     console.log(`[Session] Attaching Phone ${peer.name} to existing player ${player.config.name}`);
     player.attachRemotePeer(manager, peer.peerId);
     changed = true;

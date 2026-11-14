@@ -13,6 +13,7 @@ import { isPartyRoomCode } from '../../features/party/logic/partyRoom';
 import { universalPartyManager } from '../../features/party/logic/universalPartyManager';
 import { getOrCreatePlayerName } from '../../features/party/logic/playerName';
 import { useFollowPartyLobby } from '../../features/party/hooks/useFollowPartyLobby';
+import { useWakeLock } from '../../hooks/useWakeLock';
 import { publishClientEngine, useMountedClientEngine } from './hooks/clientEngineStore';
 
 export type { ClientProfile } from './logic/clientProfile';
@@ -30,8 +31,12 @@ export interface ClientEngineContextType {
   hostSettings: HostSettings | null;
   isHostSettingsOpen: boolean;
   setHostSettingsOpen: (open: boolean) => void;
+  /** Permission role granted by the host (admin, queue manager, …; `roster.update`). */
   clientRole: string;
   setClientRole: (role: string) => void;
+  /** The host scores this phone in the running song, so its microphone streams pitch. */
+  isSinging: boolean;
+  setSinging: (singing: boolean) => void;
   promptedSongId: string | null;
   setPromptedSongId: (id: string | null) => void;
   updateClientProfile: (updates: Partial<ClientProfile>) => void;
@@ -50,6 +55,8 @@ const DEFAULT_CLIENT_ENGINE: ClientEngineContextType = {
   setHostSettingsOpen: () => {},
   clientRole: 'spectator',
   setClientRole: () => {},
+  isSinging: false,
+  setSinging: () => {},
   promptedSongId: null,
   setPromptedSongId: () => {},
   updateClientProfile: () => {},
@@ -97,6 +104,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     ),
   );
   const [clientRole, setClientRole] = useState<string>('spectator');
+  const [isSinging, setSinging] = useState(false);
   const [promptedSongId, setPromptedSongId] = useState<string | null>(null);
   const [isHostSettingsOpen, setHostSettingsOpen] = useState(false);
 
@@ -128,6 +136,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
   const { handleMessage, isSessionPlaying, activeSongId, hostSettings } = usePhoneClientMessages({
     getDeviceId,
     setClientRole,
+    setSinging,
     updateClientProfile,
   });
 
@@ -175,10 +184,12 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
 
   usePhoneMicStreaming({
     isSessionPlaying,
-    clientRole,
+    isSinging,
     micDeviceId: clientProfile.micDeviceId,
     sendData,
   });
+  // A locked screen suspends the browser and with it the microphone and the connection.
+  useWakeLock(isConnected && isSessionPlaying && isSinging);
 
   const sendClientCommand = (command: string, data: Record<string, unknown> = {}) => {
     sendData({ type: 'remote.command', command, ...data });
@@ -207,6 +218,8 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     updateClientProfile,
     clientRole,
     setClientRole,
+    isSinging,
+    setSinging,
     promptedSongId,
     setPromptedSongId,
   };
