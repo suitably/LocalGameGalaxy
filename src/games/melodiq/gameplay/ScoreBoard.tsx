@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Box, Button, Grid, Typography } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 import { useQueue } from '../hooks/useQueue';
 import { useMelodiqSettings } from '../hooks/SettingsContext';
 import { ScoreBoardQrCode } from './ScoreBoardQrCode';
@@ -57,13 +57,6 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({
         p: { xs: 2, md: 4 },
       }}
     >
-      {isPassive && onMinimize && (
-        <Box sx={{ position: 'absolute', top: 16, left: 16, zIndex: 10 }}>
-          <Button variant="outlined" color="inherit" onClick={onMinimize}>
-            ▼ Minimize
-          </Button>
-        </Box>
-      )}
       {players.length > 0 && (
         <Typography
           variant="h3"
@@ -126,6 +119,7 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({
         onExit={onExit}
         onResume={onResume}
         onCancelAutoPlay={cancel}
+        onMainMenu={onMinimize}
       />
     </Box>
   );
