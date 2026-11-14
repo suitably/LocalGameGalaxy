@@ -10,7 +10,7 @@ generated:
   by: previous-agent
 verified:
   at: 2026-11-14
-  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
+  method: '2026-11-14: §2.9 / §2.10 written from code and measurements; rest 2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
 # Melodiq Architecture
@@ -58,7 +58,7 @@ Melodiq follows a strict separation of concerns, divided into domains:
 
 - **Separation Backend**: `server/src/plugins/melodiq/services/separator.ts` and `scanner.ts` extract and index separated stems (`(Instrumental)`, `(Vocals)`).
 - **Playback Modes**: Configurable via `settings.audioPlaybackMode` (`'separated'` vs `'original'`):
-  - `'separated'`: Plays instrumental on master audio element and vocal stem on secondary audio element with continuous millisecond drift alignment (`useLocalMediaSync.ts`). Allows independent vocal volume reduction.
+  - `'separated'`: Plays instrumental on master audio element and vocal stem on secondary audio element; `useLocalMediaSync.ts` keeps the stem on the master (§2.9). Allows independent vocal volume reduction.
   - `'original'`: Plays the untouched original mix directly without secondary vocal stem.
 - **Audio Track Resolution**: `useMediaLoaders.ts` resolves stem paths and URLs automatically based on the user's selected mode and available files.
 
@@ -96,6 +96,27 @@ While a phone is connected to a host, feedback is not sent with the phone's own 
 - Host: `FeedbackRpcBridge.tsx` validates/caps the request (`logic/feedbackRpc.ts`, one request per phone per 10 s, any connected phone) and creates the issue with the host's PAT (`submitFeedbackWithLocalPat`). Without a host PAT it answers `code: 'no_token'`.
 - Fallback: on `no_token`, error or timeout, `submitFeedback` uses the phone's own PAT if it has one, then the server proxy as before.
 
+### 2.9 Timing: one song clock, everything else follows
+
+Four things must agree: instrumental, vocal stem, lyrics / pitch lanes, and the singers' scored pitch. The rule: the instrumental `<audio>` of the **host** is the song clock (`audioRef.current.currentTime`); nothing else keeps time of its own.
+
+| Follower                                | How it follows                                                                                                                                                                                                                                      | Code                                       |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Lyrics, pitch lanes, scoring (host)     | read the clock every frame (`timeProxyRef`), scoring subtracts the player's and the global mic latency                                                                                                                                              | `LyricsDisplay.tsx`, `useScoringEngine.ts` |
+| Vocal stem, background video (any view) | second decoder, steered by `correctDrift` (`gameplay/logic/mediaDrift.ts`): proportional rate change up to 1.5 % (stem) / 5 % (video), seek above 60 ms (stem) / 500 ms (video), stem paused while the instrumental buffers (`waiting` / `playing`) | `useLocalMediaSync.ts`                     |
+| TV audio (passive, audible)             | follows the host's position estimated by `createRemoteClock` (`gameplay/logic/remoteClock.ts`): rate change up to 2 %, seek above 120 ms; on resume it is set to the host's position                                                                | `usePassiveSync.ts`                        |
+| Phone lyrics (passive, no audio)        | `virtualTimeRef` advances per frame and is re-set to the remote clock when more than 30 ms off                                                                                                                                                      | `usePassiveSync.ts`, `useScoringEngine.ts` |
+
+- `createRemoteClock` is a minimum-delay filter: of the `GAME_STATE` reports of the last 3 s the one that arrived fastest gives the offset, between reports the position runs on `performance.now()`. Device wall clocks are never compared (`hostTimestamp` is unused).
+- Measured 2026-11-14 with the real hooks in headless Chromium against stems of the maintainer's server (8 songs): the files are sample-aligned (original vs. instrumental + vocals: 0.0 ms at start, middle and end; stems are 320 kbit/s CBR MP3 of equal size, so both seek to the same frame). In playback the stems stay within 0–3 ms. Before this change a stem offset below 20 ms was never corrected (11.6 ms stayed after a seek under CPU throttling) and a 90 ms offset was still 46 ms after 16 s; now both are below 3 ms within about a second.
+- Known limits: MP3 seeks land on a frame (26 ms), so lyrics can be up to one frame off the audio after a seek. Output latency of the speaker path (TV, Bluetooth) is not known to the browser; it is covered by the latency calibration per player.
+- **Unverified:** TV-follows-host and the phone clock are covered by unit tests of the two logic modules only, not measured on a real TV / cast device or phone.
+- Not done (larger change): one decoder for both stems (a multi-channel file split with a Web Audio `ChannelSplitterNode`, or both stems as `AudioBuffer`s started on one `AudioContext` time) would make stem drift impossible instead of corrected; it needs a server pipeline change or about 170 MB of decoded audio per song.
+
+### 2.10 Whose pitch lanes a screen shows
+
+`laneScope` / `playersInScope` (`gameplay/logic/stageLanes.ts`, used by `filterVisiblePlayers`): a shared screen (TV, laptop, tablet) shows every singer. A phone is one singer's screen: a phone client shows its own singer (the host's `GAME_STATE` player `config.deviceId` is kept on the passive player for that), a hosting phone without a TV shows the singers on its own microphone (`hasTv` session prop from `isTVConnected`), and with a TV it keeps all lanes as the controller. "Phone" is a coarse pointer with a short screen side of at most 600 px (`usePhoneScreen.ts`). Duet lyrics always show both parts (the phone picks its part there, §2.6).
+
 ## 3. Known Technical Debt & Refactoring Goals
 
 To ensure Melodiq aligns perfectly with the SOLID principles outlined in the main architecture doc, the following areas are targeted for future refactoring:
@@ -112,6 +133,6 @@ To ensure Melodiq aligns perfectly with the SOLID principles outlined in the mai
 
 ## 4. Development Rules for Melodiq
 
-1.  **Audio Sync**: Never rely on `setTimeout` or `setInterval` for lyrics/pitch synchronization. Always use `audioRef.current.currentTime` as the single source of truth.
+1.  **Audio Sync**: Never rely on `setTimeout` or `setInterval` for lyrics/pitch synchronization. Always use `audioRef.current.currentTime` as the single source of truth; a second decoder or another device follows it through `mediaDrift.ts` / `remoteClock.ts` (§2.9), never with thresholds of its own.
 2.  **State Sync**: When adding a new piece of state (e.g., a new game setting), ensure it is propagated to the TV via `usePassiveSync.ts` and the `GAME_STATE` payload.
 3.  **Strict File Boundaries**: UI Components must not make direct database calls (`db.ts`). Database fetching should happen in Container Components or custom hooks.

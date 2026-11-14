@@ -1,5 +1,5 @@
 import React from 'react';
-import { alpha, Box, Typography } from '@mui/material';
+import { alpha, Box, lighten, Typography } from '@mui/material';
 import type { Note } from '../parser';
 import { transitionOf } from '../../../lib/motion';
 import { LineWords } from './lyrics/LineWords';
@@ -101,6 +101,11 @@ export const LeadInIndicator: React.FC<LeadInIndicatorProps> = React.memo(
 );
 LeadInIndicator.displayName = 'LeadInIndicator';
 
+/** Dark outline that keeps lyrics readable on any video frame. */
+const BASE_SHADOW = '0 2px 6px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.8)';
+/** How far the singer colour moves towards white for sung text. */
+const SUNG_LIGHTEN = 0.25;
+
 export interface LyricsLineProps {
   line: LineGroup;
   currentBeat: number;
@@ -111,10 +116,14 @@ export interface LyricsLineProps {
 }
 
 /**
- * Renders the active singing line with real-time syllable highlighting.
+ * Renders the active singing line: sung syllables in the singer's colour, the current one
+ * with a glow, upcoming ones white.
  */
 export const LyricsLine: React.FC<LyricsLineProps> = React.memo(
   ({ line, currentBeat, primaryColor, align, scale, enableZoom }) => {
+    // Lightened: the lane colours are mid-tones and lose against a dark video as text
+    const sungColor = lighten(primaryColor, SUNG_LIGHTEN);
+    const glowColor = alpha(primaryColor, 0.9);
     return (
       <Typography
         component="div"
@@ -139,12 +148,10 @@ export const LyricsLine: React.FC<LyricsLineProps> = React.memo(
             const noteEnd = note.start + note.duration;
             const isPast = currentBeat >= noteEnd;
             const isActive = currentBeat >= note.start && currentBeat < noteEnd;
-            const noteColor = isActive
-              ? primaryColor
-              : isPast
-                ? '#ffffff'
-                : 'rgba(255,255,255,0.72)';
-            const baseShadow = '0 2px 6px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.8)';
+            // Karaoke wipe: everything sung so far takes the singer's colour, the rest stays
+            // white, so the boundary marks the position even on a bright video.
+            const noteColor = isActive || isPast ? sungColor : 'common.white';
+            const textShadow = isActive ? `${BASE_SHADOW}, 0 0 0.45em ${glowColor}` : BASE_SHADOW;
 
             return (
               <Box
@@ -153,7 +160,7 @@ export const LyricsLine: React.FC<LyricsLineProps> = React.memo(
                 sx={{
                   display: 'inline-block',
                   color: noteColor,
-                  textShadow: baseShadow,
+                  textShadow,
                   filter: enableZoom && isActive ? 'brightness(1.25)' : 'none',
                   transition:
                     'color 0.05s ease-out, text-shadow 0.05s ease-out, filter 0.05s ease-out',

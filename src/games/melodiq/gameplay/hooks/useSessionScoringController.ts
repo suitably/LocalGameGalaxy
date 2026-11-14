@@ -6,6 +6,8 @@ import { type PassiveGameState, type ActivePlayer } from '../../types';
 import { useScoringEngine } from './useScoringEngine';
 import { storage, STORAGE_KEYS } from '../../../../lib/storage';
 import { useStackedStage } from './useStackedStage';
+import { usePhoneScreen } from './usePhoneScreen';
+import { laneScope, playersInScope, type LaneScope } from '../logic/stageLanes';
 
 export interface UseSessionScoringControllerOptions {
   players: PlayerRuntime[];
@@ -33,6 +35,9 @@ export interface UseSessionScoringControllerOptions {
   activeSessionOverride?: ActivePlayer[] | null;
   clientDeviceId?: string;
   customLayouts?: Record<number, string>;
+  /** A TV shows the stage; this device only controls it. */
+  hasTv?: boolean;
+  isTVMode?: boolean;
 }
 
 const DEFAULT_TRACK_SCORE_WEIGHTS = [1, 1];
@@ -40,11 +45,10 @@ const DEFAULT_TRACK_SCORE_WEIGHTS = [1, 1];
 export function filterVisiblePlayers(
   players: PlayerRuntime[],
   activeParticipantKeys: Set<string>,
-  isClient?: boolean,
-  clientDeviceId?: string,
+  scope: LaneScope = { kind: 'all' },
   customLayouts?: Record<number, string>,
 ): PlayerRuntime[] {
-  let list = players.filter((p) => {
+  const candidates = players.filter((p) => {
     if (p.config.isRemote && !(p.mic || p.webRtcManager)) return false;
     if (p.config.hidePitch) return false;
 
@@ -62,9 +66,8 @@ export function filterVisiblePlayers(
     return true;
   });
 
-  if (isClient && clientDeviceId) {
-    list = list.filter((p) => p.config.deviceId === clientDeviceId);
-  }
+  // A phone shows its own singer(s) only; shared screens show everyone (stageLanes.ts)
+  const list = playersInScope(candidates, scope);
 
   const numPlayers = list.length;
   const layoutRule = customLayouts ? customLayouts[numPlayers] : '';
@@ -137,6 +140,8 @@ export function useSessionScoringController({
   activeSessionOverride = null,
   clientDeviceId,
   customLayouts,
+  hasTv = false,
+  isTVMode = false,
 }: UseSessionScoringControllerOptions) {
   const scoreDisplayRef = useRef<ScoreDisplayHandle>(null);
   const progressLineRef = useRef<HTMLDivElement>(null);
@@ -178,15 +183,27 @@ export function useSessionScoringController({
     virtualTimeRef,
   });
 
+  const isPhone = usePhoneScreen();
   const visiblePlayers = useMemo(() => {
-    return filterVisiblePlayers(
-      players,
-      activeParticipantKeys,
+    const scope = laneScope({
       isClient,
       clientDeviceId,
-      customLayouts,
-    );
-  }, [players, activeParticipantKeys, isClient, clientDeviceId, customLayouts]);
+      isPhone,
+      hasTv,
+      isMirror: isTVMode || (isPassive && !isClient),
+    });
+    return filterVisiblePlayers(players, activeParticipantKeys, scope, customLayouts);
+  }, [
+    players,
+    activeParticipantKeys,
+    isClient,
+    clientDeviceId,
+    isPhone,
+    hasTv,
+    isTVMode,
+    isPassive,
+    customLayouts,
+  ]);
 
   const stacked = useStackedStage();
   const gridLayout = useMemo(() => {
