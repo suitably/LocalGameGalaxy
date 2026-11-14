@@ -5,10 +5,10 @@ const INTERACTIVE = 'button, a, input, [role="button"], [role="slider"]';
 
 /**
  * Auto-hiding stage chrome (header, transport buttons) so the video and lyrics own the screen.
- * Shown while paused; while playing it hides after `STAGE_CHROME_HIDE_MS`. A tap on the stage
+ * Shown while paused; while playing it hides after `hideMs`. A tap on the stage
  * toggles it, mouse movement or a tap on a control shows it again.
  */
-export function useStageChrome(isPlaying: boolean, enabled = true) {
+export function useStageChrome(isPlaying: boolean, hideMs = STAGE_CHROME_HIDE_MS) {
   const [hidden, setHidden] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -26,15 +26,15 @@ export function useStageChrome(isPlaying: boolean, enabled = true) {
 
   const arm = useCallback(() => {
     disarm();
-    timerRef.current = setTimeout(() => setHidden(true), STAGE_CHROME_HIDE_MS);
-  }, [disarm]);
+    timerRef.current = setTimeout(() => setHidden(true), hideMs);
+  }, [disarm, hideMs]);
 
   useEffect(() => {
-    if (enabled && isPlaying) arm();
+    if (isPlaying) arm();
     return disarm;
-  }, [enabled, isPlaying, arm, disarm]);
+  }, [isPlaying, arm, disarm]);
 
-  const visible = !enabled || !isPlaying || !hidden;
+  const visible = !isPlaying || !hidden;
 
   const show = useCallback(() => {
     setHidden(false);
@@ -66,5 +66,5 @@ export function useStageChrome(isPlaying: boolean, enabled = true) {
     [show],
   );
 
-  return { visible, stageHandlers: enabled ? { onClick, onPointerMove } : {} };
+  return { visible, stageHandlers: { onClick, onPointerMove } };
 }

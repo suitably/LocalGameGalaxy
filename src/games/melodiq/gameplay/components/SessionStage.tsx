@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { useStageChrome } from '../hooks/useStageChrome';
+import { STAGE_CHROME_HIDE_MS, TV_STAGE_CHROME_HIDE_MS } from '../logic/stageChrome';
 import type { MelodiqSessionCore } from '../hooks/useMelodiqSessionCore';
 import { SessionTopControls } from './SessionTopControls';
 import { SessionTransportControls } from './SessionTransportControls';
@@ -35,8 +36,11 @@ export const SessionStage: React.FC<SessionStageProps> = ({ session, core }) => 
   const { settings, parsedSong, audioSrc, videoSrc, vocalsSrc, videoError, setVideoError } = core;
   const { switchTrack, audioCtrl, players, scoringCtrl, handleSongEndBound } = core;
   const { audioRef, vocalsRef } = audioCtrl;
-  // TV has no pointer: its header stays. Phone and host hide it like a video player.
-  const chrome = useStageChrome(audioCtrl.isPlaying, !isTVMode);
+  // Phone, host and TV alike: the header is a title card at song start and while paused.
+  const chrome = useStageChrome(
+    audioCtrl.isPlaying,
+    isTVMode ? TV_STAGE_CHROME_HIDE_MS : STAGE_CHROME_HIDE_MS,
+  );
 
   const activeLyricsScale =
     isPassive && passiveState?.lyricsScale !== undefined
@@ -107,6 +111,7 @@ export const SessionStage: React.FC<SessionStageProps> = ({ session, core }) => 
           progressLineRef={scoringCtrl.progressLineRef}
           isUIVisible={chrome.visible}
         />
+        {/* The TV mirrors the host and has no pointer: no buttons there */}
         {!isTVMode && (
           <SessionTransportControls
             visible={chrome.visible}

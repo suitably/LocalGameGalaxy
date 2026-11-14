@@ -1,6 +1,12 @@
 /** Like a video player: controls leave shortly after the last interaction. */
 export const STAGE_CHROME_HIDE_MS = 3500;
 
+/**
+ * TV: nobody can bring the header back, and it is read from ~3 m, so the title card at song
+ * start stays longer before the video and lyrics own the screen.
+ */
+export const TV_STAGE_CHROME_HIDE_MS = 8000;
+
 export interface StageTap {
   visible: boolean;
   isPlaying: boolean;
