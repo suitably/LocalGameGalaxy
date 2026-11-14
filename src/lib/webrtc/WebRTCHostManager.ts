@@ -259,7 +259,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
 
             // Give subclasses a chance to process tracker messages
             if (this.handleCustomTrackerMessage(parsedData, trackerPeer)) {
-              return;
+              continue; // handled; later messages of the same chunk still count
             }
 
             if (parsedData.connectionId && parsedData.signal) {

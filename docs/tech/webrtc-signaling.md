@@ -9,8 +9,8 @@ generated:
   at: 2026-09-27T10:00:00Z
   by: previous-agent
 verified:
-  at: 2026-11-07
-  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; §6 checked against src/lib/webrtc/iceServers.ts on 2026-10-21; §3–§4 checked against useWebRTCClient.ts and a multi-browser run on 2026-11-06'
+  at: 2026-11-14
+  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; §6 checked against src/lib/webrtc/iceServers.ts on 2026-10-21; §3–§4 checked against useWebRTCClient.ts and a multi-browser run on 2026-11-06; §3–§5 and the built-in tracker checked against code and a host + 3 phones run on 2026-11-14'
 ---
 
 # WebRTC Signaling & Connection Architecture
@@ -91,6 +91,7 @@ The phone client manages its connection via the `useWebRTCClient` React hook:
 - **Race Condition Handling**: Multiple tracker peers might be returned. The client initiates up to `MAX_CANDIDATES` (4) connections concurrently. The first connection to fire the `connect` event "wins the race" and becomes the active peer (`peerRef.current`). The other candidates are immediately destroyed to conserve battery and CPU.
 - **Identification Handshake**: Upon connection, the client sends an `identify` message containing the player's profile (name, avatar color hue, and persistent device ID).
 - **Leaving the swarm**: once connected, the client stops and destroys its tracker client (`leaveSwarm`). A WebSocket tracker forwards each announce (at most 5 offers, `websocket-tracker.js`) to **random** peers of the swarm, so connected phones in the swarm would soak up the offers of later phones. With only the host and searching phones left, a new or returning phone reaches the host on its first announce. The tracker peer and the data peer stay open.
+- **One search at a time**: `connect()` waits for the microphone; a call that was overtaken by a newer one (or by unmount) stops there, so no second tracker client opens duplicate connections.
 - **Re-announce while searching**: until a host answers, the client calls `trackerClient.update()` after 3 s, then 1.5× longer, at most every 15 s (`discoveryRetryDelay` in `src/lib/webrtc/discoveryRetry.ts`); the tracker's own interval is 2 minutes.
 
 ---
@@ -99,8 +100,9 @@ The phone client manages its connection via the `useWebRTCClient` React hook:
 
 Local WebRTC connections can drop due to phone sleep states, network switches, or temporary physical interference. The following retry mechanics are implemented:
 
-- **Signaling Timeout**: If a connection attempt takes longer than `CONNECTION_TIMEOUT_MS` (6 seconds), the candidate peer is automatically destroyed, triggering `processNextPendingPeer` to try another tracker peer.
+- **Signaling Timeout**: If a connection attempt takes longer than `CONNECTION_TIMEOUT_MS` (10 seconds; ICE over mobile data or a TURN relay takes several seconds), the candidate peer is automatically destroyed, triggering `processNextPendingPeer` to try another tracker peer.
 - **Auto-Reconnect**: On connection loss, if `autoConnect` is active, the client schedules a new `connect()` after 1.5 seconds. Only the `close` handler resets state and reconnects; simple-peer emits `close` right after `error`, and the `error` handler only keeps the message for the status line (before, an `error` such as an ICE failure reset the state first, so `close` skipped the reconnect).
+- **Back in the foreground / back online**: on `visibilitychange` (visible) and `online`, a phone that is not connected starts a fresh search at once, unless one started less than 5 s ago. Timers are paused in the background and dead tracker sockets retry only after a long backoff.
 - **Heartbeat**: the host pings every connected phone every `PING_INTERVAL_MS` (5 s) and the phone answers with `pong`; both sides check every second. A peer silent for `PEER_TIMEOUT_MS` (15 s) is dropped by the host (`removePeer`), and a phone that gets no ping for that long destroys its peer and takes the auto-reconnect path, so a closed tab leaves the roster within about 16 s. Timing and message types: `src/lib/webrtc/heartbeat.ts`; ping/pong never reach game message handlers.
 - **Stale State Recovery**: If a client reconnects using an identical `deviceId`, the host matches it to the existing player record and updates the session references rather than instantiating a new player slot.
 
@@ -116,9 +118,15 @@ When Melodiq is opened from the party lobby (`/games/melodiq?room=<CODE>`), `Web
 
 The signaling infrastructure manages multiple trackers with distinct classifications and precedence rules:
 
-1. **Self-Hosted Backend Tracker**: Resolved via `storage.getSignalingUrl()`. Automatically points to the dedicated signaling microservice (port `8000`) derived from the configured Companion Server URL (`storage.getHelperUrl()`), or an explicit custom signaling URL.
+1. **Self-Hosted Backend Tracker**: Resolved via `getSignalingUrl()` (`src/lib/webrtc/signalingSettings.ts`), in this order: an explicit custom signaling URL; the tracker **built into the companion server** (`ws(s)://<helper host>[:port]/signaling`, see below); the dedicated signaling microservice on port `8000` of the helper's host.
 2. **Default Free Public Fallback Trackers**: Reliable public BitTorrent WebTorrent trackers (`wss://tracker.openwebtorrent.com`, `wss://tracker.webtorrent.dev`).
 3. **Custom User Trackers**: Manually added by users in the Device Connection settings.
+
+### Tracker built into the companion server
+
+The companion server serves the WebSocket tracker protocol itself on its HTTP port at `/signaling` (`server/src/core/signaling.ts`: `SignalingHub` routes announces, offers and answers; `attachSignaling` handles the `upgrade` requests). A reverse proxy or tunnel that exposes the server therefore exposes signaling too — no second port or certificate. The server pings every socket each 30 s (proxies such as Cloudflare close idle WebSockets after 100 s, which would silently take the host out of the swarm) and tells clients to re-announce every 60 s. It needs no token: like the standalone tracker it only passes offers and answers between peers that know the party code.
+
+The server reports the path in `GET /api/info` (`signaling`). `detectHelperSignaling()` reads it (from `useTrackerConfig`, on mount and on settings events), stores `{ helperUrl, url }` in `STORAGE_KEYS.SIGNALING_DETECTED` (`galaxy_signaling_detected`) and fires `SIGNALING_DETECTED_EVENT`, so every `useTrackerConfig` instance re-reads the trackers. An unreachable server keeps the last answer; a server without the field (older version) clears it and the port-`8000` rule applies again. A helper on `localhost` is not asked from a non-local page. The host's QR code carries the tracker URL, so phones need no detection.
 
 ### Coexistence and Default Activation Rules
 

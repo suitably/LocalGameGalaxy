@@ -107,7 +107,6 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         onPlayingChange?.(false);
       };
     }, [actualIsPlaying, onPlayingChange]);
-
     // Expose methods to parent
     useImperativeHandle(ref, () => ({
       togglePlay: () => {
