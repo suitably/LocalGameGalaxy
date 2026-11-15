@@ -1,12 +1,12 @@
 import React from 'react';
 import { Box, Paper, Typography, Chip } from '@mui/material';
+import type { ReactNode } from 'react';
 import { alpha, useTheme } from '@mui/material/styles';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEventsRounded';
 import LocalFloristIcon from '@mui/icons-material/LocalFloristRounded';
 import { useTranslation } from 'react-i18next';
 import type { PlayerSheet, RowColor } from '../logic/types';
 import { calculateTotalScore } from '../logic/qwixxReducer';
-import { getSheetDefinition } from '../logic/sheetDefinitions';
 import { QwixxMissBoxes } from './QwixxMissBoxes';
 import { QwixxScoreTile } from './QwixxScoreTile';
 
@@ -15,6 +15,8 @@ interface QwixxScoreSummaryProps {
   onAddMiss: () => void;
   onRemoveMiss: () => void;
   disabled?: boolean;
+  /** Sheet name / random chips for the top line. */
+  sheetChips?: ReactNode;
 }
 
 const ROW_COLORS: RowColor[] = ['red', 'yellow', 'green', 'blue'];
@@ -30,11 +32,11 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
   onAddMiss,
   onRemoveMiss,
   disabled = false,
+  sheetChips,
 }) => {
   const { t } = useTranslation();
   const { palette } = useTheme();
   const scores = calculateTotalScore(sheet);
-  const sheetDef = getSheetDefinition(sheet.sheetType || 'classic');
   const labels: Record<RowColor, string> = {
     red: t('games.qwixx.red', 'Red'),
     yellow: t('games.qwixx.yellow', 'Yellow'),
@@ -51,6 +53,10 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
         border: '1px solid',
         borderColor: 'divider',
         mt: { xs: 0, sm: 2 },
+        // Phones: compact so the whole sheet incl. score and misses fits one screen.
+        display: 'flex',
+        flexDirection: 'column',
+        gap: { xs: 0.75, sm: 1.5 },
       }}
     >
       <Box
@@ -58,29 +64,25 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          mb: { xs: 0, sm: 1.5 },
-          flexWrap: 'wrap',
           gap: 1,
         }}
       >
-        {/* Phones: the toolbar chip already names the sheet. */}
-        <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
-          <Typography variant="body2" color="text.secondary" fontWeight="bold">
-            {t('games.qwixx.mode_label', 'Modus:')}
-          </Typography>
-          <Chip
-            size="small"
-            label={t(sheetDef.nameKey)}
-            color="primary"
-            variant="outlined"
-            sx={{ fontWeight: 'bold' }}
-          />
-        </Box>
+        {sheetChips}
 
         {sheet.sheetType === 'longo' && sheet.luckyNumbers && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mb: { xs: 1, sm: 0 } }}>
+          <Box
+            title={t('games.qwixx.lucky_numbers', 'Glückszahlen')}
+            sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 0.8 }, flexShrink: 0 }}
+          >
             <LocalFloristIcon sx={{ fontSize: '1.1rem', color: 'secondary.main' }} />
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 'bold' }}>
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'text.secondary',
+                fontWeight: 'bold',
+                display: { xs: 'none', sm: 'inline' },
+              }}
+            >
               {t('games.qwixx.lucky_numbers', 'Glückszahlen')}:
             </Typography>
             {sheet.luckyNumbers.map((n, i) => (
@@ -107,7 +109,7 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: { xs: 1, sm: 1.5 },
+          gap: { xs: 0.75, sm: 1.5 },
         }}
       >
         <Box
@@ -153,12 +155,17 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
               bgcolor: 'primary.main',
               color: 'primary.contrastText',
               textAlign: 'center',
-              minWidth: { xs: 56, sm: 70 },
+              minWidth: { xs: 52, sm: 70 },
             }}
+            aria-label={t('games.qwixx.total', 'TOTAL')}
           >
             <Typography
               variant="caption"
-              sx={{ color: 'primary.contrastText', display: 'block', fontWeight: 'bold' }}
+              sx={{
+                color: 'primary.contrastText',
+                display: { xs: 'none', sm: 'block' },
+                fontWeight: 'bold',
+              }}
             >
               {t('games.qwixx.total', 'TOTAL')}
             </Typography>

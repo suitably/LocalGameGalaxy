@@ -18,10 +18,12 @@ interface QwixxSheetProps {
   onRemoveMiss: () => void;
   readOnly?: boolean;
   highlightedNumbers?: Partial<Record<RowColor, number[]>> | null;
+  /** Sheet name / random chips, shown in the score panel's top line. */
+  sheetChips?: React.ReactNode;
 }
 
 const EMPTY_ROW: RowState = { crossed: [], isLocked: false };
-const GAP = { xs: 1, sm: 1.5 };
+const GAP = { xs: 0.75, sm: 1.5 };
 
 export const QwixxSheet: React.FC<QwixxSheetProps> = ({
   sheet,
@@ -32,6 +34,7 @@ export const QwixxSheet: React.FC<QwixxSheetProps> = ({
   onRemoveMiss,
   readOnly = false,
   highlightedNumbers = null,
+  sheetChips,
 }) => {
   const { t } = useTranslation();
   const rowsContainerRef = useRef<HTMLDivElement>(null);
@@ -119,6 +122,7 @@ export const QwixxSheet: React.FC<QwixxSheetProps> = ({
         onAddMiss={onAddMiss}
         onRemoveMiss={onRemoveMiss}
         disabled={readOnly}
+        sheetChips={sheetChips}
       />
     </Box>
   );

@@ -1,1 +1,1 @@
-Qwixx on phones: Longo and Big Points sheets fit the screen (40px cells, dice bar on one line, compact toolbar), and the sheet selector opens full-screen with a compact two-column grid.
+Qwixx on phones: the whole Longo and Big Points sheet incl. dice, score and misses fits one screen (36px cells, dice bar on one line, compact score panel). Dice toggle and new game moved into the header; the sheet chips moved into the score panel. The sheet selector opens full-screen with a compact two-column grid.

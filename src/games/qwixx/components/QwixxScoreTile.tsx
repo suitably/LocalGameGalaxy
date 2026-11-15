@@ -11,7 +11,7 @@ interface QwixxScoreTileProps {
   minWidth?: number;
 }
 
-/** One term of the score formula (row score, bonus or penalty). */
+/** One term of the score formula (row score, bonus or penalty). Phones: value only, colour-coded. */
 export const QwixxScoreTile: React.FC<QwixxScoreTileProps> = ({
   label,
   value,
@@ -20,16 +20,25 @@ export const QwixxScoreTile: React.FC<QwixxScoreTileProps> = ({
   minWidth = 48,
 }) => (
   <Box
+    title={label}
+    aria-label={`${label}: ${value}`}
     sx={{
       p: { xs: 0.5, sm: 1 },
       borderRadius: 2,
       bgcolor: alpha(color, 0.16),
       border: `1px solid ${color}`,
       textAlign: 'center',
-      minWidth,
+      minWidth: { xs: 34, sm: minWidth },
     }}
   >
-    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.25 }}>
+    <Box
+      sx={{
+        display: { xs: 'none', sm: 'flex' },
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 0.25,
+      }}
+    >
       {icon}
       <Typography variant="caption" sx={{ color: 'text.primary', fontWeight: 'bold' }}>
         {label}
