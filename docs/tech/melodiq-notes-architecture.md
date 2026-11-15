@@ -9,8 +9,8 @@ generated:
   at: 2026-11-08T23:00:00+01:00
   by: claude-code
 verified:
-  at: 2026-11-09
-  method: 'Read stage/engine/{players,input,transport,remote,advance}.ts, stage/useStage.ts, stage/useStageInput.ts, hooks/useMicPitch.ts, logic/micOnset.ts, stage/logic/judging.ts, pult/logic/{protocol,stageClock,clockSync}.ts, pult/{usePult,useStageRoom}.ts, stage/{loadScore,serverScoreLoad}.ts; src/modules/music-score/musicXml*.ts (parser, #696); constants confirmed with grep. Rendering and the MIDI input path were not read line by line.'
+  at: 2026-11-15
+  method: 'Read stage/engine/{players,input,transport,remote,advance}.ts, stage/useStage.ts, stage/useStageInput.ts, hooks/useMicPitch.ts, logic/micOnset.ts, stage/logic/judging.ts, pult/logic/{protocol,stageClock,clockSync}.ts, pult/{usePult,useStageRoom}.ts, stage/{loadScore,serverScoreLoad}.ts; src/modules/music-score/musicXml*.ts (parser, #696); constants confirmed with grep; stage/logic/songResults.ts and stage/useSongResults.ts (#699). Rendering and the MIDI input path were not read line by line.'
 sources:
   - 'src/games/melodiq-notes/stage/engine/'
   - 'src/games/melodiq-notes/stage/useStage.ts'
@@ -52,7 +52,14 @@ Spec is the code: `pult/logic/protocol.ts` ([ID: GAME-MELODIQ-NOTES-PULT-PROTOCO
 - **Clock sync.** The pult pings (`FAST_PING_MS` 300 until settled, then `SLOW_PING_MS` 3000, `pult/usePult.ts`); `clockSample`/`estimateOffset` (`pult/logic/clockSync.ts`) keep 16 samples and take the median offset of the 4 with the shortest RTT. `stageBeatAt`/`followBeat` (`pult/logic/stageClock.ts`) extrapolate the beat from the latest `clock` (pull `FOLLOW_PULL` 0.1, snap beyond 0.15 s). No drift model: the offset is constant between estimates.
 - **Heartbeat.** The stage sends `clock` every `CLOCK_HEARTBEAT_MS` 2000 (`pult/useStageRoom.ts`; **Unverified:** whether it also sends on transport changes); a pult re-sends `chart-request` every `CHART_RETRY_MS` 1500 until it has the chart.
 
-## 4. Song sources
+## 4. Results and leaderboard
+
+- `stage/logic/songResults.ts` ([ID: GAME-MELODIQ-NOTES-SONG-RESULTS], #699) keeps the best result per player and song in `STORAGE_KEYS.MELODIQ_NOTES_RESULTS` (`SongResult[]` JSON, at most `MAX_RESULTS` 500, oldest dropped). A song is identified by `songKeyOf` (`pult/logic/pultSong.ts`), so a changed chart starts a new table.
+- `runResults` counts a run only in perform mode, at speed 1 and without a loop, and only players who were judged at least once. A pult player is named by its party name, a single local player by this device's party name (`getOrCreatePlayerName`), several local players by seat number; names match case-insensitively (`playerKey`).
+- `mergeResults` replaces an entry only when the run `beats` it (more points, or as many with better accuracy). `leaderboard` sorts by score, then accuracy, then the earlier result; equal scores share a rank (1, 1, 3).
+- The stage judges every player, pults included, so its device holds the results of the whole party. `stage/useSongResults.ts` saves once when the results screen mounts; `stage/components/LeaderboardTable.tsx` shows the song's table under the run's results and marks new bests. Showing the leaderboard on the pults and the colour-blind judgement palette are follow-ups.
+
+## 5. Song sources
 
 - Entry: `stage/loadScore.ts` `readScoreFile(fileName, data)` picks the parser by extension (`.mid/.midi` → `parseMidi`, `.gp` → `parseGuitarPro`, `.mxl` → `extractMxl`, else MusicXML → `parseMusicXml`), all from `src/modules/music-score` (barrel `index.ts`; also UltraStar `ultrastar.ts`/`ultrastarScore.ts`, alignment/warp for recordings).
 - `SongOrigin` (`stage/serverScoreLoad.ts`): `example` (built-in `demoSongs.ts`), `file` (one file opened from disk, not kept), `device` (a score of the local library, #697; remembered by `fileName`), `notes` (score in a song folder, #568), `karaoke` (vocal part of a Melodiq `.txt`, #566). Server loading: `loadSongScore`, `loadKaraokeVocals`.

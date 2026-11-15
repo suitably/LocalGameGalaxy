@@ -618,6 +618,13 @@
           "practise": "{{section}} üben",
           "again": "Nochmal"
         },
+        "leaderboard": {
+          "title": "Bestenliste für diesen Song",
+          "rank": "#",
+          "player": "Spieler",
+          "new_best": "Neuer Rekord",
+          "not_counted": "Nur ein ganzer Durchgang im Auftritt-Modus in vollem Tempo zählt für die Bestenliste."
+        },
         "timeline": "Zeitleiste",
         "lead_in": "Vorlauf",
         "lead_in_seconds": "{{count}} s davor",
