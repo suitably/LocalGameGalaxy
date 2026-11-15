@@ -1,0 +1,1 @@
+- **Melodiq Notes keeps your best results**: after a full run in perform mode at full speed, the results screen stores each player's best score for the song on this device and shows the song's leaderboard (pult players by their party name), with new bests marked.

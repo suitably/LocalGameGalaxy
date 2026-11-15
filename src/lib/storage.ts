@@ -104,6 +104,8 @@ export const STORAGE_KEYS = {
   MELODIQ_NOTES_LAST_SONG: 'melodiq_notes_last_song',
   /** The instrument the player last picked; a new song seats them on a matching part (#635). */
   MELODIQ_NOTES_INSTRUMENT: 'melodiq_notes_instrument',
+  /** Best result per player and song (`SongResult[]` JSON, #699). */
+  MELODIQ_NOTES_RESULTS: 'melodiq_notes_results',
 
   // Werewolf game state
   WEREWOLF_STATE: 'werewolf-game-state',
