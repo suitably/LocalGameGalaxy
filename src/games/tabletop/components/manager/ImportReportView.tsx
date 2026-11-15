@@ -8,6 +8,8 @@ import type { ImportReport } from '../../logic/types';
 
 const OUTCOMES = ['converted', 'degraded', 'dropped'] as const;
 const COLORS = { converted: 'success', degraded: 'warning', dropped: 'error' } as const;
+/** Untranslated script functions named in the dialog; the rest is in the saved report. */
+const MAX_LISTED = 12;
 
 export const ImportReportView: React.FC<{ report: ImportReport }> = ({ report }) => {
   const { t } = useTranslation();
@@ -15,6 +17,7 @@ export const ImportReportView: React.FC<{ report: ImportReport }> = ({ report })
   const hosts = Object.entries(report.imageHosts).sort(([, a], [, b]) => b - a);
   const { scripts } = report;
   const hasScripts = scripts.global || scripts.objects > 0 || scripts.xmlUi;
+  const untranslated = report.untranslated ?? [];
 
   return (
     <Stack spacing={1.5} data-testid="tabletop-import-report">
@@ -57,6 +60,23 @@ export const ImportReportView: React.FC<{ report: ImportReport }> = ({ report })
       {hasScripts && (
         <Typography variant="caption" color="text.secondary">
           {t('games.tabletop.import_report.scripts_note')}
+        </Typography>
+      )}
+      {report.buttons && (
+        <Typography variant="body2" data-testid="tabletop-import-buttons">
+          {t('games.tabletop.import_report.buttons_translated', report.buttons)}
+        </Typography>
+      )}
+      {untranslated.length > 0 && (
+        <Typography variant="caption" color="warning.main">
+          {t('games.tabletop.import_report.untranslated', {
+            count: untranslated.length,
+            list: untranslated
+              .slice(0, MAX_LISTED)
+              .map((u) => `${u.fn} (${u.reason})`)
+              .join(', '),
+          })}
+          {untranslated.length > MAX_LISTED ? ' …' : ''}
         </Typography>
       )}
       {hosts.length > 0 && (

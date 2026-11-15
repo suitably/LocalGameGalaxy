@@ -618,6 +618,13 @@
           "practise": "Practise {{section}}",
           "again": "Again"
         },
+        "leaderboard": {
+          "title": "Best results for this song",
+          "rank": "#",
+          "player": "Player",
+          "new_best": "New best",
+          "not_counted": "Only a full run in perform mode at full speed counts for the leaderboard."
+        },
         "timeline": "Timeline",
         "lead_in": "Lead-in",
         "lead_in_seconds": "{{count}} s before",
@@ -1025,7 +1032,10 @@
         "no": "no",
         "hosts": "Image hosts: {{hosts}}",
         "assets_cached": "{{cached}} of {{total}} images saved on this device (available offline).",
-        "assets_dead": "{{count}} images unavailable (host): {{hosts}}"
+        "assets_dead": "{{count}} images unavailable (host): {{hosts}}",
+        "buttons_translated": "Setup buttons from scripts: {{translated}} of {{total}} work as routines.",
+        "untranslated": "Not translated ({{count}}): {{list}}",
+        "button_untranslated": "This button runs the Workshop script function \"{{fn}}\", which could not be translated. It does nothing until it gets a routine in the editor."
       },
       "workshop_play_now": "Play Now",
       "workshop_success": "Successfully imported \"{{name}}\"!",

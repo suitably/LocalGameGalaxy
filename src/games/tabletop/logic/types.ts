@@ -248,6 +248,11 @@ export interface ButtonWidget extends BaseWidget {
   routine: RoutineStep[];
   /** Events that run the routine without a click. */
   triggers?: RoutineTrigger[];
+  /**
+   * Imported TTS click function the Lua translator could not turn into a routine. While the
+   * routine is empty the button is shown inert with a tooltip; authoring a routine revives it.
+   */
+  untranslated?: string;
 }
 
 export type TabletopWidget =
@@ -306,7 +311,13 @@ export interface ScriptZone {
 }
 
 import type { ImportReport, GameScripts } from './importTypes';
-export type { ImportTypeCount, ImportReport, ScriptEntry, GameScripts } from './importTypes';
+export type {
+  ImportTypeCount,
+  ImportReport,
+  ScriptEntry,
+  GameScripts,
+  UntranslatedScriptFunction,
+} from './importTypes';
 
 /** Source format of a game; `tts-workshop` marks third-party Tabletop Simulator content (D4). */
 export type TabletopGameFormat = 'flat-json' | 'pcio-folder' | 'tts-workshop' | 'unknown';

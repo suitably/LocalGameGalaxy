@@ -618,6 +618,13 @@
           "practise": "{{section}} üben",
           "again": "Nochmal"
         },
+        "leaderboard": {
+          "title": "Bestenliste für diesen Song",
+          "rank": "#",
+          "player": "Spieler",
+          "new_best": "Neuer Rekord",
+          "not_counted": "Nur ein ganzer Durchgang im Auftritt-Modus in vollem Tempo zählt für die Bestenliste."
+        },
         "timeline": "Zeitleiste",
         "lead_in": "Vorlauf",
         "lead_in_seconds": "{{count}} s davor",
@@ -1025,7 +1032,10 @@
         "no": "nein",
         "hosts": "Bild-Hosts: {{hosts}}",
         "assets_cached": "{{cached}} von {{total}} Bildern auf diesem Gerät gespeichert (auch offline verfügbar).",
-        "assets_dead": "{{count}} Bilder nicht erreichbar (Host): {{hosts}}"
+        "assets_dead": "{{count}} Bilder nicht erreichbar (Host): {{hosts}}",
+        "buttons_translated": "Setup-Knöpfe aus Skripten: {{translated}} von {{total}} funktionieren als Routine.",
+        "untranslated": "Nicht übersetzt ({{count}}): {{list}}",
+        "button_untranslated": "Dieser Knopf ruft die Workshop-Skriptfunktion „{{fn}}“ auf, die nicht übersetzt werden konnte. Er tut nichts, bis er im Editor eine Routine bekommt."
       },
       "workshop_play_now": "Jetzt spielen",
       "workshop_success": "„{{name}}“ erfolgreich importiert!",
