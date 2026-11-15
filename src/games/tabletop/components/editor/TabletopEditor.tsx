@@ -58,6 +58,7 @@ export const TabletopEditor: React.FC<TabletopEditorProps> = ({
           isTvMode={isTvMode}
           hideSeatSelector={hideSeatSelector}
           editMode={editor.editMode}
+          canDeleteSelection
         />
       </Box>
       {editor.editMode && editor.selectedId && (

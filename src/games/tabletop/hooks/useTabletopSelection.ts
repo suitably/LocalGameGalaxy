@@ -76,8 +76,40 @@ export function useTabletopSelection({
     });
   }, [dispatch, selectedWidgetIds]);
 
+  const moveSelected = useCallback(
+    (dx: number, dy: number) => {
+      if (selectedWidgetIds.length === 0) return;
+      dispatch({ type: 'MOVE_WIDGETS', payload: { ids: selectedWidgetIds, dx, dy } });
+    },
+    [dispatch, selectedWidgetIds],
+  );
+
+  const flipSelected = useCallback(() => {
+    if (selectedWidgetIds.length === 0) return;
+    dispatch({ type: 'FLIP_WIDGETS', payload: { ids: selectedWidgetIds } });
+  }, [dispatch, selectedWidgetIds]);
+
+  const rotateSelected = useCallback(
+    (deltaDegrees: number) => {
+      if (selectedWidgetIds.length === 0) return;
+      dispatch({ type: 'ROTATE_WIDGETS', payload: { ids: selectedWidgetIds, deltaDegrees } });
+    },
+    [dispatch, selectedWidgetIds],
+  );
+
+  /** Host only: the host rejects `DELETE_WIDGETS` from phones (#685). */
+  const deleteSelected = useCallback(() => {
+    if (selectedWidgetIds.length === 0) return;
+    dispatch({ type: 'DELETE_WIDGETS', payload: { ids: selectedWidgetIds } });
+    setSelectedWidgetIds([]);
+  }, [dispatch, selectedWidgetIds]);
+
   return {
     selectedWidgetIds,
+    moveSelected,
+    flipSelected,
+    rotateSelected,
+    deleteSelected,
     isSelectionMode,
     toggleSelectionMode,
     handleWidgetClick,
