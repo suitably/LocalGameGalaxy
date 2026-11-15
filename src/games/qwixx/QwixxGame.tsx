@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   Typography,
   Button,
@@ -16,8 +16,9 @@ import { GameLayout } from '../../components/Layout/GameLayout';
 import { QwixxSheet } from './components/QwixxSheet';
 import { QwixxDiceRoller } from './components/QwixxDiceRoller';
 import { QwixxSheetSelector } from './components/QwixxSheetSelector';
-import { QwixxToolbar } from './components/QwixxToolbar';
+import { QwixxSheetChips } from './components/QwixxSheetChips';
 import { useQwixxState } from './useQwixxState';
+import { useQwixxHeaderActions } from './useQwixxHeaderActions';
 
 // Initialize i18n bundles at module load time to prevent setState side-effects during render
 initQwixxI18n();
@@ -32,18 +33,15 @@ export const QwixxGame: React.FC = () => {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [sheetSelectorOpen, setSheetSelectorOpen] = useState(false);
   const currentSheetDef = getSheetDefinition(state.mySheet.sheetType || 'classic');
+  const { showDice, setShowDice } = game;
+  useQwixxHeaderActions({
+    showDice,
+    onToggleDice: useCallback(() => setShowDice(!showDice), [setShowDice, showDice]),
+    onNewGame: useCallback(() => setResetDialogOpen(true), []),
+  });
 
   return (
     <GameLayout maxWidth="md">
-      <QwixxToolbar
-        sheetName={t(currentSheetDef.nameKey)}
-        showDice={game.showDice}
-        onOpenSheetSelector={() => setSheetSelectorOpen(true)}
-        onPickRandomSheet={game.pickRandomSheet}
-        onToggleDice={() => game.setShowDice(!game.showDice)}
-        onNewGame={() => setResetDialogOpen(true)}
-      />
-
       {game.showDice && (
         <QwixxDiceRoller
           dice={state.dice}
@@ -63,6 +61,13 @@ export const QwixxGame: React.FC = () => {
         onAddMiss={game.addMiss}
         onRemoveMiss={game.removeMiss}
         highlightedNumbers={game.highlightedNumbers}
+        sheetChips={
+          <QwixxSheetChips
+            sheetName={t(currentSheetDef.nameKey)}
+            onOpenSheetSelector={() => setSheetSelectorOpen(true)}
+            onPickRandomSheet={game.pickRandomSheet}
+          />
+        }
       />
 
       <Dialog open={resetDialogOpen} onClose={() => setResetDialogOpen(false)}>

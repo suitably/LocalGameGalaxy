@@ -15,6 +15,8 @@ interface QwixxLockButtonProps {
   hasBonus: boolean;
   canLock: boolean;
   disabled?: boolean;
+  /** Height on phones, matching the row's cells. */
+  phoneHeight?: number;
   onLock: () => void;
   onUnlock: () => void;
 }
@@ -25,6 +27,7 @@ export const QwixxLockButton: React.FC<QwixxLockButtonProps> = ({
   hasBonus,
   canLock,
   disabled = false,
+  phoneHeight = 48,
   onLock,
   onUnlock,
 }) => {
@@ -52,7 +55,7 @@ export const QwixxLockButton: React.FC<QwixxLockButtonProps> = ({
         minWidth: 0,
         width: { xs: 'auto', sm: 38, md: 46 },
         maxWidth: { xs: 48, sm: 'none' },
-        height: { xs: 48, sm: 40, md: 48 },
+        height: { xs: phoneHeight, sm: 40, md: 48 },
         borderRadius: { xs: 2, sm: '50%' },
         bgcolor: highlighted ? tone.button : tone.muted,
         color: highlighted ? tone.ink : alpha(tone.ink, 0.5),

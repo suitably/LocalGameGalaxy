@@ -7,7 +7,9 @@ import {
   Button,
   Typography,
   Box,
+  useMediaQuery,
 } from '@mui/material';
+import type { Theme } from '@mui/material/styles';
 import StyleIcon from '@mui/icons-material/StyleRounded';
 import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import { useTranslation } from 'react-i18next';
@@ -32,27 +34,37 @@ export const QwixxSheetSelector: React.FC<QwixxSheetSelectorProps> = ({
 }) => {
   const { t } = useTranslation();
   const state = useSheetSelectorState({ currentSheetType, onSelectSheet, onClose });
+  // Phones: full-screen dialog with a compact two-column grid, so many sheets fit at once.
+  const phone = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
 
   return (
     <>
-      <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-        <DialogTitle sx={{ pb: 1.5 }}>
+      <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth fullScreen={phone}>
+        <DialogTitle sx={{ pb: 1.5, px: { xs: 2, sm: 3 } }}>
           <Box
             sx={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              flexWrap: 'wrap',
+              flexWrap: { xs: 'nowrap', sm: 'wrap' },
               gap: 1.5,
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <StyleIcon color="primary" />
-              <Box>
-                <Typography variant="h6" fontWeight="bold">
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+              <StyleIcon color="primary" sx={{ display: { xs: 'none', sm: 'block' } }} />
+              <Box sx={{ minWidth: 0 }}>
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  sx={{ fontSize: { xs: '1.05rem', sm: undefined }, lineHeight: 1.3 }}
+                >
                   {t('games.qwixx.select_sheet_title', 'Wähle deinen Qwixx-Block')}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: { xs: 'none', sm: 'block' } }}
+                >
                   {t(
                     'games.qwixx.select_sheet_subtitle',
                     'Entdecke offizielle Editionen, alternative Layouts und Randomizer-Modi',
@@ -67,19 +79,29 @@ export const QwixxSheetSelector: React.FC<QwixxSheetSelectorProps> = ({
               size="small"
               startIcon={<CasinoIcon />}
               onClick={state.handleGlobalRandom}
-              sx={{ fontWeight: 'bold', borderRadius: 2 }}
+              aria-label={t('games.qwixx.random_block_button', 'Zufälliger Block')}
+              sx={{
+                fontWeight: 'bold',
+                borderRadius: 2,
+                flexShrink: 0,
+                minWidth: { xs: 48, sm: 64 },
+                minHeight: { xs: 48, sm: 'auto' },
+                '& .MuiButton-startIcon': { mx: { xs: 0 }, ml: { sm: -0.5 }, mr: { sm: 1 } },
+              }}
             >
-              {t('games.qwixx.random_block_button', 'Zufälliger Block')}
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                {t('games.qwixx.random_block_button', 'Zufälliger Block')}
+              </Box>
             </Button>
           </Box>
         </DialogTitle>
 
-        <DialogContent dividers sx={{ p: { xs: 1.5, sm: 2.5 } }}>
+        <DialogContent dividers sx={{ p: { xs: 1, sm: 2.5 } }}>
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
-              gap: 2.5,
+              gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
+              gap: { xs: 1, sm: 2.5 },
             }}
           >
             {ALL_SHEET_TYPES.map((type) => (
@@ -98,7 +120,7 @@ export const QwixxSheetSelector: React.FC<QwixxSheetSelectorProps> = ({
           </Box>
         </DialogContent>
 
-        <DialogActions sx={{ p: 2 }}>
+        <DialogActions sx={{ p: { xs: 1, sm: 2 } }}>
           <Button onClick={onClose} color="inherit">
             {t('common.close', 'Schließen')}
           </Button>

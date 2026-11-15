@@ -18,10 +18,12 @@ interface QwixxSheetProps {
   onRemoveMiss: () => void;
   readOnly?: boolean;
   highlightedNumbers?: Partial<Record<RowColor, number[]>> | null;
+  /** Sheet name / random chips, shown in the score panel's top line. */
+  sheetChips?: React.ReactNode;
 }
 
 const EMPTY_ROW: RowState = { crossed: [], isLocked: false };
-const GAP = { xs: 1, sm: 1.5 };
+const GAP = { xs: 0.75, sm: 1.5 };
 
 export const QwixxSheet: React.FC<QwixxSheetProps> = ({
   sheet,
@@ -32,12 +34,21 @@ export const QwixxSheet: React.FC<QwixxSheetProps> = ({
   onRemoveMiss,
   readOnly = false,
   highlightedNumbers = null,
+  sheetChips,
 }) => {
   const { t } = useTranslation();
   const rowsContainerRef = useRef<HTMLDivElement>(null);
   const sheetDef = getSheetDefinition(sheet.sheetType || 'classic');
   const rows = getSheetRows(sheet.sheetType || 'classic', sheet.presetIndex, sheet.customRows);
-  const rowHandlers = { sheetType: sheet.sheetType, onCrossNumber, onLockRow, onUnlockRow };
+  // Sheets with bonus rows have six rows: compact cells on phones so they fit the screen.
+  const dense = !!sheetDef.hasBonusRows;
+  const rowHandlers = {
+    sheetType: sheet.sheetType,
+    onCrossNumber,
+    onLockRow,
+    onUnlockRow,
+    dense,
+  };
 
   const renderBonusRow = (index: number) => {
     // A bonus row sits below the 2nd (red-yellow) and 4th (green-blue) row.
@@ -47,13 +58,14 @@ export const QwixxSheet: React.FC<QwixxSheetProps> = ({
     const isRedYellow = slot === 0;
 
     return (
-      <Box sx={{ my: 0.25 }}>
+      <Box sx={{ my: { xs: 0, sm: 0.25 } }}>
         <Typography
           variant="caption"
           sx={{
             color: isRedYellow ? 'piece.yellow' : 'piece.green',
             fontWeight: 'bold',
             px: 1,
+            lineHeight: { xs: 1.5, sm: 1.66 },
             display: 'inline-flex',
             alignItems: 'center',
             gap: 0.5,
@@ -110,6 +122,7 @@ export const QwixxSheet: React.FC<QwixxSheetProps> = ({
         onAddMiss={onAddMiss}
         onRemoveMiss={onRemoveMiss}
         disabled={readOnly}
+        sheetChips={sheetChips}
       />
     </Box>
   );
