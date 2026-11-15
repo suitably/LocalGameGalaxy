@@ -7,6 +7,7 @@ import type { CardGameDefinition } from '../logic/types';
 import { getAllCardGames } from '../logic/gamesCatalogue';
 import { PlayerManagerCard, useLobbyPlayers } from '../../../modules/player-management';
 import { transitionOf } from '../../../lib/motion';
+import { STORAGE_KEYS } from '../../../lib/storage';
 
 interface CardsLobbyProps {
   onStartGame: (game: CardGameDefinition, players: string[]) => void;
@@ -25,7 +26,7 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
     removePlayer,
     hasMinPlayers,
   } = useLobbyPlayers({
-    storageKey: 'cards_lobby_players',
+    storageKey: STORAGE_KEYS.CARDS_LOBBY_PLAYERS,
     defaultPlayers: ['Spieler 1', 'Spieler 2', 'Spieler 3'],
     minPlayers: 2,
     maxPlayers: 10,

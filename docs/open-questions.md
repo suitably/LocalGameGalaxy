@@ -19,22 +19,13 @@ Resolve: delete them, or wire them up if they hold newer strings.
 TTS plan D5: optimise the DOM renderer, measure at 800 widgets, and consider a Canvas renderer only if p95 stays above 16 ms. After #684 (`npm run perf:tabletop`, headless Chromium in a 4-vCPU cloud container): a token drag reaches p95 16.7 ms unthrottled (`main`: 100–150 ms), but 50–67 ms at 4× CPU throttling (`main`: 580–750 ms); panning stays at 16.8 ms. The acceptance criterion names a real mid-range phone, and the 4× emulation is only an approximation of one.
 Resolve: measure on a real mid-range phone (manual). If p95 stays above 16 ms there, the maintainer decides between further DOM work (remaining cost: re-rendering the whole table tree on each 50 ms commit, layout of ~5,500 layout objects per commit, layerization) and the Canvas renderer of D5.
 
-## Q8 — Game-local storage keys bypass the `STORAGE_KEYS` registry
-
-Rule: every key is registered in `STORAGE_KEYS`. Reality: qwixx, knister, kniffel, guessart, storyteller and cards define local key strings (list in [game-catalog §2](tech/game-catalog.md#2-persistence)). Several registered keys are therefore **never referenced**: `CARDS_LOBBY_PLAYERS`, `QWIXX_MY_SHEET`, `QWIXX_SHOW_DICE`, `KNISTER_CURRENT_GAME`, `KNISTER_SHOW_DICE`, `EXCALIDRAW_DRAWING`. The architecture check only catches raw `localStorage.` calls, not unregistered keys.
-Resolve: replace local constants with the registry entries (same string values, so no data migration), add the missing ones (kniffel, guessart, storyteller), drop unused entries.
-
 ## Q13 — ADR-0004 no longer matches the separation stack
 
 ADR-0004 says "Demucs via PyTorch". `server/src/plugins/melodiq/services/separator.ts` runs `audio-separator[cpu]` with model `UVR-MDX-NET-Inst_HQ_3.onnx` and aligns lyrics with `whisper-timestamped` (`server/src/scripts/align_lyrics.py`). The ADR now carries a note; a superseding ADR is a maintainer decision.
 
-## Q22 — Deleting a saved tabletop game reuses `allowSongDeletion`
-
-`DELETE /api/tabletop/games/:id` (`server/src/plugins/tabletop/routes/library.ts`) checks the song-oriented `allowSongDeletion` flag; the admin UI labels it `server.admin.perm_delete`, so a key meant for song deletion can also delete saved games. A separate `allowTabletopGameDeletion` flag would need a config migration and an admin-UI entry (#687 left it unchanged).
-Resolve: decide whether the generic "deletion" flag is intended (then rename the flag/label in docs and UI) or add a dedicated flag. See [server-security](tech/server-security.md).
-
 ## Resolved 2026-11-15
 
+- Q22 deleting a saved tabletop game → maintainer decision (2026-11-15): a dedicated API key flag `allowTabletopGameDeletion`; keys from older configs get their `allowSongDeletion` value on load, so nothing changes for existing installs. [server-security](tech/server-security.md)
 - Q7 scaffolder → aligned with the existing pattern instead of adopting manifests: `scripts/scaffold-game.mjs` now generates `logic/` + test, `hooks/use<Game>State.ts`, a registered `STORAGE_KEYS` entry, locale keys and a `definitions` entry in `gameRegistry.tsx` (the old registry patch no longer matched the file). [scripts/README](../scripts/README.md)
 - Q5 root `config.example.json` → maintainer decision (2026-11-15): deleted; README step 2 copies `server/config.example.json`. [secrets-management](tech/secrets-management.md)
 

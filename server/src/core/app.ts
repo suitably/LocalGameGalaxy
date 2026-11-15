@@ -69,6 +69,7 @@ export async function createGalaxyServer(config: ServerConfig): Promise<Hono<Hon
     serverConfig.createApiKey(name, true, false, {
       allowTabletopSaves: true,
       allowTabletopTemplates: true,
+      allowTabletopGameDeletion: true,
     }),
   );
 
