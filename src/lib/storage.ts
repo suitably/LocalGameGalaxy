@@ -173,6 +173,10 @@ export const STORAGE_KEYS = {
   PARTY_PLAYER_NAME: 'guessart_player_name',
   HOST_ROOM_CODE: 'galaxy_host_room_code',
 
+  // Draw pot (Lostopf): pots this device hosts (with admin keys) and its own draw history
+  DRAWPOT_HOSTED: 'drawpot_hosted',
+  DRAWPOT_HISTORY: 'drawpot_history',
+
   // Connection & WebApp
   SHARE_WEBAPP_URL: 'nexumia_share_webapp_url',
 
