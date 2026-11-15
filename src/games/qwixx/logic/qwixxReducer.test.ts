@@ -61,3 +61,34 @@ describe('Qwixx Logic - closing rows', () => {
     expect(calculateTotalScore(locked.mySheet).yellow).toBe(36);
   });
 });
+
+describe('Qwixx Logic - Longo locks with the last two numbers', () => {
+  const longo = { ...INITIAL_STATE, mySheet: createInitialSheet('P', 'longo') };
+  const cross = (state: QwixxGameState, color: RowColor, numbers: number[]) =>
+    numbers.reduce((s, number) => qwixxReducer(s, { type: 'CROSS_NUMBER', color, number }), state);
+
+  it('locks red with 15 and counts the bonus', () => {
+    const locked = cross(longo, 'red', [2, 3, 4, 5, 6, 15]);
+    expect(locked.mySheet.red.isLocked).toBe(true);
+    // 6 crosses + 1 lock cross = 7 -> 28 points
+    expect(calculateTotalScore(locked.mySheet).red).toBe(28);
+  });
+
+  it('locks green with 3', () => {
+    const locked = cross(longo, 'green', [16, 15, 14, 13, 12, 3]);
+    expect(locked.mySheet.green.isLocked).toBe(true);
+    expect(calculateTotalScore(locked.mySheet).green).toBe(28);
+  });
+
+  it('does not lock with 15 before six crosses, and a later manual close gives no bonus', () => {
+    const crossed = cross(longo, 'yellow', [2, 3, 15]);
+    expect(crossed.mySheet.yellow.isLocked).toBe(false);
+    const closed = qwixxReducer(crossed, { type: 'LOCK_ROW', color: 'yellow' });
+    expect(calculateTotalScore(closed.mySheet).yellow).toBe(6);
+  });
+
+  it('keeps Classic rows locking only with 12 or 2', () => {
+    const crossed = cross(INITIAL_STATE, 'red', [2, 3, 4, 5, 6, 11]);
+    expect(crossed.mySheet.red.isLocked).toBe(false);
+  });
+});

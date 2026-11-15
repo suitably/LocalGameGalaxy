@@ -60,13 +60,25 @@ export const getRowCrossCount = (
   return count;
 };
 
+/** Numbers that lock the row when crossed: 2/12 (Classic), 15/16 or 3/2 (Longo). */
+export const getLockNumbers = (rowDef: SheetRowDefinition): number[] =>
+  rowDef.lockNumbers ?? [rowDef.lockNumber];
+
+const minLockCrosses = (sheetType?: QwixxSheetType) => (sheetType === 'longo' ? 6 : 5);
+
 /**
  * The lock bonus (+1 cross) only counts when the player closed the row themselves by crossing
- * its lock number (2/12, Longo 2/16). A row closed by tapping the lock (another player closed
+ * a lock number with enough crosses. A row closed by tapping the lock (another player closed
  * it) is locked without a bonus.
  */
-export const hasLockBonus = (rowDef: SheetRowDefinition, rowState: RowState): boolean =>
-  rowState.isLocked && rowState.crossed.includes(rowDef.lockNumber);
+export const hasLockBonus = (
+  rowDef: SheetRowDefinition,
+  rowState: RowState,
+  sheetType?: QwixxSheetType,
+): boolean =>
+  rowState.isLocked &&
+  getLockNumbers(rowDef).some((n) => rowState.crossed.includes(n)) &&
+  getRowCrossCount(rowDef, rowState, sheetType) >= minLockCrosses(sheetType);
 
 export const calculateTotalScore = (sheet: PlayerSheet): QwixxScoreBreakdown => {
   const rows = getSheetRows(sheet.sheetType || 'classic', sheet.presetIndex, sheet.customRows);
@@ -100,7 +112,7 @@ export const calculateTotalScore = (sheet: PlayerSheet): QwixxScoreBreakdown => 
     });
 
     // Row lock bonus counts for the row's lockColor (e.g. in Gemixxt A row 1 lock is Blue)
-    if (hasLockBonus(rowDef, rowState)) {
+    if (hasLockBonus(rowDef, rowState, sheet.sheetType)) {
       const lockColor = rowDef.lockColor || rowDef.defaultColor;
       counts[lockColor] += 1;
     }
@@ -247,12 +259,11 @@ export function canLockRow(
   numToCross: number,
   sheetType?: QwixxSheetType,
 ): boolean {
-  if (numToCross !== rowDef.lockNumber) return false;
+  if (!getLockNumbers(rowDef).includes(numToCross)) return false;
   const lockCell = rowDef.cells.find((c) => c.number === numToCross);
   const lockBonus = lockCell?.isDouble && sheetType === 'double_numbers' ? 2 : 1;
   const currentCount = getRowCrossCount(rowDef, rowState, sheetType);
-  const minCrosses = sheetType === 'longo' ? 6 : 5;
-  return currentCount + lockBonus >= minCrosses;
+  return currentCount + lockBonus >= minLockCrosses(sheetType);
 }
 
 export function canCrossBigPointsBonus(

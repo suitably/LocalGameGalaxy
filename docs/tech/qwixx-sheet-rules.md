@@ -64,7 +64,7 @@ Dieses Dokument ist das verbindliche **Regelwerk und die Spezifikation aller Qwi
 - **Bedingung**: Der Spieler muss in dieser Reihe bereits mindestens **5 Kreuze** vorweisen können (inklusive der letzten Zahl).
 - Beim Abschließen wird zusätzlich das **Schlosssymbol** angekreuzt (zählt als weiteres reguläres Kreuz für die Endwertung).
 - Der entsprechende Farbwürfel wird für alle Spieler entfernt und die Reihe ist für alle gesperrt.
-- **In der App**: Ankreuzen der letzten Zahl sperrt die Reihe automatisch mit Bonus-Kreuz. Hat ein anderer Spieler die Reihe geschlossen, tippt man selbst auf das Schloss: die Reihe ist gesperrt, aber **ohne** Bonus-Kreuz (gestrichelter Rahmen). Der Bonus zählt nur, wenn die letzte Zahl angekreuzt ist (`hasLockBonus` in `logic/qwixxReducer.ts`); erneutes Tippen entsperrt die Reihe.
+- **In der App**: Ankreuzen der letzten Zahl sperrt die Reihe automatisch mit Bonus-Kreuz. Hat ein anderer Spieler die Reihe geschlossen, tippt man selbst auf das Schloss: die Reihe ist gesperrt, aber **ohne** Bonus-Kreuz (gestrichelter Rahmen). Der Bonus zählt nur, wenn eine Schlusszahl mit genug Kreuzen angekreuzt ist (`hasLockBonus` in `logic/qwixxReducer.ts`). **Longo**: Rot/Gelb schließen mit 15 oder 16, Grün/Blau mit 3 oder 2 (`lockNumbers` in `sheetDefinitions.ts`, mindestens 6 Kreuze); erneutes Tippen entsperrt die Reihe.
 
 #### 4. Wertung
 

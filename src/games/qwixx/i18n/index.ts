@@ -150,7 +150,7 @@ export const qwixxTranslations = {
             crossing:
               'Cross numbers from left to right (2–16 / 16–2). When the white dice roll your Lucky Number, cross the next free number in the row with the fewest crosses!',
             scoring:
-              'Standard triangular scoring for up to 16 crosses (up to 136 pts per row). Locking requires 6 crosses and the final number.',
+              'Standard triangular scoring for up to 16 crosses (up to 136 pts per row). Locking requires 6 crosses and one of the last two numbers (15/16 or 3/2).',
             tip: 'Watch the white dice rolls for your Lucky Numbers to gain valuable extra crosses in your lagging rows!',
           },
           random_mix: {
@@ -368,7 +368,7 @@ export const qwixxTranslations = {
             crossing:
               'Ankreuzen von links nach rechts (2–16 / 16–2). Bei Wurf einer deiner zwei Glückszahlen mit den weißen Würfeln darf das nächste freie Feld in der Reihe mit den wenigsten Kreuzen markiert werden!',
             scoring:
-              'Punkte steigen bis zu 16 Kreuzen (bis zu 136 Pkt pro Reihe!). Das Sperren einer Reihe erfordert mindestens 6 Kreuze und die letzte Zahl.',
+              'Punkte steigen bis zu 16 Kreuzen (bis zu 136 Pkt pro Reihe!). Das Sperren einer Reihe erfordert mindestens 6 Kreuze und eine der letzten beiden Zahlen (15/16 bzw. 3/2).',
             tip: 'Nutze deine Glückszahlen geschickt, um Reihen aufzuholen, in denen du noch wenige Kreuze hast!',
           },
           random_mix: {

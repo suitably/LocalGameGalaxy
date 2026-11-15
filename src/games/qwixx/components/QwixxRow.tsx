@@ -3,7 +3,7 @@ import { Box, Paper, useMediaQuery } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import StarIcon from '@mui/icons-material/StarRounded';
 import type { RowColor, RowState, SheetRowDefinition, QwixxSheetType } from '../logic/types';
-import { getRowCrossCount, hasLockBonus } from '../logic/qwixxReducer';
+import { getLockNumbers, getRowCrossCount, hasLockBonus } from '../logic/qwixxReducer';
 import { buildRowSegments, isCellClickable, splitSegmentsIntoLines } from '../logic/rowLayout';
 import { QwixxCell } from './QwixxCell';
 import { QwixxLockButton } from './QwixxLockButton';
@@ -51,10 +51,11 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
   const hasModifier = rowDef.cells.some((c) => !!c.bonusEffect || !!c.isDouble || !!c.chainId);
   const numbers = rowDef.cells.map((c) => c.number);
   const minCrosses = sheetType === 'longo' ? 6 : 5;
+  const lockNumbers = getLockNumbers(rowDef);
   const canLock =
     !isBonusRow &&
     getRowCrossCount(rowDef, rowState, sheetType) >= minCrosses &&
-    rowState.crossed.includes(rowDef.lockNumber) &&
+    lockNumbers.some((n) => rowState.crossed.includes(n)) &&
     !rowState.isLocked;
   const isPhone = useMediaQuery(theme.breakpoints.down('sm'));
   const twoLines = isPhone && rowDef.cells.length + 1 > ONE_LINE_MAX_SLOTS;
@@ -134,7 +135,7 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
                         isClickable={isCellClickable(cell, numbers, rowState)}
                         disabled={disabled || rowState.isLocked}
                         isHighlighted={!isCrossed && !!highlightedNumbers?.includes(num)}
-                        isLastNumber={num === rowDef.lockNumber}
+                        isLastNumber={lockNumbers.includes(num)}
                         isBonusRow={isBonusRow}
                         onTap={() => onCrossNumber(color, num, isBonusRow, rowDef.id)}
                       />
@@ -145,7 +146,7 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
                     <QwixxLockButton
                       color={seg.color}
                       isLocked={rowState.isLocked}
-                      hasBonus={hasLockBonus(rowDef, rowState)}
+                      hasBonus={hasLockBonus(rowDef, rowState, sheetType)}
                       disabled={disabled}
                       canLock={canLock}
                       onLock={() => onLockRow(color)}
