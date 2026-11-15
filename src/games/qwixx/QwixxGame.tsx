@@ -50,6 +50,7 @@ export const QwixxGame: React.FC = () => {
           onDieClick={game.clickDie}
           selectedDie={game.selectedDie}
           maxDieValue={state.mySheet.sheetType === 'longo' ? 8 : 6}
+          removedDice={game.removedDice}
         />
       )}
 

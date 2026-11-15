@@ -4,7 +4,7 @@ import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import { useTranslation } from 'react-i18next';
 import { Die3D, PRESET_DIE_COLORS } from '../../../components/games/Die3D';
 import { useDiceRollAnimation } from '../../../components/games/useDiceRollAnimation';
-import type { DiceValues } from '../logic/types';
+import type { DiceValues, RowColor } from '../logic/types';
 import type { DieKey } from '../logic/diceHighlight';
 
 interface QwixxDiceRollerProps {
@@ -15,6 +15,8 @@ interface QwixxDiceRollerProps {
   selectedDie?: DieKey | null;
   disabled?: boolean;
   maxDieValue?: number;
+  /** Colored dice out of play because their row is locked; not rendered. */
+  removedDice?: RowColor[];
 }
 
 const DIE_COLORS = {
@@ -26,6 +28,8 @@ const DIE_COLORS = {
   blue: PRESET_DIE_COLORS.blue,
 };
 
+const COLORED_DICE: RowColor[] = ['red', 'yellow', 'green', 'blue'];
+
 export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
   dice,
   isRolling,
@@ -34,6 +38,7 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
   selectedDie = null,
   disabled = false,
   maxDieValue = 6,
+  removedDice = [],
 }) => {
   const { t } = useTranslation();
   const { animating, startRoll } = useDiceRollAnimation();
@@ -134,10 +139,9 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 1 } }}>
-            {renderDie('red', dice.red)}
-            {renderDie('yellow', dice.yellow)}
-            {renderDie('green', dice.green)}
-            {renderDie('blue', dice.blue)}
+            {COLORED_DICE.filter((key) => !removedDice.includes(key)).map((key) =>
+              renderDie(key, dice[key]),
+            )}
           </Box>
         </Box>
 
