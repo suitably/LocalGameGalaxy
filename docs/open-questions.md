@@ -19,11 +19,6 @@ Resolve: delete the root example and point README to `server/config.example.json
 `src/i18n/locales/{de,en}/imposter.json` are tracked but imported nowhere (Imposter strings come from `public/locales/*/translation.json`).
 Resolve: delete them, or wire them up if they hold newer strings.
 
-## Q7 — Scaffolder generates a `gameManifest.ts` pattern no game uses
-
-`scripts/scaffold-game.mjs` writes `src/games/<id>/gameManifest.ts`, `tests/<id>.test.ts` and a `hooks/use<Game>State.ts`, then patches `src/lib/gameRegistry.tsx`. None of the 15 existing games has a `gameManifest.ts`; the registry is a hand-written array. **Unverified:** whether the registry patch step still matches the current file layout.
-Resolve: run the scaffolder in a scratch branch; either align it with the existing pattern or adopt manifests everywhere.
-
 ## Q22 — Tabletop p95 frame time at 800 widgets above 16 ms under emulation [user]
 
 TTS plan D5: optimise the DOM renderer, measure at 800 widgets, and consider a Canvas renderer only if p95 stays above 16 ms. After #684 (`npm run perf:tabletop`, headless Chromium in a 4-vCPU cloud container): a token drag reaches p95 16.7 ms unthrottled (`main`: 100–150 ms), but 50–67 ms at 4× CPU throttling (`main`: 580–750 ms); panning stays at 16.8 ms. The acceptance criterion names a real mid-range phone, and the 4× emulation is only an approximation of one.
@@ -42,6 +37,10 @@ ADR-0004 says "Demucs via PyTorch". `server/src/plugins/melodiq/services/separat
 
 `DELETE /api/tabletop/games/:id` (`server/src/plugins/tabletop/routes/library.ts`) checks the song-oriented `allowSongDeletion` flag; the admin UI labels it `server.admin.perm_delete`, so a key meant for song deletion can also delete saved games. A separate `allowTabletopGameDeletion` flag would need a config migration and an admin-UI entry (#687 left it unchanged).
 Resolve: decide whether the generic "deletion" flag is intended (then rename the flag/label in docs and UI) or add a dedicated flag. See [server-security](tech/server-security.md).
+
+## Resolved 2026-11-15
+
+- Q7 scaffolder → aligned with the existing pattern instead of adopting manifests: `scripts/scaffold-game.mjs` now generates `logic/` + test, `hooks/use<Game>State.ts`, a registered `STORAGE_KEYS` entry, locale keys and a `definitions` entry in `gameRegistry.tsx` (the old registry patch no longer matched the file). [scripts/README](../scripts/README.md)
 
 ## Resolved 2026-11-08
 
