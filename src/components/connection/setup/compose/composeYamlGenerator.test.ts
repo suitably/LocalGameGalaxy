@@ -23,12 +23,13 @@ describe('generateComposeYaml (#342)', () => {
   it('runs one companion container with the selected plugins and their volumes', () => {
     const yaml = generateComposeYaml(opts({ melodiq: false, tabletop: true }));
     expect(yaml.match(/nexumia\/nexumia-server/g)).toHaveLength(1);
-    expect(yaml).toContain('PLUGINS=relay,tabletop');
+    expect(yaml).toContain('PLUGINS=relay,drawpot,tabletop');
     expect(yaml).toContain('"./tabletop:/app/tabletop"');
     expect(yaml).not.toContain('MUSIC_DIR');
     expect(yaml).not.toContain('/app/notes');
     expect(companionPlugins(opts({ melodiq: true, tabletop: true, notes: true }))).toEqual([
       'relay',
+      'drawpot',
       'melodiq',
       'tabletop',
       'notes',
@@ -43,7 +44,7 @@ describe('generateComposeYaml (#342)', () => {
         paths: { ...DEFAULT_COMPOSE_OPTIONS.paths, notes: '/srv/my notes' },
       }),
     );
-    expect(yaml).toContain('PLUGINS=relay,notes');
+    expect(yaml).toContain('PLUGINS=relay,drawpot,notes');
     expect(yaml).toContain('"/srv/my notes:/app/notes"');
     expect(yaml).toContain('NOTES_DIR=/app/notes');
   });

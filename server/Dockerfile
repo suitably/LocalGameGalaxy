@@ -51,7 +51,7 @@ VOLUME /app/notes
 # Runtime environment configuration
 ENV PORT=3000 \
     NODE_ENV=production \
-    PLUGINS=relay,melodiq,tabletop,notes \
+    PLUGINS=relay,melodiq,tabletop,notes,drawpot \
     MUSIC_DIR=/app/music \
     TABLETOP_DIR=/app/tabletop \
     NOTES_DIR=/app/notes \

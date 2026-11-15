@@ -5,13 +5,16 @@ import {
   makeAssignments,
   validateCreateInput,
   type RandomInt,
-} from '../../../../../cloudflare/drawPot/logic';
+} from '../../../../../server/src/plugins/drawpot/core/logic';
 import {
   DrawPotObject,
   handleDrawPot,
   type DrawPotNamespace,
 } from '../../../../../cloudflare/drawPot/routes';
-import type { CreateDrawPotInput, DrawPotState } from '../../../../../cloudflare/drawPot/types';
+import type {
+  CreateDrawPotInput,
+  DrawPotState,
+} from '../../../../../server/src/plugins/drawpot/core/types';
 
 const first: RandomInt = () => 0;
 const P1 = 'participant-1';

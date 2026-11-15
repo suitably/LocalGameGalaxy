@@ -12,6 +12,7 @@ import { usePageTitle } from '../../context/TitleContext';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { loadHistory, loadHosted, removeHistory, removeHosted } from './logic/localStore';
 import { PotList } from './components/PotList';
+import { potPath } from './logic/api';
 
 export const DrawPotGame: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -49,7 +50,7 @@ export const DrawPotGame: React.FC = () => {
             }),
             expired: p.expiresAt < now,
           }))}
-          onOpen={(id) => navigate(`/games/drawpot/admin/${id}`)}
+          onOpen={(id) => navigate(potPath('admin', id, hosted.find((p) => p.id === id)?.server))}
           onRemove={(id) => setHosted(removeHosted(id))}
           removeLabel={t('drawpot.home.forgetHosted')}
         />
@@ -62,7 +63,7 @@ export const DrawPotGame: React.FC = () => {
             secondary: h.draws.map((d) => d.label).join(', '),
             expired: false,
           }))}
-          onOpen={(id) => navigate(`/games/drawpot/p/${id}`)}
+          onOpen={(id) => navigate(potPath('p', id, history.find((h) => h.potId === id)?.server))}
           onRemove={(id) => setHistory(removeHistory(id))}
           removeLabel={t('drawpot.home.forgetHistory')}
         />

@@ -9,6 +9,7 @@ import { GameLayout } from '../../components/Layout/GameLayout';
 import { useCreatePotForm } from './hooks/useCreatePotForm';
 import { EntriesField } from './components/EntriesField';
 import { PotSettingsFields } from './components/PotSettingsFields';
+import { StorageTargetField } from './components/StorageTargetField';
 
 export const DrawPotCreate: React.FC = () => {
   const { t } = useTranslation();
@@ -47,6 +48,7 @@ export const DrawPotCreate: React.FC = () => {
           minRows={2}
           fullWidth
         />
+        <StorageTargetField form={form} />
         <PotSettingsFields form={form} />
         <EntriesField form={form} />
         {showProblem && (
@@ -68,7 +70,11 @@ export const DrawPotCreate: React.FC = () => {
           {t('drawpot.create.submit')}
         </Button>
         <Typography variant="caption" color="text.secondary">
-          {t('drawpot.create.privacy')}
+          {t(
+            form.target === 'companion'
+              ? 'drawpot.create.privacyCompanion'
+              : 'drawpot.create.privacy',
+          )}
         </Typography>
       </Stack>
     </GameLayout>

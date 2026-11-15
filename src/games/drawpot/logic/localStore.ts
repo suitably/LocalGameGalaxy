@@ -10,6 +10,8 @@ import type { DrawPotMode, DrawRecord } from './api';
 
 export interface HostedPot {
   id: string;
+  /** Companion server URL; missing = Cloudflare (cloud). */
+  server?: string;
   adminKey: string;
   title: string;
   mode: DrawPotMode;
@@ -19,6 +21,8 @@ export interface HostedPot {
 
 export interface PotHistory {
   potId: string;
+  /** Companion server URL; missing = Cloudflare (cloud). */
+  server?: string;
   title: string;
   mode: DrawPotMode;
   /** Secret santa: the name this device claimed. */

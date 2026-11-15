@@ -10,11 +10,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { getDeviceId } from '../../../lib/deviceIdentity';
 import { drawPotApi, DrawPotApiError, type DrawPotPublicView, type DrawRecord } from '../logic/api';
 import { findHistory, saveHistory, type PotHistory } from '../logic/localStore';
+import { usePotBackend } from './usePotBackend';
 
 export function useParticipantPot(potId: string) {
   const participantId = getDeviceId();
   const [pot, setPot] = useState<DrawPotPublicView | null>(null);
   const [history, setHistory] = useState<PotHistory | undefined>(() => findHistory(potId));
+  const { backend, server } = usePotBackend(history?.server);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<DrawPotApiError['code'] | null>(null);
   const [drawError, setDrawError] = useState<DrawPotApiError['code'] | null>(null);
@@ -29,6 +31,7 @@ export function useParticipantPot(potId: string) {
       setHistory(
         saveHistory({
           potId,
+          server,
           title: view.title,
           mode: view.settings.mode,
           identityLabel: identity,
@@ -36,14 +39,14 @@ export function useParticipantPot(potId: string) {
         }),
       );
     },
-    [potId],
+    [potId, server],
   );
 
   /** Loads the pot; state changes only after the request settled. */
   const load = useCallback(
     () =>
       drawPotApi
-        .view(potId, participantId)
+        .view(backend, potId, participantId)
         .then((view) => {
           setPot(view);
           setLoadError(null);
@@ -51,7 +54,7 @@ export function useParticipantPot(potId: string) {
         })
         .catch((e: unknown) => setLoadError(e instanceof DrawPotApiError ? e.code : 'network'))
         .finally(() => setLoading(false)),
-    [potId, participantId, remember],
+    [backend, potId, participantId, remember],
   );
 
   useEffect(() => {
@@ -69,7 +72,7 @@ export function useParticipantPot(potId: string) {
     setDrawError(null);
     setRevealing(null);
     try {
-      const res = await drawPotApi.draw(potId, participantId, identityId ?? undefined);
+      const res = await drawPotApi.draw(backend, potId, participantId, identityId ?? undefined);
       setPot(res.pot);
       remember(res.pot, [...res.pot.myDraws, res.draw]);
       setRevealing(res.draw);

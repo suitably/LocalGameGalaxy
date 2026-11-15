@@ -21,7 +21,7 @@ services:
   # 2. Game Companion Services (Modular Plugins)
   # ══════════════════════════════════════════════════════════════════
 
-  # Nexumia server (formerly melodiq-server): one container, plugins relay + melodiq + tabletop + notes (PLUGINS, default all).
+  # Nexumia server (formerly melodiq-server): one container, plugins relay + melodiq + tabletop + notes + drawpot (PLUGINS, default all).
   # Each plugin keeps its data in its own folder; drop a plugin from PLUGINS and its volume line.
   # Push notifications need no container (ntfy or server/cloudflare-push-relay worker).
   nexumia-server:
@@ -39,7 +39,7 @@ services:
     environment:
       - PORT=3000
       - NODE_ENV=production
-      - PLUGINS=relay,melodiq,tabletop,notes
+      - PLUGINS=relay,melodiq,tabletop,notes,drawpot # drawpot keeps its pots in config/drawpots/
       - MUSIC_DIR=/app/music
       - TABLETOP_DIR=/app/tabletop
       - NOTES_DIR=/app/notes

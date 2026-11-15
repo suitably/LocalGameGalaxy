@@ -1,10 +1,10 @@
 /**
  * Draw pot rules: validation, drawing, views and host actions as pure functions
- * [ID: CF-DRAWPOT-LOGIC]
+ * [ID: DRAWPOT-CORE-LOGIC]
  *
  * `applyOp` takes the stored state and one operation and returns the HTTP answer plus the next
- * state. The Durable Object runs one operation at a time, so a draw can never hand the same item
- * to two people.
+ * state. Each backend runs one operation per pot at a time (Durable Object, per-pot file lock),
+ * so a draw can never hand the same item to two people. No platform APIs besides Web Crypto.
  */
 import type {
   CreateDrawPotInput,

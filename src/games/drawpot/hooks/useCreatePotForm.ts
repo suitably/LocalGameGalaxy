@@ -3,15 +3,35 @@
  */
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { drawPotApi, DrawPotApiError, type DrawPotMode, type DrawPotSettings } from '../logic/api';
+import {
+  CLOUD_BACKEND,
+  drawPotApi,
+  DrawPotApiError,
+  potPath,
+  serverOf,
+  type DrawPotBackend,
+  type DrawPotMode,
+  type DrawPotSettings,
+} from '../logic/api';
+import {
+  getHelperToken,
+  getHelperUrl,
+  isHelperActive,
+} from '../../../lib/companion/companionSettings';
 import { duplicateLabels, MAX_ENTRIES, parseEntries } from '../logic/entries';
 import { saveHosted } from '../logic/localStore';
 
 export type CreateFormProblem =
   'title' | 'entries' | 'tooMany' | 'santaMin' | 'santaDuplicates' | null;
 
+/** Where the pot is stored: Nexumia cloud (Cloudflare) or the user's own Nexumia server. */
+export type PotTarget = 'cloud' | 'companion';
+
 export function useCreatePotForm() {
   const navigate = useNavigate();
+  // offered only when a server is connected (it has a token): creating a pot there needs it
+  const companionUrl = isHelperActive() && getHelperToken() ? getHelperUrl() : '';
+  const [target, setTarget] = useState<PotTarget>('cloud');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [entriesText, setEntriesText] = useState('');
@@ -57,16 +77,26 @@ export function useCreatePotForm() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const res = await drawPotApi.create({ title: title.trim(), description, entries, settings });
+      const backend: DrawPotBackend =
+        target === 'companion' && companionUrl
+          ? { kind: 'companion', url: companionUrl.replace(/\/+$/, '') }
+          : CLOUD_BACKEND;
+      const res = await drawPotApi.create(backend, {
+        title: title.trim(),
+        description,
+        entries,
+        settings,
+      });
       saveHosted({
         id: res.id,
+        server: serverOf(backend),
         adminKey: res.adminKey,
         title: title.trim(),
         mode,
         createdAt: Date.now(),
         expiresAt: res.expiresAt,
       });
-      navigate(`/games/drawpot/admin/${res.id}`, { replace: true });
+      navigate(potPath('admin', res.id, serverOf(backend)), { replace: true });
     } catch (e) {
       setSubmitError(e instanceof DrawPotApiError ? e.code : 'network');
       setSubmitting(false);
@@ -74,6 +104,9 @@ export function useCreatePotForm() {
   }
 
   return {
+    companionUrl,
+    target,
+    setTarget,
     title,
     setTitle,
     description,

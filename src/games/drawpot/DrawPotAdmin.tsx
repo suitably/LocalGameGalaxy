@@ -12,7 +12,7 @@ import { usePageTitle } from '../../context/TitleContext';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { ErrorState } from '../../components/common/ErrorState';
 import { useAdminPot } from './hooks/useAdminPot';
-import { adminLink, participantLink } from './logic/api';
+import { adminLink, participantLink, potPath, serverOf } from './logic/api';
 import { ShareLinkCard } from './components/ShareLinkCard';
 import { AdminStatus } from './components/AdminStatus';
 import { AdminActions } from './components/AdminActions';
@@ -30,7 +30,7 @@ export const DrawPotAdmin: React.FC = () => {
       <GameLayout maxWidth="sm">
         <ErrorState message={t('drawpot.admin.noKey')} />
         <Box textAlign="center">
-          <Button onClick={() => navigate(`/games/drawpot/p/${potId}`)}>
+          <Button onClick={() => navigate(potPath('p', potId, serverOf(a.backend)))}>
             {t('drawpot.admin.openAsParticipant')}
           </Button>
         </Box>
@@ -58,7 +58,7 @@ export const DrawPotAdmin: React.FC = () => {
       </Box>
     );
 
-  const link = participantLink(potId);
+  const link = participantLink(potId, a.backend);
   return (
     <GameLayout maxWidth="sm">
       <Stack spacing={2.5}>
@@ -92,7 +92,7 @@ export const DrawPotAdmin: React.FC = () => {
           <ShareLinkCard
             label={t('drawpot.admin.hostLink')}
             hint={t('drawpot.admin.hostLinkHint')}
-            url={adminLink(potId, a.adminKey)}
+            url={adminLink(potId, a.adminKey, a.backend)}
             shareTitle={a.pot.title}
             shareText={t('drawpot.admin.hostShareText', { title: a.pot.title })}
           />

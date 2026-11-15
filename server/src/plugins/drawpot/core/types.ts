@@ -1,8 +1,8 @@
 /**
- * Draw pot (Lostopf) data model, shared by the worker and the app [ID: CF-DRAWPOT-TYPES]
+ * Draw pot (Lostopf) data model [ID: DRAWPOT-CORE-TYPES]
  *
- * One pot lives in one Durable Object (`DrawPotObject`). The app imports these types only
- * (`import type`), never runtime code.
+ * Shared by the Cloudflare worker (one Durable Object per pot), the companion server plugin (one
+ * JSON file per pot) and the app, which imports these types only (`import type`).
  */
 
 /** `pot`: draw items from a pot. `secret-santa`: every name draws another name, never itself. */

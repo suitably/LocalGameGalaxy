@@ -10,7 +10,7 @@ import { buildPairingUrl, DEFAULT_APP_URL, pairingStore } from './core/pairing';
 import { canOpenBrowser, openBrowser } from './utils/openBrowser';
 
 const port = serverConfig.port;
-const activePlugins = (process.env.PLUGINS || 'relay,melodiq,tabletop,notes')
+const activePlugins = (process.env.PLUGINS || 'relay,melodiq,tabletop,notes,drawpot')
   .split(',')
   .map((s) => s.trim());
 const enableTunnel = process.env.ENABLE_TUNNEL === 'true' || process.argv.includes('--tunnel');

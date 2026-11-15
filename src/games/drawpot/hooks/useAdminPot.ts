@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { drawPotApi, DrawPotApiError, type DrawPotAdminView } from '../logic/api';
 import { findHosted, removeHosted, saveHosted } from '../logic/localStore';
+import { usePotBackend } from './usePotBackend';
 
 type AdminAction = 'reset' | 'close' | 'reopen';
 
@@ -18,6 +19,7 @@ export function useAdminPot(potId: string) {
     const fromHash = new URLSearchParams(hash.replace(/^#/, '')).get('key');
     return fromHash || findHosted(potId)?.adminKey || null;
   }, [hash, potId]);
+  const { backend, server } = usePotBackend(findHosted(potId)?.server);
   const [pot, setPot] = useState<DrawPotAdminView | null>(null);
   const [error, setError] = useState<DrawPotApiError['code'] | 'no_key' | null>(
     adminKey ? null : 'no_key',
@@ -30,6 +32,7 @@ export function useAdminPot(potId: string) {
       const known = findHosted(potId);
       saveHosted({
         id: potId,
+        server,
         adminKey,
         title: view.title,
         mode: view.settings.mode,
@@ -37,7 +40,7 @@ export function useAdminPot(potId: string) {
         expiresAt: view.expiresAt,
       });
     },
-    [adminKey, potId],
+    [adminKey, potId, server],
   );
 
   /** Applies a server answer; never sets state before the request settled. */
@@ -60,22 +63,22 @@ export function useAdminPot(potId: string) {
   };
 
   useEffect(() => {
-    if (adminKey) void settle(drawPotApi.adminView(potId, adminKey));
-  }, [adminKey, potId, settle]);
+    if (adminKey) void settle(drawPotApi.adminView(backend, potId, adminKey));
+  }, [adminKey, backend, potId, settle]);
 
   const refresh = () => {
-    if (adminKey) run(() => drawPotApi.adminView(potId, adminKey));
+    if (adminKey) run(() => drawPotApi.adminView(backend, potId, adminKey));
   };
 
   const act = (action: AdminAction) => {
-    if (adminKey) run(() => drawPotApi.adminAction(potId, adminKey, action));
+    if (adminKey) run(() => drawPotApi.adminAction(backend, potId, adminKey, action));
   };
 
   async function remove() {
     if (!adminKey) return;
     setBusy(true);
     try {
-      await drawPotApi.remove(potId, adminKey);
+      await drawPotApi.remove(backend, potId, adminKey);
     } catch (e) {
       // already gone counts as deleted
       if (!(e instanceof DrawPotApiError && e.code === 'not_found')) {
@@ -88,7 +91,7 @@ export function useAdminPot(potId: string) {
     navigate('/games/drawpot', { replace: true });
   }
 
-  return { pot, adminKey, error, busy, refresh, act, remove };
+  return { pot, backend, adminKey, error, busy, refresh, act, remove };
 }
 
 export type AdminPot = ReturnType<typeof useAdminPot>;

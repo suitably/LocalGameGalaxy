@@ -2439,7 +2439,8 @@
         "tooMany": "Höchstens 500 Einträge.",
         "santaMin": "Wichteln braucht mindestens 2 Namen.",
         "santaDuplicates": "Beim Wichteln darf jeder Name nur einmal vorkommen."
-      }
+      },
+      "privacyCompanion": "Der Lostopf wird auf deinem eigenen Nexumia-Server gespeichert und nach 60 Tagen automatisch gelöscht. Nur mit dem Host-Link lässt er sich ändern oder löschen."
     },
     "settings": {
       "mode": "Modus",
@@ -2528,6 +2529,23 @@
       "identity_required": "Wähle zuerst deinen eigenen Namen.",
       "forbidden": "Kein Host-Zugriff auf diesen Lostopf.",
       "unavailable": "Der Los-Server ist gerade nicht erreichbar. Versuch es später erneut."
+    },
+    "storage": {
+      "label": "Wo wird der Lostopf gespeichert?",
+      "cloud": "Nexumia-Cloud",
+      "companion": "Mein Nexumia-Server",
+      "cloudHint": "Gespeichert auf dem Nexumia-Server bei Cloudflare. Funktioniert für alle mit dem Link.",
+      "companionHint": "Gespeichert auf deinem eigenen Server ({{url}}). Die Geräte der Teilnehmenden verbinden sich direkt damit.",
+      "notPublic": "Diese Adresse funktioniert nur in deinem eigenen Netz (oder ohne HTTPS). Andere können den Lostopf nicht öffnen. Nutze eine öffentliche HTTPS-Adresse, z. B. den Cloudflare-Tunnel deines Servers."
+    },
+    "groups": {
+      "open": "Gruppen bilden",
+      "hint": "Gib ein, wie viele Personen mitmachen und wie groß eine Gruppe höchstens ist. Ausgewogene Gruppen werden als Einträge ergänzt (z. B. „Gruppe 1 *4“).",
+      "people": "Personen",
+      "size": "Max. Gruppengröße",
+      "prefix": "Gruppe",
+      "add_one": "{{count}} Gruppe hinzufügen",
+      "add_other": "{{count}} Gruppen hinzufügen"
     }
   }
 }

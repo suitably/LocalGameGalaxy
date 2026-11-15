@@ -8,7 +8,14 @@ import {
   saveHistory,
   saveHosted,
 } from '../localStore';
-import { adminLink, isWorkerHost } from '../api';
+import {
+  adminLink,
+  backendFromServer,
+  CLOUD_BACKEND,
+  isPublicServerUrl,
+  isWorkerHost,
+  potPath,
+} from '../api';
 import { storage } from '../../../../lib/storage';
 import type { DrawRecord } from '../api';
 
@@ -85,6 +92,26 @@ describe('links', () => {
   it('recognises worker hosts and keeps the admin key in the fragment', () => {
     expect(isWorkerHost('games.nexumia.de')).toBe(true);
     expect(isWorkerHost('localhost')).toBe(false);
-    expect(adminLink('abc123', 'k/y')).toMatch(/\/games\/drawpot\/admin\/abc123#key=k%2Fy$/);
+    expect(adminLink('abc123', 'k/y', CLOUD_BACKEND)).toMatch(
+      /\/games\/drawpot\/admin\/abc123#key=k%2Fy$/,
+    );
+  });
+
+  it('carries a companion server in the link and accepts only http(s) servers', () => {
+    const backend = backendFromServer('https://pots.example.org/');
+    expect(backend).toEqual({ kind: 'companion', url: 'https://pots.example.org' });
+    expect(adminLink('abc123', 'k', backend)).toMatch(
+      /\/games\/drawpot\/admin\/abc123\?server=https%3A%2F%2Fpots\.example\.org#key=k$/,
+    );
+    expect(potPath('p', 'abc123')).toBe('/games/drawpot/p/abc123');
+    expect(backendFromServer('javascript:alert(1)')).toEqual(CLOUD_BACKEND);
+    expect(backendFromServer(null)).toEqual(CLOUD_BACKEND);
+  });
+
+  it('tells public https servers from local ones', () => {
+    expect(isPublicServerUrl('https://abc.trycloudflare.com')).toBe(true);
+    expect(isPublicServerUrl('http://example.org')).toBe(false);
+    expect(isPublicServerUrl('https://192.168.1.5:3000')).toBe(false);
+    expect(isPublicServerUrl('https://localhost:3000')).toBe(false);
   });
 });
