@@ -1,7 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { alignRecording } from '../alignment';
 import { bandSong, barErrors, onlyParts, renderBand, type RenderOptions } from './bandFixtures';
 import type { ScoreSong } from '../types';
+
+// CPU-heavy DSP on synthetic audio: single tests take up to ~4.5 s alone and exceed the
+// default 5 s when the full suite runs in parallel workers on a loaded machine.
+vi.setConfig({ testTimeout: 30_000 });
 
 const drift: RenderOptions['factorAt'] = (b) => (b < 20 ? 1.06 : b < 32 ? 0.97 : 1.02);
 
