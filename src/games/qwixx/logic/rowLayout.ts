@@ -23,7 +23,7 @@ export const buildRowSegments = (rowDef: SheetRowDefinition): RowSegment[] => {
 };
 
 /**
- * Splits segments into two display lines for narrow phones. The lock/star slot counts as one
+ * Splits segments into two display lines on phones, for rows too long for one line (Longo). The lock/star slot counts as one
  * slot, so an 11-cell row becomes 6 cells + (5 cells + lock). Segments crossing the split are
  * cut; only the final segment of the second line keeps `isLastSegment`.
  */

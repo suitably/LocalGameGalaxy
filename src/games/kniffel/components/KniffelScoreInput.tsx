@@ -29,7 +29,12 @@ export const KniffelScoreInput: React.FC<KniffelScoreInputProps> = ({
       case 'fives':
       case 'sixes': {
         const faceMap: Record<string, number> = {
-          ones: 1, twos: 2, threes: 3, fours: 4, fives: 5, sixes: 6,
+          ones: 1,
+          twos: 2,
+          threes: 3,
+          fours: 4,
+          fives: 5,
+          sixes: 6,
         };
         const face = faceMap[category];
         return [0, 1, 2, 3, 4, 5].map((multiplier) => (
@@ -43,40 +48,77 @@ export const KniffelScoreInput: React.FC<KniffelScoreInputProps> = ({
       case 'chance':
         // Grid of numbers 5..30
         return (
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))', gap: 1, width: '100%', maxHeight: 300, overflowY: 'auto' }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))',
+              gap: 1,
+              width: '100%',
+              maxHeight: 300,
+              overflowY: 'auto',
+            }}
+          >
             {Array.from({ length: 26 }, (_, i) => i + 5).map((score) => (
-              <Button key={score} variant="outlined" onClick={() => onConfirm(score)} sx={{ minWidth: 0, p: 0.5 }}>
+              <Button
+                key={score}
+                variant="outlined"
+                onClick={() => onConfirm(score)}
+                sx={{ minWidth: 0, p: 0.5 }}
+              >
                 {score}
               </Button>
             ))}
-            <Button variant="outlined" color="error" onClick={() => onConfirm(0)} sx={{ gridColumn: '1 / -1' }}>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={() => onConfirm(0)}
+              sx={{ gridColumn: '1 / -1' }}
+            >
               0
             </Button>
           </Box>
         );
       case 'full_house':
         return [
-          <Button key="25" variant="contained" onClick={() => onConfirm(25)}>25</Button>,
-          <Button key="0" variant="outlined" color="error" onClick={() => onConfirm(0)}>0</Button>,
+          <Button key="25" variant="contained" onClick={() => onConfirm(25)}>
+            25
+          </Button>,
+          <Button key="0" variant="outlined" color="error" onClick={() => onConfirm(0)}>
+            0
+          </Button>,
         ];
       case 'small_straight':
         return [
-          <Button key="30" variant="contained" onClick={() => onConfirm(30)}>30</Button>,
-          <Button key="0" variant="outlined" color="error" onClick={() => onConfirm(0)}>0</Button>,
+          <Button key="30" variant="contained" onClick={() => onConfirm(30)}>
+            30
+          </Button>,
+          <Button key="0" variant="outlined" color="error" onClick={() => onConfirm(0)}>
+            0
+          </Button>,
         ];
       case 'large_straight':
         return [
-          <Button key="40" variant="contained" onClick={() => onConfirm(40)}>40</Button>,
-          <Button key="0" variant="outlined" color="error" onClick={() => onConfirm(0)}>0</Button>,
+          <Button key="40" variant="contained" onClick={() => onConfirm(40)}>
+            40
+          </Button>,
+          <Button key="0" variant="outlined" color="error" onClick={() => onConfirm(0)}>
+            0
+          </Button>,
         ];
       case 'kniffel':
         return [
-          <Button key="50" variant="contained" onClick={() => onConfirm(50)}>50</Button>,
-          <Button key="0" variant="outlined" color="error" onClick={() => onConfirm(0)}>0</Button>,
+          <Button key="50" variant="contained" onClick={() => onConfirm(50)}>
+            50
+          </Button>,
+          <Button key="0" variant="outlined" color="error" onClick={() => onConfirm(0)}>
+            0
+          </Button>,
         ];
       case 'kniffel_bonus':
         return [
-          <Button key="50" variant="contained" onClick={() => onConfirm(50)}>50</Button>,
+          <Button key="50" variant="contained" onClick={() => onConfirm(50)}>
+            50
+          </Button>,
         ];
       default:
         return null;
@@ -101,7 +143,7 @@ export const KniffelScoreInput: React.FC<KniffelScoreInputProps> = ({
         </>
       ) : (
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center' }}>
-           {renderManualOptions()}
+          {renderManualOptions()}
         </Box>
       )}
       <Button variant="text" onClick={onCancel} sx={{ mt: 1 }}>

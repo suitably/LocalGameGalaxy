@@ -78,11 +78,22 @@ describe('Knister Scoring Logic', () => {
     grid[4][0] = 8;
 
     // Fill remaining cells with distinct values to have 0 other combos
-    grid[0][1] = 2; grid[0][2] = 3; grid[0][3] = 4;
-    grid[1][0] = 5; grid[1][2] = 6; grid[1][4] = 9;
-    grid[2][0] = 10; grid[2][1] = 11; grid[2][3] = 12; grid[2][4] = 2;
-    grid[3][0] = 3; grid[3][2] = 4; grid[3][4] = 5;
-    grid[4][1] = 6; grid[4][2] = 9; grid[4][3] = 10;
+    grid[0][1] = 2;
+    grid[0][2] = 3;
+    grid[0][3] = 4;
+    grid[1][0] = 5;
+    grid[1][2] = 6;
+    grid[1][4] = 9;
+    grid[2][0] = 10;
+    grid[2][1] = 11;
+    grid[2][3] = 12;
+    grid[2][4] = 2;
+    grid[3][0] = 3;
+    grid[3][2] = 4;
+    grid[3][4] = 5;
+    grid[4][1] = 6;
+    grid[4][2] = 9;
+    grid[4][3] = 10;
 
     const scores = calculateBoardScores(grid);
     expect(scores.mainDiag.points).toBe(10); // 5 of a kind

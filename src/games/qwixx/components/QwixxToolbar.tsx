@@ -14,6 +14,14 @@ interface QwixxToolbarProps {
   onNewGame: () => void;
 }
 
+/** Phones: the buttons show only their icon so chips and buttons fit on one line. */
+const iconOnlyOnPhone = {
+  minWidth: { xs: 48, sm: 64 },
+  px: { xs: 1, sm: 1.5 },
+  '& .MuiButton-startIcon': { mx: { xs: 0 }, ml: { sm: -0.5 }, mr: { sm: 1 } },
+};
+const phoneHidden = { display: { xs: 'none', sm: 'inline' } };
+
 /** Sheet variant chips and dice / new-game buttons above the sheet. */
 export const QwixxToolbar: React.FC<QwixxToolbarProps> = ({
   sheetName,
@@ -24,6 +32,10 @@ export const QwixxToolbar: React.FC<QwixxToolbarProps> = ({
   onNewGame,
 }) => {
   const { t } = useTranslation();
+  const diceLabel = showDice
+    ? t('games.qwixx.hide_dice', 'Würfel')
+    : t('games.qwixx.show_dice', 'Würfel');
+  const newGameLabel = t('games.qwixx.new_game', 'Neues Spiel');
 
   return (
     <Box
@@ -31,7 +43,7 @@ export const QwixxToolbar: React.FC<QwixxToolbarProps> = ({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        mb: 2,
+        mb: { xs: 1, sm: 2 },
         flexWrap: 'wrap',
         gap: 1,
       }}
@@ -67,8 +79,12 @@ export const QwixxToolbar: React.FC<QwixxToolbarProps> = ({
           color="secondary"
           startIcon={<CasinoIcon />}
           onClick={onToggleDice}
+          aria-label={diceLabel}
+          sx={iconOnlyOnPhone}
         >
-          {showDice ? t('games.qwixx.hide_dice', 'Würfel') : t('games.qwixx.show_dice', 'Würfel')}
+          <Box component="span" sx={phoneHidden}>
+            {diceLabel}
+          </Box>
         </Button>
         <Button
           variant="outlined"
@@ -76,8 +92,12 @@ export const QwixxToolbar: React.FC<QwixxToolbarProps> = ({
           color="error"
           startIcon={<ReplayIcon />}
           onClick={onNewGame}
+          aria-label={newGameLabel}
+          sx={iconOnlyOnPhone}
         >
-          {t('games.qwixx.new_game', 'Neues Spiel')}
+          <Box component="span" sx={phoneHidden}>
+            {newGameLabel}
+          </Box>
         </Button>
       </Box>
     </Box>

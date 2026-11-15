@@ -41,7 +41,7 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          mb: 1,
+          mb: { xs: 0.5, sm: 1 },
           px: 0.5,
         }}
       >
@@ -88,8 +88,9 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: 'repeat(6, 1fr)', sm: 'repeat(11, 1fr)' },
-          gap: { xs: 0.5, sm: 0.8 },
+          // One line on phones too: buttons share the width and stay 48px tall.
+          gridTemplateColumns: 'repeat(11, 1fr)',
+          gap: { xs: '2px', sm: 0.8 },
         }}
       >
         {KNISTER_NUMBERS.map((num) => {
@@ -105,7 +106,9 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
                 onSelectNumber(isSelected ? null : num);
               }}
               sx={{
-                aspectRatio: '1',
+                aspectRatio: { xs: 'auto', sm: '1' },
+                height: { xs: 48, sm: 'auto' },
+                minWidth: 0,
                 borderRadius: 2,
                 display: 'flex',
                 alignItems: 'center',

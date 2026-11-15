@@ -14,11 +14,13 @@ export const initKniffelI18n = () => {
         games: {
           kniffel: {
             title: 'Kniffel',
-            description: 'Der Klassiker unter den Würfelspielen. Sammle Punkte durch geschicktes Kombinieren von 5 Würfeln.',
+            description:
+              'Der Klassiker unter den Würfelspielen. Sammle Punkte durch geschicktes Kombinieren von 5 Würfeln.',
             roll: 'Würfeln',
             rolling: 'Würfelt...',
             new_game: 'Neues Spiel',
-            new_game_confirm: 'Möchtest du wirklich eine neue Runde starten? Der aktuelle Spielstand geht verloren.',
+            new_game_confirm:
+              'Möchtest du wirklich eine neue Runde starten? Der aktuelle Spielstand geht verloren.',
             upper_section: 'Oberer Teil',
             lower_section: 'Unterer Teil',
             subtotal: 'Zwischensumme',
@@ -43,7 +45,7 @@ export const initKniffelI18n = () => {
               large_straight: 'Große Straße',
               kniffel: 'Kniffel',
               chance: 'Chance',
-              kniffel_bonus: 'Kniffel-Bonus'
+              kniffel_bonus: 'Kniffel-Bonus',
             },
             hint: {
               ones: 'Summe aller Einsen',
@@ -59,8 +61,8 @@ export const initKniffelI18n = () => {
               large_straight: '5 in Folge · 40',
               kniffel: '5 gleiche · 50',
               chance: 'Alle Augen zählen',
-              kniffel_bonus: 'Jeder weitere · 50'
-            }
+              kniffel_bonus: 'Jeder weitere · 50',
+            },
           },
         },
       },
@@ -78,7 +80,8 @@ export const initKniffelI18n = () => {
             roll: 'Roll',
             rolling: 'Rolling...',
             new_game: 'New Game',
-            new_game_confirm: 'Do you really want to start a new round? Current game progress will be lost.',
+            new_game_confirm:
+              'Do you really want to start a new round? Current game progress will be lost.',
             upper_section: 'Upper Section',
             lower_section: 'Lower Section',
             subtotal: 'Subtotal',
@@ -103,7 +106,7 @@ export const initKniffelI18n = () => {
               large_straight: 'Large Straight',
               kniffel: 'Yahtzee',
               chance: 'Chance',
-              kniffel_bonus: 'Yahtzee Bonus'
+              kniffel_bonus: 'Yahtzee Bonus',
             },
             hint: {
               ones: 'Sum of all Ones',
@@ -119,8 +122,8 @@ export const initKniffelI18n = () => {
               large_straight: '5 in a row · 40',
               kniffel: '5 of a kind · 50',
               chance: 'Sum of all dice',
-              kniffel_bonus: 'Each additional · 50'
-            }
+              kniffel_bonus: 'Each additional · 50',
+            },
           },
         },
       },

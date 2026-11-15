@@ -49,24 +49,42 @@ export const KniffelDiceRoller: React.FC<KniffelDiceRollerProps> = ({
   };
 
   const isRollDisabled = disabled || animating || rollCount >= 3;
+  const rollLabel = `${t('games.kniffel.roll', 'Würfeln')} (${rollCount}/3)`;
 
   return (
     <Paper
       elevation={0}
       sx={{
-        p: { xs: 1.5, sm: 2 },
+        p: { xs: 1, sm: 2 },
         borderRadius: 3,
-        bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
+        // Opaque fill (tint drawn as an image on top) so the sticky panel hides the rows below.
+        bgcolor: 'background.default',
+        backgroundImage: (theme) =>
+          `linear-gradient(${alpha(theme.palette.text.primary, 0.05)}, ${alpha(theme.palette.text.primary, 0.05)})`,
         border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
-        mb: 2,
+        mb: { xs: 1, sm: 2 },
         display: 'flex',
-        flexDirection: 'column',
+        // Phones: dice and roll button share one line, and the panel sticks to the top
+        // so the dice stay visible while scrolling down the score sheet.
+        flexDirection: { xs: 'row', sm: 'column' },
+        flexWrap: 'wrap',
+        justifyContent: 'center',
         alignItems: 'center',
-        gap: 2,
+        gap: { xs: 1, sm: 2 },
+        position: { xs: 'sticky', sm: 'static' },
+        top: 0,
+        zIndex: 3,
         touchAction: 'manipulation',
       }}
     >
-      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', flexWrap: 'wrap' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          gap: { xs: 0.75, sm: 1 },
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+        }}
+      >
         {dice.map((val, i) => (
           <Die3D
             key={i}
@@ -89,11 +107,24 @@ export const KniffelDiceRoller: React.FC<KniffelDiceRollerProps> = ({
         startIcon={<CasinoIcon />}
         onClick={handleRollClick}
         disabled={isRollDisabled}
-        sx={{ fontWeight: 'bold', px: { xs: 2, sm: 3 }, py: 1, borderRadius: 2 }}
+        aria-label={rollLabel}
+        sx={{ fontWeight: 'bold', px: { xs: 1.5, sm: 3 }, py: 1, minHeight: 48, borderRadius: 2 }}
       >
-        {animating
-          ? t('games.kniffel.rolling', 'Würfelt...')
-          : `${t('games.kniffel.roll', 'Würfeln')} (${rollCount}/3)`}
+        {animating ? (
+          t('games.kniffel.rolling', 'Würfelt...')
+        ) : (
+          <>
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' }, mr: 0.5 }}>
+              {t('games.kniffel.roll', 'Würfeln')}
+            </Box>
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+              ({rollCount}/3)
+            </Box>
+            <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+              {rollCount}/3
+            </Box>
+          </>
+        )}
       </Button>
     </Paper>
   );

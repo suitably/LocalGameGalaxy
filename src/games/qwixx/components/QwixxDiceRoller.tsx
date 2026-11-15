@@ -69,8 +69,8 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
         isSelected={isSelected}
         onClick={isClickable ? () => onDieClick(key) : undefined}
         sx={{
-          width: { xs: 40, sm: 52 },
-          height: { xs: 40, sm: 52 },
+          width: { xs: 36, sm: 52 },
+          height: { xs: 36, sm: 52 },
           borderRadius: 2,
         }}
       />
@@ -81,11 +81,11 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
     <Paper
       elevation={0}
       sx={{
-        p: { xs: 1.5, sm: 2 },
+        p: { xs: 1, sm: 2 },
         borderRadius: 3,
         bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
         border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
-        mb: 2,
+        mb: { xs: 1, sm: 2 },
         touchAction: 'manipulation',
       }}
     >
@@ -95,17 +95,22 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
           flexWrap: 'wrap',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: 2,
+          gap: { xs: 1, sm: 2 },
         }}
       >
         {/* Dice Row */}
         <Box
-          sx={{ display: 'flex', gap: { xs: 1, sm: 1.5 }, alignItems: 'center', flexWrap: 'wrap' }}
+          sx={{
+            display: 'flex',
+            gap: { xs: 0.75, sm: 1.5 },
+            alignItems: 'center',
+            flexWrap: 'wrap',
+          }}
         >
           <Box
             sx={{
               display: 'flex',
-              gap: 1,
+              gap: { xs: 0.75, sm: 1 },
               p: 0.5,
               bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
               borderRadius: 2,
@@ -114,7 +119,7 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
             {renderDie('white1', dice.white1)}
             {renderDie('white2', dice.white2)}
           </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ display: 'flex', gap: { xs: 0.75, sm: 1 } }}>
             {renderDie('red', dice.red)}
             {renderDie('yellow', dice.yellow)}
             {renderDie('green', dice.green)}
@@ -124,11 +129,19 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
 
         {/* Roll Button & White Sum Info */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 'auto' }}>
-          <Box sx={{ textAlign: 'right' }}>
+          <Box
+            sx={{
+              textAlign: 'right',
+              display: 'flex',
+              flexDirection: { xs: 'row', sm: 'column' },
+              alignItems: { xs: 'baseline', sm: 'flex-end' },
+              gap: { xs: 1, sm: 0 },
+            }}
+          >
             <Typography variant="caption" color="text.secondary" display="block">
               {t('games.qwixx.white_sum', 'White Sum (All)')}
             </Typography>
-            <Typography variant="h6" fontWeight="bold" color="primary">
+            <Typography variant="h6" fontWeight="bold" color="primary" sx={{ lineHeight: 1.2 }}>
               {whiteSum}
             </Typography>
           </Box>
@@ -142,7 +155,8 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
             sx={{
               fontWeight: 'bold',
               px: { xs: 2, sm: 3 },
-              py: 1,
+              py: { xs: 0.75, sm: 1 },
+              minHeight: 48,
               borderRadius: 2,
             }}
           >

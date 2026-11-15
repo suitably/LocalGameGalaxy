@@ -21,7 +21,7 @@ export const QwixxScoreTile: React.FC<QwixxScoreTileProps> = ({
 }) => (
   <Box
     sx={{
-      p: 1,
+      p: { xs: 0.5, sm: 1 },
       borderRadius: 2,
       bgcolor: alpha(color, 0.16),
       border: `1px solid ${color}`,
@@ -37,7 +37,13 @@ export const QwixxScoreTile: React.FC<QwixxScoreTileProps> = ({
     </Box>
     <Typography
       variant="h6"
-      sx={{ color: 'text.primary', fontWeight: 'bold', fontVariantNumeric: 'tabular-nums' }}
+      sx={{
+        color: 'text.primary',
+        fontWeight: 'bold',
+        fontVariantNumeric: 'tabular-nums',
+        fontSize: { xs: '1rem', sm: undefined },
+        lineHeight: 1.3,
+      }}
     >
       {value}
     </Typography>

@@ -32,15 +32,25 @@ export const INITIAL_KNIFFEL_STATE: KniffelState = {
 };
 
 const checkGameOver = (players: KniffelPlayer[]): boolean => {
-  return players.every(p => {
+  return players.every((p) => {
     const s = p.scores;
     // kniffel_bonus is optional, don't require it
     const requiredKeys: (keyof KniffelScores)[] = [
-      'ones', 'twos', 'threes', 'fours', 'fives', 'sixes',
-      'three_of_a_kind', 'four_of_a_kind', 'full_house', 'small_straight',
-      'large_straight', 'kniffel', 'chance'
+      'ones',
+      'twos',
+      'threes',
+      'fours',
+      'fives',
+      'sixes',
+      'three_of_a_kind',
+      'four_of_a_kind',
+      'full_house',
+      'small_straight',
+      'large_straight',
+      'kniffel',
+      'chance',
     ];
-    return requiredKeys.every(k => s[k] !== null);
+    return requiredKeys.every((k) => s[k] !== null);
   });
 };
 
@@ -71,8 +81,8 @@ export function kniffelReducer(state: KniffelState, action: KniffelAction): Knif
       const previousScore = currentPlayer.scores[action.category];
 
       if (isBonus) {
-         // Kniffel bonus is special, it increments
-         newScoreValue = (previousScore || 0) + 1;
+        // Kniffel bonus is special, it increments
+        newScoreValue = (previousScore || 0) + 1;
       } else {
         // Now allows overwriting: removing the check for !== null
         newScoreValue = action.score;
@@ -84,7 +94,7 @@ export function kniffelReducer(state: KniffelState, action: KniffelAction): Knif
         scores: {
           ...currentPlayer.scores,
           [action.category]: newScoreValue,
-        }
+        },
       };
 
       const isOver = checkGameOver(newPlayers);
@@ -113,8 +123,8 @@ export function kniffelReducer(state: KniffelState, action: KniffelAction): Knif
             previousDice: [...state.dice],
             previousHeldDice: [...state.heldDice],
             previousRollCount: state.rollCount,
-          }
-        ]
+          },
+        ],
       };
     }
 
@@ -131,7 +141,7 @@ export function kniffelReducer(state: KniffelState, action: KniffelAction): Knif
         scores: {
           ...player.scores,
           [lastMove.category]: lastMove.previousScore,
-        }
+        },
       };
 
       return {
@@ -149,7 +159,7 @@ export function kniffelReducer(state: KniffelState, action: KniffelAction): Knif
     case 'SET_PLAYERS': {
       return {
         ...state,
-        players: action.names.map(name => ({
+        players: action.names.map((name) => ({
           id: generateUUID(),
           name,
           scores: createEmptyScores(),
@@ -173,7 +183,7 @@ export function kniffelReducer(state: KniffelState, action: KniffelAction): Knif
     case 'NEW_GAME': {
       return {
         ...state,
-        players: state.players.map(p => ({
+        players: state.players.map((p) => ({
           ...p,
           scores: createEmptyScores(),
         })),
