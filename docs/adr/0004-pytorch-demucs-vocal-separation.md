@@ -1,10 +1,10 @@
 ---
 type: Architecture Decision Record
-title: 'ADR-0004: PyTorch Demucs for Local Vocal Separation'
+title: 'ADR-0004: PyTorch Demucs for Local Vocal Separation (superseded by ADR-0006)'
 description: Decision to run Facebook's Demucs AI model locally on the companion server for offline karaoke vocal isolation.
 resource: server/
 tags: [adr, ai, demucs, audio-separation, pytorch]
-status: stable
+status: superseded
 generated:
   at: 2026-09-27T10:00:00Z
   by: previous-agent
@@ -17,9 +17,9 @@ verified:
 
 ## Status
 
-Accepted — **implementation has drifted** (note added 2026-10-18).
+**Superseded by [ADR-0006](0006-audio-separator-onnx-whisper-alignment.md)** (2026-11-15). Kept for history.
 
-> The core decision (local `audio-separator` subprocess, no cloud API) still holds. The model is no longer Demucs: `server/src/plugins/melodiq/services/separator.ts` runs `audio-separator[cpu]` with `UVR-MDX-NET-Inst_HQ_3.onnx`, and lyric alignment uses `whisper-timestamped`. Whether to write a superseding ADR is open — [open-questions Q13](../open-questions.md#q13--adr-0004-no-longer-matches-the-separation-stack).
+> The core decision (local `audio-separator` subprocess, no cloud API) still holds. The model is no longer Demucs: the server runs `audio-separator[cpu]` with the ONNX model `UVR-MDX-NET-Inst_HQ_3.onnx`, and lyric alignment uses `whisper-timestamped`. ADR-0006 records that stack.
 
 ## Context
 
