@@ -1,9 +1,10 @@
 /**
  * Cloudflare Worker in front of the static app [ID: CF-APP-WORKER]
  *
- * Only `/api/steam/*` and `/api/push/*` reach this code (`run_worker_first` in wrangler.jsonc);
- * every other request is served from the static assets. `/api/push/*` is the stateless Web Push
- * sender (`webPushSend.ts`). The Steam part exists because Steam's Web API sends no CORS
+ * Only `/api/steam/*`, `/api/push/*` and `/api/drawpot*` reach this code (`run_worker_first` in
+ * wrangler.jsonc); every other request is served from the static assets. `/api/push/*` is the
+ * stateless Web Push sender (`webPushSend.ts`). `/api/drawpot*` is the draw pot (Lostopf) API
+ * (`drawPot/routes.ts`), the only part that stores data (one Durable Object per pot). The Steam part exists because Steam's Web API sends no CORS
  * headers, so the browser cannot ask Steam for Workshop details itself:
  *
  * - POST /api/steam/ISteamRemoteStorage/GetPublishedFileDetails/v1/ → Steam Web API (same path
@@ -14,11 +15,15 @@
  *   (Steam CDN, imgur), only `image/*`, size-limited — the fallback when the browser cannot load
  *   it directly (no CORS). The browser caches it per device (#693, TTS plan D2/D3).
  *
- * Nothing is stored. Web Push needs the secrets `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`.
+ * Steam and push store nothing. Web Push needs the secrets `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`.
  */
 import { handlePush, type PushEnv } from './webPushSend';
+import { handleDrawPot, type DrawPotEnv } from './drawPot/routes';
 
-interface Env extends PushEnv {
+// Durable Object classes must be exported by the worker's main module (wrangler.jsonc).
+export { DrawPotObject } from './drawPot/routes';
+
+interface Env extends PushEnv, DrawPotEnv {
   ASSETS: { fetch: (request: Request) => Promise<Response> };
 }
 
@@ -119,6 +124,8 @@ async function proxyImage(url: URL): Promise<Response> {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname === '/api/drawpot' || url.pathname.startsWith('/api/drawpot/'))
+      return handleDrawPot(request, env);
     if (url.pathname.startsWith('/api/push/')) {
       try {
         return await handlePush(request, env);

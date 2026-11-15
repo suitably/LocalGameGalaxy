@@ -15,7 +15,7 @@
         <a href="/">Zurück zu den Spielen</a>
       </p>
       <h1>Datenschutzerklärung</h1>
-      <p class="meta">für games.nexumia.de und die Nexumia-Android-App · Stand: 6. November 2026</p>
+      <p class="meta">für games.nexumia.de und die Nexumia-Android-App · Stand: 15. November 2026</p>
 
       <section class="summary" aria-labelledby="kurz">
         <h2 id="kurz">Das Wichtigste in Kürze</h2>
@@ -115,6 +115,31 @@
         IP-Adressen. In den Verbindungseinstellungen kannst du eigene Tracker und STUN-Server
         eintragen und die voreingestellten abschalten.
       </p>
+
+      <h3>4.3 Lostopf</h3>
+      <p>
+        Wenn du einen Lostopf erstellst oder daraus ziehst, wird der Lostopf auf unserem Server bei
+        Cloudflare gespeichert (Durable Objects, siehe Abschnitt 2), damit alle mit dem Link daraus
+        ziehen können.
+      </p>
+      <ul>
+        <li>
+          <strong>Was:</strong> Name, Hinweis und Einträge, die der Host eingibt (zum Beispiel Namen
+          von Personen), die Einstellungen und zu jeder Ziehung das gezogene Los, die Uhrzeit und
+          die zufällige Gerätekennung des ziehenden Geräts. Der Schlüssel des Host-Links wird nur
+          als Hash gespeichert.
+        </li>
+        <li>
+          <strong>Wer es sieht:</strong> Alle mit dem Link sehen Name und Hinweis des Lostopfs, beim
+          Wichteln auch die Namensliste. Gezogene Ergebnisse sieht nur das Gerät, das gezogen hat,
+          und der Host, wenn er „Host sieht Ergebnisse“ eingeschaltet hat.
+        </li>
+        <li>
+          <strong>Wie lange:</strong> Der Lostopf wird 60 Tage nach dem Erstellen automatisch
+          gelöscht, oder früher, wenn der Host ihn löscht. Deine eigenen Ergebnisse bleiben
+          zusätzlich auf deinem Gerät gespeichert (Abschnitt 3), bis du sie entfernst.
+        </li>
+      </ul>
 
       <h2 id="benachrichtigungen">5. Benachrichtigungen</h2>
       <p>
