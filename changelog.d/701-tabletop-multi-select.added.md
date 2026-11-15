@@ -1,0 +1,1 @@
+- **Tabletop: multi-select actions** (#701): a selection can now be moved (arrow buttons), flipped, rotated and, on the host, deleted together. Each action is one delta and one undo step; pinned widgets stay put and phones cannot touch widgets in another seat's hand.

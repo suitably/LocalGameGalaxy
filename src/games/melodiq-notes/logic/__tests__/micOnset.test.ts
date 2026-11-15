@@ -1,7 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { autoCorrelate, computeRMS, freqToMidi } from '../../../../modules/audio';
 import { centsOff } from '../../stage/logic/judging';
 import { initialMicOnsetState, nextMicFrame, type MicFrame } from '../micOnset';
+
+// CPU-heavy DSP on synthetic audio: single tests take up to ~4.5 s alone and exceed the
+// default 5 s when the full suite runs in parallel workers on a loaded machine.
+vi.setConfig({ testTimeout: 30_000 });
 
 // Synthetic microphone: what MicrophoneManager hands the hook every 80 ms (2048-sample frames).
 const SR = 48000;

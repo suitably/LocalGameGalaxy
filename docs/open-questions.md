@@ -9,11 +9,6 @@ Found by the [2026-10-18 docs-vs-code audit](reports/2026-10-18-docs-vs-code-aud
 The anti-pattern matrix forbids inline `BroadcastChannel` sync in games, but Melodiq creates channels directly in `hooks/useTVMode.ts`, `hooks/useTVReceiver.ts`, `hooks/SettingsContext.tsx`, `gameplay/hooks/useSessionEnd.ts` (channel `melodiq_tv_control`) and `hooks/useQueue.ts` (queue sync). `check-architecture.mjs` does not check this rule.
 Resolve: migrate to `useMultiChannelSync` or document Melodiq TV sync as an explicit exception.
 
-## Q5 — Root `config.example.json` is obsolete
-
-**[user]** The repo root contains `config.example.json` with an `ssl` block, and README step 2 says `cp config.example.json config.json`. The companion server has no TLS support any more (removed in the backend simplification, see [archive](archive/backend-simplification/03-remove-ssl-generator.md)), looks for `config.json` in `CONFIG_PATH`, the working directory or next to the executable, and ships its own `server/config.example.json`.
-Resolve: delete the root example and point README to `server/config.example.json`.
-
 ## Q6 — Dead translation files
 
 `src/i18n/locales/{de,en}/imposter.json` are tracked but imported nowhere (Imposter strings come from `public/locales/*/translation.json`).
@@ -41,6 +36,10 @@ ADR-0004 says "Demucs via PyTorch". `server/src/plugins/melodiq/services/separat
 ## Resolved 2026-11-15
 
 - Q22 deleting a saved tabletop game → maintainer decision (2026-11-15): a dedicated API key flag `allowTabletopGameDeletion`; keys from older configs get their `allowSongDeletion` value on load, so nothing changes for existing installs. [server-security](tech/server-security.md)
+
+## Resolved 2026-11-15
+
+- Q5 root `config.example.json` → maintainer decision (2026-11-15): deleted; README step 2 copies `server/config.example.json`. [secrets-management](tech/secrets-management.md)
 
 ## Resolved 2026-11-08
 
