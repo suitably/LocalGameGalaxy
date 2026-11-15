@@ -47,7 +47,7 @@ Started by `POST /api/usdb/download`; poll `GET /api/usdb/status/:jobId`; list `
 - **Alignment ("Full AI Sync"):** `python3 server/src/scripts/align_lyrics.py <txt> <audio>` — Whisper `base` model on CPU (`whisper-timestamped`, models in `WHISPER_MODELS_DIR` / `TORCH_HOME` / `/app/models`), uses the vocals stem if present, else the master audio, and rewrites note timings in the `.txt`.
 - The Docker `full` image pre-installs the Python stack; the `base` image does not (see [deployment](deployment.md)).
 
-ADR-0004 still describes Demucs; see [open-questions Q13](../open-questions.md#q13--adr-0004-no-longer-matches-the-separation-stack).
+Decision record: [ADR-0006](../adr/0006-audio-separator-onnx-whisper-alignment.md) (supersedes the Demucs wording of ADR-0004).
 
 ## 3. Library and media endpoints
 

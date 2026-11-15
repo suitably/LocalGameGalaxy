@@ -1,0 +1,1 @@
+- **Qwixx: locked rows remove their die**: once a row is locked, its colored die disappears from the dice roller (Gemixxt sheets use the row's lock color).

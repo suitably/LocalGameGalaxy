@@ -49,8 +49,6 @@ sources:
 
 Rule: add a string **where its game already keeps its strings**, in both languages. Do not move a game between the two systems as a side effect.
 
-`src/i18n/locales/{de,en}/imposter.json` exist but are imported nowhere ([open-questions Q6](../open-questions.md#q6--dead-translation-files)).
-
 ## 4. Namespaces in `translation.json`
 
 Top-level keys (identical in `en` and `de`): `app`, `common`, `connection`, `games`, `gartic`, `github`, `guessart`, `hub`, `lobby`, `notifications`, `party`, `server`, `settings`, `signaling`, `storyteller`, `sudoku`, `wordle`. Game titles/descriptions for the hub are under `games.<id>.title` / `.description` (the keys referenced by `gameRegistry.tsx`).

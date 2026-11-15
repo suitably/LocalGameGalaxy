@@ -69,7 +69,7 @@ export const KnisterGame: React.FC = () => {
       )}
 
       {/* Number selection bar (2 to 12) for custom/physical dice */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: { xs: 0.5, sm: 1.5 } }}>
         <KnisterNumberBar
           selectedNumber={game.selectedNumber}
           onSelectNumber={game.setSelectedNumber}

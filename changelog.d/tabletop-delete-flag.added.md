@@ -1,0 +1,1 @@
+- **Own permission for deleting saved tabletop games**: API keys now have a separate "Delete saved games on the server (Tabletop)" switch (`allowTabletopGameDeletion`) in the admin dashboard. "Delete Songs" no longer covers saved tabletop games. Existing keys keep what they could do: a key that could delete songs can still delete saved games until you change it.

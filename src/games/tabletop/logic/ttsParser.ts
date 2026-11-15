@@ -28,6 +28,7 @@ import {
 } from './types';
 import { validateAndSanitizeGame } from './gameValidator';
 import { buildImportReport, extractScripts } from './ttsImportReport';
+import { applyLuaTranslation } from './ttsLuaImport';
 import {
   assignSeats,
   cardOrientation,
@@ -599,9 +600,16 @@ export function parseTtsSaveFile(
   const scriptZones: Record<string, ScriptZone> = {};
   const noteTexts: string[] = [];
 
+  /** TTS GUID → widget id of each converted top-level object (for the Lua translator). */
+  const guidIds = new Map<string, string>();
+  const track = (guid: string, id: string) => {
+    if (!guidIds.has(guid)) guidIds.set(guid, id);
+  };
+  /** Top-level widgets whose id is their GUID; repeats get `guid~2`, … */
   const putClaimed = (w: TabletopWidget) => {
     const id = claimId(w.id);
     widgets[id] = { ...w, id };
+    track(w.id, id);
   };
 
   /** Objects inside bags: cards, dice and tiles keep their kind, the rest become tokens. */
@@ -656,6 +664,7 @@ export function parseTtsSaveFile(
       if (seat === undefined) continue;
       const hand = convertHandTrigger(obj, pos, seat);
       widgets[hand.id] = hand;
+      track(obj.GUID, hand.id);
       continue;
     }
 
@@ -670,6 +679,7 @@ export function parseTtsSaveFile(
     if (name === 'Deck' || name === 'DeckCustom') {
       const deck = convertDeck(obj, pos, globalDecks, widgets);
       widgets[deck.id] = deck;
+      track(obj.GUID, deck.id);
       continue;
     }
 
@@ -677,6 +687,7 @@ export function parseTtsSaveFile(
     if (name === 'Card') {
       const single = convertCard(obj, pos, globalDecks);
       widgets[single.id] = single;
+      track(obj.GUID, single.id);
       continue;
     }
 
@@ -684,6 +695,7 @@ export function parseTtsSaveFile(
     if (name === 'Infinite_Bag' || name === 'Bag') {
       const bag = convertBag(obj, pos, ttsColorToHex(obj.ColorDiffuse), convertChild, widgets);
       widgets[bag.id] = bag;
+      track(obj.GUID, bag.id);
       continue;
     }
 
@@ -716,6 +728,7 @@ export function parseTtsSaveFile(
     if (name === '3DText') {
       const text = convertText(obj, pos, ttsColorToHex(obj.Text?.colorstate));
       widgets[text.id] = text;
+      track(obj.GUID, text.id);
       continue;
     }
     if (name === 'ScriptingTrigger') {
@@ -783,6 +796,15 @@ export function parseTtsSaveFile(
   const tableHeight = Math.round((bounds.maxZ - bounds.minZ) * TTS_SCALE + margin * 2 + 200);
 
   const ruleText = rulesFromTabs(save, noteTexts);
+  const scripts = extractScripts(save);
+  const luaReport = applyLuaTranslation({
+    save,
+    scripts,
+    widgets,
+    guidIds,
+    seats,
+    scale: TTS_SCALE,
+  });
 
   return validateAndSanitizeGame({
     name: save.SaveName || options?.defaultName || 'TTS Import',
@@ -800,8 +822,9 @@ export function parseTtsSaveFile(
     ruleText,
     ...(Object.keys(hiddenZones).length > 0 ? { hiddenZones } : {}),
     ...(Object.keys(scriptZones).length > 0 ? { scriptZones } : {}),
-    importReport: buildImportReport(save, sanitizeTtsUrl),
-    scripts: extractScripts(save),
+    importReport: { ...buildImportReport(save, sanitizeTtsUrl), ...luaReport },
+    scripts,
+    format: 'tts-workshop',
   });
 }
 

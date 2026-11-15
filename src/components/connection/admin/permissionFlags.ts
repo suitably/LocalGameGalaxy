@@ -19,6 +19,11 @@ export const PERMISSION_FLAGS: ReadonlyArray<{
     labelKey: 'server.admin.perm_tabletop_templates',
     color: 'primary',
   },
+  {
+    flag: 'allowTabletopGameDeletion',
+    labelKey: 'server.admin.perm_tabletop_delete',
+    color: 'error',
+  },
 ];
 
 export const NO_PERMISSIONS: ApiKeyPermissions = {
@@ -26,6 +31,7 @@ export const NO_PERMISSIONS: ApiKeyPermissions = {
   allowSongDeletion: false,
   allowTabletopSaves: false,
   allowTabletopTemplates: false,
+  allowTabletopGameDeletion: false,
 };
 
 /** Copies only the flags (an `ApiKey` also carries its token). */
@@ -34,4 +40,5 @@ export const pickPermissions = (source: ApiKeyPermissions): ApiKeyPermissions =>
   allowSongDeletion: source.allowSongDeletion === true,
   allowTabletopSaves: source.allowTabletopSaves === true,
   allowTabletopTemplates: source.allowTabletopTemplates === true,
+  allowTabletopGameDeletion: source.allowTabletopGameDeletion === true,
 });

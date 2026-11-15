@@ -4,12 +4,14 @@ import { relayPlugin } from '../plugins/relay';
 import { melodiqPlugin } from '../plugins/melodiq';
 import { tabletopPlugin } from '../plugins/tabletop';
 import { notesPlugin } from '../plugins/notes';
+import { drawPotPlugin } from '../plugins/drawpot';
 
 const ALL_PLUGINS: Record<string, GalaxyPlugin> = {
   relay: relayPlugin,
   melodiq: melodiqPlugin,
   tabletop: tabletopPlugin,
   notes: notesPlugin,
+  drawpot: drawPotPlugin,
 };
 
 export async function loadPlugins(

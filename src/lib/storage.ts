@@ -43,7 +43,6 @@ export const STORAGE_KEYS = {
   MELODIQ_SAVED_TIME: 'melodiq_saved_time',
   MELODIQ_PARTY_ID: 'melodiq_party_id',
   MELODIQ_HOST_BASE_URL: 'melodiq_host_base_url',
-  EXCALIDRAW_DRAWING: 'excalidraw',
   DARTS_GAME_STATE: 'darts_game_state',
 
   // Queue & play state
@@ -104,6 +103,8 @@ export const STORAGE_KEYS = {
   MELODIQ_NOTES_LAST_SONG: 'melodiq_notes_last_song',
   /** The instrument the player last picked; a new song seats them on a matching part (#635). */
   MELODIQ_NOTES_INSTRUMENT: 'melodiq_notes_instrument',
+  /** Best result per player and song (`SongResult[]` JSON, #699). */
+  MELODIQ_NOTES_RESULTS: 'melodiq_notes_results',
 
   // Werewolf game state
   WEREWOLF_STATE: 'werewolf-game-state',
@@ -146,8 +147,23 @@ export const STORAGE_KEYS = {
   // Knister & Qwixx
   KNISTER_CURRENT_GAME: 'knister_current_game',
   KNISTER_SHOW_DICE: 'knister_show_dice',
+  KNISTER_HIGHSCORE: 'knister_highscore',
   QWIXX_MY_SHEET: 'qwixx_my_sheet',
   QWIXX_SHOW_DICE: 'qwixx_show_dice',
+
+  // Kniffel
+  KNIFFEL_CURRENT_GAME: 'kniffel_current_game',
+  KNIFFEL_SHOW_DICE: 'kniffel_show_dice',
+
+  // GuessArt
+  GUESSART_SEEN_INFO: 'guessart_seen_info',
+  GUESSART_LOBBY_PLAYERS: 'guessart_lobby_players_v2',
+  /** Pre-v2 roster key, only read as a migration source by `useLobbyPlayers`. */
+  GUESSART_LOBBY_PLAYERS_LEGACY: 'guessart_lobby_players',
+
+  // Storyteller
+  STORYTELLER_LOBBY_PLAYERS: 'storyteller_lobby_players',
+  STORYTELLER_LOBBY_MODIFIERS: 'storyteller_lobby_modifiers',
 
   // Gartic Phone & Universal Party
   GARTIC_STATE_PREFIX: 'galaxy_gartic_state_',
@@ -156,6 +172,10 @@ export const STORAGE_KEYS = {
   /** Player name shared by the party lobby and party games (historical key name). */
   PARTY_PLAYER_NAME: 'guessart_player_name',
   HOST_ROOM_CODE: 'galaxy_host_room_code',
+
+  // Draw pot (Lostopf): pots this device hosts (with admin keys) and its own draw history
+  DRAWPOT_HOSTED: 'drawpot_hosted',
+  DRAWPOT_HISTORY: 'drawpot_history',
 
   // Connection & WebApp
   SHARE_WEBAPP_URL: 'nexumia_share_webapp_url',
@@ -173,6 +193,10 @@ export const STORAGE_PREFIXES = {
   PARTY_STATE: 'galaxy_party_state_',
   PARTY_HOST_ID: 'party_host_id_',
   GAME_RELAY: 'galaxy_game_relay_',
+  GUESSART_GAME_ALIAS: 'guessart_game_alias_',
+  GUESSART_LOCAL_PLAYERS: 'guessart_local_players_',
+  GUESSART_TEMP_LOCAL_PLAYERS: 'guessart_temp_local_players_',
+  STORYTELLER_LOCAL_PLAYERS: 'storyteller_local_players_',
   WEBRTC_PARTY_ID: '_party_id',
   WEBRTC_TRACKER_URLS: '_tracker_urls',
   WEBRTC_TRACKER_PREF: '_tracker_preferences',

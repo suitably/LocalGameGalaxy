@@ -4,7 +4,7 @@ import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import { useTranslation } from 'react-i18next';
 import { Die3D, PRESET_DIE_COLORS } from '../../../components/games/Die3D';
 import { useDiceRollAnimation } from '../../../components/games/useDiceRollAnimation';
-import type { DiceValues } from '../logic/types';
+import type { DiceValues, RowColor } from '../logic/types';
 import type { DieKey } from '../logic/diceHighlight';
 
 interface QwixxDiceRollerProps {
@@ -15,6 +15,8 @@ interface QwixxDiceRollerProps {
   selectedDie?: DieKey | null;
   disabled?: boolean;
   maxDieValue?: number;
+  /** Colored dice out of play because their row is locked; not rendered. */
+  removedDice?: RowColor[];
 }
 
 const DIE_COLORS = {
@@ -26,6 +28,8 @@ const DIE_COLORS = {
   blue: PRESET_DIE_COLORS.blue,
 };
 
+const COLORED_DICE: RowColor[] = ['red', 'yellow', 'green', 'blue'];
+
 export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
   dice,
   isRolling,
@@ -34,6 +38,7 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
   selectedDie = null,
   disabled = false,
   maxDieValue = 6,
+  removedDice = [],
 }) => {
   const { t } = useTranslation();
   const { animating, startRoll } = useDiceRollAnimation();
@@ -69,8 +74,9 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
         isSelected={isSelected}
         onClick={isClickable ? () => onDieClick(key) : undefined}
         sx={{
-          width: { xs: 40, sm: 52 },
-          height: { xs: 40, sm: 52 },
+          width: { xs: 30, sm: 52 },
+          height: { xs: 30, sm: 52 },
+          fontSize: { xs: '1rem', sm: '1.6rem' },
           borderRadius: 2,
         }}
       />
@@ -81,11 +87,11 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
     <Paper
       elevation={0}
       sx={{
-        p: { xs: 1.5, sm: 2 },
+        p: { xs: 1, sm: 2 },
         borderRadius: 3,
         bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
         border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
-        mb: 2,
+        mb: { xs: 1, sm: 2 },
         touchAction: 'manipulation',
       }}
     >
@@ -95,40 +101,65 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
           flexWrap: 'wrap',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: 2,
+          gap: { xs: 1, sm: 2 },
         }}
       >
-        {/* Dice Row */}
+        {/* Dice Row (phones: dice, white sum and an icon-only roll button share one line) */}
         <Box
-          sx={{ display: 'flex', gap: { xs: 1, sm: 1.5 }, alignItems: 'center', flexWrap: 'wrap' }}
+          sx={{
+            display: 'flex',
+            gap: { xs: 0.5, sm: 1.5 },
+            alignItems: 'center',
+            flexWrap: 'wrap',
+          }}
         >
           <Box
             sx={{
               display: 'flex',
-              gap: 1,
+              gap: { xs: 0.5, sm: 1 },
               p: 0.5,
+              alignItems: 'center',
               bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
               borderRadius: 2,
             }}
           >
             {renderDie('white1', dice.white1)}
             {renderDie('white2', dice.white2)}
+            <Typography
+              aria-label={t('games.qwixx.white_sum', 'White Sum (All)')}
+              fontWeight="bold"
+              color="primary"
+              sx={{
+                display: { xs: 'block', sm: 'none' },
+                px: 0.25,
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              ={whiteSum}
+            </Typography>
           </Box>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            {renderDie('red', dice.red)}
-            {renderDie('yellow', dice.yellow)}
-            {renderDie('green', dice.green)}
-            {renderDie('blue', dice.blue)}
+          <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 1 } }}>
+            {COLORED_DICE.filter((key) => !removedDice.includes(key)).map((key) =>
+              renderDie(key, dice[key]),
+            )}
           </Box>
         </Box>
 
         {/* Roll Button & White Sum Info */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 'auto' }}>
-          <Box sx={{ textAlign: 'right' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, ml: 'auto' }}>
+          <Box
+            sx={{
+              textAlign: 'right',
+              display: { xs: 'none', sm: 'flex' },
+              flexDirection: { xs: 'row', sm: 'column' },
+              alignItems: { xs: 'baseline', sm: 'flex-end' },
+              gap: { xs: 1, sm: 0 },
+            }}
+          >
             <Typography variant="caption" color="text.secondary" display="block">
               {t('games.qwixx.white_sum', 'White Sum (All)')}
             </Typography>
-            <Typography variant="h6" fontWeight="bold" color="primary">
+            <Typography variant="h6" fontWeight="bold" color="primary" sx={{ lineHeight: 1.2 }}>
               {whiteSum}
             </Typography>
           </Box>
@@ -137,16 +168,22 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
             variant="contained"
             color="primary"
             startIcon={<CasinoIcon />}
+            aria-label={t('games.qwixx.roll', 'Roll')}
             onClick={handleRollClick}
             disabled={disabled || isRolling || animating}
             sx={{
               fontWeight: 'bold',
-              px: { xs: 2, sm: 3 },
-              py: 1,
+              px: { xs: 1, sm: 3 },
+              py: { xs: 0.75, sm: 1 },
+              minWidth: 48,
+              minHeight: 48,
               borderRadius: 2,
+              '& .MuiButton-startIcon': { mx: { xs: 0 }, ml: { sm: -0.5 }, mr: { sm: 1 } },
             }}
           >
-            {animating ? t('games.qwixx.rolling', 'Rolling...') : t('games.qwixx.roll', 'Roll')}
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+              {animating ? t('games.qwixx.rolling', 'Rolling...') : t('games.qwixx.roll', 'Roll')}
+            </Box>
           </Button>
         </Box>
       </Box>

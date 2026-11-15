@@ -1,0 +1,1 @@
+- **Qwixx Longo locks with the last two numbers:** red and yellow rows close with 15 or 16, green and blue with 3 or 2 (at least 6 crosses). The lock bonus also needs those crosses, so a row closed by another player never counts it.

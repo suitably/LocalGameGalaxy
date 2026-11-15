@@ -16,7 +16,7 @@
       </p>
       <h1>Privacy Notice</h1>
       <p class="meta">
-        for games.nexumia.de and the Nexumia Android app · Last updated: 6 November 2026
+        for games.nexumia.de and the Nexumia Android app · Last updated: 15 November 2026
       </p>
 
       <section class="summary" aria-labelledby="short">
@@ -113,6 +113,30 @@
         Connected devices see each other's IP addresses. In the connection settings you can add your
         own trackers and STUN servers and turn off the default ones.
       </p>
+
+      <h3>4.3 Draw pot</h3>
+      <p>
+        When you create a draw pot or draw from one, the pot is stored on our server at Cloudflare
+        (Durable Objects, see section 2) so that everyone with the link can draw from it. If the
+        host chose their own Nexumia server instead, the pot is stored only there (section 7).
+      </p>
+      <ul>
+        <li>
+          <strong>What:</strong> the name, note and entries the host types in (for example names of
+          people), the settings, and for each draw the drawn entry, the time and the random device
+          id of the device that drew. The host link's key is stored only as a hash.
+        </li>
+        <li>
+          <strong>Who sees it:</strong> anyone with the link sees the pot's name and note, and in
+          secret santa mode the list of names. Drawn results are shown only to the device that drew
+          them, and to the host if the host turned on "Host sees results".
+        </li>
+        <li>
+          <strong>How long:</strong> the pot is deleted automatically 60 days after it was created,
+          or earlier when the host deletes it. Your own results also stay on your device (section 3)
+          until you remove them.
+        </li>
+      </ul>
 
       <h2 id="notifications">5. Notifications</h2>
       <p>

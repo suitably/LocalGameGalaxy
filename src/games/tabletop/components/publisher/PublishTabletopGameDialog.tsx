@@ -129,7 +129,13 @@ export const PublishTabletopGameDialog: React.FC<PublishTabletopGameDialogProps>
               </Alert>
             )}
 
-            {!validation.valid && (
+            {validation.blocked === 'third_party_import' && (
+              <Alert severity="error" sx={{ mb: 2 }} data-testid="tabletop-publish-blocked">
+                {t('games.tabletop.workshop.publish_blocked')}
+              </Alert>
+            )}
+
+            {!validation.valid && validation.errors.length > 0 && (
               <Alert severity="error" sx={{ mb: 2 }}>
                 <Typography variant="subtitle2" fontWeight={700}>
                   Vorbedingungen nicht erfüllt:

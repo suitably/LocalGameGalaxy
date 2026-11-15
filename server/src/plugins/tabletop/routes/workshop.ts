@@ -1,10 +1,6 @@
 import { Hono } from 'hono';
-import fs from 'node:fs';
-import path from 'node:path';
-import crypto from 'node:crypto';
 import { serverConfig } from '../../../config';
-import { scanGames } from '../services/scanner';
-import type { HonoEnv, TabletopRawResponse } from '../../../core/types';
+import type { HonoEnv } from '../../../core/types';
 
 export const tabletopWorkshopRouter = new Hono<HonoEnv>();
 
@@ -83,6 +79,27 @@ tabletopWorkshopRouter.get('/api/tabletop/workshop/:workshopId/meta', async (c) 
   }
 });
 
+/** Largest save file the companion passes through (Steam saves are a few MB at most). */
+export const MAX_WORKSHOP_SAVE_BYTES = 50 * 1024 * 1024;
+
+/**
+ * Whether the bytes look like a TTS save: JSON (`{` after whitespace) or a BSON document, whose
+ * first four bytes are its total length (little-endian) and whose last byte is 0.
+ */
+export function detectSaveEncoding(buffer: Buffer): 'json' | 'bson' | null {
+  const first = buffer.find((b) => b !== 0x20 && b !== 0x09 && b !== 0x0a && b !== 0x0d);
+  if (first === 0x7b) return 'json';
+  if (buffer.length >= 5 && buffer.readInt32LE(0) === buffer.length && buffer.at(-1) === 0) {
+    return 'bson';
+  }
+  return null;
+}
+
+/**
+ * Path A of the Workshop import (#702): fetches the save file and passes it through unchanged
+ * (JSON or BSON). The app decodes and converts it with the same importer as after a browser
+ * download, then stores the game here via `POST .../import` (`routes/workshopLibrary.ts`).
+ */
 tabletopWorkshopRouter.get('/api/tabletop/workshop/:workshopId', async (c) => {
   const workshopId = c.req.param('workshopId');
 
@@ -104,45 +121,18 @@ tabletopWorkshopRouter.get('/api/tabletop/workshop/:workshopId', async (c) => {
       return c.json({ error: 'Failed to download file' }, 502);
     }
 
-    const arrayBuffer = await fileRes.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // Check if JSON
-    const isJson = buffer.length > 0 && buffer[0] === 0x7b; // '{'
-
-    let rawJson = '';
-    if (isJson) {
-      rawJson = buffer.toString('utf-8');
-    } else {
-      // For now, return error if BSON
-      return c.json({ error: 'BSON format not supported yet' }, 400);
+    const buffer = Buffer.from(await fileRes.arrayBuffer());
+    if (buffer.length > MAX_WORKSHOP_SAVE_BYTES) {
+      return c.json({ error: 'Workshop file is too large' }, 413);
+    }
+    if (!detectSaveEncoding(buffer)) {
+      return c.json({ error: 'Workshop file is neither JSON nor BSON' }, 422);
     }
 
-    const tabletopDirs = serverConfig.tabletopDirectories || [];
-    if (tabletopDirs.length === 0) {
-      return c.json({ error: 'No tabletop directory configured' }, 500);
-    }
-
-    const targetDir = path.join(tabletopDirs[0], 'workshop');
-    if (!fs.existsSync(targetDir)) {
-      await fs.promises.mkdir(targetDir, { recursive: true });
-    }
-
-    const filePath = path.join(targetDir, `${workshopId}.json`);
-    await fs.promises.writeFile(filePath, rawJson, 'utf-8');
-
-    // Trigger rescan
-    scanGames();
-
-    const id = crypto.createHash('md5').update(filePath).digest('hex').slice(0, 16);
-
-    const response: TabletopRawResponse = {
-      id,
-      rawJson,
-      assetMap: {},
-    };
-
-    return c.json(response);
+    return c.body(new Uint8Array(buffer), 200, {
+      'Content-Type': 'application/octet-stream',
+      'Cache-Control': 'no-store',
+    });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     return c.json({ error: `Download failed: ${msg}` }, 500);

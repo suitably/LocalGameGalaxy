@@ -22,7 +22,11 @@ export async function createGalaxyServer(config: ServerConfig): Promise<Hono<Hon
   app.use(
     '*',
     cors({
-      origin: (reqOrigin) => {
+      origin: (reqOrigin, c) => {
+        // draw pot links are opened on any device, from any app origin (plugins/drawpot)
+        if (c.req.path === '/api/drawpot' || c.req.path.startsWith('/api/drawpot/')) {
+          return reqOrigin || '*';
+        }
         if (
           !config.allowedOrigins ||
           config.allowedOrigins.length === 0 ||
@@ -45,7 +49,7 @@ export async function createGalaxyServer(config: ServerConfig): Promise<Hono<Hon
         return null;
       },
       allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+      allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Admin-Key'],
       exposeHeaders: ['Content-Length', 'X-Requested-With', 'X-Total-Count', 'X-Page', 'X-Limit'],
       maxAge: 86400,
     }),
@@ -69,6 +73,7 @@ export async function createGalaxyServer(config: ServerConfig): Promise<Hono<Hon
     serverConfig.createApiKey(name, true, false, {
       allowTabletopSaves: true,
       allowTabletopTemplates: true,
+      allowTabletopGameDeletion: true,
     }),
   );
 

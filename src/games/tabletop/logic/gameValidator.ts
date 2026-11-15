@@ -12,6 +12,7 @@ import {
   type DeckWidget,
   type HiddenZone,
   type ScriptZone,
+  type TabletopGameFormat,
 } from './types';
 import { sanitizeImportReport, sanitizeScripts } from './importSanitizers';
 import { isPersonalHolder, isSupplyReserveHolder } from './boardFilter';
@@ -50,6 +51,13 @@ export function sanitizeLegacyUrl(url?: string): string | undefined {
       'https://steamuserimages-a.akamaihd.net/',
     );
 }
+
+const GAME_FORMATS: readonly TabletopGameFormat[] = [
+  'flat-json',
+  'pcio-folder',
+  'tts-workshop',
+  'unknown',
+];
 
 export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGameDefinition {
   const name = (raw.name || 'Unbenanntes Spiel').trim();
@@ -282,5 +290,9 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
     scriptZones: Object.keys(cleanScriptZones).length > 0 ? cleanScriptZones : undefined,
     importReport: sanitizeImportReport(raw.importReport),
     scripts: sanitizeScripts(raw.scripts),
+    ...(GAME_FORMATS.includes(raw.format as TabletopGameFormat)
+      ? { format: raw.format as TabletopGameFormat }
+      : {}),
+    ...(raw.companionPrivate === true ? { companionPrivate: true } : {}),
   };
 }

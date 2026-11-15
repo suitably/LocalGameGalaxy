@@ -11,12 +11,18 @@ export interface ApiKey {
   allowTabletopSaves?: boolean;
   /** Tabletop: replace a game's default template (what a new table starts from). */
   allowTabletopTemplates?: boolean;
+  /** Tabletop: delete saved games. Missing in older configs; loading copies `allowSongDeletion`. */
+  allowTabletopGameDeletion?: boolean;
   createdAt: string;
 }
 
 /** Capability flags of an API key; the master token and management keys hold all of them. */
 export type ApiKeyPermission =
-  'allowManagement' | 'allowSongDeletion' | 'allowTabletopSaves' | 'allowTabletopTemplates';
+  | 'allowManagement'
+  | 'allowSongDeletion'
+  | 'allowTabletopSaves'
+  | 'allowTabletopTemplates'
+  | 'allowTabletopGameDeletion';
 
 export type HonoEnv = {
   Variables: {
@@ -66,6 +72,8 @@ export interface TabletopGameEntry {
   jsonPath: string; // absoluter Pfad zur JSON-Datei
   assetsDir: string | null; // absoluter Pfad zu assets/-Ordner oder null
   updatedAt: number;
+  /** Third-party content (TTS save or `companionPrivate` copy): private to this server (D4). */
+  private?: boolean;
 }
 
 export type ClientTabletopGameEntry = Omit<TabletopGameEntry, 'jsonPath' | 'assetsDir'> & {

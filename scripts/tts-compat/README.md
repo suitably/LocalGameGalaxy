@@ -22,12 +22,13 @@ Unit tests (offline, need `npm ci`): `npm run test:tts-compat` (part of `ci:gate
 
 ## Output per mod
 
-`tier` (`none` < `A` < `B` < `C`, `D` = out of scope), `checks` (the tier-A conditions), `projection` (B/C reachable once the planned translator/shim exist), `objects` (converted / degraded / dropped per TTS type), `guidCollisions`, `decks` (cards vs. `DeckIDs`), `seats`, `images` (scheme count, per-host URLs, statuses), `scripts` (Global/object/`XmlUI`, bytes, Lua calls and events via `luaparse`). Aggregate: mods per tier, top-N calls and events by mod count.
+`tier` (`none` < `A` < `B` < `C`, `D` = out of scope), `checks` (the tier-A conditions), `projection` (B/C reachable once the planned translator/shim exist), `objects` (converted / degraded / dropped per TTS type), `guidCollisions`, `decks` (cards vs. `DeckIDs`), `seats`, `images` (scheme count, per-host URLs, statuses), `scripts` (Global/object/`XmlUI`, bytes, Lua calls and events via `luaparse`, `buttons` = setup buttons found / translated into routines by the importer's Lua translator, #704). Aggregate: mods per tier, `buttons` (corpus total, translated, `ratio` — the slice 8 acceptance metric, ≥ 0.5), top-N calls and events by mod count.
 
 ## Tier rules (`analyze.mjs`)
 
 - **A**: parse succeeds, every deck holds all `DeckIDs`, no GUID collisions, hand seats < `maxPlayers`, all image URLs https (and reachable with `--check-images`).
-- **B / C**: only when the translator / Lua shim implement every call of the mod — raise `IMPLEMENTED` in `analyze.mjs` with slices 8/9. Until then all scripted mods stay at A.
+- **B**: tier A, scripts present, every Lua call in the translator set (`IMPLEMENTED.translatable`, slice 8 / #704) and every setup button translated.
+- **C**: additionally every call and event in the Lua shim — raise `IMPLEMENTED.shim` in `analyze.mjs` with slice 9. Until then no mod reaches C.
 - **D**: `Custom_Assetbundle` objects or `WebRequest.*` calls.
 
 **Regression gate:** every tabletop import PR attaches the before/after `aggregate.perTier`; no mod may lower its tier (`--baseline`).

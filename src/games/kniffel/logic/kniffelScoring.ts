@@ -3,7 +3,7 @@ import type { KniffelCategory } from './types';
 // Returns the count of each die face (1-6)
 const getCounts = (dice: number[]) => {
   const counts = Array(7).fill(0);
-  dice.forEach(d => counts[d]++);
+  dice.forEach((d) => counts[d]++);
   return counts;
 };
 
@@ -11,12 +11,12 @@ const getCounts = (dice: number[]) => {
 const getSum = (dice: number[]) => dice.reduce((a, b) => a + b, 0);
 
 export const calculateUpperScore = (dice: number[], targetFace: number): number => {
-  return dice.filter(d => d === targetFace).length * targetFace;
+  return dice.filter((d) => d === targetFace).length * targetFace;
 };
 
 export const calculateThreeOfAKind = (dice: number[]): number => {
   const counts = getCounts(dice);
-  if (counts.some(c => c >= 3)) {
+  if (counts.some((c) => c >= 3)) {
     return getSum(dice);
   }
   return 0;
@@ -24,7 +24,7 @@ export const calculateThreeOfAKind = (dice: number[]): number => {
 
 export const calculateFourOfAKind = (dice: number[]): number => {
   const counts = getCounts(dice);
-  if (counts.some(c => c >= 4)) {
+  if (counts.some((c) => c >= 4)) {
     return getSum(dice);
   }
   return 0;
@@ -32,9 +32,9 @@ export const calculateFourOfAKind = (dice: number[]): number => {
 
 export const calculateFullHouse = (dice: number[]): number => {
   const counts = getCounts(dice);
-  const hasThree = counts.some(c => c === 3);
-  const hasTwo = counts.some(c => c === 2);
-  const hasFive = counts.some(c => c === 5); // 5 of a kind also counts as full house optionally, or 3+2
+  const hasThree = counts.some((c) => c === 3);
+  const hasTwo = counts.some((c) => c === 2);
+  const hasFive = counts.some((c) => c === 5); // 5 of a kind also counts as full house optionally, or 3+2
 
   if ((hasThree && hasTwo) || hasFive) {
     return 25;
@@ -62,7 +62,7 @@ export const calculateLargeStraight = (dice: number[]): number => {
 
 export const calculateKniffel = (dice: number[]): number => {
   const counts = getCounts(dice);
-  if (counts.some(c => c === 5)) {
+  if (counts.some((c) => c === 5)) {
     return 50;
   }
   return 0;
@@ -87,7 +87,7 @@ export const evaluatePossibleScores = (dice: number[]): Record<KniffelCategory, 
     large_straight: calculateLargeStraight(dice),
     kniffel: calculateKniffel(dice),
     chance: calculateChance(dice),
-    kniffel_bonus: calculateKniffel(dice) > 0 ? 50 : 0
+    kniffel_bonus: calculateKniffel(dice) > 0 ? 50 : 0,
   };
 };
 
@@ -102,8 +102,13 @@ export const getUpperSectionBonus = (scores: Record<string, number | null>): num
 
 export const getLowerSectionSum = (scores: Record<string, number | null>): number => {
   const lowerKeys = [
-    'three_of_a_kind', 'four_of_a_kind', 'full_house', 'small_straight',
-    'large_straight', 'kniffel', 'chance'
+    'three_of_a_kind',
+    'four_of_a_kind',
+    'full_house',
+    'small_straight',
+    'large_straight',
+    'kniffel',
+    'chance',
   ];
   const sum = lowerKeys.reduce((sum, key) => sum + (scores[key] || 0), 0);
   const bonusScore = (scores['kniffel_bonus'] || 0) * 50;

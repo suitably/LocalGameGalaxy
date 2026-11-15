@@ -7,8 +7,11 @@
  * remote URL), so the stored game.json works for every device and never contains a token.
  * Remote `https://` images (TTS imports) stay remote: each device keeps its own copy in the
  * per-device cache (`assetCache.ts`, #693) instead of the companion redistributing them.
+ * A copy of an imported third-party game is marked `companionPrivate` (TTS plan D4): the
+ * companion keeps it private to that server and the app never publishes it.
  */
 import type { TabletopGameDefinition } from './types';
+import { isThirdPartyImport } from './publishValidator';
 
 export type AssetFetcher = (url: string) => Promise<Blob>;
 
@@ -74,6 +77,7 @@ export async function prepareGameForServer(
   const embedded = Object.fromEntries(
     Object.entries(assetFiles ?? {}).filter(([, v]) => v.startsWith('data:')),
   );
-  const copy = (await walk(rest)) as TabletopGameDefinition;
+  const walked = (await walk(rest)) as TabletopGameDefinition;
+  const copy = isThirdPartyImport(game) ? { ...walked, companionPrivate: true } : walked;
   return Object.keys(embedded).length > 0 ? { ...copy, assetFiles: embedded } : copy;
 }

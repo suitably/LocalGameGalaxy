@@ -14,6 +14,7 @@ import AdsClickIcon from '@mui/icons-material/AdsClickRounded';
 import AutoStoriesIcon from '@mui/icons-material/AutoStoriesRounded';
 import PianoIcon from '@mui/icons-material/PianoRounded';
 import { SongsProvider } from '../games/melodiq';
+import { drawPotDefinition } from '../games/drawpot/definition';
 import type { GameSettingsSectionDefinition } from './gameSettingsTypes';
 import { withGameSettings } from './gameSettingsRegistry';
 
@@ -220,7 +221,7 @@ class GameRegistry {
     },
   ];
 
-  private games: GameDefinition[] = this.definitions.map(withGameSettings);
+  private games: GameDefinition[] = [...this.definitions, drawPotDefinition].map(withGameSettings);
 
   getGames(): GameDefinition[] {
     return this.games;

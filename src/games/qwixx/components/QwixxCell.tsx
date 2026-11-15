@@ -23,6 +23,8 @@ interface QwixxCellProps {
   isHighlighted: boolean;
   isLastNumber: boolean;
   isBonusRow: boolean;
+  /** Height on phones (48 default; smaller for long or many rows). The hit area stays 48px. */
+  phoneHeight?: number;
   onTap: () => void;
 }
 
@@ -46,6 +48,7 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
   isHighlighted,
   isLastNumber,
   isBonusRow,
+  phoneHeight = 48,
   onTap,
 }) => {
   const theme = useTheme();
@@ -62,6 +65,10 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
         alignItems: 'center',
         position: 'relative',
         gap: 0.25,
+        // Phones: cells share the row width (see QwixxRow), capped at 48px.
+        flex: { xs: 1, sm: 'none' },
+        minWidth: 0,
+        maxWidth: { xs: 48, sm: 'none' },
       }}
     >
       <ButtonBase
@@ -70,8 +77,8 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
         disabled={disabled || !isClickable}
         sx={{
           ...invisibleHitArea(48, 'y'),
-          width: { xs: 48, sm: 36, md: 44 },
-          height: { xs: 48, sm: 40, md: 48 },
+          width: { xs: '100%', sm: 36, md: 44 },
+          height: { xs: phoneHeight, sm: 40, md: 48 },
           borderRadius: 2,
           bgcolor: isCrossed ? tone.buttonCrossed : tone.button,
           color: isCrossed ? 'common.white' : tone.ink,

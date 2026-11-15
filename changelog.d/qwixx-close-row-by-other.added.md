@@ -1,0 +1,1 @@
+- **Qwixx: close a row another player closed:** tap the lock of any row to close it on your sheet too. It counts no lock bonus (dashed lock); a row you close yourself by crossing its last number (2/12, Longo 2/16) still gets the +1 cross.

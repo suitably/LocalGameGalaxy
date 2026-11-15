@@ -73,6 +73,8 @@ export function hasCompanion(options: ComposeGeneratorOptions): boolean {
 export function companionPlugins(options: ComposeGeneratorOptions): string[] {
   return [
     'relay',
+    // draw pot (Lostopf) needs no folder of its own: pots go to config/drawpots/
+    'drawpot',
     ...(options.melodiq ? ['melodiq'] : []),
     ...(options.tabletop ? ['tabletop'] : []),
     ...(options.notes ? ['notes'] : []),

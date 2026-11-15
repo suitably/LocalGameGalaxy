@@ -30,6 +30,9 @@ import { getSheetDefinition } from '../logic/sheetDefinitions';
 import { QwixxMiniSheet } from './QwixxMiniSheet';
 import { QwixxPresetSwitcher } from './QwixxPresetSwitcher';
 
+/** Phones show a compact two-column card: no description, no select button (the card is the button). */
+const hideOnPhone = { display: { xs: 'none', sm: 'flex' } };
+
 const SHEET_ICONS: Record<QwixxSheetType, React.ReactElement> = {
   classic: <StyleIcon />,
   gemixxt_a: <ColorLensIcon />,
@@ -89,7 +92,7 @@ export const QwixxSheetCard: React.FC<QwixxSheetCardProps> = ({
       <CardActionArea
         onClick={onChoose}
         sx={{
-          p: 2,
+          p: { xs: 1, sm: 2 },
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'flex-start',
@@ -103,19 +106,25 @@ export const QwixxSheetCard: React.FC<QwixxSheetCardProps> = ({
             width: '100%',
             justifyContent: 'space-between',
             alignItems: 'center',
-            mb: 1,
+            mb: { xs: 0.5, sm: 1 },
           }}
         >
           <Box
             sx={{
               display: 'flex',
               alignItems: 'center',
-              gap: 1,
+              gap: { xs: 0.5, sm: 1 },
+              minWidth: 0,
               color: isCurrent ? 'primary.main' : 'text.primary',
+              '& > .MuiSvgIcon-root': { display: { xs: 'none', sm: 'block' } },
             }}
           >
             {SHEET_ICONS[type]}
-            <Typography variant="subtitle1" fontWeight="bold">
+            <Typography
+              variant="subtitle1"
+              fontWeight="bold"
+              sx={{ fontSize: { xs: '0.85rem', sm: undefined }, lineHeight: 1.25 }}
+            >
               {t(def.nameKey)}
             </Typography>
           </Box>
@@ -127,7 +136,7 @@ export const QwixxSheetCard: React.FC<QwixxSheetCardProps> = ({
                 color="success"
                 variant="outlined"
                 icon={<CheckCircleIcon />}
-                sx={{ height: 22, fontSize: '0.75rem' }}
+                sx={{ height: 22, fontSize: '0.75rem', ...hideOnPhone }}
               />
             )}
             <Tooltip title={t('games.qwixx.view_rules', 'Regeln lesen')}>
@@ -145,7 +154,7 @@ export const QwixxSheetCard: React.FC<QwixxSheetCardProps> = ({
           </Box>
         </Box>
 
-        <Box sx={{ width: '100%', my: 1 }}>
+        <Box sx={{ width: '100%', my: { xs: 0.5, sm: 1 } }}>
           <QwixxMiniSheet
             sheetType={type}
             presetIndex={presetIndex}
@@ -180,14 +189,14 @@ export const QwixxSheetCard: React.FC<QwixxSheetCardProps> = ({
         <Chip
           size="small"
           label={t(def.badgeKey)}
-          sx={{ mb: 1, fontSize: '0.75rem', height: 22, fontWeight: 'bold' }}
+          sx={{ mb: { xs: 0, sm: 1 }, fontSize: '0.75rem', height: 22, fontWeight: 'bold' }}
           color={isCurrent ? 'primary' : 'default'}
         />
 
         <Typography
           variant="body2"
           color="text.secondary"
-          sx={{ fontSize: '0.85rem', lineHeight: 1.4, flexGrow: 1, mb: 1.5 }}
+          sx={{ fontSize: '0.85rem', lineHeight: 1.4, flexGrow: 1, mb: 1.5, ...hideOnPhone }}
         >
           {t(def.descriptionKey)}
         </Typography>
@@ -197,7 +206,7 @@ export const QwixxSheetCard: React.FC<QwixxSheetCardProps> = ({
           color="primary"
           fullWidth
           size="small"
-          sx={{ mt: 'auto', borderRadius: 2 }}
+          sx={{ mt: 'auto', borderRadius: 2, ...hideOnPhone }}
         >
           {isCurrent
             ? t('games.qwixx.active_badge', 'Aktiv')
