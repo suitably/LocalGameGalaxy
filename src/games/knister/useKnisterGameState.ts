@@ -1,10 +1,7 @@
 import { useReducer, useEffect, useState, useCallback } from 'react';
-import { storage } from '../../lib/storage';
+import { storage, STORAGE_KEYS } from '../../lib/storage';
 import { knisterReducer, INITIAL_KNISTER_STATE } from './logic/knisterReducer';
 import type { KnisterState } from './logic/types';
-
-const STORAGE_KEY_KNISTER_STATE = 'knister_current_game';
-const STORAGE_KEY_SHOW_DICE = 'knister_show_dice';
 
 interface Cell {
   row: number;
@@ -12,7 +9,7 @@ interface Cell {
 }
 
 const loadInitialState = (initial: KnisterState): KnisterState => {
-  const saved = storage.getJson<KnisterState | null>(STORAGE_KEY_KNISTER_STATE, null);
+  const saved = storage.getJson<KnisterState | null>(STORAGE_KEYS.KNISTER_CURRENT_GAME, null);
   if (saved && Array.isArray(saved.players) && saved.players.length > 0) {
     return {
       ...initial,
@@ -27,7 +24,7 @@ const loadInitialState = (initial: KnisterState): KnisterState => {
 export const useKnisterGameState = () => {
   const [state, dispatch] = useReducer(knisterReducer, INITIAL_KNISTER_STATE, loadInitialState);
   const [showDice, setShowDice] = useState<boolean>(
-    () => storage.get(STORAGE_KEY_SHOW_DICE, 'true') === 'true',
+    () => storage.get(STORAGE_KEYS.KNISTER_SHOW_DICE, 'true') === 'true',
   );
   const [selectedNumber, setSelectedNumber] = useState<number | null>(null);
   const [pickerTargetCell, setPickerTargetCell] = useState<Cell | null>(null);
@@ -39,11 +36,11 @@ export const useKnisterGameState = () => {
   const gameOverModalOpen = state.isGameOver && dismissedAtMoves !== movesPlayed;
 
   useEffect(() => {
-    storage.setJson(STORAGE_KEY_KNISTER_STATE, state);
+    storage.setJson(STORAGE_KEYS.KNISTER_CURRENT_GAME, state);
   }, [state]);
 
   useEffect(() => {
-    storage.set(STORAGE_KEY_SHOW_DICE, String(showDice));
+    storage.set(STORAGE_KEYS.KNISTER_SHOW_DICE, String(showDice));
   }, [showDice]);
 
   const activePlayer = state.players[state.activePlayerIndex] || state.players[0];

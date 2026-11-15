@@ -1,11 +1,9 @@
-import { storage } from '../../../lib/storage';
-
-const STORAGE_PREFIX = 'guessart_game_alias_';
+import { storage, STORAGE_PREFIXES } from '../../../lib/storage';
 
 export const gameNameOverride = {
   getAlias(gameId: string): string | null {
     if (!gameId) return null;
-    const val = storage.get(`${STORAGE_PREFIX}${gameId}`);
+    const val = storage.get(`${STORAGE_PREFIXES.GUESSART_GAME_ALIAS}${gameId}`);
     return val && val.trim() ? val.trim() : null;
   },
 
@@ -15,13 +13,13 @@ export const gameNameOverride = {
     if (!trimmed) {
       this.removeAlias(gameId);
     } else {
-      storage.set(`${STORAGE_PREFIX}${gameId}`, trimmed);
+      storage.set(`${STORAGE_PREFIXES.GUESSART_GAME_ALIAS}${gameId}`, trimmed);
     }
   },
 
   removeAlias(gameId: string): void {
     if (!gameId) return;
-    storage.remove(`${STORAGE_PREFIX}${gameId}`);
+    storage.remove(`${STORAGE_PREFIXES.GUESSART_GAME_ALIAS}${gameId}`);
   },
 
   getEffectiveGameName(gameId?: string | null, globalName?: string): string | undefined {

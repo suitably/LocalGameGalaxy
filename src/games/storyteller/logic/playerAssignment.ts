@@ -1,6 +1,5 @@
 import { createSeatedAssignment } from '../../../modules/player-management';
-
-const STORAGE_PREFIX = 'storyteller_local_players_';
+import { STORAGE_PREFIXES } from '../../../lib/storage';
 
 /** `isLocal(game, id)` follows the player's seat; the per-device list is only for old records. */
-export const playerAssignment = createSeatedAssignment(STORAGE_PREFIX);
+export const playerAssignment = createSeatedAssignment(STORAGE_PREFIXES.STORYTELLER_LOCAL_PLAYERS);
