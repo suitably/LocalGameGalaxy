@@ -1,10 +1,14 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { alignRecording } from '../alignment';
 import { ALIGN_SAMPLE_RATE } from '../dsp';
 import type { OnsetBands } from '../noteFit';
 import { estimateTempoAndStart, hasPitchedNotes, marksFromOnsets } from '../onsetAlign';
 import type { ScoreNote, ScoreSong } from '../types';
 import { barErrors, onlyParts, renderBand, type RenderOptions } from './bandFixtures';
+
+// CPU-heavy DSP on synthetic audio: single tests take up to ~4.5 s alone and exceed the
+// default 5 s when the full suite runs in parallel workers on a loaded machine.
+vi.setConfig({ testTimeout: 30_000 });
 
 const BARS = 40;
 
