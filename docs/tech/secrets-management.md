@@ -47,8 +47,6 @@ cd server && cp config.example.json config.json
 
 Other keys the server understands (defaults in `defaultConfig`): `tabletopDirectories`, `downloadDir`, `usdbUsername`, `usdbPassword`, `apiKeys`, `defaultDownloadMode` (`stream`), `autoVocalSeparation` (`false`), `githubOwner` (`suitably`), `githubRepo` (`LocalGameGalaxy`), `githubToken`.
 
-> The repo-root `config.example.json` (with an `ssl` block) is obsolete — [open-questions Q5](../open-questions.md#q5--root-configexamplejson-is-obsolete).
-
 ## 3. Token
 
 - Empty or missing token → the server generates `crypto.randomBytes(16).toString('hex')` at start-up and persists it.

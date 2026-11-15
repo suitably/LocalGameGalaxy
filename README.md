@@ -59,9 +59,10 @@ cd ..
 The server creates `config.json` (with a random token) on first start. To pre-configure song directories:
 
 ```bash
-cd server
-cp config.example.json config.json
+cp server/config.example.json server/config.json
 ```
+
+`npm run host` starts the server inside `server/`, which is where it looks for `config.json` (otherwise `CONFIG_PATH`, `/app/config` or next to the executable).
 
 Tokens, environment variables and HTTPS for phones: [Secrets & Local Configuration Guide](docs/tech/secrets-management.md).
 
