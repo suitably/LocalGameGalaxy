@@ -4,7 +4,7 @@
  */
 import { analyzeLua } from './lua.mjs';
 
-/** Slice 8 translator (planned): Lua calls that become routine ops. getObjectFromGUID addresses the targets. */
+/** Slice 8 translator (#704, `luaTranslator.ts`): Lua calls that become routine ops. getObjectFromGUID addresses the targets. */
 export const PLANNED_TRANSLATABLE = new Set([
   'createButton',
   'shuffle',
@@ -51,8 +51,8 @@ export const PLANNED_SHIM = new Set([
   'getGUID',
 ]);
 
-/** Implemented today: nothing translates or runs Lua yet. Bump when slices 8/9 land. */
-export const IMPLEMENTED = { translatable: new Set(), shim: new Set() };
+/** Implemented today: the slice 8 translator (#704); no Lua runtime yet. Bump with slice 9. */
+export const IMPLEMENTED = { translatable: PLANNED_TRANSLATABLE, shim: new Set() };
 
 /** Calls that put a mod out of scope (tier D). */
 const OUT_OF_SCOPE_CALLS = new Set([
@@ -168,6 +168,11 @@ export function analyzeSave(save, { parse, classify, sanitizeUrl = (u) => u }) {
   }
   const calls = [...callSet].sort();
   const events = [...eventSet].sort();
+  // Setup-button coverage straight from the importer's report (translator, #704).
+  const buttons = {
+    total: game?.importReport?.buttons?.total ?? 0,
+    translated: game?.importReport?.buttons?.translated ?? 0,
+  };
 
   const outOfScope =
     [...walkObjects(top)].some(([o]) => o.Name === 'Custom_Assetbundle') ||
@@ -186,7 +191,8 @@ export function analyzeSave(save, { parse, classify, sanitizeUrl = (u) => u }) {
   let tier = 'none';
   if (outOfScope) tier = 'D';
   else if (aOk) tier = 'A';
-  if (tier === 'A' && hasScripts && covered(IMPLEMENTED.translatable)) tier = 'B';
+  const allButtons = buttons.translated === buttons.total;
+  if (tier === 'A' && hasScripts && covered(IMPLEMENTED.translatable) && allButtons) tier = 'B';
   if (tier === 'B' && covered(IMPLEMENTED.shim) && events.every((e) => IMPLEMENTED.shim.has(e)))
     tier = 'C';
   // Projection: tiers reachable once the planned translator (slice 8) / shim (slice 9) exist.
@@ -206,7 +212,7 @@ export function analyzeSave(save, { parse, classify, sanitizeUrl = (u) => u }) {
     decks,
     seats: { count: seats.length, maxPlayers },
     images: { insecure, hosts },
-    scripts: { ...scripts, luaErrors, calls, events },
+    scripts: { ...scripts, luaErrors, calls, events, buttons },
     ...(parseError ? { parseError } : {}),
   };
 }
@@ -217,7 +223,10 @@ export function aggregate(mods, topN = 20) {
   const callCount = new Map();
   const eventCount = new Map();
   const projected = { B: 0, C: 0 };
+  const buttons = { total: 0, translated: 0 };
   for (const m of mods) {
+    buttons.total += m.scripts.buttons?.total ?? 0;
+    buttons.translated += m.scripts.buttons?.translated ?? 0;
     perTier[m.tier] = (perTier[m.tier] ?? 0) + 1;
     if (m.projection?.B) projected.B += 1;
     if (m.projection?.C) projected.C += 1;
@@ -233,6 +242,8 @@ export function aggregate(mods, topN = 20) {
     mods: mods.length,
     perTier,
     projected,
+    // Slice 8 acceptance metric: share of corpus setup buttons that became routines.
+    buttons: { ...buttons, ratio: buttons.total ? buttons.translated / buttons.total : null },
     topCalls: top(callCount),
     topEvents: top(eventCount),
   };

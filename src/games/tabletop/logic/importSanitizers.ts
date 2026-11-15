@@ -1,7 +1,16 @@
 /**
  * Sanitizers for the import report and script sidecar [ID: LOGIC-TABLETOP-IMPORT-SANITIZERS]
  */
-import type { AssetCacheSummary, ImportReport, GameScripts, ScriptEntry } from './importTypes';
+import type {
+  AssetCacheSummary,
+  ImportReport,
+  GameScripts,
+  ScriptEntry,
+  UntranslatedScriptFunction,
+} from './importTypes';
+
+/** Report entries kept when loading (same cap as the translator's). */
+const MAX_UNTRANSLATED = 200;
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   Boolean(v) && typeof v === 'object' && !Array.isArray(v);
@@ -61,6 +70,16 @@ function sanitizeAssetSummary(raw: unknown): AssetCacheSummary | undefined {
   };
 }
 
+function sanitizeUntranslated(raw: unknown): UntranslatedScriptFunction[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const text = (v: unknown) => (typeof v === 'string' ? v.slice(0, 120) : '');
+  return raw
+    .filter(isRecord)
+    .map((e) => ({ owner: text(e.owner), fn: text(e.fn), reason: text(e.reason) }))
+    .filter((e) => e.owner && e.fn)
+    .slice(0, MAX_UNTRANSLATED);
+}
+
 export function sanitizeImportReport(raw: unknown): ImportReport | undefined {
   if (!isRecord(raw) || raw.source !== 'tts') return undefined;
   const byType: ImportReport['byType'] = {};
@@ -86,5 +105,16 @@ export function sanitizeImportReport(raw: unknown): ImportReport | undefined {
     },
     imageHosts,
     ...(isRecord(raw.assets) ? { assets: sanitizeAssetSummary(raw.assets) } : {}),
+    ...(isRecord(raw.buttons)
+      ? {
+          buttons: {
+            total: countOf(raw.buttons.total),
+            translated: countOf(raw.buttons.translated),
+          },
+        }
+      : {}),
+    ...(Array.isArray(raw.untranslated)
+      ? { untranslated: sanitizeUntranslated(raw.untranslated) }
+      : {}),
   };
 }

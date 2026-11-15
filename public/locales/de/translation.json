@@ -1025,7 +1025,10 @@
         "no": "nein",
         "hosts": "Bild-Hosts: {{hosts}}",
         "assets_cached": "{{cached}} von {{total}} Bildern auf diesem Gerät gespeichert (auch offline verfügbar).",
-        "assets_dead": "{{count}} Bilder nicht erreichbar (Host): {{hosts}}"
+        "assets_dead": "{{count}} Bilder nicht erreichbar (Host): {{hosts}}",
+        "buttons_translated": "Setup-Knöpfe aus Skripten: {{translated}} von {{total}} funktionieren als Routine.",
+        "untranslated": "Nicht übersetzt ({{count}}): {{list}}",
+        "button_untranslated": "Dieser Knopf ruft die Workshop-Skriptfunktion „{{fn}}“ auf, die nicht übersetzt werden konnte. Er tut nichts, bis er im Editor eine Routine bekommt."
       },
       "workshop_play_now": "Jetzt spielen",
       "workshop_success": "„{{name}}“ erfolgreich importiert!",
