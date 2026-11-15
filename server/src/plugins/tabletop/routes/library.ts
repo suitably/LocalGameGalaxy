@@ -6,6 +6,7 @@ import { cleanUploadName } from '../../../utils/scoreFiles';
 import {
   getGameCache,
   isSavedGame,
+  keepPrivate,
   parseGameFile,
   removeGameFromCache,
   savedGamesRoot,
@@ -95,7 +96,8 @@ tabletopLibraryRouter.put('/api/tabletop/games/:id', async (c) => {
   if (typeof parsed === 'string') return c.json({ error: parsed }, 400);
   const previous = await fs.promises.readFile(entry.jsonPath, 'utf-8').catch(() => null);
   try {
-    const updated = await writeGame(entry.jsonPath, parsed.json);
+    const json = entry.private ? keepPrivate(parsed.json) : parsed.json;
+    const updated = await writeGame(entry.jsonPath, json);
     if (!updated) {
       if (previous !== null) await writeGame(entry.jsonPath, previous);
       return c.json({ error: 'Not a recognised tabletop game definition' }, 400);

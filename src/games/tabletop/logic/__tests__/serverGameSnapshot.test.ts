@@ -71,6 +71,14 @@ describe('prepareGameForServer', () => {
     expect((out.widgets.t as unknown as { image: string }).image).toBe(remote);
   });
 
+  it('marks copies of imported third-party games private to the companion (D4)', async () => {
+    const fetchAsset = vi.fn(async () => new Blob(['x']));
+    const imported = { ...game({}), format: 'tts-workshop' } as TabletopGameDefinition;
+    expect((await prepareGameForServer(imported, BASE, fetchAsset)).companionPrivate).toBe(true);
+    const own = await prepareGameForServer(game({}), BASE, fetchAsset);
+    expect(own.companionPrivate).toBeUndefined();
+  });
+
   it('reports images that cannot be loaded', async () => {
     const fetchAsset = vi.fn(async () => {
       throw new Error('gone');
@@ -95,6 +103,13 @@ describe('parseServerGame', () => {
     expect(loaded.id).toBe('abc123');
     expect(loaded.name).toBe('My Game');
     expect(loaded.widgets.c1.x).toBe(10);
+  });
+
+  it('keeps the third-party marks of a private companion copy', async () => {
+    const raw = JSON.stringify({ ...game({}), format: 'tts-workshop', companionPrivate: true });
+    const loaded = await parseServerGame('p1', raw, {});
+    expect(loaded.format).toBe('tts-workshop');
+    expect(loaded.companionPrivate).toBe(true);
   });
 
   it('sends other formats through the importer', async () => {

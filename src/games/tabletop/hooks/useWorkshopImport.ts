@@ -17,6 +17,7 @@ import {
 } from '../logic/steamWorkshopApi';
 import type { WorkshopItemDetails } from '../logic/steamWorkshopApi';
 import type { TabletopGameDefinition } from '../logic/types';
+import type { TTSSaveFile } from '../logic/ttsTypes';
 
 export type WorkshopImportStatus =
   | 'idle'
@@ -126,38 +127,30 @@ export function useWorkshopImport() {
     setState((s) => ({ ...s, status: 'downloading', error: null }));
 
     try {
-      let game: TabletopGameDefinition | null = null;
+      let save: TTSSaveFile | null = null;
 
-      // Path A: Try companion server first if configured
+      // Path A: the companion only fetches the save file (JSON or BSON) and stores nothing (#702)
       if (storage.isHelperActive()) {
         try {
           const baseUrl = storage.getHelperUrl().replace(/\/$/, '');
-          const token = storage.getHelperToken();
-          const data = await downloadWorkshopMod(state.meta.id, baseUrl, token);
-
-          setState((s) => ({ ...s, status: 'parsing' }));
-          game = await parsePcioFile(data.rawJson, {
-            assetFiles: data.assetMap,
-            defaultName: state.meta.title,
-          });
+          save = await downloadWorkshopMod(state.meta.id, baseUrl, storage.getHelperToken());
         } catch {
           // Companion server failed/unreachable - fall through to direct browser download
         }
       }
 
       // Path B: Direct download from Steam CDN (has Access-Control-Allow-Origin: *)
-      if (!game && state.meta.fileUrl) {
-        setState((s) => ({ ...s, status: 'downloading' }));
-        const decoded = await downloadWorkshopModDirect(state.meta.fileUrl);
-        setState((s) => ({ ...s, status: 'parsing' }));
-        game = parseTtsSaveFile(decoded, { defaultName: state.meta.title });
+      if (!save && state.meta.fileUrl) {
+        save = await downloadWorkshopModDirect(state.meta.fileUrl);
       }
 
-      if (!game) {
+      if (!save) {
         throw new WorkshopError('no_download_url');
       }
 
-      await cacheAndSave(game);
+      // Both paths convert and cache on this device the same way
+      setState((s) => ({ ...s, status: 'parsing' }));
+      await cacheAndSave(parseTtsSaveFile(save, { defaultName: state.meta.title }));
     } catch (err) {
       setState((s) => ({
         ...s,

@@ -6,7 +6,7 @@ import { getHelperUrl } from '../../../lib/companion/companionSettings';
 import { validateAndSanitizeGame, type RawTabletopGameInput } from './gameValidator';
 import { parsePcioFile } from './pcioParser';
 import { prepareGameForServer } from './serverGameSnapshot';
-import type { TabletopGameDefinition } from './types';
+import type { TabletopGameDefinition, TabletopGameFormat } from './types';
 
 export interface ServerGameEntry {
   id: string;
@@ -15,8 +15,10 @@ export interface ServerGameEntry {
   description?: string;
   widgetCount: number;
   cardCount: number;
-  format?: 'flat-json' | 'pcio-folder' | 'tts-workshop' | 'unknown';
+  format?: TabletopGameFormat;
   updatedAt: number;
+  /** Third-party import kept private to this server (#702); older servers omit it. */
+  private?: boolean;
   /** Saved from the app, so it can be overwritten and deleted (older servers omit it). */
   saved?: boolean;
 }

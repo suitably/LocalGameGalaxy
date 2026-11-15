@@ -66,6 +66,8 @@ export interface TabletopGameEntry {
   jsonPath: string; // absoluter Pfad zur JSON-Datei
   assetsDir: string | null; // absoluter Pfad zu assets/-Ordner oder null
   updatedAt: number;
+  /** Third-party content (TTS save or `companionPrivate` copy): private to this server (D4). */
+  private?: boolean;
 }
 
 export type ClientTabletopGameEntry = Omit<TabletopGameEntry, 'jsonPath' | 'assetsDir'> & {

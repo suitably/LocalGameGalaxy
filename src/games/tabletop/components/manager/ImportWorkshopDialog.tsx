@@ -21,6 +21,7 @@ import { useWorkshopImport } from '../../hooks/useWorkshopImport';
 import { isValidWorkshopInput } from '../../logic/steamWorkshopApi';
 import { WorkshopMetaPreview } from './WorkshopMetaPreview';
 import { ImportReportView } from './ImportReportView';
+import { WorkshopRightsNotice } from './WorkshopRightsNotice';
 
 interface ImportWorkshopDialogProps {
   open: boolean;
@@ -161,6 +162,11 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
             (status === 'meta_loaded' || status === 'downloading' || status === 'parsing') && (
               <WorkshopMetaPreview meta={meta} />
             )}
+
+          {/* Source, author and rights (D4): for every import, before and after it runs */}
+          {(meta || game?.format === 'tts-workshop') && (
+            <WorkshopRightsNotice workshopId={meta?.id} creatorId={meta?.creatorId} />
+          )}
 
           {/* Import Button */}
           {status === 'meta_loaded' && meta?.fileUrl && (

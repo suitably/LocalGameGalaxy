@@ -802,6 +802,7 @@ export function parseTtsSaveFile(
     ...(Object.keys(scriptZones).length > 0 ? { scriptZones } : {}),
     importReport: buildImportReport(save, sanitizeTtsUrl),
     scripts: extractScripts(save),
+    format: 'tts-workshop',
   });
 }
 

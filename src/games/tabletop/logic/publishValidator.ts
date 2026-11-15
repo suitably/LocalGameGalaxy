@@ -7,9 +7,21 @@ import { sanitizeGameSlug } from './gameValidator';
 export interface PublishValidationResult {
   valid: boolean;
   errors: string[];
+  /** Why publishing is refused outright (shown translated by the dialog). */
+  blocked?: 'third_party_import';
 }
 
+/**
+ * Imported third-party content (TTS Workshop; `importReport` covers imports made before
+ * `format` existed). Such games never leave the device as content (TTS plan D4, ADR-0005 §5).
+ */
+export const isThirdPartyImport = (game: TabletopGameDefinition): boolean =>
+  game.format === 'tts-workshop' || game.importReport?.source === 'tts' || !!game.companionPrivate;
+
 export function validateGameForPublishing(game: TabletopGameDefinition): PublishValidationResult {
+  if (isThirdPartyImport(game)) {
+    return { valid: false, errors: [], blocked: 'third_party_import' };
+  }
   const errors: string[] = [];
 
   if (!game.name || game.name.trim().length < 3) {
@@ -45,6 +57,7 @@ export function buildPublishPrPayload(
   authorName: string,
   extraNotes?: string,
 ) {
+  if (isThirdPartyImport(game)) throw new Error('Imported third-party games cannot be published');
   const slug = sanitizeGameSlug(game.name);
   const filePath = `public/games/tabletop/${slug}.json`;
   const fileContent = JSON.stringify(game, null, 2);
@@ -60,7 +73,9 @@ export function buildPublishPrPayload(
     `- **Beschreibung:** ${game.description}`,
     extraNotes ? `\n**Zusätzliche Hinweise:**\n${extraNotes}` : '',
     '\n*Automatisch eingereicht über LocalGameGalaxy In-App Tabletop Publisher.*',
-  ].filter(Boolean).join('\n');
+  ]
+    .filter(Boolean)
+    .join('\n');
 
   return {
     slug,
