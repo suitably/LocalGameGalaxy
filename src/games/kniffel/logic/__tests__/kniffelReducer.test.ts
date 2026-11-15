@@ -71,7 +71,11 @@ describe('kniffelReducer', () => {
     let state = INITIAL_KNIFFEL_STATE;
     state = kniffelReducer(state, { type: 'ROLL_DICE', dice: [1, 2, 3, 4, 5] });
     state = kniffelReducer(state, { type: 'TOGGLE_HOLD_DIE', index: 1 });
-    state = kniffelReducer(state, { type: 'SCORE_CATEGORY', category: 'small_straight', score: 30 });
+    state = kniffelReducer(state, {
+      type: 'SCORE_CATEGORY',
+      category: 'small_straight',
+      score: 30,
+    });
 
     expect(state.activePlayerIndex).toBe(1);
     expect(state.players[0].scores.small_straight).toBe(30);
@@ -115,22 +119,44 @@ describe('kniffelReducer', () => {
           id: 'p1',
           name: 'P1',
           scores: {
-            ones: 3, twos: 6, threes: 9, fours: 12, fives: 15, sixes: 18,
-            three_of_a_kind: 15, four_of_a_kind: 20, full_house: 25, small_straight: 30,
-            large_straight: 40, kniffel: 50, chance: 20, kniffel_bonus: null
-          }
+            ones: 3,
+            twos: 6,
+            threes: 9,
+            fours: 12,
+            fives: 15,
+            sixes: 18,
+            three_of_a_kind: 15,
+            four_of_a_kind: 20,
+            full_house: 25,
+            small_straight: 30,
+            large_straight: 40,
+            kniffel: 50,
+            chance: 20,
+            kniffel_bonus: null,
+          },
         },
         {
           id: 'p2',
           name: 'P2',
           scores: {
-            ones: 3, twos: 6, threes: 9, fours: 12, fives: 15, sixes: 18,
-            three_of_a_kind: 15, four_of_a_kind: 20, full_house: 25, small_straight: 30,
-            large_straight: 40, kniffel: 50, chance: null, kniffel_bonus: null
-          }
-        }
+            ones: 3,
+            twos: 6,
+            threes: 9,
+            fours: 12,
+            fives: 15,
+            sixes: 18,
+            three_of_a_kind: 15,
+            four_of_a_kind: 20,
+            full_house: 25,
+            small_straight: 30,
+            large_straight: 40,
+            kniffel: 50,
+            chance: null,
+            kniffel_bonus: null,
+          },
+        },
       ],
-      activePlayerIndex: 1
+      activePlayerIndex: 1,
     };
 
     expect(state.isGameOver).toBe(false);

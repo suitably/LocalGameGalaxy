@@ -159,7 +159,7 @@ export const calculateBoardScores = (grid: KnisterGrid): BoardScores => {
   // Diagonal points count DOUBLE in Knister!
   const rowsTotal = rows.reduce((acc, curr) => acc + curr.points, 0);
   const colsTotal = cols.reduce((acc, curr) => acc + curr.points, 0);
-  const diagTotal = (mainDiag.points * 2) + (antiDiag.points * 2);
+  const diagTotal = mainDiag.points * 2 + antiDiag.points * 2;
 
   return {
     rows,

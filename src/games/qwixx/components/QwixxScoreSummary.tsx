@@ -20,7 +20,7 @@ interface QwixxScoreSummaryProps {
 const ROW_COLORS: RowColor[] = ['red', 'yellow', 'green', 'blue'];
 
 const Operator: React.FC<{ children: string }> = ({ children }) => (
-  <Typography variant="h6" color="text.secondary">
+  <Typography variant="h6" color="text.secondary" sx={{ fontSize: { xs: '1rem', sm: undefined } }}>
     {children}
   </Typography>
 );
@@ -46,11 +46,11 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
     <Paper
       elevation={0}
       sx={{
-        p: { xs: 1.5, sm: 2 },
+        p: { xs: 1, sm: 2 },
         borderRadius: 3,
         border: '1px solid',
         borderColor: 'divider',
-        mt: 2,
+        mt: { xs: 0, sm: 2 },
       }}
     >
       <Box
@@ -58,12 +58,13 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          mb: 1.5,
+          mb: { xs: 0, sm: 1.5 },
           flexWrap: 'wrap',
           gap: 1,
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        {/* Phones: the toolbar chip already names the sheet. */}
+        <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', gap: 1 }}>
           <Typography variant="body2" color="text.secondary" fontWeight="bold">
             {t('games.qwixx.mode_label', 'Modus:')}
           </Typography>
@@ -77,7 +78,7 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
         </Box>
 
         {sheet.sheetType === 'longo' && sheet.luckyNumbers && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8, mb: { xs: 1, sm: 0 } }}>
             <LocalFloristIcon sx={{ fontSize: '1.1rem', color: 'secondary.main' }} />
             <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 'bold' }}>
               {t('games.qwixx.lucky_numbers', 'Glückszahlen')}:
@@ -106,10 +107,12 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: 1.5,
+          gap: { xs: 1, sm: 1.5 },
         }}
       >
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+        <Box
+          sx={{ display: 'flex', gap: { xs: 0.5, sm: 1 }, alignItems: 'center', flexWrap: 'wrap' }}
+        >
           {ROW_COLORS.map((color, i) => (
             <React.Fragment key={color}>
               {i > 0 && <Operator>+</Operator>}
@@ -144,13 +147,13 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
           <Operator>=</Operator>
           <Box
             sx={{
-              p: 1,
-              px: 2,
+              p: { xs: 0.5, sm: 1 },
+              px: { xs: 1.5, sm: 2 },
               borderRadius: 2,
               bgcolor: 'primary.main',
               color: 'primary.contrastText',
               textAlign: 'center',
-              minWidth: 70,
+              minWidth: { xs: 56, sm: 70 },
             }}
           >
             <Typography
@@ -165,6 +168,8 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
                 color: 'primary.contrastText',
                 fontWeight: 800,
                 fontVariantNumeric: 'tabular-nums',
+                fontSize: { xs: '1.25rem', sm: undefined },
+                lineHeight: 1.3,
               }}
             >
               {scores.total}

@@ -49,7 +49,7 @@ export const KnisterBoard: React.FC<KnisterBoardProps> = ({
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        my: { xs: 1, sm: 2 },
+        my: { xs: 0.5, sm: 2 },
         touchAction: 'manipulation',
       }}
     >
@@ -61,7 +61,7 @@ export const KnisterBoard: React.FC<KnisterBoardProps> = ({
           gap: { xs: 0.8, sm: 1.2 },
           bgcolor: (theme) =>
             playerSlot === undefined ? theme.palette.action.hover : pieceTint(theme, playerSlot),
-          p: { xs: 1.5, sm: 2.5 },
+          p: { xs: 1, sm: 2.5 },
           borderRadius: 5,
           border: 1,
           borderColor: 'divider',
@@ -142,7 +142,7 @@ export const KnisterBoard: React.FC<KnisterBoardProps> = ({
 
       <Box
         sx={{
-          mt: 2,
+          mt: { xs: 1, sm: 2 },
           display: 'flex',
           alignItems: 'center',
           gap: 1.5,

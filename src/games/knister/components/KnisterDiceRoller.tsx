@@ -1,5 +1,6 @@
 import React from 'react';
-import { alpha, Box, Paper, Typography, Button, Chip } from '@mui/material';
+import { alpha, Box, Paper, Typography, Button, Chip, useMediaQuery } from '@mui/material';
+import type { Theme } from '@mui/material/styles';
 import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import { useTranslation } from 'react-i18next';
 import { Die3D } from '../../../components/games/Die3D';
@@ -22,6 +23,7 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
 }) => {
   const { t } = useTranslation();
   const { animating, startRoll } = useDiceRollAnimation();
+  const isPhone = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
 
   const handleRollClick = () => {
     if (disabled || animating || rollCount >= 25 || currentRoll !== null) return;
@@ -43,11 +45,11 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
     <Paper
       elevation={0}
       sx={{
-        p: { xs: 1.5, sm: 2 },
+        p: { xs: 1, sm: 2 },
         borderRadius: 3,
         bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
         border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
-        mb: 2,
+        mb: { xs: 0, sm: 2 },
         width: '100%',
         maxWidth: 520,
         userSelect: 'none',
@@ -62,7 +64,7 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
           flexWrap: 'wrap',
           justifyContent: 'space-between',
           alignItems: 'center',
-          gap: 2,
+          gap: { xs: 1, sm: 2 },
         }}
       >
         {/* Dice Row + Sum Info */}
@@ -108,9 +110,12 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
         </Box>
 
         {/* Round Tracker & Roll Button */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, ml: 'auto' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 }, ml: 'auto' }}>
           <Chip
-            label={`${t('games.knister.round', 'Wurf')}: ${rollCount}/25`}
+            label={
+              isPhone ? `${rollCount}/25` : `${t('games.knister.round', 'Wurf')}: ${rollCount}/25`
+            }
+            aria-label={`${t('games.knister.round', 'Wurf')}: ${rollCount}/25`}
             color={rollCount >= 25 ? 'error' : 'default'}
             variant="outlined"
             size="small"
@@ -126,7 +131,8 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
             sx={{
               fontWeight: 'bold',
               px: { xs: 2, sm: 3 },
-              py: 1,
+              py: { xs: 0.75, sm: 1 },
+              minHeight: 48,
               borderRadius: 2,
               textTransform: 'none',
             }}
@@ -151,7 +157,7 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
             gap: 0.8,
             overflowX: 'auto',
             maxWidth: '100%',
-            mt: 1.5,
+            mt: { xs: 1, sm: 1.5 },
             pt: 1,
             borderTop: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.06)}`,
           }}

@@ -31,7 +31,7 @@ export const KnisterToolbar: React.FC<KnisterToolbarProps> = ({
         alignItems: 'center',
         justifyContent: 'flex-end',
         gap: 1,
-        mb: 1.5,
+        mb: { xs: 1, sm: 1.5 },
         flexWrap: 'wrap',
       }}
     >

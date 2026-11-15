@@ -62,6 +62,10 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
         alignItems: 'center',
         position: 'relative',
         gap: 0.25,
+        // Phones: cells share the row width (see QwixxRow), capped at 48px.
+        flex: { xs: 1, sm: 'none' },
+        minWidth: 0,
+        maxWidth: { xs: 48, sm: 'none' },
       }}
     >
       <ButtonBase
@@ -70,7 +74,7 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
         disabled={disabled || !isClickable}
         sx={{
           ...invisibleHitArea(48, 'y'),
-          width: { xs: 48, sm: 36, md: 44 },
+          width: { xs: '100%', sm: 36, md: 44 },
           height: { xs: 48, sm: 40, md: 48 },
           borderRadius: 2,
           bgcolor: isCrossed ? tone.buttonCrossed : tone.button,

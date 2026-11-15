@@ -1,0 +1,1 @@
+- **Dice games fit better on phones:** Qwixx, Knister and Kniffel take less room on phones: Qwixx colour rows stay on one line, the Knister number bar is one line, the dice panels and toolbars are more compact, and the Kniffel dice stay pinned at the top while you scroll the score sheet.

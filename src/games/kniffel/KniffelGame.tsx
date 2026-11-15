@@ -65,7 +65,7 @@ export const KniffelGame: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'flex-end',
-          mb: 1.5,
+          mb: { xs: 1, sm: 1.5 },
           flexWrap: 'wrap',
           gap: 1,
         }}

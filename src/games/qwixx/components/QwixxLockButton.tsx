@@ -36,9 +36,13 @@ export const QwixxLockButton: React.FC<QwixxLockButtonProps> = ({
         isLocked ? t('common.a11y.unlock_row', 'Unlock row') : t('common.a11y.lock_row', 'Lock row')
       }
       sx={{
-        width: { xs: 48, sm: 38, md: 46 },
+        // Phones: shares the row width like the cells, so it is a rounded slot, not a circle.
+        flex: { xs: 1, sm: 'none' },
+        minWidth: 0,
+        width: { xs: 'auto', sm: 38, md: 46 },
+        maxWidth: { xs: 48, sm: 'none' },
         height: { xs: 48, sm: 40, md: 48 },
-        borderRadius: '50%',
+        borderRadius: { xs: 2, sm: '50%' },
         bgcolor: active ? tone.button : tone.muted,
         color: active ? tone.ink : alpha(tone.ink, 0.5),
         display: 'flex',
