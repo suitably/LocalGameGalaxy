@@ -34,6 +34,8 @@ interface TabletopSurfaceProps {
   editMode?: boolean;
   /** Spectator device: the table can be viewed, panned and zoomed but never changed. */
   readOnly?: boolean;
+  /** Host table: the selection can be deleted (phones may not, #685). */
+  canDeleteSelection?: boolean;
 }
 
 export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
@@ -43,6 +45,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
   hideSeatSelector = false,
   editMode = false,
   readOnly = false,
+  canDeleteSelection = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
@@ -193,13 +196,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
         />
       </Box>
 
-      <SelectionFloatingBar
-        selectedCount={selection.selectedWidgetIds.length}
-        onScaleUp={() => selection.scaleSelected(1.25)}
-        onScaleDown={() => selection.scaleSelected(0.8)}
-        onResetScale={selection.resetScaleSelected}
-        onClearSelection={selection.clearSelection}
-      />
+      <SelectionFloatingBar selection={selection} canDelete={canDeleteSelection && !isSpectator} />
 
       <SurfaceSeatControls
         seats={seats}

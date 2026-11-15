@@ -19,6 +19,9 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: '@mui/*'
         update-types: ['version-update:semver-major']
+      # Types must match the runtime in .nvmrc / engines (Node 24); bump the major with Node.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
     groups:
       capacitor:
         patterns: ['@capacitor/*', 'capacitor-*']

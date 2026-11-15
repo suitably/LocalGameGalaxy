@@ -30,6 +30,7 @@ import { seededRng } from './rng';
 import { moveTurn, seatIndexOf } from './turnOrder';
 import { raiseWidget, type ZOrderOp } from './zOrder';
 import type { WidgetPatch } from './widgetEdits';
+import { selectionReducer } from './reducers/selectionReducer';
 import { gestureOf } from './dragGesture';
 
 export interface FlyingCardAnimation {
@@ -122,6 +123,10 @@ type TabletopActionBody =
       payload: { pieceId: string; targetPosition?: { x: number; y: number } };
     }
   | { type: 'PLAY_CARD_FROM_HAND'; payload: { cardId: string; position: { x: number; y: number } } }
+  /** Selection actions (#701): every unlocked widget moves by the same offset (clamped as a group). */
+  | { type: 'MOVE_WIDGETS'; payload: { ids: string[]; dx: number; dy: number } }
+  | { type: 'FLIP_WIDGETS'; payload: { ids: string[] } }
+  | { type: 'ROTATE_WIDGETS'; payload: { ids: string[]; deltaDegrees: number } }
   | { type: 'SCALE_WIDGETS'; payload: { widgetIds: string[]; factor: number } }
   | { type: 'RESET_WIDGET_SCALE'; payload: { widgetIds: string[] } }
   | { type: 'SET_Z_ORDER'; payload: { widgetIds: string[]; op: ZOrderOp } }
@@ -467,6 +472,10 @@ function applyAction(
     case 'TAKE_PIECE_FROM_SUPPLY':
     case 'PLAY_CARD_FROM_HAND':
       return pieceReducer(state, action, (s, a) => applyAction(s, a, ctx));
+    case 'MOVE_WIDGETS':
+    case 'FLIP_WIDGETS':
+    case 'ROTATE_WIDGETS':
+      return selectionReducer(state, action);
     case 'SCALE_WIDGETS':
     case 'RESET_WIDGET_SCALE':
     case 'SET_WIDGET_SHOW_ALWAYS':

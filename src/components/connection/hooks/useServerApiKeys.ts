@@ -7,6 +7,7 @@ export interface ApiKeyPermissions {
   allowSongDeletion: boolean;
   allowTabletopSaves?: boolean;
   allowTabletopTemplates?: boolean;
+  allowTabletopGameDeletion?: boolean;
 }
 
 export interface ApiKey extends ApiKeyPermissions {

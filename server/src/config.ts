@@ -120,6 +120,13 @@ export class ConfigManager {
         if (!Array.isArray(this.fileConfig.apiKeys)) {
           this.fileConfig.apiKeys = [...defaultConfig.apiKeys];
         }
+        // Keys from before the dedicated flag keep what they could do: deleting saved tabletop
+        // games was tied to `allowSongDeletion`. Persisted with the next config save.
+        for (const key of this.fileConfig.apiKeys) {
+          if (key.allowTabletopGameDeletion === undefined) {
+            key.allowTabletopGameDeletion = key.allowSongDeletion === true;
+          }
+        }
       } catch (e) {
         console.error(`[Config] Failed to parse config at ${foundConfig}:`, e);
       }
@@ -337,7 +344,9 @@ export class ConfigManager {
     name?: string,
     allowManagement?: boolean,
     allowSongDeletion?: boolean,
-    extra: Partial<Pick<ApiKey, 'allowTabletopSaves' | 'allowTabletopTemplates'>> = {},
+    extra: Partial<
+      Pick<ApiKey, 'allowTabletopSaves' | 'allowTabletopTemplates' | 'allowTabletopGameDeletion'>
+    > = {},
   ): ApiKey {
     if (!this.fileConfig.apiKeys) {
       this.fileConfig.apiKeys = [];
@@ -352,6 +361,7 @@ export class ConfigManager {
       allowSongDeletion: allowSongDeletion === true,
       allowTabletopSaves: extra.allowTabletopSaves === true,
       allowTabletopTemplates: extra.allowTabletopTemplates === true,
+      allowTabletopGameDeletion: extra.allowTabletopGameDeletion === true,
       createdAt: new Date().toISOString(),
     };
     this.fileConfig.apiKeys.push(keyObj);
@@ -376,6 +386,7 @@ export class ConfigManager {
         'allowSongDeletion',
         'allowTabletopSaves',
         'allowTabletopTemplates',
+        'allowTabletopGameDeletion',
       ];
       for (const flag of flags) {
         if (updates[flag] !== undefined) {

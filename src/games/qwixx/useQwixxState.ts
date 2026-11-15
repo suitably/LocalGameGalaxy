@@ -1,5 +1,5 @@
 import { useReducer, useEffect, useState, useCallback, useRef } from 'react';
-import { storage } from '../../lib/storage';
+import { storage, STORAGE_KEYS } from '../../lib/storage';
 import { qwixxReducer, INITIAL_STATE } from './logic/qwixxReducer';
 import { computeHighlightedNumbers } from './logic/diceHighlight';
 import {
@@ -16,8 +16,6 @@ import type {
   SheetRowDefinition,
 } from './logic/types';
 
-const STORAGE_KEY_SHEET = 'qwixx_my_sheet';
-const STORAGE_KEY_SHOW_DICE = 'qwixx_show_dice';
 const HIGHLIGHT_MS = 5000;
 
 type Highlights = Partial<Record<RowColor, number[]>> | null;
@@ -25,7 +23,7 @@ type Highlights = Partial<Record<RowColor, number[]>> | null;
 /** State, persistence and handlers of the Qwixx sheet screen. */
 export const useQwixxState = () => {
   const [state, dispatch] = useReducer(qwixxReducer, INITIAL_STATE, (initial) => {
-    const savedSheet = storage.getJson<PlayerSheet | null>(STORAGE_KEY_SHEET, null);
+    const savedSheet = storage.getJson<PlayerSheet | null>(STORAGE_KEYS.QWIXX_MY_SHEET, null);
     let mySheet = initial.mySheet;
     if (savedSheet && savedSheet.red && savedSheet.yellow && savedSheet.green && savedSheet.blue) {
       mySheet = {
@@ -41,18 +39,18 @@ export const useQwixxState = () => {
   });
 
   const [showDice, setShowDice] = useState<boolean>(
-    () => storage.get(STORAGE_KEY_SHOW_DICE, 'false') === 'true',
+    () => storage.get(STORAGE_KEYS.QWIXX_SHOW_DICE, 'false') === 'true',
   );
   const [selectedDie, setSelectedDie] = useState<DieKey | null>(null);
   const [highlightedNumbers, setHighlightedNumbers] = useState<Highlights>(null);
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    storage.setJson(STORAGE_KEY_SHEET, state.mySheet);
+    storage.setJson(STORAGE_KEYS.QWIXX_MY_SHEET, state.mySheet);
   }, [state.mySheet]);
 
   useEffect(() => {
-    storage.set(STORAGE_KEY_SHOW_DICE, String(showDice));
+    storage.set(STORAGE_KEYS.QWIXX_SHOW_DICE, String(showDice));
   }, [showDice]);
 
   const clearHighlightTimer = useCallback(() => {

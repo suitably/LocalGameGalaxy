@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { storage } from '../../../lib/storage';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import type { GuessArtGameRecord } from '../logic/types';
-
-const STORAGE_KEY_SEEN_INFO = 'guessart_seen_info';
 
 /** Open/close state of the info, history, edit and catalogue dialogs. */
 export function useGuessArtDialogState() {
@@ -25,7 +23,7 @@ export function useGuessArtDialogState() {
 
   const handleCloseInfo = () => {
     setInfoOpen(false);
-    storage.set(STORAGE_KEY_SEEN_INFO, 'true');
+    storage.set(STORAGE_KEYS.GUESSART_SEEN_INFO, 'true');
   };
 
   return {

@@ -2,6 +2,7 @@ import { Hono, type Context } from 'hono';
 import fs from 'node:fs';
 import path from 'node:path';
 import { serverConfig } from '../../../config';
+import { hasPermission } from '../../../core/auth';
 import { cleanUploadName } from '../../../utils/scoreFiles';
 import {
   getGameCache,
@@ -110,7 +111,7 @@ tabletopLibraryRouter.put('/api/tabletop/games/:id', async (c) => {
 
 // DELETE /api/tabletop/games/:id — remove a saved game with its folder
 tabletopLibraryRouter.delete('/api/tabletop/games/:id', async (c) => {
-  if (!c.get('isMasterToken') && !c.get('apiKey')?.allowSongDeletion) {
+  if (!hasPermission(c, 'allowTabletopGameDeletion')) {
     return c.json({ error: 'Permission denied: deletion not allowed' }, 403);
   }
   const entry = savedEntry(c);

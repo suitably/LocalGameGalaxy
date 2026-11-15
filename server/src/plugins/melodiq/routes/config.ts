@@ -135,11 +135,18 @@ configRouter.get('/api/config/apikeys', requireMasterToken, (c) => {
 
 configRouter.post('/api/config/apikeys', requireMasterToken, async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as ApiKeyBody;
-  const { name, allowManagement, allowSongDeletion, allowTabletopSaves, allowTabletopTemplates } =
-    body;
+  const {
+    name,
+    allowManagement,
+    allowSongDeletion,
+    allowTabletopSaves,
+    allowTabletopTemplates,
+    allowTabletopGameDeletion,
+  } = body;
   const newKey = serverConfig.createApiKey(name, allowManagement, allowSongDeletion, {
     allowTabletopSaves,
     allowTabletopTemplates,
+    allowTabletopGameDeletion,
   });
   return c.json(newKey);
 });

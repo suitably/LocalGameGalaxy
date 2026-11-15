@@ -4,7 +4,7 @@ import ReplayIcon from '@mui/icons-material/ReplayRounded';
 import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
-import { storage } from '../../lib/storage';
+import { storage, STORAGE_KEYS } from '../../lib/storage';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import UndoIcon from '@mui/icons-material/UndoRounded';
@@ -16,9 +16,6 @@ import { KniffelBoard } from './components/KniffelBoard';
 import { KniffelDiceRoller } from './components/KniffelDiceRoller';
 import { initKniffelI18n } from './i18n';
 
-const STORAGE_KEY_KNIFFEL_STATE = 'kniffel_current_game';
-const STORAGE_KEY_SHOW_DICE = 'kniffel_show_dice';
-
 initKniffelI18n();
 
 export const KniffelGame: React.FC = () => {
@@ -26,7 +23,7 @@ export const KniffelGame: React.FC = () => {
   usePageTitle(t('games.kniffel.title', 'Kniffel'));
 
   const [state, dispatch] = useReducer(kniffelReducer, INITIAL_KNIFFEL_STATE, (initial) => {
-    const saved = storage.getJson<KniffelState | null>(STORAGE_KEY_KNIFFEL_STATE, null);
+    const saved = storage.getJson<KniffelState | null>(STORAGE_KEYS.KNIFFEL_CURRENT_GAME, null);
     if (saved && Array.isArray(saved.players) && saved.players.length > 0) {
       return { ...initial, ...saved };
     }
@@ -34,16 +31,16 @@ export const KniffelGame: React.FC = () => {
   });
 
   const [showDice, setShowDice] = useState<boolean>(
-    () => storage.get(STORAGE_KEY_SHOW_DICE, 'true') === 'true',
+    () => storage.get(STORAGE_KEYS.KNIFFEL_SHOW_DICE, 'true') === 'true',
   );
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   useEffect(() => {
-    storage.setJson(STORAGE_KEY_KNIFFEL_STATE, state);
+    storage.setJson(STORAGE_KEYS.KNIFFEL_CURRENT_GAME, state);
   }, [state]);
 
   useEffect(() => {
-    storage.set(STORAGE_KEY_SHOW_DICE, String(showDice));
+    storage.set(STORAGE_KEYS.KNIFFEL_SHOW_DICE, String(showDice));
   }, [showDice]);
 
   const handleRollDice = (newDice: number[]) => {
