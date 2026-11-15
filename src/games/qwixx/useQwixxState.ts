@@ -1,7 +1,7 @@
-import { useReducer, useEffect, useState, useCallback, useRef } from 'react';
+import { useReducer, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { storage, STORAGE_KEYS } from '../../lib/storage';
 import { qwixxReducer, INITIAL_STATE } from './logic/qwixxReducer';
-import { computeHighlightedNumbers } from './logic/diceHighlight';
+import { computeHighlightedNumbers, getRemovedDieColors } from './logic/diceHighlight';
 import {
   getSheetDefinition,
   ALL_SHEET_TYPES,
@@ -121,6 +121,8 @@ export const useQwixxState = () => {
     [selectedDie, state.dice, state.mySheet, clearHighlights, clearHighlightTimer],
   );
 
+  const removedDice = useMemo(() => getRemovedDieColors(state.mySheet), [state.mySheet]);
+
   const resetGame = useCallback(() => {
     dispatch({ type: 'RESET_GAME' });
     clearHighlights();
@@ -132,6 +134,7 @@ export const useQwixxState = () => {
     setShowDice,
     selectedDie,
     highlightedNumbers,
+    removedDice,
     crossNumber,
     lockRow,
     unlockRow,

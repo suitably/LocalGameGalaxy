@@ -74,3 +74,19 @@ export function computeHighlightedNumbers(
 
   return result;
 }
+
+/**
+ * Colored dice that are out of the game: a die leaves play once a row whose lock
+ * symbol has that color is locked (classic: the row of the same color; Gemixxt: the
+ * row's `lockColor`).
+ */
+export function getRemovedDieColors(sheet: PlayerSheet): RowColor[] {
+  const rows = getSheetRows(sheet.sheetType || 'classic', sheet.presetIndex, sheet.customRows);
+  const removed = new Set<RowColor>();
+  for (const rowDef of rows) {
+    if (sheet[rowDef.defaultColor]?.isLocked) {
+      removed.add(rowDef.lockColor || rowDef.defaultColor);
+    }
+  }
+  return [...removed];
+}
