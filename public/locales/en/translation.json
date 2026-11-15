@@ -1304,8 +1304,11 @@
         "rights_source": "Source",
         "rights_author": "Author",
         "rights_author_profile": "Steam profile {{id}}",
-        "rights_notice": "This mod belongs to its author and to the rights holders of the game it shows. The import is a private copy: images are stored only on this device, a copy on your companion server stays private to that server, and imported games cannot be published.",
-        "publish_blocked": "Imported games (e.g. from the Steam Workshop) belong to their authors and cannot be published. Only games you made yourself can be submitted."
+        "rights_notice": "This mod belongs to its author and to the rights holders of the game it shows. The import is a private copy: it is stored on this device and, with a companion server, on that server for everyone who uses it. It is never published anywhere else, and imported games cannot be submitted for publishing.",
+        "publish_blocked": "Imported games (e.g. from the Steam Workshop) belong to their authors and cannot be published. Only games you made yourself can be submitted.",
+        "storing": "Saving the game on the companion server...",
+        "stored_on_server": "Saved on the companion server: everyone who uses it can play this game. The server downloads its images in the background.",
+        "store_failed": "Saving on the companion server failed ({{error}}). The game was saved on this device only."
       },
       "mode_shared_device": "One device for everyone",
       "mode_shared_device_hint": "Pass it around – hands stay hidden when switching.",

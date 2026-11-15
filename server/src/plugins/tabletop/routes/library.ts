@@ -44,7 +44,7 @@ export function parseGameBody(body: unknown): { json: string; name: string } | s
 }
 
 /** Writes the JSON and indexes it; a file the scanner does not recognise as a game is removed again. */
-async function writeGame(jsonPath: string, json: string): Promise<TabletopGameEntry | null> {
+export async function writeGame(jsonPath: string, json: string): Promise<TabletopGameEntry | null> {
   await fs.promises.mkdir(path.dirname(jsonPath), { recursive: true });
   await fs.promises.writeFile(jsonPath, json, 'utf-8');
   const entry = await parseGameFile(jsonPath);
@@ -52,7 +52,7 @@ async function writeGame(jsonPath: string, json: string): Promise<TabletopGameEn
   return entry;
 }
 
-function ensureScanned(): void {
+export function ensureScanned(): void {
   // a save folder that is not configured yet becomes the first tabletop directory
   if (serverConfig.tabletopDirectories.length === 0) {
     fs.mkdirSync(serverConfig.tabletopSaveRoot, { recursive: true });

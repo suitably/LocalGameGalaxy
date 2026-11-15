@@ -4,6 +4,7 @@ import { tabletopGamesRouter } from './routes/games';
 import { tabletopMediaRouter } from './routes/media';
 import { tabletopConfigRouter } from './routes/config';
 import { tabletopWorkshopRouter } from './routes/workshop';
+import { tabletopWorkshopLibraryRouter } from './routes/workshopLibrary';
 import { tabletopLibraryRouter } from './routes/library';
 import { tabletopSavesRouter } from './routes/saves';
 import { scanGames } from './services/scanner';
@@ -18,6 +19,7 @@ export const tabletopPlugin: GalaxyPlugin = {
     // /tabletop/proxy-image checks its token itself.
     app.use('/api/tabletop/*', requireAuth);
     app.use('/tabletop/media', requireAuth);
+    app.use('/tabletop/stored-asset', requireAuth);
     app.use('/api/tabletop/config/*', requireMasterToken);
 
     // Mount routes
@@ -27,6 +29,7 @@ export const tabletopPlugin: GalaxyPlugin = {
     app.route('/', tabletopMediaRouter);
     app.route('/', tabletopConfigRouter);
     app.route('/', tabletopWorkshopRouter);
+    app.route('/', tabletopWorkshopLibraryRouter);
     // Initial scan
     scanGames();
   },

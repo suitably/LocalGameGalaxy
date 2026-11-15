@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { blobToDataUrl, classifyAssetUrl, prepareGameForServer } from '../serverGameSnapshot';
-import { isNativeGameDefinition, parseServerGame } from '../tabletopServerApi';
+import {
+  isNativeGameDefinition,
+  parseServerGame,
+  storeWorkshopGameOnServer,
+} from '../tabletopServerApi';
 import type { TabletopGameDefinition } from '../types';
 
 const BASE = 'http://192.168.1.5:3000';
@@ -117,5 +121,21 @@ describe('parseServerGame', () => {
     expect(isNativeGameDefinition(JSON.parse(flat))).toBe(false);
     const loaded = await parseServerGame('x', flat, {});
     expect(loaded.id).not.toBe('x');
+  });
+});
+
+describe('storeWorkshopGameOnServer (#702)', () => {
+  it('posts the private companion copy to the Workshop import route', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(Response.json({ id: 'srv1', name: 'My Game', private: true }));
+    const imported = { ...game({}), format: 'tts-workshop' } as TabletopGameDefinition;
+    const entry = await storeWorkshopGameOnServer('123', imported);
+    expect(entry.id).toBe('srv1');
+    const [url, init] = fetchSpy.mock.calls[0];
+    expect(String(url)).toMatch(/\/api\/tabletop\/workshop\/123\/import$/);
+    expect(init?.method).toBe('POST');
+    expect(JSON.parse(String(init?.body)).game.companionPrivate).toBe(true);
+    fetchSpy.mockRestore();
   });
 });

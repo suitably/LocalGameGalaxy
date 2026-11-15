@@ -96,9 +96,9 @@ export function detectSaveEncoding(buffer: Buffer): 'json' | 'bson' | null {
 }
 
 /**
- * Path A of the Workshop import (#702, TTS plan D4): fetches the save file and passes it through
- * unchanged (JSON or BSON). Nothing is written to the library; the app decodes, converts and
- * caches the game on its own device exactly as after a browser download.
+ * Path A of the Workshop import (#702): fetches the save file and passes it through unchanged
+ * (JSON or BSON). The app decodes and converts it with the same importer as after a browser
+ * download, then stores the game here via `POST .../import` (`routes/workshopLibrary.ts`).
  */
 tabletopWorkshopRouter.get('/api/tabletop/workshop/:workshopId', async (c) => {
   const workshopId = c.req.param('workshopId');

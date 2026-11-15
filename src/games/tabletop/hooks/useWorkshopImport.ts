@@ -8,6 +8,7 @@ import { parsePcioFile } from '../logic/pcioParser';
 import { parseTtsSaveFile } from '../logic/ttsParser';
 import { saveTabletopGame } from '../logic/tabletopStorage';
 import { withCachedImages } from '../logic/gameAssetCache';
+import { storeWorkshopGameOnServer } from '../logic/tabletopServerApi';
 import {
   extractWorkshopId,
   fetchWorkshopDetails,
@@ -25,6 +26,7 @@ export type WorkshopImportStatus =
   | 'meta_loaded'
   | 'downloading'
   | 'parsing'
+  | 'storing'
   | 'caching'
   | 'success'
   | 'error';
@@ -37,6 +39,10 @@ export interface WorkshopImportState {
   serverAvailable: boolean;
   /** Images cached so far while `status === 'caching'` (#693). */
   progress: { done: number; total: number } | null;
+  /** Stored in the companion library for everyone who uses it (#702). */
+  storedOnServer: boolean;
+  /** Why storing on the companion failed (the game was saved on this device only). */
+  serverError: string | null;
 }
 
 export function useWorkshopImport() {
@@ -62,6 +68,8 @@ export function useWorkshopImport() {
     error: null,
     serverAvailable: storage.isHelperActive(),
     progress: null,
+    storedOnServer: false,
+    serverError: null,
   });
 
   /** Caches the game's images on this device (with progress), then saves it. */
@@ -74,6 +82,27 @@ export function useWorkshopImport() {
     setState((s) => ({ ...s, status: 'success', game, progress: null }));
   }, []);
 
+  /**
+   * With a companion, the game is stored there for everyone who uses it (#702); the copy on this
+   * device then carries the server id, so it is listed with the server's games.
+   */
+  const storeOnCompanion = useCallback(
+    async (workshopId: string, parsed: TabletopGameDefinition) => {
+      if (!storage.isHelperActive()) return parsed;
+      setState((s) => ({ ...s, status: 'storing' }));
+      try {
+        const entry = await storeWorkshopGameOnServer(workshopId, parsed);
+        setState((s) => ({ ...s, storedOnServer: true }));
+        return { ...parsed, id: entry.id };
+      } catch (err) {
+        // the import still works on this device
+        setState((s) => ({ ...s, serverError: errorText(err) }));
+        return parsed;
+      }
+    },
+    [errorText],
+  );
+
   const reset = useCallback(() => {
     setState({
       status: 'idle',
@@ -82,6 +111,8 @@ export function useWorkshopImport() {
       error: null,
       serverAvailable: storage.isHelperActive(),
       progress: null,
+      storedOnServer: false,
+      serverError: null,
     });
   }, []);
 
@@ -98,7 +129,15 @@ export function useWorkshopImport() {
         return;
       }
 
-      setState((s) => ({ ...s, status: 'loading_meta', error: null, meta: null, game: null }));
+      setState((s) => ({
+        ...s,
+        status: 'loading_meta',
+        error: null,
+        meta: null,
+        game: null,
+        storedOnServer: false,
+        serverError: null,
+      }));
 
       try {
         const baseUrl = storage.isHelperActive()
@@ -150,7 +189,8 @@ export function useWorkshopImport() {
 
       // Both paths convert and cache on this device the same way
       setState((s) => ({ ...s, status: 'parsing' }));
-      await cacheAndSave(parseTtsSaveFile(save, { defaultName: state.meta.title }));
+      const parsed = parseTtsSaveFile(save, { defaultName: state.meta.title });
+      await cacheAndSave(await storeOnCompanion(state.meta.id, parsed));
     } catch (err) {
       setState((s) => ({
         ...s,
@@ -158,7 +198,7 @@ export function useWorkshopImport() {
         error: errorText(err),
       }));
     }
-  }, [state.meta, errorText, cacheAndSave]);
+  }, [state.meta, errorText, cacheAndSave, storeOnCompanion]);
 
   /** Parse a manually uploaded TTS JSON file */
   const importFromFile = useCallback(

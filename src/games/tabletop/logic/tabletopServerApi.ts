@@ -80,6 +80,22 @@ export async function saveGameOnServer(
   );
 }
 
+/**
+ * Stores an imported Workshop game in the companion library for everyone who uses that
+ * companion; the companion downloads its images (#702, maintainer decision 2026-11-15).
+ * A re-import of the same Workshop item overwrites the stored game.
+ */
+export async function storeWorkshopGameOnServer(
+  workshopId: string,
+  game: TabletopGameDefinition,
+): Promise<ServerGameEntry> {
+  const prepared = await prepareGameForServer(game, getHelperUrl());
+  return companionRequest<ServerGameEntry>(
+    `/api/tabletop/workshop/${encodeURIComponent(workshopId)}/import`,
+    jsonBody('POST', { game: prepared }),
+  );
+}
+
 export const deleteGameOnServer = (serverId: string) =>
   companionRequest<{ success: true }>(`/api/tabletop/games/${encodeURIComponent(serverId)}`, {
     method: 'DELETE',

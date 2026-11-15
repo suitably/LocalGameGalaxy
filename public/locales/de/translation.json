@@ -1304,8 +1304,11 @@
         "rights_source": "Quelle",
         "rights_author": "Autor",
         "rights_author_profile": "Steam-Profil {{id}}",
-        "rights_notice": "Diese Mod gehört ihrem Autor und den Rechteinhabern des gezeigten Spiels. Der Import ist eine private Kopie: Bilder werden nur auf diesem Gerät gespeichert, eine Kopie auf deinem Companion-Server bleibt privat auf diesem Server, und importierte Spiele können nicht veröffentlicht werden.",
-        "publish_blocked": "Importierte Spiele (z. B. aus dem Steam Workshop) gehören ihren Autoren und können nicht veröffentlicht werden. Einreichen kannst du nur selbst erstellte Spiele."
+        "rights_notice": "Diese Mod gehört ihrem Autor und den Rechteinhabern des gezeigten Spiels. Der Import ist eine private Kopie: Sie wird auf diesem Gerät gespeichert und, mit einem Companion-Server, auf diesem Server für alle, die ihn nutzen. Sie wird nirgendwo sonst veröffentlicht, und importierte Spiele können nicht zur Veröffentlichung eingereicht werden.",
+        "publish_blocked": "Importierte Spiele (z. B. aus dem Steam Workshop) gehören ihren Autoren und können nicht veröffentlicht werden. Einreichen kannst du nur selbst erstellte Spiele.",
+        "storing": "Spiel wird auf dem Companion-Server gespeichert...",
+        "stored_on_server": "Auf dem Companion-Server gespeichert: Alle, die ihn nutzen, können dieses Spiel spielen. Der Server lädt die Bilder im Hintergrund herunter.",
+        "store_failed": "Speichern auf dem Companion-Server fehlgeschlagen ({{error}}). Das Spiel wurde nur auf diesem Gerät gespeichert."
       },
       "mode_shared_device": "Ein Gerät für alle",
       "mode_shared_device_hint": "Reihum weitergeben – Handkarten bleiben beim Wechsel verdeckt.",
