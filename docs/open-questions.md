@@ -14,11 +14,6 @@ Resolve: migrate to `useMultiChannelSync` or document Melodiq TV sync as an expl
 **[user]** The repo root contains `config.example.json` with an `ssl` block, and README step 2 says `cp config.example.json config.json`. The companion server has no TLS support any more (removed in the backend simplification, see [archive](archive/backend-simplification/03-remove-ssl-generator.md)), looks for `config.json` in `CONFIG_PATH`, the working directory or next to the executable, and ships its own `server/config.example.json`.
 Resolve: delete the root example and point README to `server/config.example.json`.
 
-## Q6 — Dead translation files
-
-`src/i18n/locales/{de,en}/imposter.json` are tracked but imported nowhere (Imposter strings come from `public/locales/*/translation.json`).
-Resolve: delete them, or wire them up if they hold newer strings.
-
 ## Q7 — Scaffolder generates a `gameManifest.ts` pattern no game uses
 
 `scripts/scaffold-game.mjs` writes `src/games/<id>/gameManifest.ts`, `tests/<id>.test.ts` and a `hooks/use<Game>State.ts`, then patches `src/lib/gameRegistry.tsx`. None of the 15 existing games has a `gameManifest.ts`; the registry is a hand-written array. **Unverified:** whether the registry patch step still matches the current file layout.
@@ -42,6 +37,10 @@ ADR-0004 says "Demucs via PyTorch". `server/src/plugins/melodiq/services/separat
 
 `DELETE /api/tabletop/games/:id` (`server/src/plugins/tabletop/routes/library.ts`) checks the song-oriented `allowSongDeletion` flag; the admin UI labels it `server.admin.perm_delete`, so a key meant for song deletion can also delete saved games. A separate `allowTabletopGameDeletion` flag would need a config migration and an admin-UI entry (#687 left it unchanged).
 Resolve: decide whether the generic "deletion" flag is intended (then rename the flag/label in docs and UI) or add a dedicated flag. See [server-security](tech/server-security.md).
+
+## Resolved 2026-11-15
+
+- Q6 dead `imposter.json` locale files → maintainer decision (2026-11-15): deleted. They held a legacy word/hint list (1066 keys per language) superseded by `src/games/imposter/logic/wordPairs_{de,en}.ts`; none of the keys is referenced.
 
 ## Resolved 2026-11-08
 
