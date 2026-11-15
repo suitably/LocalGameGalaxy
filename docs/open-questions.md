@@ -28,13 +28,9 @@ Resolve: measure on a real mid-range phone (manual). If p95 stays above 16 ms th
 
 ADR-0004 says "Demucs via PyTorch". `server/src/plugins/melodiq/services/separator.ts` runs `audio-separator[cpu]` with model `UVR-MDX-NET-Inst_HQ_3.onnx` and aligns lyrics with `whisper-timestamped` (`server/src/scripts/align_lyrics.py`). The ADR now carries a note; a superseding ADR is a maintainer decision.
 
-## Q22 — Deleting a saved tabletop game reuses `allowSongDeletion`
-
-`DELETE /api/tabletop/games/:id` (`server/src/plugins/tabletop/routes/library.ts`) checks the song-oriented `allowSongDeletion` flag; the admin UI labels it `server.admin.perm_delete`, so a key meant for song deletion can also delete saved games. A separate `allowTabletopGameDeletion` flag would need a config migration and an admin-UI entry (#687 left it unchanged).
-Resolve: decide whether the generic "deletion" flag is intended (then rename the flag/label in docs and UI) or add a dedicated flag. See [server-security](tech/server-security.md).
-
 ## Resolved 2026-11-15
 
+- Q22 deleting a saved tabletop game → maintainer decision (2026-11-15): a dedicated API key flag `allowTabletopGameDeletion`; keys from older configs get their `allowSongDeletion` value on load, so nothing changes for existing installs. [server-security](tech/server-security.md)
 - Q5 root `config.example.json` → maintainer decision (2026-11-15): deleted; README step 2 copies `server/config.example.json`. [secrets-management](tech/secrets-management.md)
 
 ## Resolved 2026-11-08
