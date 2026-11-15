@@ -1,8 +1,6 @@
 import type { KnisterAction, KnisterPlayer, KnisterState, KnisterMoveHistoryEntry } from './types';
 import { createEmptyGrid, calculateBoardScores } from './knisterScoring';
-import { storage } from '../../../lib/storage';
-
-const STORAGE_KEY_KNISTER_HIGHSCORE = 'knister_highscore';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 
 export const INITIAL_PLAYER: KnisterPlayer = {
   id: 'p1',
@@ -20,7 +18,7 @@ export const INITIAL_KNISTER_STATE: KnisterState = {
   moveHistory: [],
   isRolling: false,
   isGameOver: false,
-  highScore: Number(storage.get(STORAGE_KEY_KNISTER_HIGHSCORE, '0')) || 0,
+  highScore: Number(storage.get(STORAGE_KEYS.KNISTER_HIGHSCORE, '0')) || 0,
 };
 
 export function knisterReducer(state: KnisterState, action: KnisterAction): KnisterState {
@@ -53,7 +51,9 @@ export function knisterReducer(state: KnisterState, action: KnisterAction): Knis
       if (player.grid[action.row][action.col] !== null) return state;
 
       const newGrid = player.grid.map((rowArr, rIdx) =>
-        rowArr.map((cell, cIdx) => (rIdx === action.row && cIdx === action.col ? valToPlace : cell)),
+        rowArr.map((cell, cIdx) =>
+          rIdx === action.row && cIdx === action.col ? valToPlace : cell,
+        ),
       );
 
       // Count filled cells
@@ -75,12 +75,8 @@ export function knisterReducer(state: KnisterState, action: KnisterAction): Knis
 
       const hadVirtualRoll = state.currentRoll !== null;
       const newRollCount = hadVirtualRoll ? state.rollCount : state.rollCount + 1;
-      const rollEntry = hadVirtualRoll
-        ? state.currentRoll!
-        : { die1: 0, die2: 0, sum: valToPlace };
-      const newRollHistory = hadVirtualRoll
-        ? state.rollHistory
-        : [rollEntry, ...state.rollHistory];
+      const rollEntry = hadVirtualRoll ? state.currentRoll! : { die1: 0, die2: 0, sum: valToPlace };
+      const newRollHistory = hadVirtualRoll ? state.rollHistory : [rollEntry, ...state.rollHistory];
 
       const moveEntry: KnisterMoveHistoryEntry = {
         row: action.row,
@@ -98,7 +94,7 @@ export function knisterReducer(state: KnisterState, action: KnisterAction): Knis
           const score = calculateBoardScores(p.grid).totalScore;
           if (score > newHighScore) {
             newHighScore = score;
-            storage.set(STORAGE_KEY_KNISTER_HIGHSCORE, String(score));
+            storage.set(STORAGE_KEYS.KNISTER_HIGHSCORE, String(score));
           }
         }
       }
@@ -136,7 +132,8 @@ export function knisterReducer(state: KnisterState, action: KnisterAction): Knis
       updatedPlayers[playerIndex] = updatedPlayer;
 
       const restoredRoll = lastMove.previousRoll;
-      const newRollCount = restoredRoll !== null ? state.rollCount : Math.max(0, state.rollCount - 1);
+      const newRollCount =
+        restoredRoll !== null ? state.rollCount : Math.max(0, state.rollCount - 1);
       const newRollHistory = restoredRoll !== null ? state.rollHistory : state.rollHistory.slice(1);
 
       return {
@@ -200,4 +197,3 @@ export function knisterReducer(state: KnisterState, action: KnisterAction): Knis
       return state;
   }
 }
-

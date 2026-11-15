@@ -1,0 +1,1 @@
+- **Obsolete root `config.example.json`**: removed. It still had an `ssl` block although the companion server no longer supports TLS. Copy `server/config.example.json` to `server/config.json` instead (README step 2).

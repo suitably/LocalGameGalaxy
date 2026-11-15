@@ -9,11 +9,6 @@ Found by the [2026-10-18 docs-vs-code audit](reports/2026-10-18-docs-vs-code-aud
 The anti-pattern matrix forbids inline `BroadcastChannel` sync in games, but Melodiq creates channels directly in `hooks/useTVMode.ts`, `hooks/useTVReceiver.ts`, `hooks/SettingsContext.tsx`, `gameplay/hooks/useSessionEnd.ts` (channel `melodiq_tv_control`) and `hooks/useQueue.ts` (queue sync). `check-architecture.mjs` does not check this rule.
 Resolve: migrate to `useMultiChannelSync` or document Melodiq TV sync as an explicit exception.
 
-## Q5 — Root `config.example.json` is obsolete
-
-**[user]** The repo root contains `config.example.json` with an `ssl` block, and README step 2 says `cp config.example.json config.json`. The companion server has no TLS support any more (removed in the backend simplification, see [archive](archive/backend-simplification/03-remove-ssl-generator.md)), looks for `config.json` in `CONFIG_PATH`, the working directory or next to the executable, and ships its own `server/config.example.json`.
-Resolve: delete the root example and point README to `server/config.example.json`.
-
 ## Q7 — Scaffolder generates a `gameManifest.ts` pattern no game uses
 
 `scripts/scaffold-game.mjs` writes `src/games/<id>/gameManifest.ts`, `tests/<id>.test.ts` and a `hooks/use<Game>State.ts`, then patches `src/lib/gameRegistry.tsx`. None of the 15 existing games has a `gameManifest.ts`; the registry is a hand-written array. **Unverified:** whether the registry patch step still matches the current file layout.
@@ -23,11 +18,6 @@ Resolve: run the scaffolder in a scratch branch; either align it with the existi
 
 TTS plan D5: optimise the DOM renderer, measure at 800 widgets, and consider a Canvas renderer only if p95 stays above 16 ms. After #684 (`npm run perf:tabletop`, headless Chromium in a 4-vCPU cloud container): a token drag reaches p95 16.7 ms unthrottled (`main`: 100–150 ms), but 50–67 ms at 4× CPU throttling (`main`: 580–750 ms); panning stays at 16.8 ms. The acceptance criterion names a real mid-range phone, and the 4× emulation is only an approximation of one.
 Resolve: measure on a real mid-range phone (manual). If p95 stays above 16 ms there, the maintainer decides between further DOM work (remaining cost: re-rendering the whole table tree on each 50 ms commit, layout of ~5,500 layout objects per commit, layerization) and the Canvas renderer of D5.
-
-## Q8 — Game-local storage keys bypass the `STORAGE_KEYS` registry
-
-Rule: every key is registered in `STORAGE_KEYS`. Reality: qwixx, knister, kniffel, guessart, storyteller and cards define local key strings (list in [game-catalog §2](tech/game-catalog.md#2-persistence)). Several registered keys are therefore **never referenced**: `CARDS_LOBBY_PLAYERS`, `QWIXX_MY_SHEET`, `QWIXX_SHOW_DICE`, `KNISTER_CURRENT_GAME`, `KNISTER_SHOW_DICE`, `EXCALIDRAW_DRAWING`. The architecture check only catches raw `localStorage.` calls, not unregistered keys.
-Resolve: replace local constants with the registry entries (same string values, so no data migration), add the missing ones (kniffel, guessart, storyteller), drop unused entries.
 
 ## Q13 — ADR-0004 no longer matches the separation stack
 
@@ -40,6 +30,7 @@ Resolve: decide whether the generic "deletion" flag is intended (then rename the
 
 ## Resolved 2026-11-15
 
+- Q5 root `config.example.json` → maintainer decision (2026-11-15): deleted; README step 2 copies `server/config.example.json`. [secrets-management](tech/secrets-management.md)
 - Q6 dead `imposter.json` locale files → maintainer decision (2026-11-15): deleted. They held a legacy word/hint list (1066 keys per language) superseded by `src/games/imposter/logic/wordPairs_{de,en}.ts`; none of the keys is referenced.
 
 ## Resolved 2026-11-08
