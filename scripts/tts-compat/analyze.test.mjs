@@ -53,6 +53,8 @@ test('fixture: parsed by the real importer, tier A, scripts and hosts reported',
     assert.equal(r.scripts.objects, 1);
     assert.ok(r.scripts.calls.includes('Wait.time'));
     assert.deepEqual(r.projection, { B: false, C: true });
+    // Global `self.createButton` has no object to sit on and `dealCards` calls Wait.time.
+    assert.deepEqual(r.scripts.buttons, { total: 1, translated: 0 });
   } finally {
     parser.cleanup();
   }
@@ -111,4 +113,17 @@ test('aggregate and regressions', () => {
   assert.equal(agg.perTier.none, 1);
   assert.deepEqual(agg.topCalls[0], { name: 'shuffle', mods: 2 });
   assert.deepEqual(tierRegressions({ x: 'B', y: 'A' }, { x: 'A', y: 'A', z: 'none' }), ['x']);
+});
+
+test('aggregate: setup-button coverage across mods (#704)', () => {
+  const mod = (total, translated) => ({
+    tier: 'A',
+    scripts: { calls: [], events: [], buttons: { total, translated } },
+  });
+  assert.deepEqual(aggregate([mod(3, 2), mod(1, 1)]).buttons, {
+    total: 4,
+    translated: 3,
+    ratio: 0.75,
+  });
+  assert.equal(aggregate([mod(0, 0)]).buttons.ratio, null);
 });

@@ -86,4 +86,4 @@ Docs whose content checked out (only links/front matter fixed): `webrtc-signalin
 
 ## 5. Code findings that are not documentation problems
 
-Listed in [open-questions.md](../open-questions.md): broken release job (Q1), `any` debt (Q3), Melodiq inline `BroadcastChannel` (Q4), dead `imposter.json` (Q6), scaffolder drift (Q7), unregistered/unused storage keys (Q8), stale budget baseline (Q9), Node 20 in Dockerfile (Q10), tracked 63.7 MB model (Q11), CHANGELOG merge artefacts (Q12).
+Listed in [open-questions.md](../open-questions.md): broken release job (Q1), `any` debt (Q3), Melodiq inline `BroadcastChannel` (Q4), scaffolder drift (Q7), unregistered/unused storage keys (Q8), stale budget baseline (Q9), Node 20 in Dockerfile (Q10), tracked 63.7 MB model (Q11), CHANGELOG merge artefacts (Q12).

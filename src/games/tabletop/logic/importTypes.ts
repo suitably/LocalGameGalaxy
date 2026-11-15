@@ -19,6 +19,22 @@ export interface ImportReport {
   imageHosts: Record<string, number>;
   /** Result of caching the images on this device at import (#693); absent before it ran. */
   assets?: AssetCacheSummary;
+  /** Setup buttons found in the Lua scripts and how many got a routine (#704). */
+  buttons?: { total: number; translated: number };
+  /** Script functions the Lua translator left out, with the reason (#704). */
+  untranslated?: UntranslatedScriptFunction[];
+}
+
+/**
+ * One script function the static Lua translator did not translate. `owner` is `global` or the
+ * TTS GUID of the object script; `fn` is `*` for a whole script. `reason` is the first call or
+ * statement it could not map (`Wait.time`, `if`, …) or one of `event`, `dynamic`, `missing`,
+ * `click_function`, `no_owner`, `too_many_steps`, `invalid_routine`, `parse_error`.
+ */
+export interface UntranslatedScriptFunction {
+  owner: string;
+  fn: string;
+  reason: string;
 }
 
 /** Summary of one per-device image cache run (`logic/assetCache.ts`). */

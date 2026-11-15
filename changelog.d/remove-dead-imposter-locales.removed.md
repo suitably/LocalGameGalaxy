@@ -1,0 +1,1 @@
+- Removed the unused `src/i18n/locales/{de,en}/imposter.json` files (legacy Imposter word lists that no code imported).
