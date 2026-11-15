@@ -11,7 +11,10 @@ import { transitionOf } from '../../../lib/motion';
 interface QwixxLockButtonProps {
   color: RowColor;
   isLocked: boolean;
+  /** Locked by crossing the lock number (+1 cross); otherwise closed by another player. */
+  hasBonus: boolean;
   canLock: boolean;
+  disabled?: boolean;
   onLock: () => void;
   onUnlock: () => void;
 }
@@ -19,22 +22,30 @@ interface QwixxLockButtonProps {
 export const QwixxLockButton: React.FC<QwixxLockButtonProps> = ({
   color,
   isLocked,
+  hasBonus,
   canLock,
+  disabled = false,
   onLock,
   onUnlock,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
   const tone = getRowTone(theme, color);
-  const active = isLocked || canLock;
+  // Always tappable: a row another player closed is closed here too, just without the bonus.
+  const highlighted = isLocked || canLock;
+  const label = isLocked
+    ? t('common.a11y.unlock_row', 'Unlock row')
+    : canLock
+      ? t('common.a11y.lock_row', 'Lock row')
+      : t('games.qwixx.close_row_by_other', 'Close row (closed by another player, no point)');
+  const lockedBorder = hasBonus ? `2px solid ${tone.ink}` : `2px dashed ${tone.ink}`;
 
   return (
     <ButtonBase
       onClick={isLocked ? onUnlock : onLock}
-      disabled={!active}
-      aria-label={
-        isLocked ? t('common.a11y.unlock_row', 'Unlock row') : t('common.a11y.lock_row', 'Lock row')
-      }
+      disabled={disabled}
+      aria-label={label}
+      title={label}
       sx={{
         // Phones: shares the row width like the cells, so it is a rounded slot, not a circle.
         flex: { xs: 1, sm: 'none' },
@@ -43,12 +54,12 @@ export const QwixxLockButton: React.FC<QwixxLockButtonProps> = ({
         maxWidth: { xs: 48, sm: 'none' },
         height: { xs: 48, sm: 40, md: 48 },
         borderRadius: { xs: 2, sm: '50%' },
-        bgcolor: active ? tone.button : tone.muted,
-        color: active ? tone.ink : alpha(tone.ink, 0.5),
+        bgcolor: highlighted ? tone.button : tone.muted,
+        color: highlighted ? tone.ink : alpha(tone.ink, 0.5),
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        border: isLocked ? `2px solid ${tone.ink}` : 'none',
+        border: isLocked ? lockedBorder : 'none',
         transition: transitionOf(['background-color', 'color', 'border-color']),
         animation: canLock ? 'qwixxLockPulse 1.5s infinite' : 'none',
         '@keyframes qwixxLockPulse': {

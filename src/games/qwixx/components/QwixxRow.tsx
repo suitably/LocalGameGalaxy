@@ -3,7 +3,7 @@ import { Box, Paper, useMediaQuery } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import StarIcon from '@mui/icons-material/StarRounded';
 import type { RowColor, RowState, SheetRowDefinition, QwixxSheetType } from '../logic/types';
-import { getRowCrossCount } from '../logic/qwixxReducer';
+import { getRowCrossCount, hasLockBonus } from '../logic/qwixxReducer';
 import { buildRowSegments, isCellClickable, splitSegmentsIntoLines } from '../logic/rowLayout';
 import { QwixxCell } from './QwixxCell';
 import { QwixxLockButton } from './QwixxLockButton';
@@ -145,6 +145,8 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
                     <QwixxLockButton
                       color={seg.color}
                       isLocked={rowState.isLocked}
+                      hasBonus={hasLockBonus(rowDef, rowState)}
+                      disabled={disabled}
                       canLock={canLock}
                       onLock={() => onLockRow(color)}
                       onUnlock={() => onUnlockRow(color)}
