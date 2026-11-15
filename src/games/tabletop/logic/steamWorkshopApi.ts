@@ -231,13 +231,16 @@ export async function fetchWorkshopDetails(
 }
 
 /**
- * Triggers server-side download of a workshop mod and returns the raw game data.
+ * Fetches a workshop mod through the companion server (Path A). The companion only fetches the
+ * save file (JSON or BSON) and stores nothing (TTS plan D4, #702); decoding and conversion run
+ * here exactly as for the browser download, so companion import equals browser import.
+ * Older servers answer `{ rawJson }` (JSON saves only); that shape is still read.
  */
 export async function downloadWorkshopMod(
   workshopId: string,
   serverBaseUrl: string,
   token?: string,
-): Promise<{ id: string; rawJson: string; assetMap: Record<string, string> }> {
+): Promise<TTSSaveFile> {
   const headers: Record<string, string> = {};
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -254,7 +257,24 @@ export async function downloadWorkshopMod(
     throw new WorkshopError('http', res.status);
   }
 
-  return (await res.json()) as { id: string; rawJson: string; assetMap: Record<string, string> };
+  if (res.headers.get('content-type')?.includes('application/json')) {
+    const legacy = (await res.json()) as { rawJson?: unknown };
+    if (typeof legacy.rawJson !== 'string') throw new WorkshopError('invalid_file');
+    return decodeTtsSave(new TextEncoder().encode(legacy.rawJson).buffer);
+  }
+  return decodeTtsSave(await res.arrayBuffer());
+}
+
+/** Decodes a downloaded save (JSON or BSON) and checks that it is a TTS save. */
+export function decodeTtsSave(buffer: ArrayBuffer): TTSSaveFile {
+  let decoded: unknown;
+  try {
+    decoded = decodeModBuffer(buffer);
+  } catch {
+    throw new WorkshopError('invalid_file');
+  }
+  if (!isTtsSaveFile(decoded)) throw new WorkshopError('invalid_file');
+  return decoded;
 }
 
 /**
@@ -307,12 +327,5 @@ export async function downloadWorkshopModDirect(fileUrl: string): Promise<TTSSav
   if (!res.ok) {
     throw new WorkshopError('download_failed', res.status);
   }
-  let decoded: unknown;
-  try {
-    decoded = decodeModBuffer(await res.arrayBuffer());
-  } catch {
-    throw new WorkshopError('invalid_file');
-  }
-  if (!isTtsSaveFile(decoded)) throw new WorkshopError('invalid_file');
-  return decoded;
+  return decodeTtsSave(await res.arrayBuffer());
 }

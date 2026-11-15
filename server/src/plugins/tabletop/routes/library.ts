@@ -7,6 +7,7 @@ import { cleanUploadName } from '../../../utils/scoreFiles';
 import {
   getGameCache,
   isSavedGame,
+  keepPrivate,
   parseGameFile,
   removeGameFromCache,
   savedGamesRoot,
@@ -43,7 +44,7 @@ export function parseGameBody(body: unknown): { json: string; name: string } | s
 }
 
 /** Writes the JSON and indexes it; a file the scanner does not recognise as a game is removed again. */
-async function writeGame(jsonPath: string, json: string): Promise<TabletopGameEntry | null> {
+export async function writeGame(jsonPath: string, json: string): Promise<TabletopGameEntry | null> {
   await fs.promises.mkdir(path.dirname(jsonPath), { recursive: true });
   await fs.promises.writeFile(jsonPath, json, 'utf-8');
   const entry = await parseGameFile(jsonPath);
@@ -51,7 +52,7 @@ async function writeGame(jsonPath: string, json: string): Promise<TabletopGameEn
   return entry;
 }
 
-function ensureScanned(): void {
+export function ensureScanned(): void {
   // a save folder that is not configured yet becomes the first tabletop directory
   if (serverConfig.tabletopDirectories.length === 0) {
     fs.mkdirSync(serverConfig.tabletopSaveRoot, { recursive: true });
@@ -96,7 +97,8 @@ tabletopLibraryRouter.put('/api/tabletop/games/:id', async (c) => {
   if (typeof parsed === 'string') return c.json({ error: parsed }, 400);
   const previous = await fs.promises.readFile(entry.jsonPath, 'utf-8').catch(() => null);
   try {
-    const updated = await writeGame(entry.jsonPath, parsed.json);
+    const json = entry.private ? keepPrivate(parsed.json) : parsed.json;
+    const updated = await writeGame(entry.jsonPath, json);
     if (!updated) {
       if (previous !== null) await writeGame(entry.jsonPath, previous);
       return c.json({ error: 'Not a recognised tabletop game definition' }, 400);

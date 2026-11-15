@@ -43,7 +43,7 @@ export type CachedAsset =
   | { url: string; status: 'ok'; blob: Blob; host: string; fetchedAt: number }
   | { url: string; status: 'failed'; host: string; fetchedAt: number; reason: string };
 
-export type FetchRoute = 'direct' | 'worker' | 'companion';
+export type FetchRoute = 'stored' | 'direct' | 'worker' | 'companion';
 
 export interface FetchCandidate {
   via: FetchRoute;
@@ -95,17 +95,26 @@ export function collectGameImageUrls(game: Pick<TabletopGameDefinition, 'widgets
   return [...urls];
 }
 
-/** Routes to try for one URL, in order (D2). */
+/**
+ * Routes to try for one URL, in order (D2): the active companion's stored copy first (images of
+ * Workshop games it stores, #702), then direct, the Worker and the companion's proxy.
+ */
 export function fetchCandidates(url: string, proxy: ProxyConfig): FetchCandidate[] {
-  const out: FetchCandidate[] = [{ via: 'direct', url }];
+  const base = proxy.companion?.baseUrl?.replace(/\/$/, '');
+  const token = proxy.companion?.token ? `&token=${encodeURIComponent(proxy.companion.token)}` : '';
+  const out: FetchCandidate[] = base
+    ? [
+        {
+          via: 'stored',
+          url: `${base}/tabletop/stored-asset?url=${encodeURIComponent(url)}${token}`,
+        },
+      ]
+    : [];
+  out.push({ via: 'direct', url });
   if (!isProxyImageHost(hostOf(url))) return out;
   if (proxy.worker)
     out.push({ via: 'worker', url: `/api/steam/image?url=${encodeURIComponent(url)}` });
-  if (proxy.companion?.baseUrl) {
-    const base = proxy.companion.baseUrl.replace(/\/$/, '');
-    const token = proxy.companion.token
-      ? `&token=${encodeURIComponent(proxy.companion.token)}`
-      : '';
+  if (base) {
     out.push({
       via: 'companion',
       url: `${base}/tabletop/proxy-image?url=${encodeURIComponent(url)}${token}`,

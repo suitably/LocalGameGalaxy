@@ -824,6 +824,7 @@ export function parseTtsSaveFile(
     ...(Object.keys(scriptZones).length > 0 ? { scriptZones } : {}),
     importReport: { ...buildImportReport(save, sanitizeTtsUrl), ...luaReport },
     scripts,
+    format: 'tts-workshop',
   });
 }
 

@@ -319,8 +319,15 @@ export type {
   UntranslatedScriptFunction,
 } from './importTypes';
 
+/** Source format of a game; `tts-workshop` marks third-party Tabletop Simulator content (D4). */
+export type TabletopGameFormat = 'flat-json' | 'pcio-folder' | 'tts-workshop' | 'unknown';
+
 export interface TabletopGameDefinition extends TabletopGameMetadata {
   version: string;
+  /** Set by the TTS importer; such games never leave the device as published content. */
+  format?: TabletopGameFormat;
+  /** Companion copy of an imported third-party game: private to that server (D4). */
+  companionPrivate?: boolean;
   minPlayers: number;
   maxPlayers: number;
   supportedModes: TabletopPlayMode[];
@@ -343,7 +350,7 @@ export interface TabletopGameSummary extends TabletopGameMetadata {
   cardCount: number;
   widgetCount: number;
   updatedAt: number;
-  format?: 'flat-json' | 'pcio-folder' | 'tts-workshop' | 'unknown';
+  format?: TabletopGameFormat;
   /** Listed by the companion server and saved from the app there, so it can be changed. */
   serverSaved?: boolean;
 }

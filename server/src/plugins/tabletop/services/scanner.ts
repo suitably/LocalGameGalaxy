@@ -89,7 +89,7 @@ export async function parseGameFile(jsonPath: string): Promise<TabletopGameEntry
         }
       }
     }
-    format = 'pcio-folder';
+    format = parsed.format === 'tts-workshop' ? 'tts-workshop' : 'pcio-folder';
   } else if (typeof parsed.SaveName === 'string' && Array.isArray(parsed.ObjectStates)) {
     format = 'tts-workshop';
     parsed.name = parsed.SaveName; // so fallback logic uses it
@@ -198,7 +198,19 @@ export async function parseGameFile(jsonPath: string): Promise<TabletopGameEntry
     jsonPath,
     assetsDir,
     updatedAt,
+    ...(format === 'tts-workshop' || parsed.companionPrivate === true ? { private: true } : {}),
   };
+}
+
+/**
+ * A private game stays private (TTS plan D4): an overwrite cannot drop `companionPrivate`.
+ * `json` is the pretty-printed game object from `parseGameBody`.
+ */
+export function keepPrivate(json: string): string {
+  const game = JSON.parse(json) as Record<string, unknown>;
+  return game.companionPrivate === true
+    ? json
+    : JSON.stringify({ ...game, companionPrivate: true }, null, 2);
 }
 
 /**

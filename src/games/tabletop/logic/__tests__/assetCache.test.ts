@@ -28,27 +28,33 @@ describe('image host allow-list', () => {
   });
 });
 
-describe('fetchCandidates (D2: direct, Worker, companion)', () => {
-  it('tries direct, then Worker, then companion with token for allow-listed hosts', () => {
+describe('fetchCandidates (D2: stored copy, direct, Worker, companion)', () => {
+  it('tries the stored copy, direct, Worker, then companion with token for allow-listed hosts', () => {
     const url = 'https://i.imgur.com/a.png';
     const c = fetchCandidates(url, {
       worker: true,
       companion: { baseUrl: 'http://pc:3000/', token: 't k' },
     });
-    expect(c.map((x) => x.via)).toEqual(['direct', 'worker', 'companion']);
-    expect(c[0].url).toBe(url);
-    expect(c[1].url).toBe(`/api/steam/image?url=${encodeURIComponent(url)}`);
-    expect(c[2].url).toBe(
+    expect(c.map((x) => x.via)).toEqual(['stored', 'direct', 'worker', 'companion']);
+    expect(c[0].url).toBe(
+      `http://pc:3000/tabletop/stored-asset?url=${encodeURIComponent(url)}&token=t%20k`,
+    );
+    expect(c[1].url).toBe(url);
+    expect(c[2].url).toBe(`/api/steam/image?url=${encodeURIComponent(url)}`);
+    expect(c[3].url).toBe(
       `http://pc:3000/tabletop/proxy-image?url=${encodeURIComponent(url)}&token=t%20k`,
     );
   });
 
-  it('never proxies hosts outside the allow-list', () => {
+  it('never proxies hosts outside the allow-list, but asks for a stored copy', () => {
     const c = fetchCandidates('https://example.com/a.png', {
       worker: true,
       companion: { baseUrl: 'http://pc:3000' },
     });
-    expect(c.map((x) => x.via)).toEqual(['direct']);
+    expect(c.map((x) => x.via)).toEqual(['stored', 'direct']);
+    expect(
+      fetchCandidates('https://example.com/a.png', { worker: true }).map((x) => x.via),
+    ).toEqual(['direct']);
   });
 });
 

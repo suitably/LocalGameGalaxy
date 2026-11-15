@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { BSON } from 'bson';
 import {
+  downloadWorkshopMod,
   downloadWorkshopModDirect,
   fetchWorkshopDetails,
   isBlockedMixedContent,
@@ -107,5 +108,31 @@ describe('steamWorkshopApi companion diagnostics', () => {
     expect(
       await failureOf(fetchWorkshopDetails('1', 'http://localhost:3000', undefined, false)),
     ).toBe('metadata_unavailable');
+  });
+});
+
+describe('steamWorkshopApi companion download (Path A, #702)', () => {
+  afterEach(() => vi.restoreAllMocks());
+  const SERVER = 'http://localhost:3000';
+
+  it('decodes a BSON save the companion passes through, like the browser path', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(new Uint8Array(BSON.serialize(sampleSave)), {
+        headers: { 'content-type': 'application/octet-stream' },
+      }),
+    );
+    expect((await downloadWorkshopMod('1', SERVER, 't')).SaveName).toBe('Testspiel');
+  });
+
+  it('still reads the { rawJson } answer of older servers', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      Response.json({ id: 'x', rawJson: JSON.stringify(sampleSave), assetMap: {} }),
+    );
+    expect((await downloadWorkshopMod('1', SERVER)).SaveName).toBe('Testspiel');
+  });
+
+  it('rejects files that are not TTS saves', async () => {
+    respond('{"hello":"world"}');
+    expect(await codeOf(downloadWorkshopMod('1', SERVER))).toBe('invalid_file');
   });
 });

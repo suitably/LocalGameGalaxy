@@ -21,6 +21,7 @@ import { useWorkshopImport } from '../../hooks/useWorkshopImport';
 import { isValidWorkshopInput } from '../../logic/steamWorkshopApi';
 import { WorkshopMetaPreview } from './WorkshopMetaPreview';
 import { ImportReportView } from './ImportReportView';
+import { WorkshopRightsNotice } from './WorkshopRightsNotice';
 
 interface ImportWorkshopDialogProps {
   open: boolean;
@@ -36,8 +37,19 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
   const { t } = useTranslation();
   const [url, setUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { status, meta, game, error, progress, loadMeta, importViaServer, importFromFile, reset } =
-    useWorkshopImport();
+  const {
+    status,
+    meta,
+    game,
+    error,
+    progress,
+    storedOnServer,
+    serverError,
+    loadMeta,
+    importViaServer,
+    importFromFile,
+    reset,
+  } = useWorkshopImport();
 
   const handleClose = () => {
     reset();
@@ -56,11 +68,13 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
     if (file) importFromFile(file);
   };
 
-  const isLoading =
-    status === 'loading_meta' ||
-    status === 'downloading' ||
-    status === 'parsing' ||
-    status === 'caching';
+  const busyText: Partial<Record<typeof status, string>> = {
+    loading_meta: t('games.tabletop.workshop_loading_meta', 'Lade Mod-Informationen...'),
+    downloading: t('games.tabletop.workshop_downloading', 'Mod wird heruntergeladen...'),
+    parsing: t('games.tabletop.workshop_parsing', 'Spiel wird konvertiert...'),
+    storing: t('games.tabletop.workshop.storing'),
+  };
+  const isLoading = status in busyText || status === 'caching';
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -111,30 +125,10 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
           ) : null}
 
           {/* Loading States */}
-          {status === 'loading_meta' && (
+          {busyText[status] && (
             <Box display="flex" alignItems="center" gap={1.5}>
               <CircularProgress size={20} />
-              <Typography variant="body2">
-                {t('games.tabletop.workshop_loading_meta', 'Lade Mod-Informationen...')}
-              </Typography>
-            </Box>
-          )}
-
-          {status === 'downloading' && (
-            <Box display="flex" alignItems="center" gap={1.5}>
-              <CircularProgress size={20} />
-              <Typography variant="body2">
-                {t('games.tabletop.workshop_downloading', 'Mod wird heruntergeladen...')}
-              </Typography>
-            </Box>
-          )}
-
-          {status === 'parsing' && (
-            <Box display="flex" alignItems="center" gap={1.5}>
-              <CircularProgress size={20} />
-              <Typography variant="body2">
-                {t('games.tabletop.workshop_parsing', 'Spiel wird konvertiert...')}
-              </Typography>
+              <Typography variant="body2">{busyText[status]}</Typography>
             </Box>
           )}
 
@@ -158,9 +152,15 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
 
           {/* Meta Preview */}
           {meta &&
-            (status === 'meta_loaded' || status === 'downloading' || status === 'parsing') && (
-              <WorkshopMetaPreview meta={meta} />
-            )}
+            (status === 'meta_loaded' ||
+              status === 'downloading' ||
+              status === 'parsing' ||
+              status === 'storing') && <WorkshopMetaPreview meta={meta} />}
+
+          {/* Source, author and rights (D4): for every import, before and after it runs */}
+          {(meta || game?.format === 'tts-workshop') && (
+            <WorkshopRightsNotice workshopId={meta?.id} creatorId={meta?.creatorId} />
+          )}
 
           {/* Import Button */}
           {status === 'meta_loaded' && meta?.fileUrl && (
@@ -205,6 +205,15 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
               {t('games.tabletop.workshop_success', '„{{name}}" erfolgreich importiert!', {
                 name: game.name,
               })}
+            </Alert>
+          )}
+
+          {status === 'success' && storedOnServer && (
+            <Alert severity="info">{t('games.tabletop.workshop.stored_on_server')}</Alert>
+          )}
+          {status === 'success' && serverError && (
+            <Alert severity="warning">
+              {t('games.tabletop.workshop.store_failed', { error: serverError })}
             </Alert>
           )}
 

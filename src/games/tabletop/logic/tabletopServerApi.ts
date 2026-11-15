@@ -6,7 +6,7 @@ import { getHelperUrl } from '../../../lib/companion/companionSettings';
 import { validateAndSanitizeGame, type RawTabletopGameInput } from './gameValidator';
 import { parsePcioFile } from './pcioParser';
 import { prepareGameForServer } from './serverGameSnapshot';
-import type { TabletopGameDefinition } from './types';
+import type { TabletopGameDefinition, TabletopGameFormat } from './types';
 
 export interface ServerGameEntry {
   id: string;
@@ -15,8 +15,10 @@ export interface ServerGameEntry {
   description?: string;
   widgetCount: number;
   cardCount: number;
-  format?: 'flat-json' | 'pcio-folder' | 'tts-workshop' | 'unknown';
+  format?: TabletopGameFormat;
   updatedAt: number;
+  /** Third-party import kept private to this server (#702); older servers omit it. */
+  private?: boolean;
   /** Saved from the app, so it can be overwritten and deleted (older servers omit it). */
   saved?: boolean;
 }
@@ -75,6 +77,22 @@ export async function saveGameOnServer(
   return companionRequest<ServerGameEntry>(
     serverId ? `/api/tabletop/games/${encodeURIComponent(serverId)}` : '/api/tabletop/games',
     jsonBody(serverId ? 'PUT' : 'POST', { game: prepared }),
+  );
+}
+
+/**
+ * Stores an imported Workshop game in the companion library for everyone who uses that
+ * companion; the companion downloads its images (#702, maintainer decision 2026-11-15).
+ * A re-import of the same Workshop item overwrites the stored game.
+ */
+export async function storeWorkshopGameOnServer(
+  workshopId: string,
+  game: TabletopGameDefinition,
+): Promise<ServerGameEntry> {
+  const prepared = await prepareGameForServer(game, getHelperUrl());
+  return companionRequest<ServerGameEntry>(
+    `/api/tabletop/workshop/${encodeURIComponent(workshopId)}/import`,
+    jsonBody('POST', { game: prepared }),
   );
 }
 
