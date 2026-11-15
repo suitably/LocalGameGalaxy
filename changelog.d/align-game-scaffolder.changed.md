@@ -1,0 +1,1 @@
+- **Game scaffolder follows the real game pattern** (Q7): `scripts/scaffold-game.mjs` generates `logic/` with tests, `hooks/use<Game>State.ts`, a registered storage key, locale keys and a `gameRegistry.tsx` entry instead of a `gameManifest.ts`, and supports `--dry-run`.

@@ -618,6 +618,13 @@
           "practise": "Practise {{section}}",
           "again": "Again"
         },
+        "leaderboard": {
+          "title": "Best results for this song",
+          "rank": "#",
+          "player": "Player",
+          "new_best": "New best",
+          "not_counted": "Only a full run in perform mode at full speed counts for the leaderboard."
+        },
         "timeline": "Timeline",
         "lead_in": "Lead-in",
         "lead_in_seconds": "{{count}} s before",
@@ -1717,6 +1724,7 @@
       "perm_delete": "Delete Songs",
       "perm_tabletop_saves": "Store save games on the server (Tabletop)",
       "perm_tabletop_templates": "Change default game templates (Tabletop)",
+      "perm_tabletop_delete": "Delete saved games on the server (Tabletop)",
       "perm_readonly": "Read Only",
       "perm_desc": "Permissions control what this key is allowed to do on your server.",
       "perm_readonly_desc": "Read-Only Mode: Can search songs, stream audio/video, and sing, but cannot delete files or modify server settings.",

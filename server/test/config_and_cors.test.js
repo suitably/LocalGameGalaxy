@@ -18,11 +18,11 @@ test('Server Config - Environment Variables & Directory Discovery', async (t) =>
     assert.strictEqual(config.token, testToken, 'Token should match SECURITY_TOKEN env variable');
     assert.ok(
       config.directories.includes('/tmp/test_music_dir_1'),
-      'MUSIC_DIR directories should be included in config.directories'
+      'MUSIC_DIR directories should be included in config.directories',
     );
     assert.ok(
       config.directories.includes('/tmp/test_music_dir_2'),
-      'MUSIC_DIR directories should be included in config.directories'
+      'MUSIC_DIR directories should be included in config.directories',
     );
 
     delete process.env.SECURITY_TOKEN;
@@ -49,7 +49,11 @@ test('Server Config - Environment Variables & Directory Discovery', async (t) =>
     const { ConfigManager } = require('../dist/config.js');
     const config = new ConfigManager();
 
-    assert.strictEqual(config.disableRateLimit, undefined, 'disableRateLimit should not exist on config');
+    assert.strictEqual(
+      config.disableRateLimit,
+      undefined,
+      'disableRateLimit should not exist on config',
+    );
 
     const newKey = config.createApiKey('Test Key', true, false);
     assert.strictEqual(newKey.name, 'Test Key');
@@ -160,4 +164,44 @@ test('Hono Server Endpoints, Auth & CORS', async (t) => {
     serverConfig.deleteApiKey(mgmtKey.id);
     serverConfig.deleteApiKey(guestKey.id);
   });
+});
+
+test('Server Config - allowTabletopGameDeletion migration', () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cfg-migrate-'));
+  const file = path.join(dir, 'config.json');
+  const key = (id, extra) => ({
+    id,
+    name: id,
+    token: `${id}_token`,
+    allowManagement: false,
+    createdAt: new Date().toISOString(),
+    ...extra,
+  });
+  fs.writeFileSync(
+    file,
+    JSON.stringify({
+      apiKeys: [
+        key('songs', { allowSongDeletion: true }),
+        key('plain', { allowSongDeletion: false }),
+        key('explicit', { allowSongDeletion: true, allowTabletopGameDeletion: false }),
+      ],
+    }),
+  );
+  const previous = process.env.CONFIG_PATH;
+  process.env.CONFIG_PATH = file;
+  try {
+    const configPath = path.resolve(__dirname, '../dist/config.js');
+    delete require.cache[configPath];
+    const { ConfigManager } = require('../dist/config.js');
+    const byId = Object.fromEntries(new ConfigManager().apiKeys.map((k) => [k.id, k]));
+    assert.strictEqual(byId.songs.allowTabletopGameDeletion, true, 'copies allowSongDeletion');
+    assert.strictEqual(byId.plain.allowTabletopGameDeletion, false);
+    assert.strictEqual(byId.explicit.allowTabletopGameDeletion, false, 'keeps an explicit value');
+  } finally {
+    if (previous === undefined) delete process.env.CONFIG_PATH;
+    else process.env.CONFIG_PATH = previous;
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 });

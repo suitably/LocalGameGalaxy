@@ -8,8 +8,8 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-27
-  method: 'read server/src/core/app.ts, server/src/plugins/melodiq/{index.ts,middleware/auth.ts,routes/songFiles.ts,routes/notesMigration.ts}, server/src/plugins/tabletop/routes/*.ts, server/src/plugins/notes/index.ts, server/src/plugins/relay/index.ts, server/src/utils/helpers.ts, server/src/core/pairing.ts'
+  at: 2026-11-15
+  method: 'read server/src/config.ts, server/src/core/app.ts, server/src/plugins/melodiq/{index.ts,middleware/auth.ts,routes/songFiles.ts,routes/notesMigration.ts}, server/src/plugins/tabletop/routes/*.ts, server/src/plugins/notes/index.ts, server/src/plugins/relay/index.ts, server/src/utils/helpers.ts, server/src/core/pairing.ts'
 sources:
   - 'server/src/plugins/melodiq/middleware/auth.ts'
   - 'server/src/core/app.ts'
@@ -72,7 +72,7 @@ The token is stored in `config.json` and loaded at server startup via `server/sr
 
 - Reads `Authorization: Bearer <token>` or the `?token=` query parameter.
 - Applied by the `melodiq` plugin to: `/api/songs*`, `/api/status`, `/api/auth/me`, `/media`, `/api/usdb/*`, `/api/youtube/*`, `/api/separator/*`, `/api/config/*`, `/api/playlists*`, `/api/browse`, `/api/feedback`, `/api/notes/*` (`server/src/plugins/melodiq/index.ts`). Public: `/health`, `/api/info`.
-- Applied by the `tabletop` plugin to `/api/tabletop/*` and `/tabletop/media`; `/api/tabletop/config/*` additionally needs `requireMasterToken`. `/tabletop/proxy-image` checks its token itself. Saving games needs any valid token; only games under `saved/` can be overwritten, and deleting one needs `allowSongDeletion` (or the master token). Named table states (`/api/tabletop/saves`) can be listed and loaded with any token; storing one needs `allowTabletopSaves`, and only the key that stored it may overwrite or delete it (the master token may also delete). `PUT/DELETE /api/tabletop/games/:id/template` needs `allowTabletopTemplates`. Checks use `hasPermission` from `server/src/core/auth.ts`.
+- Applied by the `tabletop` plugin to `/api/tabletop/*` and `/tabletop/media`; `/api/tabletop/config/*` additionally needs `requireMasterToken`. `/tabletop/proxy-image` checks its token itself. Saving games needs any valid token; only games under `saved/` can be overwritten, and deleting one needs `allowTabletopGameDeletion` (or the master token; a key without the flag read from an older config gets the value of its `allowSongDeletion`, see §API keys). Named table states (`/api/tabletop/saves`) can be listed and loaded with any token; storing one needs `allowTabletopSaves`, and only the key that stored it may overwrite or delete it (the master token may also delete). `PUT/DELETE /api/tabletop/games/:id/template` needs `allowTabletopTemplates`. Checks use `hasPermission` from `server/src/core/auth.ts`.
 - Song-folder files (#568, `routes/songFiles.ts`) are addressed by song id and a file name the scan found, never by path, and the song folder must lie in a library directory. Creating songs, uploading scores or recordings, labels and marks need any valid token; deleting a file or a song needs `allowSongDeletion` (or the master token). The old Notes library migration (`/api/notes/migration`) can be read with any token; running it or removing the originals (`run`, `confirm`) needs `requireMasterToken`. `/api/notes/pieces*` and `/notes/media/*` no longer exist.
 - Matches against the master `config.token` (which grants full permissions) or a valid API key in `config.apiKeys`.
 - Returns `401 Unauthorized` if missing or mismatched.
@@ -83,7 +83,7 @@ The token is stored in `config.json` and loaded at server startup via `server/sr
 So the user never copies a token, the server pairs the app with a one-time code (`server/src/core/pairing.ts`, `PairingStore`):
 
 - On every start `server/src/index.ts` issues a code and prints `<APP_URL>/settings?tab=server&pair=http://localhost:<port>&code=<code>` (`APP_URL` env, default `https://nexumia.de`). On the first start (`serverConfig.isFirstRun`: the token was just generated) it also opens that URL in the default browser, unless `NO_BROWSER=true`, `CI` is set or `/.dockerenv` exists.
-- `POST /api/pair` (public) takes `{ code, name? }`. A valid code creates an API key named `Paired: <device>` with `allowManagement`, `allowTabletopSaves` and `allowTabletopTemplates` (the owner's own app; revoke it like any key) and returns `{ token, keyId, name }` with `Cache-Control: no-store`. Wrong, used or expired codes get `401`.
+- `POST /api/pair` (public) takes `{ code, name? }`. A valid code creates an API key named `Paired: <device>` with `allowManagement`, `allowTabletopSaves`, `allowTabletopTemplates` and `allowTabletopGameDeletion` (the owner's own app; revoke it like any key) and returns `{ token, keyId, name }` with `Cache-Control: no-store`. Wrong, used or expired codes get `401`.
 - Codes: 24 hex chars, in memory only, single use, TTL 10 minutes, at most one live code (a new one replaces the old). Failed redemptions are limited to 5 per minute per remote address (`429`, also for the right code while limited).
 - `POST /api/pair/code` (`requireMasterToken`) issues a fresh code, e.g. to pair another device.
 - Client: `src/lib/companion/serverPairing.ts` parses the link, redeems the code and stores URL and key via `companionSettings`; `ServerPairingCard` in Settings → Server asks for confirmation first (shows the server URL, since a foreign link could point at someone else's server) and removes `pair`/`code` from the URL afterwards. If the server cannot be reached it shows the mixed-content hint (https page → http LAN server) or suggests opening the server URL once in a new tab (certificate warning of a self-signed proxy).
@@ -99,6 +99,7 @@ Each API key contains:
 - `allowSongDeletion`: Boolean indicating whether the key can delete songs
 - `allowTabletopSaves`: Boolean, store named tabletop table states on the server (missing = false)
 - `allowTabletopTemplates`: Boolean, replace a tabletop game's default template (missing = false)
+- `allowTabletopGameDeletion`: Boolean, delete saved tabletop games (#687, Q22). Missing in a config written before the flag: loading copies the key's `allowSongDeletion`, so existing keys keep their behaviour; the value is saved with the next config write
 - `createdAt`: ISO timestamp
 
 API keys are passed via the standard `Authorization: Bearer <token>` header and validated in `requireAuth` and `requireMasterToken`. The master token and keys with `allowManagement` hold every capability (`hasPermission`). `GET /api/tabletop/status` and `GET /api/tabletop/saves` report the caller's tabletop rights as `permissions: { saveStates, saveTemplates }`.

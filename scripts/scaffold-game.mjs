@@ -1,274 +1,369 @@
 #!/usr/bin/env node
 /**
- * Game Scaffolding Tool for LocalGameGalaxy
+ * Game scaffolder for LocalGameGalaxy.
  *
- * Enforces the Single Source of Truth architecture and prevents AI agent semantic drift.
+ * Produces the layout the existing games use (see docs/tech/game-catalog.md):
+ *   src/games/<id>/index.ts                       named export of the entry component
+ *   src/games/<id>/<Pascal>Game.tsx               entry component (usePageTitle + t())
+ *   src/games/<id>/hooks/use<Pascal>State.ts      state hook persisted via lib/storage
+ *   src/games/<id>/logic/types.ts                 domain types
+ *   src/games/<id>/logic/<camel>Engine.ts         pure game rules
+ *   src/games/<id>/logic/<camel>Engine.test.ts    Vitest tests for the rules
+ * and patches by text insertion:
+ *   src/lib/storage.ts                            STORAGE_KEYS.<ID>_GAME_STATE
+ *   src/lib/gameRegistry.tsx                      lazy import + `definitions` entry (+ icon import)
+ *   public/locales/{de,en}/translation.json       games.<id>.title / description / UI strings
+ *
+ * There is no gameManifest.ts: the registry is a hand-written array (open question Q7).
+ *
  * Usage:
- *   node scripts/scaffold-game.mjs --id=<gameId> --title="<Game Title>" [--category=<category>] [--icon=<icon>]
+ *   node scripts/scaffold-game.mjs --id=<id> --title="<DE title>" [--title-en="<EN title>"]
+ *     [--description="<DE>"] [--description-en="<EN>"] [--category=<category>] [--icon=<MuiIconName>]
+ *     [--dry-run]
  *
- * Example:
- *   node scripts/scaffold-game.mjs --id=battleship --title="Schiffe versenken" --category=party
+ * `--icon` is the MUI icon base name without suffix (`@mui/icons-material/<Name>Rounded`).
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const ROOT_DIR = path.resolve(__dirname, '..');
+const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-// Parse CLI args
+const CATEGORIES = ['dice', 'drawing', 'music', 'social_deduction', 'cards', 'party', 'puzzle'];
+
 const args = process.argv.slice(2).reduce((acc, arg) => {
   if (arg.startsWith('--')) {
-    const [key, val] = arg.slice(2).split('=');
-    acc[key] = val || true;
+    const eq = arg.indexOf('=');
+    if (eq === -1) acc[arg.slice(2)] = true;
+    else acc[arg.slice(2, eq)] = arg.slice(eq + 1);
   }
   return acc;
 }, {});
 
+const usage =
+  'Usage: node scripts/scaffold-game.mjs --id=<id> --title="<DE title>" [--title-en=...] ' +
+  '[--description=...] [--description-en=...] [--category=<cat>] [--icon=<MuiIcon>] [--dry-run]';
+
+function fail(message) {
+  console.error(`Error: ${message}`);
+  process.exit(1);
+}
+
 const gameId = args.id;
-const gameTitle = args.title;
-const category = args.category || 'party';
-const iconName = args.icon || 'SportsEsports';
-
-if (!gameId || !gameTitle) {
-  console.error('❌ Error: Missing mandatory arguments.');
-  console.log(
-    'Usage: node scripts/scaffold-game.mjs --id=<id> --title="<Title>" [--category=<cat>]',
-  );
-  process.exit(1);
+const titleDe = args.title;
+if (typeof gameId !== 'string' || typeof titleDe !== 'string' || !titleDe) {
+  console.error(usage);
+  fail('missing mandatory arguments --id and --title.');
 }
-
-// Sanitize gameId
-if (!/^[a-z0-9-]+$/.test(gameId)) {
-  console.error(
-    '❌ Error: game id must be lower-case alphanumeric with dashes (e.g. "yatzy" or "battleship").',
+if (!/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(gameId)) {
+  fail(
+    'game id must be lower-case alphanumeric with single dashes (e.g. "yatzy" or "battle-ship").',
   );
-  process.exit(1);
 }
+const category = typeof args.category === 'string' ? args.category : 'party';
+if (!CATEGORIES.includes(category)) {
+  fail(`category must be one of: ${CATEGORIES.join(', ')}.`);
+}
+const iconName = typeof args.icon === 'string' ? args.icon : 'SportsEsports';
+if (!/^[A-Z][A-Za-z0-9]*$/.test(iconName)) fail('--icon must be a PascalCase MUI icon name.');
+const dryRun = args['dry-run'] === true;
 
-const capitalized = gameId
+const titleEn = typeof args['title-en'] === 'string' ? args['title-en'] : titleDe;
+const descriptionDe =
+  typeof args.description === 'string' ? args.description : `TODO: Beschreibung für ${titleDe}.`;
+const descriptionEn =
+  typeof args['description-en'] === 'string'
+    ? args['description-en']
+    : `TODO: description for ${titleEn}.`;
+
+const pascal = gameId
   .split('-')
   .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
   .join('');
+const i18nId = gameId.replace(/-/g, '_'); // locale keys use underscores (games.melodiq_notes)
+const camel = pascal.charAt(0).toLowerCase() + pascal.slice(1);
+const storageKeyName = `${gameId.toUpperCase().replace(/-/g, '_')}_GAME_STATE`;
+const storageKeyValue = `${gameId.replace(/-/g, '_')}_game_state`;
 
+const rel = (p) => path.relative(ROOT_DIR, p).split(path.sep).join('/');
 const targetDir = path.join(ROOT_DIR, 'src', 'games', gameId);
-if (fs.existsSync(targetDir)) {
-  console.error(`❌ Error: Game directory ${targetDir} already exists.`);
-  process.exit(1);
-}
+const registryPath = path.join(ROOT_DIR, 'src', 'lib', 'gameRegistry.tsx');
+const storagePath = path.join(ROOT_DIR, 'src', 'lib', 'storage.ts');
+const localePaths = {
+  de: path.join(ROOT_DIR, 'public', 'locales', 'de', 'translation.json'),
+  en: path.join(ROOT_DIR, 'public', 'locales', 'en', 'translation.json'),
+};
 
-console.log(`🚀 Scaffolding new game: ${gameTitle} (${gameId}) in category [${category}]...`);
+if (fs.existsSync(targetDir)) fail(`${rel(targetDir)} already exists.`);
 
-// 1. Create directories
-fs.mkdirSync(path.join(targetDir, 'hooks'), { recursive: true });
-fs.mkdirSync(path.join(targetDir, 'components'), { recursive: true });
-fs.mkdirSync(path.join(targetDir, 'tests'), { recursive: true });
+// ---------------------------------------------------------------- file contents
 
-// 2. types.ts
-const typesContent = `export type ${capitalized}Phase = 'setup' | 'playing' | 'round_over' | 'game_over';
+const files = {};
 
-export interface ${capitalized}Player {
+files['logic/types.ts'] = `export type ${pascal}Phase = 'setup' | 'playing' | 'game_over';
+
+export interface ${pascal}Player {
   id: string;
   name: string;
   score: number;
 }
 
-export interface ${capitalized}State {
-  phase: ${capitalized}Phase;
-  players: ${capitalized}Player[];
+export interface ${pascal}State {
+  phase: ${pascal}Phase;
+  players: ${pascal}Player[];
   activePlayerIndex: number;
   round: number;
 }
 `;
-fs.writeFileSync(path.join(targetDir, 'types.ts'), typesContent);
 
-// 3. hooks/use<Game>State.ts
-const hookContent = `import { useState, useCallback } from 'react';
-import { storage } from '../../../lib/storage';
-import type { ${capitalized}State, ${capitalized}Phase } from '../types';
+files[`logic/${camel}Engine.ts`] = `import type { ${pascal}State } from './types';
 
-const STORAGE_KEY = \`${gameId}_game_state\` as any;
+export function createInitialState(): ${pascal}State {
+  return { phase: 'setup', players: [], activePlayerIndex: 0, round: 1 };
+}
 
-const initialState: ${capitalized}State = {
-  phase: 'setup',
-  players: [],
-  activePlayerIndex: 0,
-  round: 1,
-};
+export function startGame(state: ${pascal}State): ${pascal}State {
+  return { ...state, phase: 'playing', activePlayerIndex: 0, round: 1 };
+}
 
-export function use${capitalized}State() {
-  const [state, setState] = useState<${capitalized}State>(() => {
-    return storage.getJSON<${capitalized}State>(STORAGE_KEY, initialState);
+/** Advances to the next player; a full lap over all players starts the next round. */
+export function nextTurn(state: ${pascal}State): ${pascal}State {
+  const count = Math.max(state.players.length, 1);
+  const next = state.activePlayerIndex + 1;
+  return next >= count
+    ? { ...state, activePlayerIndex: 0, round: state.round + 1 }
+    : { ...state, activePlayerIndex: next };
+}
+`;
+
+files[`logic/${camel}Engine.test.ts`] = `import { describe, it, expect } from 'vitest';
+import { createInitialState, nextTurn, startGame } from './${camel}Engine';
+
+describe('${pascal} engine', () => {
+  it('starts in setup at round 1', () => {
+    const state = createInitialState();
+    expect(state.phase).toBe('setup');
+    expect(state.round).toBe(1);
   });
 
-  const setPhase = useCallback((phase: ${capitalized}Phase) => {
-    setState(prev => {
-      const next = { ...prev, phase };
-      storage.setJSON(STORAGE_KEY, next);
+  it('startGame switches to playing', () => {
+    expect(startGame(createInitialState()).phase).toBe('playing');
+  });
+
+  it('nextTurn starts a new round after the last player', () => {
+    const base = {
+      ...createInitialState(),
+      players: [
+        { id: 'a', name: 'A', score: 0 },
+        { id: 'b', name: 'B', score: 0 },
+      ],
+    };
+    const second = nextTurn(base);
+    expect(second.activePlayerIndex).toBe(1);
+    expect(second.round).toBe(1);
+    const wrapped = nextTurn(second);
+    expect(wrapped.activePlayerIndex).toBe(0);
+    expect(wrapped.round).toBe(2);
+  });
+});
+`;
+
+files[`hooks/use${pascal}State.ts`] = `import { useCallback, useState } from 'react';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
+import { createInitialState, nextTurn, startGame } from '../logic/${camel}Engine';
+import type { ${pascal}State } from '../logic/types';
+
+const STORAGE_KEY = STORAGE_KEYS.${storageKeyName};
+
+export function use${pascal}State() {
+  const [state, setState] = useState<${pascal}State>(() =>
+    storage.getJson<${pascal}State>(STORAGE_KEY, createInitialState()),
+  );
+
+  const update = useCallback((fn: (prev: ${pascal}State) => ${pascal}State) => {
+    setState((prev) => {
+      const next = fn(prev);
+      storage.setJson(STORAGE_KEY, next);
       return next;
     });
   }, []);
 
-  const resetGame = useCallback(() => {
-    storage.setJSON(STORAGE_KEY, initialState);
-    setState(initialState);
-  }, []);
+  const start = useCallback(() => update(startGame), [update]);
+  const advance = useCallback(() => update(nextTurn), [update]);
+  const reset = useCallback(() => update(createInitialState), [update]);
 
-  return {
-    state,
-    setPhase,
-    resetGame,
-  };
+  return { state, start, advance, reset };
 }
 `;
-fs.writeFileSync(path.join(targetDir, 'hooks', `use${capitalized}State.ts`), hookContent);
 
-// 4. <Game>Game.tsx (<150 lines, compliant with budget)
-const gameComponentContent = `import React from 'react';
-import { Box, Button, Typography, Paper, Container } from '@mui/material';
+files[`${pascal}Game.tsx`] =
+  `import { Box, Button, Container, Paper, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { use${capitalized}State } from './hooks/use${capitalized}State';
+import { usePageTitle } from '../../context/LayoutContext';
+import { use${pascal}State } from './hooks/use${pascal}State';
 
-export const ${capitalized}Game: React.FC = () => {
+export function ${pascal}Game() {
   const { t } = useTranslation();
-  const { state, setPhase, resetGame } = use${capitalized}State();
+  usePageTitle(t('games.${i18nId}.title'));
+  const { state, start, advance, reset } = use${pascal}State();
 
   return (
     <Container maxWidth="md" sx={{ py: 3 }}>
-      <Paper elevation={3} sx={{ p: 4, borderRadius: 3, textAlign: 'center' }}>
-        <Typography variant="h4" component="h1" gutterBottom fontWeight="bold">
-          {t('games.${gameId}.title')}
+      <Paper sx={{ p: 4, borderRadius: 3, textAlign: 'center' }}>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+          {t('games.${i18nId}.description')}
         </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-          {t('games.${gameId}.description')}
+        <Typography variant="h6" sx={{ mb: 3 }}>
+          {t('games.${i18nId}.round', { round: state.round })}
         </Typography>
-
-        <Box sx={{ my: 3 }}>
-          <Typography variant="h6">
-            Status: <strong>{state.phase}</strong> | Runde: <strong>{state.round}</strong>
-          </Typography>
-        </Box>
-
         <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
           {state.phase === 'setup' ? (
-            <Button variant="contained" color="primary" onClick={() => setPhase('playing')}>
-              Spiel starten
+            <Button variant="contained" onClick={start}>
+              {t('games.${i18nId}.start')}
             </Button>
           ) : (
-            <Button variant="outlined" color="secondary" onClick={resetGame}>
-              Neu starten
-            </Button>
+            <>
+              <Button variant="contained" onClick={advance}>
+                {t('games.${i18nId}.next_turn')}
+              </Button>
+              <Button variant="outlined" onClick={reset}>
+                {t('games.${i18nId}.restart')}
+              </Button>
+            </>
           )}
         </Box>
       </Paper>
     </Container>
   );
-};
-`;
-fs.writeFileSync(path.join(targetDir, `${capitalized}Game.tsx`), gameComponentContent);
-
-// 5. gameManifest.ts
-const manifestContent = `export interface GameManifest {
-  id: string;
-  titleKey: string;
-  descriptionKey: string;
-  category: string;
-  minPlayers: number;
-  maxPlayers: number;
 }
-
-export const manifest: GameManifest = {
-  id: '${gameId}',
-  titleKey: 'games.${gameId}.title',
-  descriptionKey: 'games.${gameId}.description',
-  category: '${category}',
-  minPlayers: 2,
-  maxPlayers: 8,
-};
 `;
-fs.writeFileSync(path.join(targetDir, 'gameManifest.ts'), manifestContent);
 
-// 6. index.ts
-const indexContent = `export { ${capitalized}Game } from './${capitalized}Game';
-export { manifest } from './gameManifest';
-export type * from './types';
-`;
-fs.writeFileSync(path.join(targetDir, 'index.ts'), indexContent);
+files['index.ts'] = `export { ${pascal}Game } from './${pascal}Game';\n`;
 
-// 7. tests/<id>.test.ts
-const testContent = `import { describe, it, expect } from 'vitest';
-import { manifest } from '../gameManifest';
+// ---------------------------------------------------------------- text patches
 
-describe('${capitalized} Game', () => {
-  it('has valid manifest configuration', () => {
-    expect(manifest.id).toBe('${gameId}');
-    expect(manifest.titleKey).toBe('games.${gameId}.title');
-    expect(manifest.minPlayers).toBeGreaterThanOrEqual(1);
-    expect(manifest.maxPlayers).toBeGreaterThanOrEqual(manifest.minPlayers);
-  });
-});
-`;
-fs.writeFileSync(path.join(targetDir, 'tests', `${gameId}.test.ts`), testContent);
-
-// 8. Register in i18n translation files
-const dePath = path.join(ROOT_DIR, 'public', 'locales', 'de', 'translation.json');
-const enPath = path.join(ROOT_DIR, 'public', 'locales', 'en', 'translation.json');
-
-function addI18nKey(filePath, id, title) {
-  if (!fs.existsSync(filePath)) return;
-  const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  if (!content.games) content.games = {};
-  if (!content.games[id]) {
-    content.games[id] = {
-      title: title,
-      description: title + ' Party- und Gesellschaftsspiel.',
-    };
-    fs.writeFileSync(filePath, JSON.stringify(content, null, 2) + '\n');
-    console.log(`✔ Updated ${path.basename(filePath)}`);
+/** Returns the new content; throws if the anchor is missing or ambiguous. */
+function insertOnce(content, anchor, replacement, label) {
+  const first = content.indexOf(anchor);
+  if (first === -1 || content.indexOf(anchor, first + 1) !== -1) {
+    fail(
+      `${label}: anchor not found exactly once (file layout changed?): ${JSON.stringify(anchor)}`,
+    );
   }
+  return content.replace(anchor, () => replacement);
 }
 
-addI18nKey(dePath, gameId, gameTitle);
-addI18nKey(enPath, gameId, gameTitle);
+const patches = []; // { file, content }
 
-// 9. Update gameRegistry.tsx
-const registryPath = path.join(ROOT_DIR, 'src', 'lib', 'gameRegistry.tsx');
-let registryContent = fs.readFileSync(registryPath, 'utf8');
-
-// Insert lazy import before class GameRegistry
-const lazyImport = `const ${capitalized}Game = lazy(() => import('../games/${gameId}').then(m => ({ default: m.${capitalized}Game })));\n`;
-if (!registryContent.includes(`${capitalized}Game = lazy`)) {
-  registryContent = registryContent.replace(
-    'class GameRegistry {',
-    `${lazyImport}class GameRegistry {`,
+// storage.ts: register the key (no unregistered keys, see Q8).
+{
+  let c = fs.readFileSync(storagePath, 'utf8');
+  if (c.includes(`${storageKeyName}:`)) fail(`STORAGE_KEYS.${storageKeyName} already exists.`);
+  c = insertOnce(
+    c,
+    "  DARTS_GAME_STATE: 'darts_game_state',\n",
+    `  DARTS_GAME_STATE: 'darts_game_state',\n  ${storageKeyName}: '${storageKeyValue}',\n`,
+    'storage.ts',
   );
-
-  // Insert entry into games array
-  const registryEntry = `        {
-            id: '${gameId}',
-            route: 'games/${gameId}',
-            titleKey: 'games.${gameId}.title',
-            descriptionKey: 'games.${gameId}.description',
-            icon: <${iconName}Icon sx={{ fontSize: 72, mb: 2 }} />,
-            category: '${category}' as any,
-            component: <${capitalized}Game />
-        },
-`;
-  registryContent = registryContent.replace(
-    'private games: GameDefinition[] = [',
-    `private games: GameDefinition[] = [\n${registryEntry}`,
-  );
-  fs.writeFileSync(registryPath, registryContent);
-  console.log(`✔ Registered in src/lib/gameRegistry.tsx`);
+  patches.push({ file: storagePath, content: c });
 }
 
-console.log(`\n🎉 Successfully scaffolded ${gameTitle}!`);
-console.log(`📁 Files created in: src/games/${gameId}/`);
-console.log(`   - gameManifest.ts`);
-console.log(`   - types.ts`);
-console.log(`   - hooks/use${capitalized}State.ts`);
-console.log(`   - ${capitalized}Game.tsx`);
-console.log(`   - tests/${gameId}.test.ts`);
-console.log(`   - index.ts`);
+// gameRegistry.tsx: icon import, lazy import, definitions entry.
+{
+  let c = fs.readFileSync(registryPath, 'utf8');
+  if (c.includes(`id: '${gameId}',`)) fail(`${gameId} is already in gameRegistry.tsx.`);
+  const iconImport = `import ${iconName}Icon from '@mui/icons-material/${iconName}Rounded';\n`;
+  if (!c.includes(iconImport)) {
+    c = insertOnce(
+      c,
+      "import { SongsProvider } from '../games/melodiq';\n",
+      `${iconImport}import { SongsProvider } from '../games/melodiq';\n`,
+      'gameRegistry.tsx icon import',
+    );
+  }
+  c = insertOnce(
+    c,
+    '\nclass GameRegistry {\n',
+    `const ${pascal}Game = lazy(() => import('../games/${gameId}').then(pick('${pascal}Game')));\n\nclass GameRegistry {\n`,
+    'gameRegistry.tsx lazy import',
+  );
+  c = insertOnce(
+    c,
+    '  ];\n\n  private games: GameDefinition[] = this.definitions.map(withGameSettings);',
+    `    {
+      id: '${gameId}',
+      route: 'games/${gameId}',
+      titleKey: 'games.${i18nId}.title',
+      descriptionKey: 'games.${i18nId}.description',
+      icon: <${iconName}Icon sx={{ fontSize: 72, mb: 2 }} />,
+      category: '${category}',
+      component: <${pascal}Game />,
+    },
+  ];\n\n  private games: GameDefinition[] = this.definitions.map(withGameSettings);`,
+    'gameRegistry.tsx entry',
+  );
+  patches.push({ file: registryPath, content: c });
+}
+
+// Locales: hub title/description plus the UI strings of the scaffolded component.
+const strings = {
+  de: {
+    title: titleDe,
+    description: descriptionDe,
+    round: 'Runde {{round}}',
+    start: 'Spiel starten',
+    next_turn: 'Nächster Zug',
+    restart: 'Neu starten',
+  },
+  en: {
+    title: titleEn,
+    description: descriptionEn,
+    round: 'Round {{round}}',
+    start: 'Start game',
+    next_turn: 'Next turn',
+    restart: 'Restart',
+  },
+};
+for (const [lang, file] of Object.entries(localePaths)) {
+  let c = fs.readFileSync(file, 'utf8');
+  if (new RegExp(`^ {4}"${i18nId}": \\{`, 'm').test(c)) {
+    fail(`games.${i18nId} already exists in ${rel(file)}.`);
+  }
+  const body = Object.entries(strings[lang])
+    .map(([k, v]) => `      ${JSON.stringify(k)}: ${JSON.stringify(v)}`)
+    .join(',\n');
+  c = insertOnce(
+    c,
+    '  "games": {\n',
+    `  "games": {\n    "${i18nId}": {\n${body}\n    },\n`,
+    rel(file),
+  );
+  JSON.parse(c); // must stay valid JSON
+  patches.push({ file, content: c });
+}
+
+// ---------------------------------------------------------------- write
+
+const created = Object.keys(files).map((f) => `src/games/${gameId}/${f}`);
+const modified = patches.map((p) => rel(p.file));
+
+if (dryRun) {
+  console.log(`[dry-run] would create:\n${created.map((f) => `  ${f}`).join('\n')}`);
+  console.log(`[dry-run] would modify:\n${modified.map((f) => `  ${f}`).join('\n')}`);
+  process.exit(0);
+}
+
+for (const [rf, content] of Object.entries(files)) {
+  const full = path.join(targetDir, rf);
+  fs.mkdirSync(path.dirname(full), { recursive: true });
+  fs.writeFileSync(full, content);
+}
+for (const { file, content } of patches) fs.writeFileSync(file, content);
+
+console.log(`Scaffolded ${titleEn} (${gameId}), category ${category}.`);
+console.log(`Created:\n${created.map((f) => `  ${f}`).join('\n')}`);
+console.log(`Modified:\n${modified.map((f) => `  ${f}`).join('\n')}`);
+console.log(
+  'Next: replace the placeholder logic/UI, review the TODO description, add the game to docs/tech/game-catalog.md and a changelog.d fragment.',
+);

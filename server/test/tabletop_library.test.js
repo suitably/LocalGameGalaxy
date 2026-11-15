@@ -100,12 +100,34 @@ test('Tabletop library: save, overwrite, delete games', async (t) => {
 
   await t.test('deletes a saved game only with deletion rights', async () => {
     const key = serverConfig.createApiKey('tt-test', false, false);
-    t.after(() => serverConfig.deleteApiKey(key.id));
-    const denied = await app.request(`/api/tabletop/games/${saved.id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${key.token}` },
+    // song deletion no longer covers saved games
+    const songOnly = serverConfig.createApiKey('song-only', false, true);
+    const allowed = serverConfig.createApiKey('tt-delete', false, false, {
+      allowTabletopGameDeletion: true,
     });
-    assert.strictEqual(denied.status, 403);
+    t.after(() => {
+      for (const k of [key, songOnly, allowed]) serverConfig.deleteApiKey(k.id);
+    });
+    for (const k of [key, songOnly]) {
+      const denied = await app.request(`/api/tabletop/games/${saved.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${k.token}` },
+      });
+      assert.strictEqual(denied.status, 403);
+    }
+    assert.ok(fs.existsSync(path.join(dir, 'saved', 'My Game')));
+    const other = await (
+      await app.request('/api/tabletop/games', {
+        method: 'POST',
+        headers: json,
+        body: JSON.stringify({ game: game('Other Game', 1) }),
+      })
+    ).json();
+    const viaKey = await app.request(`/api/tabletop/games/${other.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${allowed.token}` },
+    });
+    assert.strictEqual(viaKey.status, 200);
     const res = await app.request(`/api/tabletop/games/${saved.id}`, {
       method: 'DELETE',
       headers: auth,
