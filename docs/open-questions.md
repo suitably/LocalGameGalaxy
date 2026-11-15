@@ -36,9 +36,6 @@ ADR-0004 says "Demucs via PyTorch". `server/src/plugins/melodiq/services/separat
 ## Resolved 2026-11-15
 
 - Q22 deleting a saved tabletop game → maintainer decision (2026-11-15): a dedicated API key flag `allowTabletopGameDeletion`; keys from older configs get their `allowSongDeletion` value on load, so nothing changes for existing installs. [server-security](tech/server-security.md)
-
-## Resolved 2026-11-15
-
 - Q5 root `config.example.json` → maintainer decision (2026-11-15): deleted; README step 2 copies `server/config.example.json`. [secrets-management](tech/secrets-management.md)
 
 ## Resolved 2026-11-08
