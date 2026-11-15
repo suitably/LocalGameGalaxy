@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { storage } from '../../../lib/storage';
+import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { LocalStoryEngine } from '../logic/engine';
 import { deleteStoryGame } from '../logic/repository';
 import { DEFAULT_MODIFIER_SETTINGS } from '../logic/modifiers';
@@ -9,9 +9,6 @@ import type { StoryGameRecord, StoryModifierSettings } from '../types';
 
 export type StoryLobbyPlayerItem = LobbyPlayerItem;
 
-const STORAGE_KEY_STORY_PLAYERS = 'storyteller_lobby_players';
-const STORAGE_KEY_STORY_MODIFIERS = 'storyteller_lobby_modifiers';
-
 export const useStorytellerLobby = () => {
   const {
     players: lobbyPlayers,
@@ -20,14 +17,14 @@ export const useStorytellerLobby = () => {
     togglePlayerRemote,
     hasMinPlayers,
   } = useLobbyPlayers({
-    storageKey: STORAGE_KEY_STORY_PLAYERS,
+    storageKey: STORAGE_KEYS.STORYTELLER_LOBBY_PLAYERS,
     defaultPlayers: [{ name: 'Spieler 1' }, { name: 'Spieler 2' }],
     minPlayers: 2,
   });
 
   const [modifiers, setModifiers] = useState<StoryModifierSettings>(() => {
     const raw = storage.getJson<StoryModifierSettings>(
-      STORAGE_KEY_STORY_MODIFIERS,
+      STORAGE_KEYS.STORYTELLER_LOBBY_MODIFIERS,
       DEFAULT_MODIFIER_SETTINGS,
     );
     return {
@@ -41,7 +38,7 @@ export const useStorytellerLobby = () => {
   const [loadingGames, setLoadingGames] = useState<boolean>(true);
 
   useEffect(() => {
-    storage.setJson(STORAGE_KEY_STORY_MODIFIERS, modifiers);
+    storage.setJson(STORAGE_KEYS.STORYTELLER_LOBBY_MODIFIERS, modifiers);
   }, [modifiers]);
 
   const loadActiveGames = useCallback(async () => {

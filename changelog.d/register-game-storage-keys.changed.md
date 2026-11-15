@@ -1,0 +1,1 @@
+- Registered the remaining game-local storage keys of Qwixx, Knister, Kniffel, GuessArt, Storyteller and Cards in the central key registry (same key names, no data migration); removed the unused `EXCALIDRAW_DRAWING` entry.

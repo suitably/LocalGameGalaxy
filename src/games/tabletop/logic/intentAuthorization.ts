@@ -77,6 +77,10 @@ function touchedIds(action: TabletopAction, widgets: Widgets): { ids: string[]; 
       return { ids: [action.payload.cardId], into: [action.payload.targetHolderId] };
     case 'TAKE_PIECE_FROM_SUPPLY':
       return { ids: [action.payload.pieceId], into: [] };
+    case 'MOVE_WIDGETS':
+    case 'FLIP_WIDGETS':
+    case 'ROTATE_WIDGETS':
+      return { ids: action.payload.ids, into: [] };
     case 'SCALE_WIDGETS':
     case 'RESET_WIDGET_SCALE':
     case 'SET_Z_ORDER':

@@ -5,10 +5,9 @@ import { guessArtNotificationService } from '../logic/notificationService';
 import { useLobbyPlayers } from '../../../modules/player-management';
 import type { LobbyPlayerItem } from '../../../modules/player-management';
 import type { GuessArtGameRecord } from '../logic/types';
+import { STORAGE_KEYS } from '../../../lib/storage';
 
 export type { LobbyPlayerItem };
-
-const STORAGE_KEY_GUESSART_PLAYERS = 'guessart_lobby_players_v2';
 
 export const useGuessArtLobby = () => {
   const {
@@ -18,12 +17,12 @@ export const useGuessArtLobby = () => {
     togglePlayerRemote,
     hasMinPlayers,
   } = useLobbyPlayers({
-    storageKey: STORAGE_KEY_GUESSART_PLAYERS,
+    storageKey: STORAGE_KEYS.GUESSART_LOBBY_PLAYERS,
     defaultPlayers: [
       { name: 'Player 1', isRemote: false },
       { name: 'Player 2', isRemote: false },
     ],
-    legacyStorageKeys: ['guessart_lobby_players'],
+    legacyStorageKeys: [STORAGE_KEYS.GUESSART_LOBBY_PLAYERS_LEGACY],
     minPlayers: 2,
   });
 
