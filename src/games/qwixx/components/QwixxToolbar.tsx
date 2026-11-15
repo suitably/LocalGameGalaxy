@@ -3,6 +3,7 @@ import { Box, Button, Chip, Tooltip } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/ReplayRounded';
 import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import StyleIcon from '@mui/icons-material/StyleRounded';
+import ShuffleIcon from '@mui/icons-material/ShuffleRounded';
 import { useTranslation } from 'react-i18next';
 
 interface QwixxToolbarProps {
@@ -21,6 +22,12 @@ const iconOnlyOnPhone = {
   '& .MuiButton-startIcon': { mx: { xs: 0 }, ml: { sm: -0.5 }, mr: { sm: 1 } },
 };
 const phoneHidden = { display: { xs: 'none', sm: 'inline' } };
+/** Phones: the random chip shows only its icon so the toolbar stays on one line (Longo). */
+const iconOnlyChipOnPhone = {
+  fontWeight: 'bold',
+  '& .MuiChip-label': { display: { xs: 'none', sm: 'block' } },
+  '& .MuiChip-icon': { mx: { xs: 0.75, sm: undefined } },
+};
 
 /** Sheet variant chips and dice / new-game buttons above the sheet. */
 export const QwixxToolbar: React.FC<QwixxToolbarProps> = ({
@@ -44,11 +51,11 @@ export const QwixxToolbar: React.FC<QwixxToolbarProps> = ({
         justifyContent: 'space-between',
         alignItems: 'center',
         mb: { xs: 1, sm: 2 },
-        flexWrap: 'wrap',
+        flexWrap: { xs: 'nowrap', sm: 'wrap' },
         gap: 1,
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
         <Chip
           icon={<StyleIcon />}
           label={sheetName}
@@ -56,23 +63,24 @@ export const QwixxToolbar: React.FC<QwixxToolbarProps> = ({
           onClick={onOpenSheetSelector}
           size="small"
           clickable
-          sx={{ fontWeight: 'bold' }}
+          sx={{ fontWeight: 'bold', minWidth: 0 }}
         />
         <Tooltip title={t('games.qwixx.random_mode', 'Zufälliger Modus')}>
           <Chip
-            icon={<CasinoIcon />}
+            icon={<ShuffleIcon />}
             label={t('games.qwixx.random_mode', 'Zufall')}
+            aria-label={t('games.qwixx.random_mode', 'Zufall')}
             variant="outlined"
             color="secondary"
             onClick={onPickRandomSheet}
             size="small"
             clickable
-            sx={{ fontWeight: 'bold' }}
+            sx={iconOnlyChipOnPhone}
           />
         </Tooltip>
       </Box>
 
-      <Box sx={{ display: 'flex', gap: 1 }}>
+      <Box sx={{ display: 'flex', gap: 1, flexShrink: 0 }}>
         <Button
           variant={showDice ? 'contained' : 'outlined'}
           size="small"

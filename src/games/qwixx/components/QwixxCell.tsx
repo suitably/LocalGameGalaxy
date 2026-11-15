@@ -23,6 +23,8 @@ interface QwixxCellProps {
   isHighlighted: boolean;
   isLastNumber: boolean;
   isBonusRow: boolean;
+  /** Phones: 40px tall instead of 48px (long or many rows); the hit area stays 48px. */
+  dense?: boolean;
   onTap: () => void;
 }
 
@@ -46,6 +48,7 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
   isHighlighted,
   isLastNumber,
   isBonusRow,
+  dense = false,
   onTap,
 }) => {
   const theme = useTheme();
@@ -75,7 +78,7 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
         sx={{
           ...invisibleHitArea(48, 'y'),
           width: { xs: '100%', sm: 36, md: 44 },
-          height: { xs: 48, sm: 40, md: 48 },
+          height: { xs: dense ? 40 : 48, sm: 40, md: 48 },
           borderRadius: 2,
           bgcolor: isCrossed ? tone.buttonCrossed : tone.button,
           color: isCrossed ? 'common.white' : tone.ink,

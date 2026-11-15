@@ -69,8 +69,9 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
         isSelected={isSelected}
         onClick={isClickable ? () => onDieClick(key) : undefined}
         sx={{
-          width: { xs: 36, sm: 52 },
-          height: { xs: 36, sm: 52 },
+          width: { xs: 30, sm: 52 },
+          height: { xs: 30, sm: 52 },
+          fontSize: { xs: '1rem', sm: '1.6rem' },
           borderRadius: 2,
         }}
       />
@@ -98,11 +99,11 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
           gap: { xs: 1, sm: 2 },
         }}
       >
-        {/* Dice Row */}
+        {/* Dice Row (phones: dice, white sum and an icon-only roll button share one line) */}
         <Box
           sx={{
             display: 'flex',
-            gap: { xs: 0.75, sm: 1.5 },
+            gap: { xs: 0.5, sm: 1.5 },
             alignItems: 'center',
             flexWrap: 'wrap',
           }}
@@ -110,16 +111,29 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
           <Box
             sx={{
               display: 'flex',
-              gap: { xs: 0.75, sm: 1 },
+              gap: { xs: 0.5, sm: 1 },
               p: 0.5,
+              alignItems: 'center',
               bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
               borderRadius: 2,
             }}
           >
             {renderDie('white1', dice.white1)}
             {renderDie('white2', dice.white2)}
+            <Typography
+              aria-label={t('games.qwixx.white_sum', 'White Sum (All)')}
+              fontWeight="bold"
+              color="primary"
+              sx={{
+                display: { xs: 'block', sm: 'none' },
+                px: 0.25,
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              ={whiteSum}
+            </Typography>
           </Box>
-          <Box sx={{ display: 'flex', gap: { xs: 0.75, sm: 1 } }}>
+          <Box sx={{ display: 'flex', gap: { xs: 0.5, sm: 1 } }}>
             {renderDie('red', dice.red)}
             {renderDie('yellow', dice.yellow)}
             {renderDie('green', dice.green)}
@@ -128,11 +142,11 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
         </Box>
 
         {/* Roll Button & White Sum Info */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 'auto' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, ml: 'auto' }}>
           <Box
             sx={{
               textAlign: 'right',
-              display: 'flex',
+              display: { xs: 'none', sm: 'flex' },
               flexDirection: { xs: 'row', sm: 'column' },
               alignItems: { xs: 'baseline', sm: 'flex-end' },
               gap: { xs: 1, sm: 0 },
@@ -150,17 +164,22 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
             variant="contained"
             color="primary"
             startIcon={<CasinoIcon />}
+            aria-label={t('games.qwixx.roll', 'Roll')}
             onClick={handleRollClick}
             disabled={disabled || isRolling || animating}
             sx={{
               fontWeight: 'bold',
-              px: { xs: 2, sm: 3 },
+              px: { xs: 1, sm: 3 },
               py: { xs: 0.75, sm: 1 },
+              minWidth: 48,
               minHeight: 48,
               borderRadius: 2,
+              '& .MuiButton-startIcon': { mx: { xs: 0 }, ml: { sm: -0.5 }, mr: { sm: 1 } },
             }}
           >
-            {animating ? t('games.qwixx.rolling', 'Rolling...') : t('games.qwixx.roll', 'Roll')}
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+              {animating ? t('games.qwixx.rolling', 'Rolling...') : t('games.qwixx.roll', 'Roll')}
+            </Box>
           </Button>
         </Box>
       </Box>

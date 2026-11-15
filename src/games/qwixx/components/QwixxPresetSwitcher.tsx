@@ -50,7 +50,7 @@ export const QwixxPresetSwitcher: React.FC<QwixxPresetSwitcherProps> = ({
         onChange={(_, val) => {
           if (val !== null) onChange(val);
         }}
-        sx={{ height: 26, width: '100%' }}
+        sx={{ minHeight: 26, width: '100%' }}
       >
         {presetNames.map((name, idx) => (
           <ToggleButton

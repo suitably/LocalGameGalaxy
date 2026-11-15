@@ -19,19 +19,22 @@ interface QwixxRowProps {
   onUnlockRow: (color: RowColor) => void;
   disabled?: boolean;
   highlightedNumbers?: number[];
+  /** Sheet has many rows (bonus rows): use 40px cells on phones so it fits the screen. */
+  dense?: boolean;
 }
 
 /**
  * Phones (<600px): slots share the row width (max 48px) and stay 48px tall. Rows longer than
  * ONE_LINE_MAX_SLOTS (Longo: 15 numbers) wrap into two lines so slots do not get too narrow.
+ * Two-line rows and dense sheets (bonus rows) use 40px tall slots on phones so the sheet fits.
  */
-const SLOT_SIZE = {
+const slotSize = (dense: boolean) => ({
   flex: { xs: 1, sm: 'none' },
   minWidth: 0,
   width: { xs: 'auto', sm: 38, md: 46 },
   maxWidth: { xs: 48, sm: 'none' },
-  height: { xs: 48, sm: 40, md: 48 },
-};
+  height: { xs: dense ? 40 : 48, sm: 40, md: 48 },
+});
 const ONE_LINE_MAX_SLOTS = 12;
 
 export const QwixxRow: React.FC<QwixxRowProps> = ({
@@ -44,6 +47,7 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
   onUnlockRow,
   disabled = false,
   highlightedNumbers,
+  dense: denseSheet = false,
 }) => {
   const theme = useTheme();
   const isBonusRow = !!rowDef.isBonusRow;
@@ -60,6 +64,7 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
   const isPhone = useMediaQuery(theme.breakpoints.down('sm'));
   const twoLines = isPhone && rowDef.cells.length + 1 > ONE_LINE_MAX_SLOTS;
   const allSegments = buildRowSegments(rowDef);
+  const dense = denseSheet || twoLines;
   const lines = twoLines ? splitSegmentsIntoLines(allSegments) : [allSegments];
   const pad = { xs: 0.75, sm: 1.25 };
   const modifierPad = { xs: 1.2, sm: 1.5 };
@@ -137,6 +142,7 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
                         isHighlighted={!isCrossed && !!highlightedNumbers?.includes(num)}
                         isLastNumber={lockNumbers.includes(num)}
                         isBonusRow={isBonusRow}
+                        dense={dense}
                         onTap={() => onCrossNumber(color, num, isBonusRow, rowDef.id)}
                       />
                     );
@@ -148,6 +154,7 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
                       isLocked={rowState.isLocked}
                       hasBonus={hasLockBonus(rowDef, rowState, sheetType)}
                       disabled={disabled}
+                      dense={dense}
                       canLock={canLock}
                       onLock={() => onLockRow(color)}
                       onUnlock={() => onUnlockRow(color)}
@@ -158,7 +165,7 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
                   {seg.isLastSegment && isBonusRow && (
                     <Box
                       sx={{
-                        ...SLOT_SIZE,
+                        ...slotSize(dense),
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
