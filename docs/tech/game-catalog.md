@@ -18,7 +18,7 @@ sources:
 
 # Game catalog
 
-Games live in `src/games/<id>/` and are registered by hand in [`src/lib/gameRegistry.tsx`](../../src/lib/gameRegistry.tsx) (lazy-loaded entry component, route, category, colours, i18n title/description keys). The hub renders the registry; there is **no auto-discovery** (see [open-questions Q7](../open-questions.md#q7--scaffolder-generates-a-gamemanifestts-pattern-no-game-uses)).
+Games live in `src/games/<id>/` and are registered by hand in [`src/lib/gameRegistry.tsx`](../../src/lib/gameRegistry.tsx) (lazy-loaded entry component, route, category, colours, i18n title/description keys). The hub renders the registry; there is **no auto-discovery** and no per-game manifest. New games start from `node scripts/scaffold-game.mjs` ([scripts/README.md](../../scripts/README.md)), which generates the layout the existing games use and patches the registry, `STORAGE_KEYS` and both locale files.
 
 Numbers below are a snapshot (2026-10-18). Re-derive them before relying on them — commands at the end.
 
