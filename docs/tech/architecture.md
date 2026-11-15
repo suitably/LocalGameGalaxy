@@ -177,7 +177,7 @@ Decisions and rationale: [settings unification plan](../reports/2026-10-26-setti
 
 The rules (SRP, 250-line budget with ratchet, 3-tier decomposition, anti-pattern matrix) live in **[coding-conventions.md](coding-conventions.md)** and are summarised in [AGENTS.md](../../AGENTS.md). Not repeated here — one topic, one home.
 
-Known deviations from the rules are tracked in [open-questions.md](../open-questions.md) (Q4 Melodiq `BroadcastChannel`, Q8 unregistered storage keys).
+Known deviations from the rules are tracked in [open-questions.md](../open-questions.md) (Q8 unregistered storage keys).
 
 ## 5. Verification & quality gates
 

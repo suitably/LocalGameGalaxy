@@ -4,6 +4,8 @@ import type { SongMeta } from '../db';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { generateUUID } from '../../../lib/uuid';
 import { enrichQueueParticipants } from '../logic/queueParticipantUtils';
+import { useMultiChannelSync } from '../../../modules/sync';
+import { QUEUE_SYNC } from '../logic/syncChannels';
 
 function recordSongToHistory(song: SongMeta) {
   try {
@@ -24,7 +26,6 @@ function recordSongToHistory(song: SongMeta) {
 }
 
 const QUEUE_STORAGE_KEY = 'melodiq_queue';
-const CHANNEL_NAME = 'melodiq_queue_channel';
 
 const isClient = new URLSearchParams(window.location.search).get('role') === 'client';
 
@@ -69,25 +70,10 @@ interface QueueContextValue {
 
 const QueueContext = createContext<QueueContextValue | null>(null);
 
-/**
- * One BroadcastChannel per tab for the host queue, created lazily and kept for the page's lifetime
- * on purpose: `setQueue`/`setNowPlaying` post through it from outside the provider's render cycle,
- * and the browser closes it when the page unloads. Not closed on provider unmount (#427).
- */
-let queueBroadcastChannel: BroadcastChannel | null = null;
-
-const getBroadcastChannel = (): BroadcastChannel | null => {
-  if (typeof window === 'undefined' || typeof BroadcastChannel === 'undefined' || isClient)
-    return null;
-  if (!queueBroadcastChannel) {
-    try {
-      queueBroadcastChannel = new BroadcastChannel(CHANNEL_NAME);
-    } catch (e) {
-      console.warn('Failed to create BroadcastChannel', e);
-    }
-  }
-  return queueBroadcastChannel;
-};
+/** Queue sync message between host tabs of this device. */
+type QueueSyncMessage =
+  | { type: 'UPDATE_QUEUE'; payload: QueueItem[] }
+  | { type: 'UPDATE_NOW_PLAYING'; payload: SongMeta | null };
 
 export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [queue, setQueue] = useState<QueueItem[]>(() => {
@@ -102,26 +88,20 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return stored ? JSON.parse(stored) : null;
   });
 
-  useEffect(() => {
-    if (isClient) return;
-
-    const channel = getBroadcastChannel();
-    if (!channel) return;
-
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'UPDATE_QUEUE') {
-        setQueue(event.data.payload);
-      } else if (event.data.type === 'UPDATE_NOW_PLAYING') {
-        setNowPlayingState(event.data.payload);
+  // Host tabs only. The channel lives with the provider; publishes while it is closed fall back to a
+  // transient channel, so updates posted from outside the render cycle still go out (#427).
+  const { publish: publishLocal } = useMultiChannelSync<QueueSyncMessage>({
+    ...QUEUE_SYNC,
+    enabled: !isClient,
+    selfEcho: false,
+    onMessage: (message) => {
+      if (message.type === 'UPDATE_QUEUE') {
+        setQueue(message.payload);
+      } else if (message.type === 'UPDATE_NOW_PLAYING') {
+        setNowPlayingState(message.payload);
       }
-    };
-
-    channel.addEventListener('message', handleMessage);
-
-    return () => {
-      channel.removeEventListener('message', handleMessage);
-    };
-  }, []);
+    },
+  });
 
   // Listen for updates from PhoneClientEngine (Client logic)
   useEffect(() => {
@@ -135,13 +115,19 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => window.removeEventListener('melodiq_client_queue_update', handleClientUpdate);
   }, []);
 
-  const broadcastQueue = useCallback((newQueue: QueueItem[]) => {
-    getBroadcastChannel()?.postMessage({ type: 'UPDATE_QUEUE', payload: newQueue });
-  }, []);
+  const broadcastQueue = useCallback(
+    (newQueue: QueueItem[]) => {
+      if (!isClient) publishLocal({ type: 'UPDATE_QUEUE', payload: newQueue });
+    },
+    [publishLocal],
+  );
 
-  const broadcastNowPlaying = useCallback((song: SongMeta | null) => {
-    getBroadcastChannel()?.postMessage({ type: 'UPDATE_NOW_PLAYING', payload: song });
-  }, []);
+  const broadcastNowPlaying = useCallback(
+    (song: SongMeta | null) => {
+      if (!isClient) publishLocal({ type: 'UPDATE_NOW_PLAYING', payload: song });
+    },
+    [publishLocal],
+  );
 
   const syncQueue = useCallback((newQueue: QueueItem[]) => {
     setQueue(newQueue);
