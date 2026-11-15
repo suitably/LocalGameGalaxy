@@ -1,17 +1,17 @@
-import { storage } from '../../../lib/storage';
+import { storage, STORAGE_PREFIXES } from '../../../lib/storage';
 import { pushClient } from '../../../lib/push/pushClient';
 import { createSeatedAssignment } from '../../../modules/player-management';
 
-const STORAGE_PREFIX = 'guessart_local_players_';
-const TEMP_STORAGE_PREFIX = 'guessart_temp_local_players_';
-
 const tempClaims = (gameId: string): string[] => {
-  const list = storage.getJson<string[]>(`${TEMP_STORAGE_PREFIX}${gameId}`, []);
+  const list = storage.getJson<string[]>(
+    `${STORAGE_PREFIXES.GUESSART_TEMP_LOCAL_PLAYERS}${gameId}`,
+    [],
+  );
   return Array.isArray(list) ? list : [];
 };
 
 // `isLocal(game, id)` follows the player's seat; a turn claimed with "play here" counts as local.
-const baseAssignment = createSeatedAssignment(STORAGE_PREFIX, {
+const baseAssignment = createSeatedAssignment(STORAGE_PREFIXES.GUESSART_LOCAL_PLAYERS, {
   claimed: (gameId, playerId) => tempClaims(gameId).includes(playerId),
 });
 
@@ -31,7 +31,10 @@ export const playerAssignment = {
   claimTurnTemporary(gameId: string, playerId: string): void {
     const temps = this.getTemporaryClaimedPlayerIds(gameId);
     if (!temps.includes(playerId)) {
-      storage.setJson(`${TEMP_STORAGE_PREFIX}${gameId}`, [...temps, playerId]);
+      storage.setJson(`${STORAGE_PREFIXES.GUESSART_TEMP_LOCAL_PLAYERS}${gameId}`, [
+        ...temps,
+        playerId,
+      ]);
     }
     this.addLocalPlayerId(gameId, playerId);
   },
@@ -53,7 +56,7 @@ export const playerAssignment = {
       if (temps.includes(playerId)) {
         this.removeLocalPlayerId(gameId, playerId);
         storage.setJson(
-          `${TEMP_STORAGE_PREFIX}${gameId}`,
+          `${STORAGE_PREFIXES.GUESSART_TEMP_LOCAL_PLAYERS}${gameId}`,
           temps.filter((id) => id !== playerId),
         );
         pushClient.unsubscribeFromGamePush(gameId, playerId).catch(() => {});
@@ -63,7 +66,7 @@ export const playerAssignment = {
         this.removeLocalPlayerId(gameId, id);
         pushClient.unsubscribeFromGamePush(gameId, id).catch(() => {});
       }
-      storage.remove(`${TEMP_STORAGE_PREFIX}${gameId}`);
+      storage.remove(`${STORAGE_PREFIXES.GUESSART_TEMP_LOCAL_PLAYERS}${gameId}`);
     }
   },
 };
