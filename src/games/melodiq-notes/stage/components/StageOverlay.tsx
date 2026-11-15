@@ -5,6 +5,7 @@ import { playerResults, weakestSection } from '../engine/results';
 import { measureIndexAt } from '../../../../modules/music-score';
 import { useSectionName } from './useSectionName';
 import { ResultsTable } from './ResultsTable';
+import { LeaderboardTable } from './LeaderboardTable';
 import { WaitChip } from './WaitChip';
 import { SkipToEndButton } from './SkipToEndButton';
 
@@ -53,6 +54,7 @@ export function StageOverlay({ engine, onStart, onPractise }: StageOverlayProps)
             {k(`results.${title}`)}
           </Typography>
           <ResultsTable engine={engine} />
+          <LeaderboardTable engine={engine} />
           <Typography color="text.secondary">
             {weakest === null
               ? k('results.none_weak')

@@ -618,6 +618,13 @@
           "practise": "{{section}} üben",
           "again": "Nochmal"
         },
+        "leaderboard": {
+          "title": "Bestenliste für diesen Song",
+          "rank": "#",
+          "player": "Spieler",
+          "new_best": "Neuer Rekord",
+          "not_counted": "Nur ein ganzer Durchgang im Auftritt-Modus in vollem Tempo zählt für die Bestenliste."
+        },
         "timeline": "Zeitleiste",
         "lead_in": "Vorlauf",
         "lead_in_seconds": "{{count}} s davor",
@@ -1717,6 +1724,7 @@
       "perm_delete": "Songs löschen",
       "perm_tabletop_saves": "Spielstände auf dem Server speichern (Tabletop)",
       "perm_tabletop_templates": "Standard-Vorlagen von Spielen ändern (Tabletop)",
+      "perm_tabletop_delete": "Gespeicherte Spiele auf dem Server löschen (Tabletop)",
       "perm_readonly": "Nur Lesen",
       "perm_desc": "Berechtigungen steuern, was dieser Key auf deinem Server tun darf.",
       "perm_readonly_desc": "Nur-Lesen Modus: Kann Songs durchsuchen, streamen und singen, aber keine Dateien löschen oder Einstellungen ändern.",
