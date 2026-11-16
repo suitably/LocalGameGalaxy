@@ -1360,6 +1360,7 @@
       "shuffleDeck": "Mischen",
       "view_hand": "Hand",
       "view_board": "Tisch",
+      "view_my_area": "Mein Bereich",
       "flick_hint": "Wische eine Karte nach oben, um sie auf den TV zu werfen!",
       "current_table_card": "Aktuelle Karte auf dem Tisch",
       "table_card": "Tisch: {{card}}",
