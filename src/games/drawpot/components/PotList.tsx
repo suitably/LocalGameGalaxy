@@ -10,6 +10,7 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
@@ -58,9 +59,15 @@ export const PotList: React.FC<PotListProps> = ({
               key={item.id}
               disablePadding
               secondaryAction={
-                <IconButton edge="end" aria-label={removeLabel} onClick={() => setPending(item.id)}>
-                  <CloseRoundedIcon fontSize="small" />
-                </IconButton>
+                <Tooltip title={removeLabel}>
+                  <IconButton
+                    edge="end"
+                    aria-label={removeLabel}
+                    onClick={() => setPending(item.id)}
+                  >
+                    <CloseRoundedIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               }
             >
               <ListItemButton onClick={() => onOpen(item.id)}>

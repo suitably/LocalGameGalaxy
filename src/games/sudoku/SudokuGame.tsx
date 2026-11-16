@@ -197,7 +197,7 @@ export const SudokuGame: React.FC = () => {
             </Typography>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setHelpOpen(false)}>{t('common.close', 'Verstanden')}</Button>
+            <Button onClick={() => setHelpOpen(false)}>{t('common.close')}</Button>
           </DialogActions>
         </Dialog>
       </Box>

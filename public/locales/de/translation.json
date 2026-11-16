@@ -238,6 +238,8 @@
         "editor": {
           "title": "Rollen-Editor",
           "add_role": "Rolle hinzufügen",
+          "standard_roles": "Standard-Rollen",
+          "custom_roles": "Eigene Rollen",
           "edit_role": "Rolle bearbeiten",
           "new_role": "Neue Rolle",
           "role_name": "Rollenname",
@@ -1394,6 +1396,7 @@
       "counterDecrement": "Verringern",
       "counterIncrement": "Erhöhen",
       "drawToHand": "Auf die Hand ziehen",
+      "dealEach": "{{count}} an alle austeilen",
       "dealEach_one": "{{count}} Karte an alle austeilen",
       "dealEach_other": "{{count}} Karten an alle austeilen",
       "server_unreachable": "Der Companion-Server ist gerade nicht erreichbar.",
@@ -1937,6 +1940,9 @@
     "duplicatePlayer": "Spieler existiert bereits!",
     "minPlayers": "Mindestens 2 Spieler werden benötigt!",
     "optionsTitle": "Optionen",
+    "hintFailed": "Hinweis konnte nicht geladen werden",
+    "guessFailed": "Tipp konnte nicht gesendet werden",
+    "publishFailed": "Katalog konnte nicht veröffentlicht werden",
     "manualWordModeToggle": "Manuelle Worterstellung",
     "manualWordModeDesc": "Spieler geben eigene Begriffe ein, anstatt aus dem Katalog zu wählen.",
     "startGame": "Neues Spiel starten",
@@ -1969,6 +1975,7 @@
     "noMoreHints": "Keine weiteren Tipps verfügbar",
     "getHint": "Tipp anfordern",
     "guessPlaceholder": "Was wurde gezeichnet?",
+    "submitGuess": "Tipp abgeben",
     "repeatedGuess": "Dieses Wort hast du schon versucht!",
     "wrongGuess": "Leider falsch! Versuch es weiter.",
     "correctCelebration": "Richtig erraten!",
@@ -2021,6 +2028,15 @@
     "promptStepHint": "Dein Satz wird an den nächsten Spieler weitergegeben, der ihn zeichnen muss!",
     "promptPlaceholder": "z.B. Ein Pinguin der Fallschirm springt...",
     "randomPrompt": "Zufällige Idee",
+    "promptSuggestions": [
+      "Ein Roboter der Pfannkuchen backt",
+      "Katze mit Sonnenbrille auf einem Skateboard",
+      "Astronaut reitet ein Lama auf dem Mond",
+      "Dinosaurier trinkt gemütlich Kaffee",
+      "Pinguin fliegt mit bunten Luftballons",
+      "Schneemann am heißen Strand in Hawaii",
+      "Superheld verliert seinen Umhang im Sturm"
+    ],
     "drawThisPrompt": "Zeichne diesen Satz:",
     "whatIsThisDrawing": "Was stellt diese Zeichnung dar? Beschreibe sie!",
     "describeDrawingPlaceholder": "Beschreibe die Zeichnung in einem Satz...",
@@ -2334,6 +2350,10 @@
     "victory": {
       "title": "Gelöst!",
       "new_record": "Neue persönliche Bestzeit!"
+    },
+    "share": {
+      "title": "Sudoku-Ergebnis",
+      "text": "🔢 Sudoku ({{difficulty}}) gelöst in {{time}}!\nFehler: {{mistakes}}, Hinweise: {{hints}}"
     },
     "menu": {
       "stats": "Statistiken",

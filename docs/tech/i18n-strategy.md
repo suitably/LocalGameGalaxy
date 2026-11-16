@@ -8,8 +8,8 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-18
-  method: 'read src/i18n.ts, src/games/*/i18n/index.ts, public/locales/*/translation.json top-level keys, scripts/check-repo-hygiene.mjs (parity check)'
+  at: 2026-11-16
+  method: 'read src/i18n.ts, src/games/*/i18n/index.ts, public/locales/*/translation.json top-level keys, scripts/check-repo-hygiene.mjs (parity check); 2026-11-16: Sudoku and Wordle bundle status re-checked with grep'
 sources:
   - 'src/i18n.ts'
   - 'public/locales/'
@@ -42,10 +42,10 @@ sources:
 
 ## 3. Two places where strings live
 
-| Source                                    | Who uses it                                                                                                                                                      | How it is loaded                                                                                                                                  |
-| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `public/locales/{en,de}/translation.json` | app shell, hub, settings, party, connection, notifications, and the games darts, guessart, storyteller, melodiq-notes, werewolf, imposter, tabletop, garticphone | HTTP backend at start-up                                                                                                                          |
-| `src/games/<id>/i18n/index.ts`            | cards, kniffel, knister, melodiq, qwixx, sudoku, wordle                                                                                                          | the game calls its `init<Game>I18n()` which runs `i18next.addResourceBundle(lang, 'translation', …, deep=true, overwrite=true)` for `en` and `de` |
+| Source                                    | Who uses it                                                                                                                                                                      | How it is loaded                                                                                                                                  |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public/locales/{en,de}/translation.json` | app shell, hub, settings, party, connection, notifications, and the games darts, guessart, storyteller, melodiq-notes, werewolf, imposter, tabletop, garticphone, sudoku, wordle | HTTP backend at start-up                                                                                                                          |
+| `src/games/<id>/i18n/index.ts`            | cards, kniffel, knister, melodiq, qwixx                                                                                                                                          | the game calls its `init<Game>I18n()` which runs `i18next.addResourceBundle(lang, 'translation', …, deep=true, overwrite=true)` for `en` and `de` |
 
 Rule: add a string **where its game already keeps its strings**, in both languages. Do not move a game between the two systems as a side effect.
 

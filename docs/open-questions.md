@@ -14,6 +14,11 @@ Resolve: migrate to `useMultiChannelSync` or document Melodiq TV sync as an expl
 TTS plan D5: optimise the DOM renderer, measure at 800 widgets, and consider a Canvas renderer only if p95 stays above 16 ms. After #684 (`npm run perf:tabletop`, headless Chromium in a 4-vCPU cloud container): a token drag reaches p95 16.7 ms unthrottled (`main`: 100–150 ms), but 50–67 ms at 4× CPU throttling (`main`: 580–750 ms); panning stays at 16.8 ms. The acceptance criterion names a real mid-range phone, and the 4× emulation is only an approximation of one.
 Resolve: measure on a real mid-range phone (manual). If p95 stays above 16 ms there, the maintainer decides between further DOM work (remaining cost: re-rendering the whole table tree on each 50 ms commit, layout of ~5,500 layout objects per commit, layerization) and the Canvas renderer of D5.
 
+## Q23 — Wordle's `i18n` bundle is never registered
+
+`src/games/wordle/i18n/index.ts` exports a flat-key `wordleTranslations` that nothing imports (only `src/games/wordle/index.ts` re-exports it); live Wordle strings come from the top-level `wordle` section of `public/locales`. Same situation Sudoku had before 2026-11-16, where the dead bundle was deleted. [i18n-strategy](tech/i18n-strategy.md) no longer lists Wordle as a bundle game.
+Resolve: check that every bundle key exists in `public/locales`, then delete the bundle like Sudoku's, or register it via an `initWordleI18n()` like Kniffel and remove the duplicates from the locale files.
+
 ## Resolved 2026-11-15
 
 - Q22 deleting a saved tabletop game → maintainer decision (2026-11-15): a dedicated API key flag `allowTabletopGameDeletion`; keys from older configs get their `allowSongDeletion` value on load, so nothing changes for existing installs. [server-security](tech/server-security.md)

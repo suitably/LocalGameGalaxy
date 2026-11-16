@@ -87,7 +87,14 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
           display: 'flex',
           flexDirection: 'column',
           p: { xs: 0.5, sm: 1 },
-          overflow: taskType === 'drawing' || taskType === 'guessing' ? 'hidden' : 'auto',
+          // The album reveal owns its own scroll container, so only the other steps scroll here.
+          overflow:
+            taskType === 'drawing' ||
+            taskType === 'guessing' ||
+            gameState.phase === 'reveal' ||
+            gameState.phase === 'finished'
+              ? 'hidden'
+              : 'auto',
         }}
       >
         {spectating ? (

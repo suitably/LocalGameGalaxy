@@ -9,8 +9,8 @@ generated:
   at: 2026-09-27T10:00:00Z
   by: previous-agent
 verified:
-  at: 2026-10-18
-  method: '2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
+  at: 2026-11-16
+  method: '2026-11-16: component tree in section 2 re-checked against src/games/werewolf/components with ls and grep; other sections not re-verified since the 2026-10-18 audit'
 ---
 
 # Werewolf Game Module Architecture
@@ -31,16 +31,20 @@ Werewolf is the primary game module and the oldest feature in LocalGameGalaxy. I
 ## 2. Component Hierarchy
 
 ```
-WerewolfGame.tsx              ← Root game component; provides GameContext
-├── SetupScreen.tsx           ← Player management, role selection
-├── RoleRevealScreen.tsx      ← Pass-device individual role reveal flow
-├── NightScreen.tsx           ← Night phase UI; triggers TTS narrator
-│   └── NightRoleCard.tsx     ← Per-role action card (KILL, HEAL, etc.)
-├── DayScreen.tsx             ← Day discussion phase
-├── VotingScreen.tsx          ← Player voting / elimination
-├── HunterShotScreen.tsx      ← Special Hunter post-elimination action
-├── GameOverScreen.tsx        ← Win condition display and restart
-└── CustomRoleEditor.tsx      ← Role customization UI
+WerewolfGame.tsx              ← Root; wraps WerewolfGameProvider (context/WerewolfGameContext.tsx)
+└── components/
+    ├── ContinueGameDialog.tsx    ← Resume or discard a saved game
+    ├── GameSetup.tsx             ← Player management, role selection (setup/RoleSelectionGrid, setup/RoleDescriptionDialog)
+    │   └── RoleEditor.tsx        ← Role customization list (RoleEditDialog.tsx, editor/AbilityEditor.tsx)
+    ├── RoleReveal.tsx            ← Pass-device individual role reveal flow
+    ├── NightPhase.tsx            ← Night phase UI; triggers TTS narrator (hooks/useTTS.ts)
+    │   ├── night/StandardRoleNight.tsx  ← Built-in role actions (roles/*View.tsx per role)
+    │   ├── night/CustomRoleNight.tsx    ← Ability-driven custom roles
+    │   └── night/RoleInfoDialog.tsx
+    ├── DayPhase.tsx              ← Day discussion phase
+    ├── VotingPhase.tsx           ← Player voting / elimination
+    ├── HunterShotView.tsx        ← Hunter post-elimination action
+    └── GameOver.tsx              ← Win condition display and restart
 ```
 
 ---

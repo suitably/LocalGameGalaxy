@@ -2,7 +2,17 @@
  * A link with copy, share and QR code [ID: DRAWPOT-SHARE-LINK]
  */
 import React, { useState } from 'react';
-import { Box, Button, Card, IconButton, Paper, Stack, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Card,
+  IconButton,
+  Paper,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@mui/material';
 import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
@@ -83,14 +93,17 @@ export const ShareLinkCard: React.FC<ShareLinkCardProps> = ({
         >
           {t('drawpot.share.share')}
         </Button>
-        <IconButton
-          size="small"
-          aria-label={t('drawpot.share.qr')}
-          onClick={() => setShowQr((v) => !v)}
-          color={showQr ? 'primary' : 'default'}
-        >
-          <QrCodeRoundedIcon fontSize="small" />
-        </IconButton>
+        <Tooltip title={t('drawpot.share.qr')}>
+          <IconButton
+            size="small"
+            aria-label={t('drawpot.share.qr')}
+            aria-pressed={showQr}
+            onClick={() => setShowQr((v) => !v)}
+            color={showQr ? 'primary' : 'default'}
+          >
+            <QrCodeRoundedIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
       </Stack>
       {showQr && (
         <Box display="flex" justifyContent="center" py={1}>

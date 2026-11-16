@@ -1,5 +1,14 @@
 import React from 'react';
-import { Box, Button, Dialog, DialogContent, Divider, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  Divider,
+  Stack,
+  Typography,
+} from '@mui/material';
 import BrushRoundedIcon from '@mui/icons-material/BrushRounded';
 import PsychologyRoundedIcon from '@mui/icons-material/PsychologyRounded';
 import LightbulbRoundedIcon from '@mui/icons-material/LightbulbRounded';
@@ -86,17 +95,10 @@ export const GameInfoDialog: React.FC<GameInfoDialogProps> = ({ open, onClose })
             </Box>
           </Box>
         </Stack>
-
-        <Button
-          variant="contained"
-          fullWidth
-          size="large"
-          onClick={onClose}
-          sx={{ mt: 3, py: 1.2, fontWeight: 700 }}
-        >
-          {t('common.close', 'Verstanden')}
-        </Button>
       </DialogContent>
+      <DialogActions sx={{ px: { xs: 2.5, sm: 3.5 }, pb: 2 }}>
+        <Button onClick={onClose}>{t('common.close')}</Button>
+      </DialogActions>
     </Dialog>
   );
 };
