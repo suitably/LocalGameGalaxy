@@ -44,6 +44,13 @@
       "busted": "Überworfen!",
       "last_score": "Wurf: {{score}}",
       "restart_title": "Spiel neustarten?",
+      "remove_player": "Spieler entfernen",
+      "multiplier": "Wurf-Multiplikator",
+      "bullseye": "BULLSEYE (50)",
+      "bull": "BULL (25)",
+      "setup_reset_title": "Spiel zurücksetzen?",
+      "setup_reset_desc": "Diese Änderung startet das laufende Spiel neu. Alle bisherigen Würfe gehen verloren.",
+      "setup_reset_confirm": "Zurücksetzen",
       "restart_desc": "Bist du sicher? Der aktuelle Spielstand geht verloren."
     },
     "wordle": {
@@ -337,6 +344,7 @@
         "resume": "Weiter",
         "end_round": "Runde beenden",
         "confirm_end": "Bist du sicher, dass du die Runde vorzeitig beenden möchtest?",
+        "end_round_confirm": "Jetzt beenden",
         "kick_title": "Wer ist der Imposter?"
       },
       "result": {
@@ -2334,6 +2342,9 @@
   },
   "storyteller": {
     "title": "Geschichtenschreiber",
+    "deleteSavedTitle": "Geschichte löschen?",
+    "deleteSavedMessage": "Die gespeicherte Geschichte wird endgültig gelöscht.",
+    "deleteSavedAria": "Geschichte löschen",
     "turnLabel": "Zug",
     "currentTurnOf": "Am Zug: ",
     "defaultPlayer": "Spieler",
@@ -2522,6 +2533,9 @@
       "deleteMessage": "Der Lostopf wird vom Server gelöscht. Der Link funktioniert nicht mehr; Teilnehmende behalten ihren lokalen Verlauf.",
       "noKey": "Dieses Gerät hat keinen Host-Zugriff auf diesen Lostopf. Öffne den Host-Link, um ihn zu verwalten.",
       "openAsParticipant": "Als Teilnehmende*r öffnen",
+      "forgetTitle": "Aus Liste entfernen?",
+      "forgetMessage": "Der Lostopf wird nur aus deiner Liste auf diesem Gerät entfernt. Mit dem Host-Link kannst du ihn später wieder hinzufügen.",
+      "forgetConfirm": "Entfernen",
       "forget": "Aus meiner Liste entfernen"
     },
     "participant": {

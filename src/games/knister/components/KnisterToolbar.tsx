@@ -76,7 +76,7 @@ export const KnisterToolbar: React.FC<KnisterToolbarProps> = ({
           onClick={onOpenLegend}
           sx={{ borderRadius: 3, textTransform: 'none', borderColor: 'divider' }}
         >
-          {t('games.knister.legend_title', 'Regeln')}
+          {t('games.knister.show_legend', 'Punkteübersicht')}
         </Button>
       </Tooltip>
 
