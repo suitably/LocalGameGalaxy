@@ -1670,7 +1670,8 @@
       "hint_order": "The first enabled microphone is assigned to player 1, the second to player 2, and so on.",
       "unknown_device": "Unknown audio device",
       "disabled": "Disabled",
-      "active": "Active (assigned to local player {{n}})"
+      "active": "Active (assigned to local player {{n}})",
+      "rename_device": "Rename device"
     },
     "privacy_title": "Privacy",
     "privacy_desc": "Which data the games use, which services they contact and your rights.",
@@ -2241,7 +2242,9 @@
     "backToHub": "Back to overview",
     "invite_players": "Invite players",
     "spectatorWatching": "You are watching",
-    "spectatorPickHint": "Pick whose view to follow"
+    "spectatorPickHint": "Pick whose view to follow",
+    "gameSelectionTitle": "Game selection",
+    "partyModeChip": "Party mode"
   },
   "gartic": {
     "waitingHeader": "Waiting for other players...",

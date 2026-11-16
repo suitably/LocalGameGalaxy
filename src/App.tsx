@@ -23,7 +23,7 @@ const GarticPhoneGame = lazy(() =>
 
 // Loading fallback component
 const LoadingFallback = () => (
-  <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+  <Box display="flex" justifyContent="center" alignItems="center" minHeight="100dvh">
     <CircularProgress />
   </Box>
 );

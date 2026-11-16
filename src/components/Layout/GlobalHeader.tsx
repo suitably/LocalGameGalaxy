@@ -74,7 +74,11 @@ export const GlobalHeader: React.FC = () => {
                 size="medium"
                 edge="start"
                 color="inherit"
-                aria-label={homeAction || isSettingsPage ? t('common.back', 'Zurück') : 'home'}
+                aria-label={
+                  homeAction || isSettingsPage
+                    ? t('common.back', 'Zurück')
+                    : t('common.home', 'Home')
+                }
                 sx={{ mr: { xs: 0.5, sm: 1.5 }, p: { xs: 0.75, sm: 1.25 } }}
                 onClick={handleHomeClick}
               >

@@ -72,6 +72,7 @@ export const FeedbackDialog: React.FC = () => {
           <IconButton
             onClick={handleClose}
             size="small"
+            aria-label={t('common.close', 'Close')}
             sx={{ color: 'text.secondary', '&:hover': { color: 'text.primary' } }}
           >
             <CloseIcon />

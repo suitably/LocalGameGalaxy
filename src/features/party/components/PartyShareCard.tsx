@@ -2,7 +2,7 @@
  * Join link, copy and QR code [ID: COMP-PARTY-SHARE-CARD]
  */
 import React from 'react';
-import { Box, Button, Card, IconButton, Paper, Typography } from '@mui/material';
+import { Box, Button, Card, IconButton, Paper, Tooltip, Typography } from '@mui/material';
 import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import QrCodeRoundedIcon from '@mui/icons-material/QrCodeRounded';
@@ -33,13 +33,21 @@ export const PartyShareCard: React.FC<{ lobby: PartyLobbyController }> = ({ lobb
             {t('party.invitePrompt', 'Freunde einladen: 1× scannen für den ganzen Abend!')}
           </Typography>
           <Box display="flex" gap={1}>
-            <IconButton
-              size="small"
-              onClick={() => setShowQr(!showQr)}
-              color={showQr ? 'primary' : 'default'}
+            <Tooltip
+              title={
+                showQr
+                  ? t('common.hideQrCode', 'Hide QR code')
+                  : t('common.showQrCode', 'Show QR code')
+              }
             >
-              <QrCodeRoundedIcon fontSize="small" />
-            </IconButton>
+              <IconButton
+                size="small"
+                onClick={() => setShowQr(!showQr)}
+                color={showQr ? 'primary' : 'default'}
+              >
+                <QrCodeRoundedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
             <Button
               size="small"
               variant="outlined"

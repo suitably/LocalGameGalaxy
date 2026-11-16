@@ -1670,7 +1670,8 @@
       "hint_order": "Das erste aktivierte Mikrofon bekommt Spieler 1, das zweite Spieler 2 usw.",
       "unknown_device": "Unbekanntes Audiogerät",
       "disabled": "Deaktiviert",
-      "active": "Aktiv (zugewiesen an lokalen Spieler {{n}})"
+      "active": "Aktiv (zugewiesen an lokalen Spieler {{n}})",
+      "rename_device": "Gerät umbenennen"
     },
     "privacy_title": "Datenschutz",
     "privacy_desc": "Welche Daten die Spiele nutzen, welche Dienste sie kontaktieren und welche Rechte du hast.",
@@ -2241,7 +2242,9 @@
     "backToHub": "Zur Übersicht",
     "invite_players": "Mitspieler einladen",
     "spectatorWatching": "Du schaust zu",
-    "spectatorPickHint": "Wähle, wessen Sicht du sehen willst"
+    "spectatorPickHint": "Wähle, wessen Sicht du sehen willst",
+    "gameSelectionTitle": "Spielauswahl",
+    "partyModeChip": "Party-Modus"
   },
   "gartic": {
     "waitingHeader": "Warte auf die anderen Spieler...",

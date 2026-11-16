@@ -90,7 +90,12 @@ export const ServerSetupWizard: React.FC<ServerSetupWizardProps> = ({ isDialog =
             onClick={() => setExpanded((v) => !v)}
             size="small"
             sx={{ color: 'text.secondary' }}
-            aria-label="toggle assistant"
+            aria-expanded={expanded}
+            aria-label={
+              expanded
+                ? t('server.setup.collapse_hide', 'Hide Setup Assistant')
+                : t('server.setup.collapse_show', 'Show Server Setup Assistant')
+            }
           >
             {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
           </IconButton>
