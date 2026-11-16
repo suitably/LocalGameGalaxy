@@ -125,6 +125,8 @@ No `aria-label` or Tooltip: `melodiq-notes/components/NotesDialogFrame.tsx:54` (
 3. Tabletop follows the common pattern: menu and table settings move to the header (menu items, `useGameSettingsHost`); only canvas tools (zoom, selection) stay floating.
 4. One close label for info dialogs: `common.close` ("Schließen").
 
+Step 9 (ratchets) now exists in `check:architecture`: `AppBar` in games, `setHeaderHidden(` allowlist, back-arrow icon baseline, unnamed `IconButton` baseline; see [coding conventions](../tech/coding-conventions.md).
+
 Done from this report: tabletop pan and zoom (not an audit finding, reported with the decisions) — zoom is anchored at the fingers or the cursor, see [tabletop engine](../tech/tabletop-engine.md).
 
 ## Not covered
