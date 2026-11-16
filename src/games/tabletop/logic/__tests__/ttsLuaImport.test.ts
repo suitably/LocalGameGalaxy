@@ -63,7 +63,12 @@ end`;
     });
     const lay = Object.values(game.widgets).find((w): w is ButtonWidget => w.type === 'button');
     const board = game.widgets.b00001;
-    const spot = { x: board.x, y: board.y };
+    const deckSize = Object.values(game.widgets).find((w) => w.type === 'deck') as DeckWidget;
+    // Both are centred on the same world position.
+    const spot = {
+      x: Math.round(board.x + board.width / 2 - deckSize.width / 2),
+      y: Math.round(board.y + board.height / 2 - deckSize.height / 2),
+    };
     expect(lay?.routine).toEqual([
       { op: 'DRAW', deck: expect.any(String), count: 1, at: spot, faceUp: true },
     ]);
