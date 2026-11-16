@@ -3,6 +3,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Box, IconButton, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { scoreText } from '../../../../themeTokens';
 import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
 import PauseIcon from '@mui/icons-material/PauseRounded';
@@ -27,6 +28,7 @@ export const TimerWidgetView: React.FC<TimerWidgetViewProps> = ({
   onToggle,
   onReset,
 }) => {
+  const { t } = useTranslation();
   const running = widget.runningSince !== undefined;
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -63,10 +65,22 @@ export const TimerWidgetView: React.FC<TimerWidgetViewProps> = ({
         {formatTimer(shown)}
       </Typography>
       <Box>
-        <IconButton size="small" color="inherit" onPointerDown={stop} onClick={onToggle}>
+        <IconButton
+          size="small"
+          color="inherit"
+          onPointerDown={stop}
+          onClick={onToggle}
+          aria-label={t(running ? 'games.tabletop.timerPause' : 'games.tabletop.timerStart')}
+        >
           {running ? <PauseIcon fontSize="small" /> : <PlayArrowIcon fontSize="small" />}
         </IconButton>
-        <IconButton size="small" color="inherit" onPointerDown={stop} onClick={onReset}>
+        <IconButton
+          size="small"
+          color="inherit"
+          onPointerDown={stop}
+          onClick={onReset}
+          aria-label={t('games.tabletop.timerReset')}
+        >
           <RestartAltIcon fontSize="small" />
         </IconButton>
       </Box>

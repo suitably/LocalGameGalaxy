@@ -44,6 +44,7 @@ export function TabletopGame() {
   const [error, setError] = useState<string | null>(null);
   const [restartCount, setRestartCount] = useState(0);
   const [origin, setOrigin] = useState<TableOrigin | null>(null);
+  const [tableSettingsOpen, setTableSettingsOpen] = useState(false);
   const isHost = role === 'tv';
   /** Host and local play own the state, so they save and resume it; phones get snapshots. */
   const ownsState = isLocal || isHost;
@@ -159,22 +160,30 @@ export function TabletopGame() {
     );
   }
 
+  // Owner views (host, local play): full header menu; the table settings dialog sits in the editor
+  const ownerMenu = {
+    game: gameState.game,
+    origin,
+    onLoad: loadSavedTable,
+    onRestart: restartGame,
+    onOpenTableSettings: () => setTableSettingsOpen(true),
+  };
+  const tableSettings = {
+    tableSettingsOpen,
+    onCloseTableSettings: () => setTableSettingsOpen(false),
+  };
+
   // 1. In Room: TV / Shared Table Mode
   if (roomId && role === 'tv') {
+    const backToLobby = () => {
+      broadcastAction({ type: 'RETURN_TO_LOBBY' });
+      returnToLobby();
+    };
     return withAssets(
       <TvThemeProvider>
         <Box position="relative" width="100%" height="100%">
-          <TableGameMenu
-            game={gameState.game}
-            origin={origin}
-            onLoad={loadSavedTable}
-            onRestart={restartGame}
-            onBackToLobby={() => {
-              broadcastAction({ type: 'RETURN_TO_LOBBY' });
-              returnToLobby();
-            }}
-          />
-          <TabletopEditor state={gameState} dispatch={syncedDispatch} isTvMode={true} />
+          <TableGameMenu {...ownerMenu} onBack={backToLobby} onBackToLobby={backToLobby} />
+          <TabletopEditor state={gameState} dispatch={syncedDispatch} isTvMode {...tableSettings} />
         </Box>
       </TvThemeProvider>,
     );
@@ -183,21 +192,24 @@ export function TabletopGame() {
   // 2. In Room: Smartphone Controller Mode (`role=spectator`: no seat, no hand, no drawing)
   if (roomId && (seat !== null || isSpectator)) {
     return withAssets(
-      <TabletopControllerView
-        state={gameState}
-        dispatch={syncedDispatch}
-        mySeat={seat}
-        readOnly={isSpectator}
-        onFlickCardToTable={(cardId, targetHolderId) => {
-          broadcastAction({
-            type: 'FLICK_CARD_TO_TABLE',
-            cardId,
-            targetHolderId,
-            senderSeat: seat ?? undefined,
-          });
-          dispatch({ type: 'ANIMATE_CARD_TO_TABLE', payload: { cardId, targetHolderId } });
-        }}
-      />,
+      <>
+        <TableGameMenu game={gameState.game} origin={origin} />
+        <TabletopControllerView
+          state={gameState}
+          dispatch={syncedDispatch}
+          mySeat={seat}
+          readOnly={isSpectator}
+          onFlickCardToTable={(cardId, targetHolderId) => {
+            broadcastAction({
+              type: 'FLICK_CARD_TO_TABLE',
+              cardId,
+              targetHolderId,
+              senderSeat: seat ?? undefined,
+            });
+            dispatch({ type: 'ANIMATE_CARD_TO_TABLE', payload: { cardId, targetHolderId } });
+          }}
+        />
+      </>,
     );
   }
 
@@ -206,13 +218,13 @@ export function TabletopGame() {
     return withAssets(
       <Box display="flex" flexDirection="column" width="100%" height="100%" overflow="hidden">
         <Box flex={1} position="relative" minHeight={0}>
-          <TableGameMenu
-            game={gameState.game}
-            origin={origin}
-            onLoad={loadSavedTable}
-            onRestart={restartGame}
+          <TableGameMenu {...ownerMenu} onBack={() => navigate('/games/tabletop')} />
+          <TabletopEditor
+            state={gameState}
+            dispatch={syncedDispatch}
+            hideSeatSelector
+            {...tableSettings}
           />
-          <TabletopEditor state={gameState} dispatch={syncedDispatch} hideSeatSelector />
           <TabletopPassAndPlay state={gameState} dispatch={syncedDispatch} />
         </Box>
         <HandDockStrip state={gameState} dispatch={syncedDispatch} />

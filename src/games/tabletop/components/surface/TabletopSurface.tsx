@@ -1,7 +1,6 @@
 import React, { useRef, useState, useMemo } from 'react';
 import { Box } from '@mui/material';
 import { TabletopToolbar } from './TabletopToolbar';
-import { RulesDialog } from './RulesDialog';
 import { FlyingCardsLayer } from './FlyingCardsLayer';
 import type { TabletopGameState, TabletopAction } from '../../logic/tabletopReducer';
 import type { TabletopWidget } from '../../logic/types';
@@ -36,6 +35,8 @@ interface TabletopSurfaceProps {
   readOnly?: boolean;
   /** Host table: the selection can be deleted (phones may not, #685). */
   canDeleteSelection?: boolean;
+  /** Top offset of the selection bar (below the editor toolbar). */
+  selectionBarTop?: number;
 }
 
 export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
@@ -46,10 +47,10 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
   editMode = false,
   readOnly = false,
   canDeleteSelection = false,
+  selectionBarTop,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-  const [rulesOpen, setRulesOpen] = useState(false);
   const [contextMenuPos, setContextMenuPos] = useState<WidgetContextMenuPosition | null>(null);
 
   const { game, flyingCards } = state;
@@ -197,7 +198,11 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
         />
       </Box>
 
-      <SelectionFloatingBar selection={selection} canDelete={canDeleteSelection && !isSpectator} />
+      <SelectionFloatingBar
+        selection={selection}
+        canDelete={canDeleteSelection && !isSpectator}
+        top={selectionBarTop}
+      />
 
       <SurfaceSeatControls
         seats={seats}
@@ -212,15 +217,12 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
           onZoomIn={zoomIn}
           onZoomOut={zoomOut}
           onResetView={fitToScreen}
-          onOpenRules={() => setRulesOpen(true)}
-          hasRules={Boolean(game.ruleText)}
           isSelectionMode={selection.isSelectionMode}
           onToggleSelectionMode={isSpectator ? undefined : selection.toggleSelectionMode}
           onAddHiddenZone={isSpectator ? undefined : handleAddHiddenZone}
+          besideInspector={editMode}
         />
       )}
-
-      <RulesDialog open={rulesOpen} onClose={() => setRulesOpen(false)} ruleText={game.ruleText} />
 
       <BoardDragOverlay
         widget={activeDragId && isDraggingActive ? game.widgets[activeDragId] : null}

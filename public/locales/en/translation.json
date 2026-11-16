@@ -1397,7 +1397,11 @@
       "dealEach_one": "Deal {{count}} card to everyone",
       "dealEach_other": "Deal {{count}} cards to everyone",
       "server_unreachable": "The companion server is not reachable right now.",
-      "gameMenu": "Game menu"
+      "timerStart": "Start timer",
+      "timerPause": "Pause timer",
+      "timerReset": "Reset timer",
+      "cardBack": "Card back",
+      "cardFront": "Card"
     },
     "drawpot": {
       "title": "Draw Pot",
