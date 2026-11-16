@@ -1404,7 +1404,126 @@
       "timerPause": "Pause timer",
       "timerReset": "Reset timer",
       "cardBack": "Card back",
-      "cardFront": "Card"
+      "cardFront": "Card",
+      "card_games": "Card games",
+      "scripted": {
+        "games": {
+          "schwimmen": {
+            "title": "Schwimmen (Thirty-One)",
+            "desc": "Collect 31, knock, three lives – for 2 to 9 players."
+          },
+          "durak": {
+            "title": "Durak",
+            "desc": "Attack, beat, throw in – whoever is left with cards is the durak. 2 to 6 players."
+          },
+          "arschloch": {
+            "title": "President (Arschloch)",
+            "desc": "Get rid of your cards and become president. 3 to 8 players."
+          },
+          "skat": {
+            "title": "Skat",
+            "desc": "Bid, discard, take 61 points – for exactly 3 players."
+          }
+        },
+        "turn": "{{name}}'s turn",
+        "yourTurn": "Your turn",
+        "roundOver": "Round over",
+        "matchWon": "{{name}} wins the game",
+        "nextRound": "Next round",
+        "newMatch": "New game",
+        "play": "Play",
+        "trump": "Trump {{suit}}",
+        "tableHint": "This is the shared table. Everyone has their hand and moves on their own device.",
+        "setup": {
+          "title": "Who is playing?",
+          "players": "This game needs {{min}} to {{max}} players.",
+          "tooMany": "The first {{max}} play; the others watch.",
+          "start": "Deal",
+          "tableOnly": "This device only shows the table",
+          "tableOnlyHint": "For the TV: cast this device's screen. All players use their own phone for their hand and moves. Switch off if you play on this device.",
+          "waitingForHost": "The host is about to start the game …"
+        },
+        "schwimmen": {
+          "out": "out",
+          "swimming": "swimming",
+          "knocked": "knocked",
+          "dealerChoice": "{{name}} deals and picks a hand",
+          "keep": "Keep hand",
+          "takeOther": "Take the other hand",
+          "lastTurn": "{{name}} – last turn",
+          "swapOne": "Swap card",
+          "swapAll": "Swap all three",
+          "pass": "Pass",
+          "knock": "Knock",
+          "fire": "{{name}} has 31 – everyone else loses a life",
+          "tie": "Tie – nobody loses a life"
+        },
+        "durak": {
+          "attacker": "attacks",
+          "defender": "defends",
+          "losses": "{{count}}× durak",
+          "draw": "Draw – no durak",
+          "isDurak": "{{name}} is the durak",
+          "defends": "{{name}} defends",
+          "attacks": "{{name}} attacks",
+          "mayAdd": "{{name}} may throw in",
+          "beat": "Beat",
+          "take": "Take",
+          "attack": "Attack",
+          "add": "Throw in",
+          "done": "Done"
+        },
+        "arschloch": {
+          "president": "President",
+          "vicePresident": "Vice",
+          "citizen": "Citizen",
+          "viceArschloch": "Vice scum",
+          "arschloch": "Scum",
+          "passed": "passed",
+          "roundWon": "{{name}} is president",
+          "gives": "{{name}} gives back {{count}} card(s)",
+          "give": "Give {{count}} card(s)",
+          "leads": "{{name}} leads",
+          "pass": "Pass"
+        },
+        "skat": {
+          "grand": "Grand",
+          "null": "Null",
+          "nullOuvert": "Null Ouvert",
+          "hand": "Hand",
+          "declarer": "Declarer",
+          "dealer": "Dealer",
+          "tricks": "{{count}} tricks",
+          "bidInfo": "Bid {{value}}",
+          "skat": "Skat",
+          "passedIn": "Everyone passed – thrown in",
+          "won": "{{name}} wins",
+          "lost": "{{name}} loses",
+          "resultWon": "{{name}}: +{{value}}",
+          "resultLost": "{{name}}: −{{value}} × 2",
+          "points": "{{points}} card points",
+          "schwarz": "Schwarz",
+          "schneider": "Schneider",
+          "overbid": "Overbid (bid up to {{bid}})",
+          "asked": "{{name}}: {{value}}?",
+          "hold": "Yes, {{value}}",
+          "pass": "Pass",
+          "bids": "{{name}} is bidding",
+          "decides": "{{name}}: pick up the skat or play hand?",
+          "pickup": "Pick up the skat",
+          "playHand": "Play hand",
+          "discards": "{{name}} is discarding",
+          "discard": "Discard 2 cards",
+          "declares": "{{name}} declares the game",
+          "trickTo": "Trick for {{name}}"
+        },
+        "rules": {
+          "schwimmen": "<p>32 cards. Everyone holds three cards, three lie open in the middle. The dealer first picks one of two hands; the other goes to the middle.</p><p><b>Your turn:</b> swap one card, swap all three, pass or knock. After a knock everyone else plays once more. If everyone passes, three new cards come to the middle.</p><p><b>Scoring:</b> the sum of one suit (ace 11, court cards 10). Three of a kind count 30.5. 31 or three aces end the round at once – everyone else loses a life. Otherwise the lowest hand loses.</p><p>Everyone has three lives, then you \"swim\", and with the next loss you are out. The last player wins.</p>",
+          "durak": "<p>36 cards (6 to ace), six in hand. The bottom card of the stock shows trumps. In the first round the lowest trump attacks.</p><p><b>Attack:</b> one or more cards of one rank. <b>Defence:</b> beat every card with a higher one of its suit or with a trump – or take everything.</p><p>Once everything is beaten, the others may throw in cards of ranks already on the table (six attack cards at most, never more than the defender held). Then everyone draws up to six. A successful defender attacks next; whoever takes is skipped.</p><p>Whoever still holds cards at the end is the durak.</p>",
+          "arschloch": "<p>All cards are dealt (32 up to four players, 52 above). The leader plays one or more cards of one rank. The others play as many cards of a higher rank or pass – a pass lasts until the trick ends. Whoever played last leads again.</p><p>First out is the president, last the scum. Before the next round the scum hands their best cards to the president (two from four players, otherwise one), who returns cards of their choice; from four players the vices swap one card too. The scum leads.</p>",
+          "skat": "<p>Three players, 32 cards, ten each, two in the skat. Middlehand bids to forehand, then rearhand to the winner. The winner picks up the skat and discards two cards – or plays hand – and declares a suit, grand or null.</p><p>You must follow suit; the jacks are the highest trumps (not in null). The declarer needs 61 card points; in null they must not take a trick.</p><p><b>Value:</b> matadors + 1 (+ hand, schneider, schwarz) × base value (diamonds 9, hearts 10, spades 11, clubs 12, grand 24); null 23, hand 35, ouvert 46, ouvert hand 59. Lost games count double negative. If everyone passes, the next dealer deals. No Ramsch, no announced schneider/schwarz.</p>"
+        }
+      }
     },
     "drawpot": {
       "title": "Draw Pot",

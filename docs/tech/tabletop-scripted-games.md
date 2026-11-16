@@ -1,0 +1,73 @@
+---
+type: Reference
+title: 'Tabletop: scripted card games (Schwimmen, Durak, Arschloch, Skat)'
+description: 'Card games with enforced rules on the Spieltisch: the rule-script contract, the session reducer, the TV table and phone views, sync and storage, and the house rules of each game.'
+resource: src/games/tabletop/scripted/
+tags: [tabletop, cards, scripted, skat, durak, schwimmen, arschloch, sync]
+status: stable
+generated:
+  at: 2026-11-16T16:00:00+01:00
+  by: claude-code
+verified:
+  at: 2026-11-16
+  method: 'Wrote and read src/games/tabletop/scripted/**, TabletopEntry.tsx, logic/tableCatalog.ts; ran the Vitest suites in scripted/logic/__tests__; played Skat, Durak, Schwimmen and Arschloch locally and a Durak room (host table + two player tabs) in headless Chromium.'
+sources:
+  - 'src/games/tabletop/scripted/logic/scriptTypes.ts'
+  - 'src/games/tabletop/scripted/logic/session.ts'
+  - 'src/games/tabletop/scripted/components/CardTable.tsx'
+  - 'src/games/tabletop/TabletopEntry.tsx'
+---
+
+# Scripted card games
+
+The free tabletop ([tabletop-engine](tabletop-engine.md)) moves widgets and knows no rules. Scripted card games are first-party TypeScript rule scripts: the app deals, accepts only legal moves, keeps the turn order and scores. They live in `src/games/tabletop/scripted/` and are listed on the Spieltisch under "Kartenspiele" (`CARD_GAMES` in `logic/tableCatalog.ts`). [ADR-0005](../adr/0005-tabletop-scripting-for-imported-games.md) is unchanged: imported third-party content still runs only as declarative routines; these scripts are app code, not content.
+
+## 1. How a game is played
+
+| Mode                                | Route                                       | Component           |
+| ----------------------------------- | ------------------------------------------- | ------------------- |
+| One device, passed around           | `/games/tabletop?local=1&gameId=<id>`       | `LocalScriptedGame` |
+| TV table + own devices (party room) | `/games/tabletop?room=<room>&gameId=<id>&…` | `RoomScriptedGame`  |
+
+`TabletopEntry.tsx` (exported as `TabletopGame`) opens these for ids in `scriptRegistry.ts` and the tabletop engine for everything else. The party lobby needs no change: `/party?launch=tabletop&gameId=skat` and the game picker (`PartyGamePickerModal`) start them like any tabletop game.
+
+**Party room.** The host opens the game on its device and sees `RoomSetup`: the roster, the switch "this device only shows the table" (on by default when the other players are enough for the game) and the start button. A device with a seat shows that player's hand and buttons. A device without a seat — the host as table, or anyone who joined as spectator — shows the public table in the TV theme: seats, table cards, status, round result, no hand. The intended setup: cast or mirror the table device to the TV, every player uses their own phone. If the host wants to play on the device that is mirrored, a second device has to be the table (join as spectator).
+
+**One device.** `LocalScriptedGame` asks for the names (`useLobbyPlayers`, `STORAGE_KEYS.TABLETOP_CARD_PLAYERS`) and covers the screen with `HandoverCover` (`modules/pass-and-play`) whenever another seat has to act.
+
+## 2. Script contract (`logic/scriptTypes.ts`)
+
+A `GameScript<G>` is a pure state machine:
+
+- `start(playerCount, rng)` — a new match with the first deal.
+- `move(state, seat, move, rng)` — the next state, or **the same object** when the move is not allowed. Moves are `{ kind: 'cards', cards, target? }` (hand cards, optionally onto a table card) or `{ kind: 'action', id, arg? }` (a button).
+- `view(state, viewer)` — what a seat (or `null`, the table) sees: `status`, `info` chips, `seats` (card count, chips, optionally revealed cards), `active` seats, `piles` (`row` of open cards with optional `cover`/`seat`, `stock`), the viewer's sorted `hand`, `select` (`none` / `one` / `many`), `targets` (table cards that can be picked), `actions` (buttons), `playLabel`, and a `summary` between rounds.
+
+Texts are `Text`: a plain string or `{ key, params, seat }`, resolved under `games.tabletop.scripted.*` in `public/locales` with the seat's name as `{{name}}` (`hooks/useScriptText.ts`). The UI holds no rules: whether the picked cards can be played is asked from the script (`moveAllowed` in `logic/session.ts` tries the move). Every seat acts in turn; `active` has one seat or none.
+
+Adding a game: one script file, an entry in `scriptRegistry.ts` and `CARD_GAMES`, strings (`games.<id>`, `rules.<id>` and the script's keys) in both locales, tests. `__tests__/playthrough.ts` plays any script with random legal moves found through its view.
+
+## 3. Session, sync, storage
+
+`logic/session.ts`: `sessionReducer` over `{ scriptId, players, seed, step, game }` with `START` (players in seat order, seed), `MOVE` (seat, move) and `END` (back to the setup). Randomness comes from `seededRng(seed, step)`, so the reducer is pure and the same actions give the same table.
+
+In a room the party host runs the reducer through `useRoomReducer` (`modules/room-game`, channel `cards-<id>_<room>`; `hooks/useRoomSession.ts`). `sessionAllows` lets the host do everything and every other device only `MOVE` its own seat (matched by party player id). The table device sends "next round" as seat 0.
+
+The owner of the state keeps the running game in `STORAGE_PREFIXES.TABLETOP_SCRIPTED` + game id (`logic/sessionStore.ts`), one entry per game with its scope (`local` or the room id); it is removed when the game ends.
+
+**Limit:** the host publishes the whole state, hands included, to every device in the room; only the UI hides other hands. The sealed per-seat hands of the tabletop engine are not used here ([Q24](../open-questions.md)).
+
+## 4. UI (`components/`)
+
+`CardTable` is the one table for all games and both roles: `SeatBadges` (players, card counts, chips, active seat), the felt with `TablePiles` or `RoundSummaryPanel`, the status line, then the buttons and `HandFan` (reuses `fanLayout` from `logic/handFan.ts`). Picking: a tap lifts a card, a second tap or the play button plays it; with `targets` a tap on the table card plays at once (`hooks/useCardSelection.ts`, rules in `logic/selection.ts`). In `one` mode cards that cannot be played are dimmed. A phone vibrates when its turn starts. Header: `hooks/useScriptedHeader.tsx` registers back, rules (`RulesDialog` with `rules.<id>`) and restart through `useTabletopHeader`.
+
+## 5. Rules as implemented
+
+- **Schwimmen** (`schwimmen.ts`, 2–9): 32 cards; the dealer keeps the first hand or takes the second, the other goes to the middle. Swap one, swap all, pass, knock (then everyone else once more). Everyone passed → three new middle cards, or showdown when the stock is short. 31 or three aces (33) end the round at once and everyone else loses a life; three of a kind 30.5. Lowest hand loses a life, ties lose together, a tie of everyone costs nothing. Three lives, then swimming, then out.
+- **Durak** (`durak.ts`, 2–6): 36 cards, podkidnoy. Lowest trump attacks first, later the player before the durak. Attack with cards of one rank; throw-ins of ranks on the table, asked in turn after each full defence (attackers who cannot add are skipped); at most six attack cards and never more than the defender held. Taking picks up at once (no throw-in after taking) and skips the defender. No passing on (perevodnoy).
+- **Arschloch** (`arschloch.ts`, 3–8): 32 cards up to four players, 52 above, ace high. Same count of a higher rank or pass; a pass lasts for the trick. Points per round: players − 1 for the president down to 0. Exchange before the next round: Arschloch → president two best cards (one with three players), vices one from four players; the winners choose what to return. The Arschloch leads.
+- **Skat** (`skat.ts`, `skatRules.ts`, exactly 3): bidding middlehand → forehand, rearhand → winner, forehand alone at 18 when nobody bid; all pass → next dealer. Pick up and discard two, or hand. Suit, grand, null, null ouvert (also as hand). Values per the International Skat Order including matadors, hand, schneider, schwarz, overbidding (lost at the next multiple of the base value) and lost games counted double. Not implemented: announced schneider/schwarz, ouvert suit/grand games, Ramsch, Kontra/Re, a fourth player sitting out.
+
+## 6. Existing scripts that were checked
+
+Nothing ready-made fits (2026-11-16): the fully scripted Skat mod on the Steam Workshop is third-party Tabletop Simulator Lua (ADR-0005: never bundled, and the Lua runtime does not exist yet); no VirtualTabletop or PlayingCards.io presets with enforced rules for these four games were found; `skaat` (npm) is a JavaScript Skat loop with an unconfirmed licence. In the repo, `src/games/cards` only keeps scores (Schwimmen lives) and may not be imported from another game.

@@ -10,6 +10,7 @@ import { PublishTabletopGameDialog } from '../publisher/PublishTabletopGameDialo
 import type { TabletopGameDefinition, TabletopGameSummary } from '../../logic/types';
 import { listTabletopGames } from '../../logic/tabletopStorage';
 import {
+  CARD_GAMES,
   DICE_GAMES,
   TABLETOP_STARTERS,
   playModesOf,
@@ -119,6 +120,7 @@ export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) 
           </Box>
 
           {section(t('games.tabletop.starter_games', 'Klassiker'), TABLETOP_STARTERS)}
+          {section(t('games.tabletop.card_games', 'Kartenspiele'), CARD_GAMES)}
           {section(t('games.tabletop.dice_games', 'Würfelspiele'), DICE_GAMES)}
           {section(t('games.tabletop.custom_games', 'Eigene & Importierte Spiele'), custom)}
         </Paper>

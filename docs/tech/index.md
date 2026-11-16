@@ -11,6 +11,7 @@ How the code works **right now**. One topic, one file. Start with the architectu
 - [Persistence](persistence.md) — `storage.ts`, `STORAGE_KEYS`, the six IndexedDB databases, server files.
 - [Sync protocol](sync-protocol.md) — MQTT mailbox, `useMultiChannelSync`, Melodiq WebRTC/TV messages, Web Push / ntfy relay.
 - [Tabletop engine](tabletop-engine.md) — reducer groups, editor operations, undo/redo deltas, host-authoritative sync, autosave.
+- [Tabletop: scripted card games](tabletop-scripted-games.md) — Schwimmen, Durak, Arschloch, Skat with enforced rules: script contract, session reducer, TV table and phone views, house rules.
 - [WebRTC signaling](webrtc-signaling.md) — tracker handshake, info-hash, candidate race, reconnects, tracker precedence.
 - [C4 diagrams](c4-diagrams.md) — system context and containers.
 
