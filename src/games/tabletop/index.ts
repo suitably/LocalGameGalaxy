@@ -1,2 +1,2 @@
-export { TabletopGame } from './TabletopGame';
+export { TabletopEntry as TabletopGame } from './TabletopEntry';
 export type { TabletopGameDefinition, TabletopWidget, TabletopPlayMode } from './logic/types';

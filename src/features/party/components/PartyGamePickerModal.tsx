@@ -22,7 +22,7 @@ import FolderOpenIcon from '@mui/icons-material/FolderOpenRounded';
 import { useTranslation } from 'react-i18next';
 import { listTabletopGames } from '../../../games/tabletop/logic/tabletopStorage';
 import type { TabletopGameSummary } from '../../../games/tabletop/logic/types';
-import { DICE_GAMES } from '../../../games/tabletop/logic/tableCatalog';
+import { CARD_GAMES, DICE_GAMES } from '../../../games/tabletop/logic/tableCatalog';
 import type { PartyGameType } from '../logic/universalPartyManager';
 import { isRoomDiceGame } from '../logic/partyRoutes';
 import { EmptyState } from '../../../components/common/EmptyState';
@@ -89,6 +89,12 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
       desc: t('games.tabletop.checkers_desc', 'Klassisches Brettspiel auf 8x8 Spielfeld.'),
       icon: <GridOnIcon sx={{ fontSize: 36, color: 'success.main' }} />,
     },
+    ...CARD_GAMES.map((g) => ({
+      id: g.id,
+      title: t(g.titleKey, g.title),
+      desc: g.descKey ? t(g.descKey) : '',
+      icon: <StyleIcon sx={{ fontSize: 36, color: 'primary.main' }} />,
+    })),
   ];
 
   const pick = (gameType: PartyGameType, id?: string) => () => {

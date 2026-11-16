@@ -1,0 +1,1 @@
+- **Card games with rules on the Spieltisch: Schwimmen, Durak, Arschloch and Skat.** The app deals, allows only legal moves, keeps the turn order and scores. Play on one device passed around, or in a party room: one device shows the table for the TV, everyone has their hand and buttons on their own phone.

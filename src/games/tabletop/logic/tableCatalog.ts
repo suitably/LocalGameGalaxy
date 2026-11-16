@@ -68,6 +68,25 @@ export const TABLETOP_STARTERS: TableGameEntry[] = [
   },
 ];
 
+/** Card games with enforced rules (`scripted/`): the app deals, checks moves and scores. */
+const cardGame = (id: string, title: string, color: string): TableGameEntry => ({
+  id,
+  kind: 'tabletop',
+  titleKey: `games.tabletop.scripted.games.${id}.title`,
+  title,
+  descKey: `games.tabletop.scripted.games.${id}.desc`,
+  icon: 'cards',
+  color,
+  modes: ['shared_device', 'own_devices'],
+});
+
+export const CARD_GAMES: TableGameEntry[] = [
+  cardGame('schwimmen', 'Schwimmen', piecePalette.teal),
+  cardGame('durak', 'Durak', piecePalette.red),
+  cardGame('arschloch', 'Arschloch', piecePalette.purple),
+  cardGame('skat', 'Skat', piecePalette.blue),
+];
+
 /** Dice games with their own score sheets; with own devices once they sync (#467 slice 5). */
 export const DICE_GAMES: TableGameEntry[] = [
   {

@@ -25,6 +25,8 @@ sources:
 
 # Tabletop engine
 
+Card games with enforced rules (Schwimmen, Durak, Arschloch, Skat) do not use this engine: [scripted card games](tabletop-scripted-games.md); `TabletopEntry.tsx` picks between the two.
+
 Roadmap and comparison with VirtualTabletop: [2026-10-21 plan](../reports/2026-10-21-tabletop-vtt-plan.md) (epic #449).
 
 ## 1. Reducer

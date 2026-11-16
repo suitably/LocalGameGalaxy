@@ -1405,7 +1405,126 @@
       "timerPause": "Timer pausieren",
       "timerReset": "Timer zurücksetzen",
       "cardBack": "Kartenrückseite",
-      "cardFront": "Karte"
+      "cardFront": "Karte",
+      "card_games": "Kartenspiele",
+      "scripted": {
+        "games": {
+          "schwimmen": {
+            "title": "Schwimmen",
+            "desc": "31 sammeln, klopfen, drei Leben – für 2 bis 9 Spieler."
+          },
+          "durak": {
+            "title": "Durak",
+            "desc": "Angreifen, schlagen, nachlegen – wer zuletzt Karten hat, ist der Durak. 2 bis 6 Spieler."
+          },
+          "arschloch": {
+            "title": "Arschloch",
+            "desc": "Karten loswerden und Präsident werden. 3 bis 8 Spieler."
+          },
+          "skat": {
+            "title": "Skat",
+            "desc": "Reizen, drücken, 61 Augen holen – für genau 3 Spieler."
+          }
+        },
+        "turn": "{{name}} ist dran",
+        "yourTurn": "Du bist dran",
+        "roundOver": "Runde vorbei",
+        "matchWon": "{{name}} gewinnt das Spiel",
+        "nextRound": "Nächste Runde",
+        "newMatch": "Neues Spiel",
+        "play": "Spielen",
+        "trump": "Trumpf {{suit}}",
+        "tableHint": "Das ist der gemeinsame Tisch. Handkarten und Züge hat jeder auf dem eigenen Gerät.",
+        "setup": {
+          "title": "Wer spielt mit?",
+          "players": "Dieses Spiel braucht {{min}} bis {{max}} Spieler.",
+          "tooMany": "Es spielen die ersten {{max}}; die anderen schauen zu.",
+          "start": "Karten geben",
+          "tableOnly": "Dieses Gerät zeigt nur den Tisch",
+          "tableOnlyHint": "Für den Fernseher: Bildschirm dieses Geräts übertragen. Alle Spieler nutzen ihr eigenes Handy für Handkarten und Züge. Ausschalten, wenn du auf diesem Gerät mitspielst.",
+          "waitingForHost": "Der Gastgeber startet das Spiel gleich …"
+        },
+        "schwimmen": {
+          "out": "raus",
+          "swimming": "schwimmt",
+          "knocked": "hat geklopft",
+          "dealerChoice": "{{name}} gibt und wählt ein Blatt",
+          "keep": "Blatt behalten",
+          "takeOther": "Anderes Blatt nehmen",
+          "lastTurn": "{{name}} – letzter Zug",
+          "swapOne": "Karte tauschen",
+          "swapAll": "Alle drei tauschen",
+          "pass": "Schieben",
+          "knock": "Klopfen",
+          "fire": "{{name}} hat 31 – alle anderen verlieren ein Leben",
+          "tie": "Gleichstand – niemand verliert ein Leben"
+        },
+        "durak": {
+          "attacker": "greift an",
+          "defender": "verteidigt",
+          "losses": "{{count}}× Durak",
+          "draw": "Unentschieden – kein Durak",
+          "isDurak": "{{name}} ist der Durak",
+          "defends": "{{name}} verteidigt",
+          "attacks": "{{name}} greift an",
+          "mayAdd": "{{name}} darf nachlegen",
+          "beat": "Schlagen",
+          "take": "Aufnehmen",
+          "attack": "Angreifen",
+          "add": "Nachlegen",
+          "done": "Fertig"
+        },
+        "arschloch": {
+          "president": "Präsident",
+          "vicePresident": "Vize",
+          "citizen": "Bürger",
+          "viceArschloch": "Vize-Arschloch",
+          "arschloch": "Arschloch",
+          "passed": "passt",
+          "roundWon": "{{name}} ist Präsident",
+          "gives": "{{name}} gibt {{count}} Karte(n) zurück",
+          "give": "{{count}} Karte(n) abgeben",
+          "leads": "{{name}} spielt aus",
+          "pass": "Passen"
+        },
+        "skat": {
+          "grand": "Grand",
+          "null": "Null",
+          "nullOuvert": "Null Ouvert",
+          "hand": "Hand",
+          "declarer": "Alleinspieler",
+          "dealer": "Geber",
+          "tricks": "{{count}} Stiche",
+          "bidInfo": "Reizwert {{value}}",
+          "skat": "Skat",
+          "passedIn": "Alle passen – eingepasst",
+          "won": "{{name}} gewinnt",
+          "lost": "{{name}} verliert",
+          "resultWon": "{{name}}: +{{value}}",
+          "resultLost": "{{name}}: −{{value}} × 2",
+          "points": "{{points}} Augen",
+          "schwarz": "Schwarz",
+          "schneider": "Schneider",
+          "overbid": "Überreizt (gereizt bis {{bid}})",
+          "asked": "{{name}}: {{value}}?",
+          "hold": "Ja, {{value}}",
+          "pass": "Passe",
+          "bids": "{{name}} reizt",
+          "decides": "{{name}}: Skat aufnehmen oder Hand?",
+          "pickup": "Skat aufnehmen",
+          "playHand": "Hand spielen",
+          "discards": "{{name}} drückt",
+          "discard": "2 Karten drücken",
+          "declares": "{{name}} sagt das Spiel an",
+          "trickTo": "Stich für {{name}}"
+        },
+        "rules": {
+          "schwimmen": "<p>32 Karten. Jeder hat drei Karten, drei liegen offen in der Mitte. Der Geber wählt zu Beginn eines von zwei Blättern; das andere kommt in die Mitte.</p><p><b>Dein Zug:</b> eine Karte tauschen, alle drei tauschen, schieben oder klopfen. Nach dem Klopfen sind alle anderen noch einmal dran. Schieben alle, kommen drei neue Karten in die Mitte.</p><p><b>Wertung:</b> Summe einer Farbe (Ass 11, Bilder 10). Drei Gleiche zählen 30,5. Wer 31 oder drei Asse hat, beendet die Runde sofort – alle anderen verlieren ein Leben. Sonst verliert das niedrigste Blatt.</p><p>Jeder hat drei Leben, danach „schwimmt“ man, beim nächsten Verlust ist man raus. Der Letzte gewinnt.</p>",
+          "durak": "<p>36 Karten (6 bis Ass), sechs auf der Hand. Die unterste Karte des Stapels zeigt Trumpf. In der ersten Runde greift der niedrigste Trumpf an.</p><p><b>Angriff:</b> eine oder mehrere Karten gleichen Werts. <b>Verteidigung:</b> jede Karte mit einer höheren derselben Farbe oder mit Trumpf schlagen – oder alles aufnehmen.</p><p>Ist alles geschlagen, dürfen die anderen Karten nachlegen, deren Wert schon auf dem Tisch liegt (höchstens sechs Angriffskarten, nie mehr als der Verteidiger Karten hatte). Danach ziehen alle auf sechs nach. Wer abwehrt, greift als Nächster an; wer aufnimmt, setzt aus.</p><p>Wer am Ende noch Karten hat, ist der Durak.</p>",
+          "arschloch": "<p>Alle Karten werden verteilt (32 bis vier Spieler, sonst 52). Wer ausspielt, legt eine oder mehrere Karten gleichen Werts. Die anderen legen gleich viele höhere Karten oder passen – wer passt, setzt bis zum Ende des Stichs aus. Wer zuletzt gelegt hat, spielt neu aus.</p><p>Wer zuerst keine Karten mehr hat, ist Präsident, der Letzte das Arschloch. Vor der nächsten Runde gibt das Arschloch seine besten Karten an den Präsidenten (zwei ab vier Spielern, sonst eine), der beliebige zurückgibt; ab vier Spielern tauschen auch die Vizes eine Karte. Das Arschloch spielt aus.</p>",
+          "skat": "<p>Drei Spieler, 32 Karten, je zehn auf der Hand, zwei im Skat. Mittelhand reizt Vorhand, danach Hinterhand den Gewinner. Wer das Reizen gewinnt, nimmt den Skat auf und drückt zwei Karten – oder spielt Hand – und sagt Farbe, Grand oder Null an.</p><p>Farbe bedienen ist Pflicht; die Buben sind die höchsten Trümpfe (außer bei Null). Der Alleinspieler braucht 61 Augen, bei Null darf er keinen Stich machen.</p><p><b>Wert:</b> Spitzen + 1 (+ Hand, Schneider, Schwarz) × Grundwert (Karo 9, Herz 10, Pik 11, Kreuz 12, Grand 24); Null 23, Hand 35, Ouvert 46, Ouvert Hand 59. Verlorene Spiele zählen doppelt minus. Passen alle, gibt der Nächste. Ohne Ramsch und ohne Schneider-/Schwarz-Ansage.</p>"
+        }
+      }
     },
     "drawpot": {
       "title": "Lostopf",
