@@ -31,10 +31,13 @@ export function claimId(guid: string): string {
 
 const normalizeDeg = (deg: number) => ((Math.round(deg || 0) % 360) + 360) % 360;
 
-/** `rotZ` ≈ 180 is a card lying face down; `rotY` is the turn on the table. */
+/**
+ * `rotZ` ≈ 180 is a card lying face down; `rotY` is the turn on the table, where 180 is upright
+ * on screen (readable from the −Z side, the bottom edge).
+ */
 export function cardOrientation(t: TTSTransform): { faceUp: boolean; rotation: number } {
   const z = normalizeDeg(t.rotZ);
-  return { faceUp: z < 90 || z > 270, rotation: normalizeDeg(t.rotY) };
+  return { faceUp: z < 90 || z > 270, rotation: normalizeDeg(t.rotY + 180) };
 }
 
 // ─── Seats ───────────────────────────────────────────────────────────
@@ -113,12 +116,13 @@ export function convertText(
   color: string,
 ): LabelWidget {
   const text = obj.Text?.Text ?? obj.Nickname ?? '';
+  const width = Math.max(80, Math.min(600, text.length * 14));
   return {
     id: claimId(obj.GUID),
     type: 'label',
-    x: pos.x,
-    y: pos.y,
-    width: Math.max(80, Math.min(600, text.length * 14)),
+    x: Math.round(pos.x - width / 2),
+    y: pos.y - 20,
+    width,
     height: 40,
     zIndex: pos.zIndex,
     text,

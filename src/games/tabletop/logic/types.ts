@@ -178,6 +178,12 @@ export interface TokenWidget extends BaseWidget {
   subText?: string;
   textColor?: string;
   rotation?: number;
+  /**
+   * How `image` fills the token: `fill` stretches it (a table image), `atlas-front` crops to the
+   * front face of a chip/tile texture atlas (front square first, then back and edge). Default: by
+   * shape.
+   */
+  imageFit?: 'fill' | 'atlas-front';
 }
 
 export interface CounterWidget extends BaseWidget {

@@ -1360,6 +1360,7 @@
       "shuffleDeck": "Shuffle",
       "view_hand": "Hand",
       "view_board": "Table",
+      "view_my_area": "My area",
       "flick_hint": "Swipe a card up to throw it onto the TV!",
       "current_table_card": "Current card on the table",
       "table_card": "Table: {{card}}",

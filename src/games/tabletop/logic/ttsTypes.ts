@@ -128,6 +128,8 @@ export interface TTSSaveFile {
   Gravity?: number;
   PlayArea?: number;
   Table?: string;
+  /** Image of the custom table (`Table: 'Table_Custom'`). */
+  TableURL?: string;
   Sky?: string;
   SkyURL?: string;
   Note?: string;
