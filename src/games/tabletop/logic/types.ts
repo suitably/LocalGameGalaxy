@@ -7,6 +7,7 @@ export type {
   RoutineCmp,
   RoutineCondition,
   RoutineOperand,
+  RoutinePoint,
   RoutineSeatRef,
   RoutineStep,
   RoutineTrigger,

@@ -36,6 +36,7 @@ function targetOf(obj: TTSObjectState, widget: TabletopWidget): LuaTarget {
     scaleX: obj.Transform.scaleX || 1,
     scaleZ: obj.Transform.scaleZ || 1,
     ...(widget.states?.length && obj.States ? { states: ttsStateNumbers(obj.States) } : {}),
+    ...(widget.type === 'deck' ? { faceUp: Boolean(widget.faceUp) } : {}),
   };
 }
 
@@ -48,6 +49,8 @@ export interface LuaImportInput {
   /** TTS player colour → seat index, and hand GUID → seat index (`assignSeats`). */
   seats: { byColor: Map<string, number>; byGuid: Map<string, number> };
   scale: number;
+  /** TTS world `x`/`z` → the table pixel the importer places a piece at. */
+  project?: LuaTranslateContext['project'];
 }
 
 /** Translates the scripts, adds the buttons to `widgets` and returns the report fields. */
@@ -65,7 +68,7 @@ export function applyLuaTranslation(
     const guid = [...seats.byGuid].find(([, s]) => s === seat)?.[0];
     if (guid && widgets[guid]?.type === 'holder') hands[color] = guid;
   }
-  const ctx: LuaTranslateContext = { targets, hands, scale: input.scale };
+  const ctx: LuaTranslateContext = { targets, hands, scale: input.scale, project: input.project };
   const lua = translateTtsScripts(input.scripts, ctx);
   for (const button of lua.buttons) {
     let id = button.id;

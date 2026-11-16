@@ -3,8 +3,8 @@
  *
  * TTS plan slice 8, ADR-0005 decision 2: reads the verbatim `scripts` sidecar with `luaparse`,
  * never runs it. Every `createButton{click_function}` becomes a `ButtonWidget` on its object;
- * when the click function is straight-line code over the idioms in `luaIdioms.ts` it gets the
- * routine, otherwise it stays visible but inert (`untranslated`) and is listed in the report
+ * when the click function is code over the idioms in `luaIdioms.ts` whose branches and loops
+ * resolve statically (`luaControl.ts`) it gets the routine, otherwise it stays visible but inert (`untranslated`) and is listed in the report
  * together with event handlers and scripts that do not parse.
  */
 import type {
@@ -77,19 +77,22 @@ function setupScript(
   selfGuid: string | undefined,
   ctx: LuaTranslateContext,
   buttons: RawLuaButton[],
+  /** Top level of the Global script, for `Global.getTable/getVar`; absent for Global itself. */
+  globalScope: LuaScope | undefined,
 ): ScriptPass | null {
   const chunk = parseLua(source);
   if (!chunk) return null;
   const scope = new LuaScope();
-  scope.declare('Global', { k: 'global' });
-  scope.declare('self', selfGuid ? { k: 'obj', guid: selfGuid } : { k: 'global' });
+  const global: LuaValue = { k: 'global', scope: globalScope ?? scope };
+  scope.declare('Global', global);
+  scope.declare('self', selfGuid ? { k: 'obj', guid: selfGuid } : global);
   const info: LuaScriptInfo = { key, chunk, scope, functions: collectFunctions(chunk) };
   const walked = new Set<LuaNode>();
   new LuaBodyWalker(info, 'setup', ctx, buttons, walked).run(
     chunk.body.filter((n) => !isFunctionDef(n)),
     scope,
   );
-  const onLoad = info.functions.get('onLoad');
+  const onLoad = info.functions.get('onLoad') ?? info.functions.get('onload');
   const load = new LuaBodyWalker(info, 'setup', ctx, buttons, walked);
   if (onLoad) load.run(onLoad.body, new LuaScope(scope));
   // A `createButton` the walker could not follow (loop, branch, other event) is still a button.
@@ -114,15 +117,29 @@ function translateClick(
   owner: LuaValue,
   ctx: LuaTranslateContext,
 ): ClickResult {
-  const scope = new LuaScope(script.scope);
-  fn.parameters.forEach((p, i) => {
-    if (p.type === 'Identifier') scope.declare((p as Identifier).name, i === 0 ? owner : UNKNOWN);
-  });
-  const walker = new LuaBodyWalker(script, 'click', ctx);
-  walker.run(fn.body, scope);
-  if (walker.failure) return { reason: walker.failure };
-  if (walker.steps.length > MAX_ROUTINE_STEPS) return { reason: 'too_many_steps' };
-  const parsed = parseRoutine(walker.steps);
+  const press = () => {
+    const scope = new LuaScope(script.scope);
+    fn.parameters.forEach((p, i) => {
+      if (p.type === 'Identifier') scope.declare((p as Identifier).name, i === 0 ? owner : UNKNOWN);
+    });
+    const walker = new LuaBodyWalker(script, 'click', ctx);
+    walker.run(fn.body, scope);
+    return walker;
+  };
+  // The script's variables as they are after loading; a press may change them (`Done = true`).
+  const loaded = script.scope.snapshot();
+  const first = press();
+  const second = first.failure ? first : press();
+  script.scope.restore(loaded);
+  if (first.failure) return { reason: first.failure };
+  if (first.steps.length > MAX_ROUTINE_STEPS) return { reason: 'too_many_steps' };
+  // A routine keeps no script variables. A second press that does nothing (a "set up once"
+  // guard) or the same again is fine; one that does something else (a toggle) is not.
+  const again = JSON.stringify(second.steps);
+  if (second.failure || (second.steps.length > 0 && again !== JSON.stringify(first.steps))) {
+    return { reason: 'stateful' };
+  }
+  const parsed = parseRoutine(first.steps);
   return parsed.ok ? { steps: parsed.routine } : { reason: 'invalid_routine' };
 }
 
@@ -186,7 +203,8 @@ export function translateTtsScripts(
   ];
   for (const [key, source, selfGuid] of sources) {
     if (!source?.trim()) continue;
-    const pass = setupScript(key, source, selfGuid, ctx, raw);
+    const globalScope = passes.get('global')?.info.scope;
+    const pass = setupScript(key, source, selfGuid, ctx, raw, globalScope);
     if (pass) passes.set(key, pass);
     else list(key, '*', 'parse_error');
   }
@@ -232,7 +250,8 @@ export function translateTtsScripts(
 
   for (const { info, onLoadConsumed } of passes.values()) {
     for (const name of info.functions.keys()) {
-      if (!EVENT_NAME.test(name) || (name === 'onLoad' && onLoadConsumed)) continue;
+      const isLoad = name === 'onLoad' || name === 'onload';
+      if (!(EVENT_NAME.test(name) || isLoad) || (isLoad && onLoadConsumed)) continue;
       list(info.key, name, 'event');
     }
   }

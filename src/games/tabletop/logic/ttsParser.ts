@@ -4,7 +4,7 @@
  * Converts TTS save file JSON (3D ObjectStates) into the Galaxy
  * TabletopGameDefinition (2D widget-based) format.
  */
-import { attachStates, convertBag, convertFogOfWar, tileShape } from './ttsContainers';
+import { attachStates, convertBag, convertFogOfWar, isTtsBag, tileShape } from './ttsContainers';
 import type {
   TTSSaveFile,
   TTSObjectState,
@@ -692,7 +692,7 @@ export function parseTtsSaveFile(
     }
 
     // Bag / Infinite_Bag → BagWidget (finite contents or infinite template)
-    if (name === 'Infinite_Bag' || name === 'Bag') {
+    if (isTtsBag(name)) {
       const bag = convertBag(obj, pos, ttsColorToHex(obj.ColorDiffuse), convertChild, widgets);
       widgets[bag.id] = bag;
       track(obj.GUID, bag.id);
@@ -804,6 +804,7 @@ export function parseTtsSaveFile(
     guidIds,
     seats,
     scale: TTS_SCALE,
+    project: (x, z) => projectWorldPos({ x, z }, bounds, margin),
   });
 
   return validateAndSanitizeGame({

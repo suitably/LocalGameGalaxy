@@ -1,51 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { translateTtsScripts, type LuaTarget, type LuaTranslateContext } from '../luaTranslator';
+import { translateTtsScripts } from '../luaTranslator';
 import { ttsStateNumbers } from '../ttsLuaImport';
-import type { GameScripts, WidgetType } from '../types';
-
-// Hand-written Lua snippets only (no Workshop content, Q21).
-
-const target = (id: string, type: WidgetType, extra: Partial<LuaTarget> = {}): LuaTarget => ({
-  id,
-  type,
-  x: 100,
-  y: 100,
-  width: 100,
-  height: 100,
-  zIndex: 5,
-  scaleX: 1,
-  scaleZ: 1,
-  ...extra,
-});
-
-const ctx: LuaTranslateContext = {
-  targets: {
-    board1: target('board1', 'token'),
-    deckG: target('deck_1', 'deck'),
-    bagG: target('bagG', 'bag'),
-    cardG: target('cardG', 'card'),
-    tileG: target('tileG', 'token', { states: [1, 2, 3] }),
-    holdG: target('holdG', 'holder'),
-  },
-  hands: { Red: 'handRed' },
-  scale: 50,
-};
-
-/** One object script on `board1` with a button calling `click`. */
-const onBoard = (clickBody: string, extra = ''): GameScripts => ({
-  objects: {
-    board1: {
-      lua: `${extra}
-function onLoad()
-  self.createButton({ click_function = 'click', function_owner = self, label = 'Go',
-    position = {0, 0.2, 1}, width = 1000, height = 400 })
-end
-function click(obj, color)
-${clickBody}
-end`,
-    },
-  },
-});
+import type { GameScripts } from '../types';
+import { ctx, onBoard } from './luaFixture';
 
 const routineOf = (scripts: GameScripts) => {
   const r = translateTtsScripts(scripts, ctx);
@@ -132,10 +89,21 @@ end`,
 describe('translateTtsScripts — untranslated (#704)', () => {
   const cases: [string, string, string?][] = [
     ['branch', '  if color == "Red" then getObjectFromGUID("deckG").shuffle() end', 'if'],
-    ['loop', '  for i = 1, 3 do print(i) end', 'fornumeric'],
-    ['unknown API', '  Wait.time(function() end, 1)', 'Wait.time'],
+    [
+      'loop over run-time data',
+      '  for i, o in ipairs(getAllObjects()) do o.flip() end',
+      'forgeneric',
+    ],
+    [
+      'loop that is not a wait',
+      '  while true do getObjectFromGUID("deckG").shuffle() end',
+      'while',
+    ],
+    ['unknown API', '  Wait.condition(function() end, ready)', 'Wait.condition'],
+    ['repeating timer', '  Wait.time(function() end, 1, 3)', 'Wait.time'],
+    ['other script coroutine', '  startLuaCoroutine(Global, "run")', 'startLuaCoroutine'],
+    ['picked piece', '  getObjectFromGUID("deckG").takeObject({ index = 2 })', 'takeObject'],
     ['caller colour', '  getObjectFromGUID("deckG").deal(1, color)', 'deal'],
-    ['shuffle on a bag', '  getObjectFromGUID("bagG").shuffle()', 'shuffle'],
     ['unknown GUID', '  getObjectFromGUID("nope").shuffle()', 'shuffle'],
     ['flip=true take', '  getObjectFromGUID("deckG").takeObject({ flip = true })', 'takeObject'],
     ['used return value', '  local c = getObjectFromGUID("deckG").takeObject()', 'takeObject'],
@@ -161,7 +129,9 @@ describe('translateTtsScripts — untranslated (#704)', () => {
         objects: {
           board1: {
             lua: `function onLoad()
-  for i = 1, 2 do self.createButton({ click_function = 'pick', label = 'Pick' }) end
+  for i, o in ipairs(getAllObjects()) do
+    self.createButton({ click_function = 'pick', label = 'Pick' })
+  end
 end
 function pick() end`,
           },

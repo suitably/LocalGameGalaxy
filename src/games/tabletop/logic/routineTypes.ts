@@ -8,6 +8,12 @@
 /** A seat relative to the run: who pressed the button (host-resolved) or whose turn it is. */
 export type RoutineSeatRef = 'caller' | 'turn';
 
+/** A point on the table in table pixels; a piece placed `at` it has its top-left corner there. */
+export interface RoutinePoint {
+  x: number;
+  y: number;
+}
+
 export type RoutineCmp = '==' | '!=' | '<' | '<=' | '>' | '>=';
 
 /** A number read from the table when an `IF` runs; see `logic/routineConditions.ts`. */
@@ -22,8 +28,10 @@ export interface RoutineCondition {
 
 /** One step of a button routine; see `logic/routineParse.ts` for limits and validation. */
 export type RoutineStep =
+  /** A deck, a holder's pile deck, or a finite bag (its draw order). */
   | { op: 'SHUFFLE'; deck: string }
-  | { op: 'DRAW'; deck: string; count?: number; to?: string }
+  /** `at`: where the drawn card is put (instead of into a holder), `faceUp` the side it shows. */
+  | { op: 'DRAW'; deck: string; count?: number; to?: string; at?: RoutinePoint; faceUp?: boolean }
   /** `dice` by id, or every die of a seat (`ownerSeat` or in that seat's hand). */
   | { op: 'ROLL'; dice?: string[]; seat?: RoutineSeatRef }
   | { op: 'FLIP'; cards: string[] }
@@ -36,7 +44,7 @@ export type RoutineStep =
   | { op: 'NEXT_STATE'; widget: string }
   /** `count` cards to every hand, round robin in seat order. */
   | { op: 'DEAL'; deck: string; count: number }
-  | { op: 'TAKE_FROM_BAG'; bag: string; count?: number; to?: string }
+  | { op: 'TAKE_FROM_BAG'; bag: string; count?: number; to?: string; at?: RoutinePoint }
   | { op: 'PLACE_IN_HOLDER'; widget: string; holder: string }
   | { op: 'SET_STATE'; widget: string; state: number }
   /** Moves the turn (`seat.turn`) to the next or previous seat, or to the caller. */

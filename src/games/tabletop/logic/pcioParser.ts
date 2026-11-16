@@ -3,6 +3,7 @@ import { unzipSync } from 'fflate';
 import type { TabletopGameDefinition } from './types';
 import { validateAndSanitizeGame } from './gameValidator';
 import { detectMimeType, uint8ArrayToBase64, resolveAssetUrl } from './pcioAssetUtils';
+import { isNativeGameFile, parseNativeGameFile } from './nativeGameFile';
 import { normalizePcioWidgets } from './pcioNormalizer';
 import { isTtsSaveFile, parseTtsSaveFile } from './ttsParser';
 import type { TTSSaveFile } from './ttsTypes';
@@ -77,6 +78,9 @@ export async function parsePcioFile(
           defaultName: options?.defaultName,
         });
       }
+
+      // A game exported by this app is already in our schema.
+      if (isNativeGameFile(parsed)) return parseNativeGameFile(parsed);
 
       const isFlatWidgets =
         !parsed.widgets &&
