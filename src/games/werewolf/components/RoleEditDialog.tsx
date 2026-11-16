@@ -199,7 +199,7 @@ export const RoleEditDialog: React.FC<RoleEditDialogProps> = ({
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('common.back')}</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
         <Button onClick={handleSave} variant="contained" color="primary">
           {t('common.save')}
         </Button>

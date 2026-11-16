@@ -4,7 +4,6 @@
 
 import React from 'react';
 import { Alert, Box, Button, ButtonGroup } from '@mui/material';
-import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded';
 import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
@@ -18,7 +17,7 @@ import { WordleDuelModal } from './components/WordleDuelModal';
 import { WordleHistoryModal } from './components/WordleHistoryModal';
 import { WordleHelpDialog } from './components/WordleHelpDialog';
 import { WordleToast } from './components/WordleToast';
-import { HeaderActionBar } from './components/HeaderActionBar';
+import { useWordleHeaderActions } from './hooks/useWordleHeaderActions';
 
 export const WordleGame: React.FC = () => {
   const { t } = useTranslation();
@@ -41,6 +40,7 @@ export const WordleGame: React.FC = () => {
   } = useWordleScreen();
 
   useGameSettingsHost({ onClose: reloadDictionaryOnly });
+  useWordleHeaderActions(open);
 
   const finished = state.status !== 'playing';
 
@@ -55,13 +55,6 @@ export const WordleGame: React.FC = () => {
           py: { xs: 1.5, sm: 2.5 },
         }}
       >
-        <HeaderActionBar
-          onHistory={() => open('history')}
-          onDuel={() => open('duel')}
-          onStats={() => open('stats')}
-          onHelp={() => open('help')}
-        />
-
         <ButtonGroup size="small" variant="outlined" sx={{ mb: 1.5 }}>
           <Button
             variant={state.mode === 'daily' ? 'contained' : 'outlined'}
@@ -100,17 +93,6 @@ export const WordleGame: React.FC = () => {
             sx={{ mb: 1, fontWeight: 700 }}
           >
             {t('wordle.new_word', 'Neues Wort')}
-          </Button>
-        )}
-
-        {finished && state.mode === 'daily' && (
-          <Button
-            variant="contained"
-            startIcon={<BarChartRoundedIcon />}
-            onClick={() => open('stats')}
-            sx={{ mb: 1, fontWeight: 700 }}
-          >
-            {t('wordle.stats.btn_tooltip', 'Statistiken')}
           </Button>
         )}
 

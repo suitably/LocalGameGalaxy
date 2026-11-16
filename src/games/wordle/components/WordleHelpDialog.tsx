@@ -60,7 +60,7 @@ export const WordleHelpDialog: React.FC<{ open: boolean; onClose: () => void }> 
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('common.close', 'Verstanden')}</Button>
+        <Button onClick={onClose}>{t('common.close', 'Schließen')}</Button>
       </DialogActions>
     </Dialog>
   );

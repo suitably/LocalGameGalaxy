@@ -20,11 +20,8 @@ import {
 import QrCode2Icon from '@mui/icons-material/QrCode2Rounded';
 import FolderOpenIcon from '@mui/icons-material/FolderOpenRounded';
 
-interface MelodiqConnectionProps {
-  onBack: () => void;
-}
-
-export const MelodiqConnection: React.FC<MelodiqConnectionProps> = ({ onBack }) => {
+/** Melodiq's phone connection screen; title and back arrow come from useMelodiqHeader. */
+export const MelodiqConnection: React.FC = () => {
   const { getRole, setRole } = useClientRoles();
   const { settings, updateSetting } = useMelodiqSettings();
   const { localLibrary } = useSongs();
@@ -33,8 +30,6 @@ export const MelodiqConnection: React.FC<MelodiqConnectionProps> = ({ onBack }) 
 
   return (
     <DeviceConnection
-      onBack={onBack}
-      title="Connect Phones"
       description="Connect your phone to use as a microphone. Scan the QR code below."
       gameId="melodiq"
       clientPath="/games/melodiq?role=client"

@@ -1,10 +1,11 @@
-import React from 'react';
-import { Box, Button, IconButton, Tooltip, Typography } from '@mui/material';
-import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import React, { useEffect, useRef, useState } from 'react';
+import { Typography } from '@mui/material';
 import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
 import UndoRoundedIcon from '@mui/icons-material/UndoRounded';
 import { useTranslation } from 'react-i18next';
+import { useHeaderLayout } from '../../../../context/HeaderLayoutContext';
+import { ConfirmDialog } from '../../../../components/common/ConfirmDialog';
 
 interface CardGameHeaderProps {
   /** Round indicator, e.g. "Runde 3". The game name lives in GlobalHeader only. */
@@ -15,7 +16,11 @@ interface CardGameHeaderProps {
   onUndo?: () => void;
 }
 
-/** Back button, round indicator and undo / history / restart actions shared by all card trackers. */
+/**
+ * Round indicator for all card trackers. Back (to the lobby), undo, history and restart live in
+ * the GlobalHeader: the back arrow is the header's home action, undo stays visible on phones,
+ * history and restart collapse into the overflow menu. Restart asks for confirmation first.
+ */
 export const CardGameHeader: React.FC<CardGameHeaderProps> = ({
   roundLabel,
   onExit,
@@ -24,55 +29,75 @@ export const CardGameHeader: React.FC<CardGameHeaderProps> = ({
   onUndo,
 }) => {
   const { t } = useTranslation();
+  const { setMenuItems, setHomeAction } = useHeaderLayout();
+  const [confirmRestart, setConfirmRestart] = useState(false);
+
+  // The header context keeps menu items while their labels are unchanged, so actions read
+  // the latest callbacks through a ref instead of capturing them.
+  const callbacks = useRef({ onExit, onRestart, onHistory, onUndo });
+  useEffect(() => {
+    callbacks.current = { onExit, onRestart, onHistory, onUndo };
+  });
+
+  const canUndo = Boolean(onUndo);
+  const canShowHistory = Boolean(onHistory);
+
+  useEffect(() => {
+    setMenuItems([
+      {
+        label: t('games.cards.undo', 'Rückgängig'),
+        icon: <UndoRoundedIcon />,
+        action: () => callbacks.current.onUndo?.(),
+        disabled: !canUndo,
+        showAlways: true,
+      },
+      {
+        label: t('games.cards.round_history', 'Rundenhistorie'),
+        icon: <HistoryRoundedIcon />,
+        action: () => callbacks.current.onHistory?.(),
+        disabled: !canShowHistory,
+      },
+      {
+        label: t('games.cards.restart', 'Neu starten'),
+        icon: <ReplayRoundedIcon />,
+        action: () => setConfirmRestart(true),
+      },
+    ]);
+  }, [t, setMenuItems, canUndo, canShowHistory]);
+
+  useEffect(() => {
+    setHomeAction(() => callbacks.current.onExit());
+    return () => {
+      setHomeAction(null);
+      setMenuItems([]);
+    };
+  }, [setHomeAction, setMenuItems]);
 
   return (
-    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-      <Button
-        startIcon={<ArrowBackRoundedIcon />}
-        onClick={onExit}
-        size="small"
-        sx={{ color: 'text.secondary' }}
+    <>
+      <Typography
+        variant="h6"
+        component="h2"
+        align="center"
+        sx={{ fontVariantNumeric: 'tabular-nums', mb: 2 }}
       >
-        {t('common.back', 'Zurück')}
-      </Button>
-
-      <Typography variant="h6" component="h2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
         {roundLabel}
       </Typography>
-
-      <Box sx={{ display: 'flex', gap: 0.5 }}>
-        {onUndo && (
-          <Tooltip title={t('games.cards.undo', 'Rückgängig')}>
-            <IconButton
-              size="small"
-              onClick={onUndo}
-              aria-label={t('games.cards.undo', 'Rückgängig')}
-            >
-              <UndoRoundedIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+      <ConfirmDialog
+        open={confirmRestart}
+        title={t('games.cards.restart_title', 'Partie neu starten?')}
+        message={t(
+          'games.cards.restart_message',
+          'Alle Runden und Punkte dieser Partie werden gelöscht.',
         )}
-        {onHistory && (
-          <Tooltip title={t('games.cards.round_history', 'Rundenhistorie')}>
-            <IconButton
-              size="small"
-              onClick={onHistory}
-              aria-label={t('games.cards.round_history', 'Rundenhistorie')}
-            >
-              <HistoryRoundedIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        )}
-        <Tooltip title={t('common.restart', 'Neu starten')}>
-          <IconButton
-            size="small"
-            onClick={onRestart}
-            aria-label={t('common.restart', 'Neu starten')}
-          >
-            <ReplayRoundedIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Box>
-    </Box>
+        confirmText={t('games.cards.restart', 'Neu starten')}
+        confirmColor="error"
+        onConfirm={() => {
+          setConfirmRestart(false);
+          callbacks.current.onRestart();
+        }}
+        onCancel={() => setConfirmRestart(false)}
+      />
+    </>
   );
 };

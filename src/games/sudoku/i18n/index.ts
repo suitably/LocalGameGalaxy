@@ -27,6 +27,12 @@ export const sudokuTranslations = {
     'sudoku.stats.played': 'Gespielt',
     'sudoku.stats.completed': 'Gelöst',
     'sudoku.stats.best_times': 'Bestzeiten',
+    'sudoku.menu.stats': 'Statistiken',
+    'sudoku.menu.help': 'Regeln',
+    'sudoku.confirm_new.title': 'Neues Spiel starten?',
+    'sudoku.confirm_new.message':
+      'Das laufende Sudoku wird beendet und dein Fortschritt geht verloren. Neues Spiel auf „{{difficulty}}“ starten?',
+    'sudoku.confirm_new.confirm': 'Neues Spiel',
     'sudoku.help.title': 'Sudoku Regeln',
     'sudoku.help.p1':
       'Jede Zeile, Spalte und jeder 3x3-Block muss die Zahlen von 1 bis 9 genau einmal enthalten.',
@@ -63,6 +69,12 @@ export const sudokuTranslations = {
     'sudoku.stats.played': 'Played',
     'sudoku.stats.completed': 'Solved',
     'sudoku.stats.best_times': 'Best Times',
+    'sudoku.menu.stats': 'Statistics',
+    'sudoku.menu.help': 'Rules',
+    'sudoku.confirm_new.title': 'Start a new game?',
+    'sudoku.confirm_new.message':
+      'The current Sudoku ends and your progress is lost. Start a new game on "{{difficulty}}"?',
+    'sudoku.confirm_new.confirm': 'New game',
     'sudoku.help.title': 'Sudoku Rules',
     'sudoku.help.p1':
       'Every row, column, and 3x3 box must contain the digits 1 through 9 exactly once.',

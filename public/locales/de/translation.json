@@ -2329,6 +2329,15 @@
       "title": "Gelöst!",
       "new_record": "Neue persönliche Bestzeit!"
     },
+    "menu": {
+      "stats": "Statistiken",
+      "help": "Regeln"
+    },
+    "confirm_new": {
+      "title": "Neues Spiel starten?",
+      "message": "Das laufende Sudoku wird beendet und dein Fortschritt geht verloren. Neues Spiel auf „{{difficulty}}“ starten?",
+      "confirm": "Neues Spiel"
+    },
     "game_over": {
       "title": "Game Over"
     },

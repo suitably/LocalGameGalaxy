@@ -2,7 +2,17 @@ import React from 'react';
 import { piecePalette, scoreText } from '../../../themeTokens';
 import { transitionOf } from '../../../lib/motion';
 import { ScoreQuickAmounts } from './ScoreQuickAmounts';
-import { Box, Chip, IconButton, Stack, TextField, Tooltip, Typography, alpha } from '@mui/material';
+import {
+  Box,
+  Chip,
+  IconButton,
+  Stack,
+  TextField,
+  Tooltip,
+  Typography,
+  alpha,
+  type Theme,
+} from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForwardRounded';
 import AddIcon from '@mui/icons-material/AddRounded';
 import RemoveIcon from '@mui/icons-material/RemoveRounded';
@@ -19,6 +29,15 @@ interface ModernScoreAdjusterProps {
 
 const QUICK_POSITIVE = [1, 5, 10, 20, 50];
 const QUICK_NEGATIVE = [-1, -5, -10, -20, -50];
+
+/** -1 / +1 steppers: at least 44px touch targets. */
+const stepperSx = {
+  bgcolor: (theme: Theme) => alpha(theme.palette.text.primary, 0.08),
+  '&:hover': { bgcolor: (theme: Theme) => alpha(theme.palette.text.primary, 0.15) },
+  borderRadius: 2,
+  minWidth: 44,
+  minHeight: 44,
+} as const;
 
 export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
   playerName,
@@ -117,14 +136,11 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
       {/* Stepper and Custom Direct Input Row */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
         <IconButton
-          size="small"
           onClick={() => handleStep(-1)}
-          sx={{
-            bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
-            '&:hover': { bgcolor: (theme) => alpha(theme.palette.text.primary, 0.15) },
-            borderRadius: 2,
-            p: 0.8,
-          }}
+          aria-label={t('games.cards.decrease_points', 'Einen Punkt weniger für {{name}}', {
+            name: playerName,
+          })}
+          sx={stepperSx}
         >
           <RemoveIcon fontSize="small" />
         </IconButton>
@@ -147,14 +163,11 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
         />
 
         <IconButton
-          size="small"
           onClick={() => handleStep(1)}
-          sx={{
-            bgcolor: (theme) => alpha(theme.palette.text.primary, 0.08),
-            '&:hover': { bgcolor: (theme) => alpha(theme.palette.text.primary, 0.15) },
-            borderRadius: 2,
-            p: 0.8,
-          }}
+          aria-label={t('games.cards.increase_points', 'Einen Punkt mehr für {{name}}', {
+            name: playerName,
+          })}
+          sx={stepperSx}
         >
           <AddIcon fontSize="small" />
         </IconButton>
@@ -164,7 +177,10 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
             <IconButton
               size="small"
               onClick={handleClear}
+              aria-label={t('games.cards.reset_delta', 'Auf 0 zurücksetzen')}
               sx={{
+                minWidth: 44,
+                minHeight: 44,
                 bgcolor: (theme) => alpha(theme.palette.text.primary, 0.05),
                 color: 'text.secondary',
                 '&:hover': { bgcolor: (theme) => alpha(theme.palette.text.primary, 0.12) },

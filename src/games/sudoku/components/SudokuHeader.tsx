@@ -1,23 +1,12 @@
 /**
  * SudokuHeader.tsx - Difficulty Selector, Timer and Game Status Bar
+ * (stats and rules live in the GlobalHeader, see useSudokuHeaderActions)
  */
 
 import React from 'react';
-import {
-  alpha,
-  Box,
-  Typography,
-  IconButton,
-  Button,
-  ButtonGroup,
-  Stack,
-  Tooltip,
-} from '@mui/material';
-import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import { alpha, Box, Typography, IconButton, Button, ButtonGroup, Stack } from '@mui/material';
 import PauseCircleOutlineRoundedIcon from '@mui/icons-material/PauseCircleOutlineRounded';
 import PlayCircleOutlineRoundedIcon from '@mui/icons-material/PlayCircleOutlineRounded';
-import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
-import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded';
 import { useTranslation } from 'react-i18next';
 import type { SudokuDifficulty } from '../logic/types';
 import { scoreText } from '../../../themeTokens';
@@ -30,9 +19,6 @@ interface SudokuHeaderProps {
   timeElapsed: number;
   isPaused: boolean;
   onTogglePause: () => void;
-  onBack?: () => void;
-  onOpenHelp: () => void;
-  onOpenStats: () => void;
 }
 
 function formatTime(seconds: number): string {
@@ -49,9 +35,6 @@ export const SudokuHeader: React.FC<SudokuHeaderProps> = ({
   timeElapsed,
   isPaused,
   onTogglePause,
-  onBack,
-  onOpenHelp,
-  onOpenStats,
 }) => {
   const { t } = useTranslation();
 
@@ -64,35 +47,6 @@ export const SudokuHeader: React.FC<SudokuHeaderProps> = ({
 
   return (
     <Box sx={{ width: '100%', maxWidth: { xs: 360, sm: 440, md: 480 }, mx: 'auto', mb: 1.5 }}>
-      {/* Navigation & Title Bar */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: onBack ? 'space-between' : 'flex-end',
-          mb: 1,
-        }}
-      >
-        {onBack && (
-          <IconButton onClick={onBack} edge="start" aria-label={t('common.back', 'Zurück')}>
-            <ArrowBackRoundedIcon />
-          </IconButton>
-        )}
-
-        <Box sx={{ display: 'flex', gap: 0.5 }}>
-          <Tooltip title={t('sudoku.stats.title', 'Statistiken')}>
-            <IconButton onClick={onOpenStats} aria-label={t('sudoku.stats.title', 'Statistiken')}>
-              <BarChartRoundedIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={t('common.help', 'Hilfe')}>
-            <IconButton onClick={onOpenHelp} aria-label={t('common.help', 'Hilfe')}>
-              <HelpOutlineRoundedIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
-
       {/* Difficulty Selector */}
       <ButtonGroup size="small" variant="outlined" fullWidth sx={{ mb: 1.5 }}>
         {difficulties.map((d) => (

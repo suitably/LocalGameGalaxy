@@ -1,7 +1,6 @@
 import React from 'react';
 import { Box, Button, Paper, Typography } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/ReplayRounded';
-import HomeIcon from '@mui/icons-material/HomeRounded';
 import { useTranslation } from 'react-i18next';
 import type { GameState } from '../logic/types';
 
@@ -9,14 +8,12 @@ interface ImposterResultViewProps {
   players: GameState['players'];
   winner: GameState['winner'];
   onPlayAgain: () => void;
-  onBack: () => void;
 }
 
 export const ImposterResultView: React.FC<ImposterResultViewProps> = ({
   players,
   winner,
   onPlayAgain,
-  onBack,
 }) => {
   const { t } = useTranslation();
   const kickedOne = players.find((p) => p.isKicked);
@@ -48,12 +45,10 @@ export const ImposterResultView: React.FC<ImposterResultViewProps> = ({
         </Typography>
       </Paper>
 
-      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+      {/* The hub exit is the GlobalHeader's home button; play again is the one action here. */}
+      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
         <Button variant="contained" size="large" startIcon={<ReplayIcon />} onClick={onPlayAgain}>
           {t('games.werewolf.play_again')}
-        </Button>
-        <Button variant="outlined" size="large" startIcon={<HomeIcon />} onClick={onBack}>
-          {t('common.back')}
         </Button>
       </Box>
     </Box>

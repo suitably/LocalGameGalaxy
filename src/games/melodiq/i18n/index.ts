@@ -28,6 +28,10 @@ export const melodiqResources = {
         singer: 'Join as singer',
         spectator: 'Just watch',
       },
+      folder_prompt: {
+        body: 'This song was imported without permanent folder access. To play it, select the folder you imported it from.',
+        select: 'Select song folder',
+      },
       queue_drawer: {
         now_playing: 'Now Playing',
         clear: 'Clear',
@@ -401,6 +405,10 @@ export const melodiqResources = {
         body: 'Gerade läuft ein Song. Wie möchtest du einsteigen?',
         singer: 'Als Sänger:in mitmachen',
         spectator: 'Nur zuschauen',
+      },
+      folder_prompt: {
+        body: 'Dieser Song wurde ohne dauerhaften Ordnerzugriff importiert. Wähle zum Abspielen denselben Ordner aus, aus dem du ihn importiert hast.',
+        select: 'Song-Ordner auswählen',
       },
       queue_drawer: {
         now_playing: 'Läuft gerade',

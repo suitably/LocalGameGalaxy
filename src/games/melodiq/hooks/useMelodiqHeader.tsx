@@ -138,7 +138,7 @@ export const useMelodiqHeader = ({
           showAlways: false,
         });
         headerActions.push({
-          label: 'Connect Phones',
+          label: t('common.a11y.connect_phones', 'Handys verbinden'),
           icon: <QrCodeIcon />,
           action: () => callbacksRef.current.setCurrentView('Connection'),
           showAlways: true,
@@ -157,7 +157,12 @@ export const useMelodiqHeader = ({
       setHeader(t('melodiq.title'), headerActions, homeAction, null, false, isClient);
       setCustomHeaderActions(tvModeActions);
     } else {
-      setHeader(t('melodiq.title'), [], homeAction, null, false, isClient);
+      // Sub views have no own top bar: the page title names the screen, the back arrow leaves it.
+      const subViewTitle =
+        currentView === 'Connection'
+          ? t('common.a11y.connect_phones', 'Handys verbinden')
+          : t('melodiq.title');
+      setHeader(subViewTitle, [], homeAction, null, false, isClient);
       setCustomHeaderActions(null);
     }
   }, [
