@@ -21,6 +21,8 @@ interface SelectionFloatingBarProps {
   selection: ReturnType<typeof useTabletopSelection>;
   /** Host only; phones omit it, since the host rejects their deletes (#685). */
   canDelete: boolean;
+  /** Distance from the table's top edge; the editor puts the bar below its toolbar. */
+  top?: number;
 }
 
 /** Distance of one nudge, in table pixels. */
@@ -35,6 +37,7 @@ const ARROWS = [
 export const SelectionFloatingBar: React.FC<SelectionFloatingBarProps> = ({
   selection,
   canDelete,
+  top = 20,
 }) => {
   const selectedCount = selection.selectedWidgetIds.length;
   const { t } = useTranslation();
@@ -46,9 +49,12 @@ export const SelectionFloatingBar: React.FC<SelectionFloatingBarProps> = ({
       elevation={0}
       sx={{
         position: 'absolute',
-        top: 20,
-        left: '50%',
-        transform: 'translateX(-50%)',
+        top,
+        // centred over the full width (left: 50% would cap the bar at half the table and wrap it)
+        left: 0,
+        right: 0,
+        mx: 'auto',
+        width: 'fit-content',
         borderRadius: 5,
         bgcolor: 'background.paper',
         border: '1px solid',

@@ -1384,7 +1384,11 @@
       "dealEach_one": "{{count}} Karte an alle austeilen",
       "dealEach_other": "{{count}} Karten an alle austeilen",
       "server_unreachable": "Der Companion-Server ist gerade nicht erreichbar.",
-      "gameMenu": "Spielmenü"
+      "timerStart": "Timer starten",
+      "timerPause": "Timer pausieren",
+      "timerReset": "Timer zurücksetzen",
+      "cardBack": "Kartenrückseite",
+      "cardFront": "Karte"
     },
     "drawpot": {
       "title": "Lostopf",

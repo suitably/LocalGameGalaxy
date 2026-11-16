@@ -1,12 +1,13 @@
 /**
- * Floating toolbar for Tabletop zoom, reset, and rules controls [ID: GAME-TABLETOP-TOOLBAR]
+ * Floating canvas tools: selection mode, hidden zone, zoom and fit [ID: GAME-TABLETOP-TOOLBAR]
+ *
+ * The rules and the game menu are in the header (`TableGameMenu`).
  */
 import React from 'react';
 import { Paper, Tooltip, IconButton } from '@mui/material';
 import ZoomInIcon from '@mui/icons-material/ZoomInRounded';
 import ZoomOutIcon from '@mui/icons-material/ZoomOutRounded';
 import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
-import MenuBookIcon from '@mui/icons-material/MenuBookRounded';
 import HighlightAltIcon from '@mui/icons-material/HighlightAltRounded';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOffRounded';
 import { Divider } from '@mui/material';
@@ -16,22 +17,21 @@ interface TabletopToolbarProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onResetView: () => void;
-  onOpenRules?: () => void;
-  hasRules?: boolean;
   isSelectionMode?: boolean;
   onToggleSelectionMode?: () => void;
   onAddHiddenZone?: () => void;
+  /** Edit mode: keep clear of the widget inspector (320 px wide, right edge) on wider screens. */
+  besideInspector?: boolean;
 }
 
 export const TabletopToolbar: React.FC<TabletopToolbarProps> = ({
   onZoomIn,
   onZoomOut,
   onResetView,
-  onOpenRules,
-  hasRules = false,
   isSelectionMode = false,
   onToggleSelectionMode,
   onAddHiddenZone,
+  besideInspector = false,
 }) => {
   const { t } = useTranslation();
 
@@ -41,7 +41,7 @@ export const TabletopToolbar: React.FC<TabletopToolbarProps> = ({
       sx={{
         position: 'absolute',
         bottom: 20,
-        right: 20,
+        right: besideInspector ? { xs: 20, sm: 344 } : 20,
         borderRadius: 3,
         bgcolor: 'background.paper',
         p: 0.5,
@@ -81,13 +81,6 @@ export const TabletopToolbar: React.FC<TabletopToolbarProps> = ({
         <Divider orientation="vertical" flexItem sx={{ my: 0.5 }} />
       )}
 
-      {hasRules && onOpenRules && (
-        <Tooltip title={t('games.tabletop.rulesButton', 'Regeln')}>
-          <IconButton size="small" onClick={onOpenRules} color="primary">
-            <MenuBookIcon />
-          </IconButton>
-        </Tooltip>
-      )}
       <Tooltip title={t('games.tabletop.zoomIn')}>
         <IconButton size="small" onClick={onZoomIn}>
           <ZoomInIcon />
