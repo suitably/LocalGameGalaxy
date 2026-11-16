@@ -9,14 +9,18 @@ import { type MelodiqView } from '../hooks/useMelodiqNavigation';
 interface MelodiqSubViewsProps {
   currentView: MelodiqView;
   setCurrentView: (view: MelodiqView) => void;
-  onCloseSubView: () => void;
+  /** Unused since the sub views lost their own back buttons; the header back arrow closes them. */
+  onCloseSubView?: () => void;
 }
 
-/** Connection and playlist screens; kept mounted and toggled via `display`. */
+/**
+ * Connection and playlist screens; kept mounted and toggled via `display`. They have no own back
+ * buttons: the GlobalHeader back arrow (useMelodiqHeader -> useMelodiqNavigation) leads
+ * playlist details -> playlists -> home.
+ */
 export const MelodiqSubViews: React.FC<MelodiqSubViewsProps> = ({
   currentView,
   setCurrentView,
-  onCloseSubView,
 }) => {
   const [activePlaylist, setActivePlaylist] = useState<Playlist | null>(null);
 
@@ -29,12 +33,11 @@ export const MelodiqSubViews: React.FC<MelodiqSubViewsProps> = ({
           overflow: 'auto',
         }}
       >
-        <MelodiqConnection onBack={onCloseSubView} />
+        <MelodiqConnection />
       </Box>
 
       <Box sx={{ display: currentView === 'Playlists' ? 'block' : 'none', height: '100%' }}>
         <MelodiqPlaylists
-          onBack={onCloseSubView}
           onSelectPlaylist={(p) => {
             setActivePlaylist(p);
             setCurrentView('PlaylistDetails');
@@ -43,9 +46,7 @@ export const MelodiqSubViews: React.FC<MelodiqSubViewsProps> = ({
       </Box>
 
       <Box sx={{ display: currentView === 'PlaylistDetails' ? 'block' : 'none', height: '100%' }}>
-        {activePlaylist && (
-          <PlaylistDetails playlist={activePlaylist} onBack={() => setCurrentView('Playlists')} />
-        )}
+        {activePlaylist && <PlaylistDetails playlist={activePlaylist} />}
       </Box>
     </>
   );

@@ -140,7 +140,7 @@ export const CustomRoleNight: React.FC<CustomRoleNightProps> = ({
       players={players.filter((p) => p.isAlive && !selectedTargets.includes(p.id))}
       onSelect={handleSelect}
       onSkip={leaveAbility}
-      skipLabel={t('common.back')}
+      skipLabel={t('common.skip')}
       buttonColor="primary"
     />
   );
