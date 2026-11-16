@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Box, CircularProgress } from '@mui/material';
-import { StoryHeader } from './StoryHeader';
 import { StoryWriterView } from './StoryWriterView';
 import { WaitingForStoryTurnView } from './WaitingForStoryTurnView';
 import { StoryReaderModal } from './StoryReaderModal';
 import { EditStoryDialog } from './EditStoryDialog';
 import { ShareStoryLinksDialog } from './ShareStoryLinksDialog';
 import { LocalStoryEngine } from '../logic/engine';
+import { useStoryHeader } from '../hooks/useStoryHeader';
 import { PlayerJoinedSnackbar } from '../../../modules/player-management/PlayerJoinedSnackbar';
 import type { StoryEntry, StoryGameRecord } from '../types';
 
@@ -27,7 +27,7 @@ interface StoryActiveViewProps {
   broadcastSnapshot: (game: StoryGameRecord, entries: StoryEntry[]) => void;
 }
 
-/** Running-story screen: header, writer/waiting view and the story dialogs. */
+/** Running-story screen: global-header wiring, writer/waiting view and the story dialogs. */
 export const StoryActiveView: React.FC<StoryActiveViewProps> = ({
   game,
   entries,
@@ -46,6 +46,15 @@ export const StoryActiveView: React.FC<StoryActiveViewProps> = ({
 }) => {
   const [editOpen, setEditOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  useStoryHeader({
+    game,
+    isCurrentTurnLocal,
+    onExit,
+    onOpenReader: () => setReaderOpen(true),
+    onOpenEdit: () => setEditOpen(true),
+    onOpenShare: () => setShareDialogOpen(true),
+    onToggleLocalRemote: toggleCurrentTurn,
+  });
 
   return (
     <Box
@@ -57,17 +66,6 @@ export const StoryActiveView: React.FC<StoryActiveViewProps> = ({
         overflow: 'hidden',
       }}
     >
-      <StoryHeader
-        game={game}
-        onExit={onExit}
-        onOpenReader={() => setReaderOpen(true)}
-        onOpenEdit={() => setEditOpen(true)}
-        onOpenShare={() => setShareDialogOpen(true)}
-        isCurrentTurnLocal={isCurrentTurnLocal}
-        canToggleLocalRemote={true}
-        onToggleLocalRemote={toggleCurrentTurn}
-      />
-
       <Box sx={{ flexGrow: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         {gameLoading && !game ? (
           <Box display="flex" justifyContent="center" alignItems="center" height="100%">

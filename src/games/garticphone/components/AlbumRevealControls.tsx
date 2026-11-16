@@ -1,9 +1,8 @@
 import React from 'react';
-import { Button, Chip, Paper, Stack, Typography } from '@mui/material';
+import { Button, Chip, Paper, Typography } from '@mui/material';
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
-import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
 import SlideshowRoundedIcon from '@mui/icons-material/SlideshowRounded';
 import { useTranslation } from 'react-i18next';
 
@@ -17,10 +16,9 @@ interface AlbumRevealControlsProps {
   onPrev: () => void;
   onNext: () => void;
   onRestartGame: () => void;
-  onBackToMenu: () => void;
 }
 
-/** Navigation row below the album: only the host can step back/forward or restart. */
+/** Navigation row below the album: only the host can step back/forward or restart; leaving is the header back arrow. */
 export const AlbumRevealControls: React.FC<AlbumRevealControlsProps> = ({
   isHost,
   bookIndex,
@@ -31,18 +29,12 @@ export const AlbumRevealControls: React.FC<AlbumRevealControlsProps> = ({
   onPrev,
   onNext,
   onRestartGame,
-  onBackToMenu,
 }) => {
   const { t } = useTranslation();
   const progress = (
     <Typography variant="body2" fontWeight={700} color="text.secondary">
       {revealedStepsCount} / {totalSteps} {t('guessart.steps', 'Schritte')}
     </Typography>
-  );
-  const menuButton = (
-    <Button variant="outlined" startIcon={<HomeRoundedIcon />} onClick={onBackToMenu}>
-      {t('common.menu', 'Menü')}
-    </Button>
   );
 
   return (
@@ -73,17 +65,14 @@ export const AlbumRevealControls: React.FC<AlbumRevealControlsProps> = ({
           {progress}
 
           {isBookFullyRevealed && !hasNextBook ? (
-            <Stack direction="row" spacing={1}>
-              {menuButton}
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<ReplayRoundedIcon />}
-                onClick={onRestartGame}
-              >
-                {t('guessart.newGarticGame', 'Neues Spiel')}
-              </Button>
-            </Stack>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<ReplayRoundedIcon />}
+              onClick={onRestartGame}
+            >
+              {t('guessart.newGarticGame', 'Neues Spiel')}
+            </Button>
           ) : (
             <Button
               variant="contained"
@@ -108,7 +97,6 @@ export const AlbumRevealControls: React.FC<AlbumRevealControlsProps> = ({
             sx={{ fontWeight: 700 }}
           />
           {progress}
-          {menuButton}
         </>
       )}
     </Paper>

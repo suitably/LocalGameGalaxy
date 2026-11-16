@@ -1,5 +1,5 @@
 import { NotificationChoiceDialog } from '../../components/push/NotificationChoiceDialog';
-import { useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
@@ -10,7 +10,6 @@ import { useGuessArtGame } from './hooks/useGuessArtGame';
 import { useGuessArtJoinLink } from './hooks/useGuessArtJoinLink';
 import { JoinLinkNotice } from './components/JoinLinkNotice';
 import { useGuessArtTurnSeat } from './hooks/useGuessArtTurnSeat';
-import { useHeaderLayout } from '../../context/HeaderLayoutContext';
 import { GameSetup } from './components/GameSetup';
 import { GuessArtSessionView } from './components/GuessArtSessionView';
 import { GuessArtDialogs } from './components/GuessArtDialogs';
@@ -117,13 +116,6 @@ const GuessArtLocalGame: React.FC = () => {
 
   const historyPlayers =
     game?.players || activeGames.find((g) => g.id === historyGameId)?.players || [];
-
-  const { setHeaderHidden } = useHeaderLayout();
-
-  useEffect(() => {
-    setHeaderHidden(Boolean(activeGameId));
-    return () => setHeaderHidden(false);
-  }, [activeGameId, setHeaderHidden]);
 
   const handleExitActiveGame = useCallback(() => {
     cleanWindowUrlQuery('#/guessart');
