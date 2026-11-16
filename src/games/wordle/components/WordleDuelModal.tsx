@@ -15,6 +15,7 @@ import {
   IconButton,
   InputAdornment,
   Alert,
+  Tooltip,
 } from '@mui/material';
 import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
@@ -122,13 +123,16 @@ export const WordleDuelModal: React.FC<WordleDuelModalProps> = ({ open, onClose 
                 readOnly: true,
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton
-                      onClick={handleCopy}
-                      edge="end"
-                      color={copied ? 'success' : 'primary'}
-                    >
-                      {copied ? <CheckRoundedIcon /> : <ContentCopyRoundedIcon />}
-                    </IconButton>
+                    <Tooltip title={t('common.copy')}>
+                      <IconButton
+                        onClick={handleCopy}
+                        aria-label={t('common.copy')}
+                        edge="end"
+                        color={copied ? 'success' : 'primary'}
+                      >
+                        {copied ? <CheckRoundedIcon /> : <ContentCopyRoundedIcon />}
+                      </IconButton>
+                    </Tooltip>
                   </InputAdornment>
                 ),
               }}

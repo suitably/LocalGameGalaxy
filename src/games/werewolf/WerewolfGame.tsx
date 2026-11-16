@@ -15,111 +15,114 @@ import { WerewolfGameProvider, useWerewolfGame } from './context/WerewolfGameCon
 import { useWakeLock } from '../../hooks/useWakeLock';
 
 const WerewolfGameContent: React.FC = () => {
-    const { t } = useTranslation();
-    usePageTitle(t('games.werewolf.title'));
+  const { t } = useTranslation();
+  usePageTitle(t('games.werewolf.title'));
 
-    const {
-        gameState,
-        showContinueDialog,
-        savedGameInfo,
-        handleContinueGame,
-        handleNewGame,
-        addPlayer,
-        removePlayer,
-        clearAllPlayers,
-        startGame,
-        nextPhase,
-        killPlayer,
-        resetGame,
-        saveCustomRoles,
-        executeNightAction,
-        executeHunterShot,
-    } = useWerewolfGame();
+  const {
+    gameState,
+    showContinueDialog,
+    savedGameInfo,
+    handleContinueGame,
+    handleNewGame,
+    addPlayer,
+    removePlayer,
+    clearAllPlayers,
+    startGame,
+    nextPhase,
+    killPlayer,
+    resetGame,
+    saveCustomRoles,
+    executeNightAction,
+    executeHunterShot,
+  } = useWerewolfGame();
 
-    useWakeLock(gameState.phase !== 'SETUP');
+  useWakeLock(gameState.phase !== 'SETUP');
 
-    return (
-        <Box sx={{ p: 2, height: '100%', overflow: 'auto' }}>
-            <ContinueGameDialog
-                open={showContinueDialog}
-                savedGameInfo={savedGameInfo}
-                onContinue={handleContinueGame}
-                onNewGame={handleNewGame}
-            />
+  return (
+    <Box
+      sx={{
+        p: 2,
+        pb: 'calc(16px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))',
+        height: '100%',
+        overflow: 'auto',
+      }}
+    >
+      <ContinueGameDialog
+        open={showContinueDialog}
+        savedGameInfo={savedGameInfo}
+        onContinue={handleContinueGame}
+        onNewGame={handleNewGame}
+      />
 
-            {gameState.phase === 'SETUP' && (
-                <GameSetup
-                    players={gameState.players}
-                    customRoles={gameState.customRoles}
-                    onAddPlayer={addPlayer}
-                    onRemovePlayer={removePlayer}
-                    onClearAllPlayers={clearAllPlayers}
-                    onStartGame={startGame}
-                    onSaveCustomRoles={saveCustomRoles}
-                />
-            )}
+      {gameState.phase === 'SETUP' && (
+        <GameSetup
+          players={gameState.players}
+          customRoles={gameState.customRoles}
+          onAddPlayer={addPlayer}
+          onRemovePlayer={removePlayer}
+          onClearAllPlayers={clearAllPlayers}
+          onStartGame={startGame}
+          onSaveCustomRoles={saveCustomRoles}
+        />
+      )}
 
-            {gameState.phase === 'ROLE_REVEAL' && (
-                <RoleReveal
-                    players={gameState.players}
-                    onComplete={nextPhase}
-                />
-            )}
+      {gameState.phase === 'ROLE_REVEAL' && (
+        <RoleReveal players={gameState.players} onComplete={nextPhase} />
+      )}
 
-            {gameState.phase === 'NIGHT' && (
-                <NightPhase
-                    players={gameState.players}
-                    customRoles={gameState.customRoles}
-                    round={gameState.round}
-                    nightActionLog={gameState.nightActionLog}
-                    onNextPhase={nextPhase}
-                    onNightAction={executeNightAction}
-                />
-            )}
+      {gameState.phase === 'NIGHT' && (
+        <NightPhase
+          players={gameState.players}
+          customRoles={gameState.customRoles}
+          round={gameState.round}
+          nightActionLog={gameState.nightActionLog}
+          onNextPhase={nextPhase}
+          onNightAction={executeNightAction}
+        />
+      )}
 
-            {gameState.phase === 'DAY' && (
-                <DayPhase
-                    players={gameState.players}
-                    round={gameState.round}
-                    customRoles={gameState.customRoles}
-                    onNextPhase={nextPhase}
-                    removedPlayerIds={gameState.players.filter((p: Player) => !p.isAlive && gameState.nightActionLog.includes(p.id)).map((p: Player) => p.id)}
-                    nightDecisions={gameState.nightDecisions}
-                />
-            )}
+      {gameState.phase === 'DAY' && (
+        <DayPhase
+          players={gameState.players}
+          round={gameState.round}
+          customRoles={gameState.customRoles}
+          onNextPhase={nextPhase}
+          removedPlayerIds={gameState.players
+            .filter((p: Player) => !p.isAlive && gameState.nightActionLog.includes(p.id))
+            .map((p: Player) => p.id)}
+          nightDecisions={gameState.nightDecisions}
+        />
+      )}
 
-            {gameState.phase === 'VOTING' && (
-                <VotingPhase
-                    players={gameState.players}
-                    round={gameState.round}
-                    onVote={killPlayer}
-                    onSkipVote={nextPhase}
-                />
-            )}
+      {gameState.phase === 'VOTING' && (
+        <VotingPhase
+          players={gameState.players}
+          round={gameState.round}
+          onVote={killPlayer}
+          onSkipVote={nextPhase}
+        />
+      )}
 
-            {gameState.phase === 'HUNTER_SHOT' && (
-                <HunterShotView
-                    hunter={gameState.players.find((p: Player) => p.id === gameState.pendingHunterIds[0])!}
-                    players={gameState.players}
-                    onShot={executeHunterShot}
-                    onSkip={() => executeHunterShot('')}
-                />
-            )}
+      {gameState.phase === 'HUNTER_SHOT' && (
+        <HunterShotView
+          hunter={gameState.players.find((p: Player) => p.id === gameState.pendingHunterIds[0])!}
+          players={gameState.players}
+          onShot={executeHunterShot}
+          onSkip={() => executeHunterShot('')}
+        />
+      )}
 
-            {gameState.phase === 'GAME_OVER' && gameState.winner && (
-                <GameOver
-                    winner={gameState.winner}
-                    onPlayAgain={resetGame}
-                />
-            )}
-        </Box>
-    );
+      {gameState.phase === 'GAME_OVER' && gameState.winner && (
+        <GameOver winner={gameState.winner} onPlayAgain={resetGame} />
+      )}
+    </Box>
+  );
 };
 
 export const WerewolfGame: React.FC = () => {
-    return (
-        <WerewolfGameProvider>
-            <WerewolfGameContent />
-        </WerewolfGameProvider>
-    );
+  return (
+    <WerewolfGameProvider>
+      <WerewolfGameContent />
+    </WerewolfGameProvider>
+  );
 };

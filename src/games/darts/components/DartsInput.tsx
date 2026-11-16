@@ -1,4 +1,4 @@
-import { Box, Button, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { Box, Button, ToggleButton, ToggleButtonGroup, Tooltip } from '@mui/material';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDartsGame, type ThrowMultiplier, type ThrowValue } from '../useDartsGame';
@@ -95,16 +95,20 @@ export function DartsInput({ state }: Props) {
           </ToggleButton>
         </ToggleButtonGroup>
 
-        <Button
-          variant="outlined"
-          color="error"
-          onClick={undoThrow}
-          aria-label={t('common.a11y.undo_throw', 'Undo last throw')}
-          disabled={state.turns.length === 0 && state.currentTurnThrows.length === 0}
-          sx={{ px: 3 }}
-        >
-          <BackspaceIcon />
-        </Button>
+        <Tooltip title={t('common.a11y.undo_throw')}>
+          <span>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={undoThrow}
+              aria-label={t('common.a11y.undo_throw')}
+              disabled={state.turns.length === 0 && state.currentTurnThrows.length === 0}
+              sx={{ px: 3, height: '100%' }}
+            >
+              <BackspaceIcon />
+            </Button>
+          </span>
+        </Tooltip>
       </Box>
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', margin: -0.5 }}>

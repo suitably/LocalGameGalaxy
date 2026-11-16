@@ -63,10 +63,10 @@ interface Item {
 type Entry = Item | 'divider';
 
 const Z_ITEMS = [
-  { op: 'front', icon: FlipToFrontIcon, key: 'bringToFront', fallback: 'Bring to front' },
-  { op: 'forward', icon: ArrowUpwardIcon, key: 'bringForward', fallback: 'Bring forward' },
-  { op: 'backward', icon: ArrowDownwardIcon, key: 'sendBackward', fallback: 'Send backward' },
-  { op: 'back', icon: FlipToBackIcon, key: 'sendToBack', fallback: 'Send to back' },
+  { op: 'front', icon: FlipToFrontIcon, key: 'bringToFront' },
+  { op: 'forward', icon: ArrowUpwardIcon, key: 'bringForward' },
+  { op: 'backward', icon: ArrowDownwardIcon, key: 'sendBackward' },
+  { op: 'back', icon: FlipToBackIcon, key: 'sendToBack' },
 ] as const;
 
 export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = (props) => {
@@ -86,7 +86,7 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = (props) => {
       props.onDrawToHand && {
         key: 'draw',
         icon: <PanToolIcon fontSize="small" />,
-        label: t('games.tabletop.drawToHand', 'Auf die Hand ziehen'),
+        label: t('games.tabletop.drawToHand'),
         run: () => props.onDrawToHand?.(id),
       },
   );
@@ -97,7 +97,7 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = (props) => {
         props.onDeal && {
           key: `deal${perHand}`,
           icon: <GroupsIcon fontSize="small" />,
-          label: t('games.tabletop.dealEach', '{{count}} an alle austeilen', { count: perHand }),
+          label: t('games.tabletop.dealEach', { count: perHand }),
           run: () => props.onDeal?.(id, perHand),
         },
     );
@@ -107,7 +107,7 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = (props) => {
     Boolean(props.onFlip && flipActionFor(widget)) && {
       key: 'flip',
       icon: <FlipIcon fontSize="small" />,
-      label: t('games.tabletop.flipCard', 'Umdrehen'),
+      label: t('games.tabletop.flipCard'),
       secondary: 'F',
       run: () => props.onFlip?.(id),
     },
@@ -118,10 +118,7 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = (props) => {
       key: 'shake',
       icon:
         widget.type === 'die' ? <CasinoIcon fontSize="small" /> : <ShuffleIcon fontSize="small" />,
-      label:
-        widget.type === 'die'
-          ? t('games.tabletop.rollDie', 'Würfeln')
-          : t('games.tabletop.shuffleDeck', 'Mischen'),
+      label: widget.type === 'die' ? t('games.tabletop.rollDie') : t('games.tabletop.shuffleDeck'),
       secondary: 'S',
       run: () => props.onShake?.(id),
     },
@@ -135,9 +132,7 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = (props) => {
       ) : (
         <CheckBoxOutlineBlankIcon fontSize="small" />
       ),
-      label: isSelected
-        ? t('games.tabletop.deselectWidget', 'Auswahl aufheben')
-        : t('games.tabletop.selectWidget', 'Element auswählen'),
+      label: isSelected ? t('games.tabletop.deselectWidget') : t('games.tabletop.selectWidget'),
       run: () => props.onToggleSelect?.(id),
     },
   );
@@ -151,17 +146,17 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = (props) => {
         <VisibilityIcon fontSize="small" color="primary" />
       ),
       label: showAlways
-        ? t('games.tabletop.disableShowAlways', 'Normal verbergen in Zonen')
-        : t('games.tabletop.enableShowAlways', 'Immer anzeigen (Show Always)'),
+        ? t('games.tabletop.disableShowAlways')
+        : t('games.tabletop.enableShowAlways'),
       run: () => props.onToggleShowAlways?.(id, showAlways),
     },
   );
   if (props.onZOrder) {
-    for (const { op, icon: Icon, key, fallback } of Z_ITEMS) {
+    for (const { op, icon: Icon, key } of Z_ITEMS) {
       add(2, {
         key: op,
         icon: <Icon fontSize="small" />,
-        label: t(`games.tabletop.${key}`, fallback),
+        label: t(`games.tabletop.${key}`),
         run: () => props.onZOrder?.(id, op),
       });
     }
@@ -171,7 +166,7 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = (props) => {
     props.onScaleWidget && {
       key: 'scaleUp',
       icon: <ZoomInIcon fontSize="small" />,
-      label: t('games.tabletop.scaleUpItem', 'Vergrößern (+25%)'),
+      label: t('games.tabletop.scaleUpItem'),
       run: () => props.onScaleWidget?.(id, 1.25),
     },
   );
@@ -180,7 +175,7 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = (props) => {
     props.onScaleWidget && {
       key: 'scaleDown',
       icon: <ZoomOutIcon fontSize="small" />,
-      label: t('games.tabletop.scaleDownItem', 'Verkleinern (-20%)'),
+      label: t('games.tabletop.scaleDownItem'),
       run: () => props.onScaleWidget?.(id, 0.8),
     },
   );
@@ -189,7 +184,7 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = (props) => {
     props.onResetWidgetScale && {
       key: 'resetScale',
       icon: <RestartAltIcon fontSize="small" />,
-      label: t('games.tabletop.resetScaleItem', 'Größe zurücksetzen'),
+      label: t('games.tabletop.resetScaleItem'),
       run: () => props.onResetWidgetScale?.(id),
     },
   );

@@ -73,7 +73,10 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
         }
       }
     } catch (err) {
-      setFeedback({ type: 'error', text: err instanceof Error ? err.message : 'Hint failed' });
+      setFeedback({
+        type: 'error',
+        text: err instanceof Error ? err.message : t('guessart.hintFailed'),
+      });
     } finally {
       setRequestingHint(false);
     }
@@ -120,11 +123,19 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
         setGuess('');
       }
     } catch (err) {
-      setFeedback({ type: 'error', text: err instanceof Error ? err.message : 'Guess failed' });
+      setFeedback({
+        type: 'error',
+        text: err instanceof Error ? err.message : t('guessart.guessFailed'),
+      });
     } finally {
       setSubmitting(false);
     }
   };
+
+  const hintLabel =
+    hintStage >= 2
+      ? t('guessart.noMoreHints', 'Keine weiteren Tipps')
+      : t('guessart.getHint', 'Tipp anfordern');
 
   return (
     <Box
@@ -157,16 +168,11 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
 
       {/* Input Bar */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, pt: 1.5, pb: 1 }}>
-        <Tooltip
-          title={
-            hintStage >= 2
-              ? t('guessart.noMoreHints', 'Keine weiteren Tipps')
-              : t('guessart.getHint', 'Tipp anfordern')
-          }
-        >
+        <Tooltip title={hintLabel}>
           <span>
             <IconButton
               color="warning"
+              aria-label={hintLabel}
               onClick={handleHintClick}
               disabled={hintStage >= 2 || requestingHint}
               sx={{
@@ -219,6 +225,7 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
 
         <IconButton
           color="primary"
+          aria-label={t('guessart.submitGuess')}
           onClick={handleSubmit}
           disabled={submitting || !guess.trim()}
           sx={{

@@ -116,7 +116,6 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
           py: 1.5,
           fontWeight: 800,
           fontSize: '1.1rem',
-          borderRadius: 999,
         }}
       >
         {t('games.cards.start_session', 'Runde starten')} ({selectedGame.name})

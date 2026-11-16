@@ -79,7 +79,7 @@ export const PublishCatalogueTab: React.FC<PublishCatalogueTabProps> = ({
       console.error('Publishing failed', err);
       setResult({
         success: false,
-        error: err instanceof Error ? err.message : 'Failed to publish catalogue',
+        error: err instanceof Error ? err.message : t('guessart.publishFailed'),
       });
     } finally {
       setSubmitting(false);

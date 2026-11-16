@@ -92,15 +92,17 @@ export function DartsScoreboard({ state }: Props) {
           minHeight: { xs: 'auto', md: 'auto' },
         }}
       >
-        {winner && (
-          <EmojiEventsIcon
-            sx={{ position: 'absolute', top: 16, right: 16, color: 'gold', fontSize: 48 }}
-          />
-        )}
-
-        <Typography variant="h5" noWrap>
-          {focusPlayer.name}
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, maxWidth: '100%' }}>
+          {winner && (
+            <EmojiEventsIcon
+              aria-hidden
+              sx={{ color: 'warning.main', fontSize: 32, flexShrink: 0 }}
+            />
+          )}
+          <Typography variant="h5" noWrap>
+            {focusPlayer.name}
+          </Typography>
+        </Box>
 
         <Typography
           variant="h1"

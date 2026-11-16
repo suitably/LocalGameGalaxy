@@ -12,16 +12,6 @@ interface GarticPromptStepProps {
 
 const MAX_PROMPT_LENGTH = 70;
 
-const PROMPT_SUGGESTIONS = [
-  'Ein Roboter der Pfannkuchen backt',
-  'Katze mit Sonnenbrille auf einem Skateboard',
-  'Astronaut reitet ein Lama auf dem Mond',
-  'Dinosaurier trinkt gemütlich Kaffee',
-  'Pinguin fliegt mit bunten Luftballons',
-  'Schneemann am heißen Strand in Hawaii',
-  'Superheld verliert seinen Umhang im Sturm',
-];
-
 export const GarticPromptStep: React.FC<GarticPromptStepProps> = ({
   playerName,
   onSubmitPrompt,
@@ -30,8 +20,10 @@ export const GarticPromptStep: React.FC<GarticPromptStepProps> = ({
   const [promptText, setPromptText] = useState('');
 
   const handleRandom = () => {
-    const random = PROMPT_SUGGESTIONS[Math.floor(Math.random() * PROMPT_SUGGESTIONS.length)];
-    setPromptText(random);
+    const suggestions = t('guessart.promptSuggestions', { returnObjects: true }) as unknown;
+    if (!Array.isArray(suggestions) || suggestions.length === 0) return;
+    const random = suggestions[Math.floor(Math.random() * suggestions.length)];
+    if (typeof random === 'string') setPromptText(random);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -94,7 +86,7 @@ export const GarticPromptStep: React.FC<GarticPromptStepProps> = ({
             onClick={handleRandom}
             sx={{ borderRadius: 3 }}
           >
-            {t('guessart.randomPrompt', 'Zufällige Idee')}
+            {t('guessart.randomPrompt')}
           </Button>
 
           <Button

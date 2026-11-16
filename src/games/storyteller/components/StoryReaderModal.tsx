@@ -11,6 +11,7 @@ import {
   Divider,
   IconButton,
   Stack,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
@@ -85,9 +86,16 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
             </Typography>
           </Box>
         </Stack>
-        <IconButton onClick={onClose} sx={{ color: 'text.secondary' }} size="small">
-          <CloseRoundedIcon />
-        </IconButton>
+        <Tooltip title={t('common.close')}>
+          <IconButton
+            onClick={onClose}
+            aria-label={t('common.close')}
+            sx={{ color: 'text.secondary' }}
+            size="small"
+          >
+            <CloseRoundedIcon />
+          </IconButton>
+        </Tooltip>
       </DialogTitle>
 
       <DialogContent sx={{ p: { xs: 2, sm: 3 }, overflowY: 'auto' }}>

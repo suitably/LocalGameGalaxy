@@ -238,6 +238,8 @@
         "editor": {
           "title": "Role Editor",
           "add_role": "Add Role",
+          "standard_roles": "Standard roles",
+          "custom_roles": "Custom roles",
           "edit_role": "Edit Role",
           "new_role": "New Role",
           "role_name": "Role Name",
@@ -1394,6 +1396,7 @@
       "counterDecrement": "Decrease",
       "counterIncrement": "Increase",
       "drawToHand": "Draw to my hand",
+      "dealEach": "Deal {{count}} to everyone",
       "dealEach_one": "Deal {{count}} card to everyone",
       "dealEach_other": "Deal {{count}} cards to everyone",
       "server_unreachable": "The companion server is not reachable right now.",
@@ -1936,6 +1939,9 @@
     "duplicatePlayer": "Player already exists!",
     "minPlayers": "At least 2 players required!",
     "optionsTitle": "Options",
+    "hintFailed": "Hint failed",
+    "guessFailed": "Guess failed",
+    "publishFailed": "Failed to publish catalogue",
     "manualWordModeToggle": "Manual Word Creation",
     "manualWordModeDesc": "Players enter their own custom words instead of picking from the catalogue.",
     "startGame": "Start New Game",
@@ -1968,6 +1974,7 @@
     "noMoreHints": "No more hints available",
     "getHint": "Get Hint",
     "guessPlaceholder": "What was drawn?",
+    "submitGuess": "Submit guess",
     "repeatedGuess": "You already tried this guess!",
     "wrongGuess": "Incorrect! Keep guessing.",
     "correctCelebration": "Correct Guess!",
@@ -2020,6 +2027,15 @@
     "promptStepHint": "Your phrase will be passed to the next player who must draw it!",
     "promptPlaceholder": "e.g. A penguin skydiving with balloons...",
     "randomPrompt": "Random Idea",
+    "promptSuggestions": [
+      "A robot flipping pancakes",
+      "Cat in sunglasses on a skateboard",
+      "Astronaut riding a llama on the moon",
+      "Dinosaur drinking coffee in no rush",
+      "Penguin floating away with colorful balloons",
+      "Snowman on a hot beach in Hawaii",
+      "Superhero losing their cape in a storm"
+    ],
     "drawThisPrompt": "Draw this phrase:",
     "whatIsThisDrawing": "What does this drawing depict? Describe it!",
     "describeDrawingPlaceholder": "Describe the drawing in one sentence...",
@@ -2331,6 +2347,10 @@
     "victory": {
       "title": "Solved!",
       "new_record": "New personal best time!"
+    },
+    "share": {
+      "title": "Sudoku result",
+      "text": "🔢 Sudoku ({{difficulty}}) solved in {{time}}!\nMistakes: {{mistakes}}, hints: {{hints}}"
     },
     "menu": {
       "stats": "Statistics",

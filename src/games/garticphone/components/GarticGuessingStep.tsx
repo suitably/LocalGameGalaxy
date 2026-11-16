@@ -93,7 +93,7 @@ export const GarticGuessingStep: React.FC<GarticGuessingStepProps> = ({
           color="primary"
           disabled={!guess.trim()}
           startIcon={<SendRoundedIcon />}
-          sx={{ px: 2.5, fontWeight: 700, borderRadius: 2, height: 40, whiteSpace: 'nowrap' }}
+          sx={{ px: 2.5, fontWeight: 700, borderRadius: 2, minHeight: 44, whiteSpace: 'nowrap' }}
         >
           {t('common.send', 'Senden')}
         </Button>

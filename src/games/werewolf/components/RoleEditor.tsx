@@ -8,7 +8,6 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemSecondaryAction,
   Chip,
   Accordion,
   AccordionSummary,
@@ -129,8 +128,9 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
     const removeLabel = `${removeAction}: ${displayName}`;
 
     return (
-      <ListItem key={role.id} divider>
+      <ListItem key={role.id} divider sx={{ alignItems: 'flex-start', gap: 1 }}>
         <ListItemText
+          sx={{ flex: '1 1 auto', minWidth: 0 }}
           primary={
             <Box display="flex" alignItems="center" gap={1}>
               <Typography>
@@ -148,14 +148,9 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
           }
           secondary={displayDescription}
         />
-        <ListItemSecondaryAction>
+        <Box display="flex" flexShrink={0} alignItems="center" gap={0.5}>
           <Tooltip title={editLabel}>
-            <IconButton
-              edge="end"
-              onClick={() => handleEditRole(role)}
-              aria-label={editLabel}
-              sx={{ mr: 1 }}
-            >
+            <IconButton edge="end" onClick={() => handleEditRole(role)} aria-label={editLabel}>
               <EditIcon />
             </IconButton>
           </Tooltip>
@@ -169,7 +164,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
               {isDefaultId ? <RestartAltIcon /> : <DeleteIcon />}
             </IconButton>
           </Tooltip>
-        </ListItemSecondaryAction>
+        </Box>
       </ListItem>
     );
   };
@@ -193,7 +188,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
         {customRolesList.length > 0 && (
           <Paper variant="outlined" sx={{ mb: 2 }}>
             <Typography variant="h6" sx={{ p: 2, pb: 0 }}>
-              {t('games.werewolf.ui.editor.custom_roles', 'Custom Roles')}
+              {t('games.werewolf.ui.editor.custom_roles')}
             </Typography>
             <List sx={{ width: '100%' }}>{customRolesList.map(renderRoleItem)}</List>
           </Paper>
@@ -202,8 +197,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
         <Accordion defaultExpanded={false} variant="outlined" disableGutters>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">
-              {t('games.werewolf.ui.editor.standard_roles', 'Standard Roles')} (
-              {standardRolesList.length})
+              {t('games.werewolf.ui.editor.standard_roles')} ({standardRolesList.length})
             </Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ p: 0 }}>
