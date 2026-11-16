@@ -1,0 +1,8 @@
+{
+  "src/components/connection/ServerUsdbConfig.tsx": 1,
+  "src/games/garticphone/components/AlbumRevealControls.tsx": 1,
+  "src/games/guessart/components/WordSelector.tsx": 1,
+  "src/games/tabletop/components/surface/CardZoomDialog.tsx": 1,
+  "src/games/tabletop/components/surface/SelectionFloatingBar.tsx": 1,
+  "src/games/tabletop/TabletopGame.tsx": 1
+}
