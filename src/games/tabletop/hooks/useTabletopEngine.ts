@@ -51,6 +51,8 @@ export interface TabletopEngineOptions {
   onShake?: (action: TabletopAction) => void;
   /** Long press on a source released without moving: open its context menu. */
   onLongPressRelease?: (widgetId: string, clientX: number, clientY: number) => void;
+  /** The element the table is panned and zoomed in: anchor for pinch, wheel and button zoom. */
+  containerRef?: React.RefObject<HTMLElement | null>;
 }
 
 interface DragStart {
@@ -73,7 +75,7 @@ const DOCK_HEIGHT = 156;
 const isMovable = (w?: TabletopWidget) => Boolean(w && !w.pinned && w.movable !== false);
 
 export function useTabletopEngine(options: TabletopEngineOptions) {
-  const view = usePanPinch();
+  const view = usePanPinch(options.containerRef);
   const { transform, endPan } = view;
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [isDraggingActive, setIsDraggingActive] = useState(false);
@@ -174,12 +176,9 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
   };
 
   const handlePointerMove = (e: PointerEvent | React.PointerEvent) => {
-    if (view.pinchMove(e)) return;
+    if (view.moveView(e)) return;
     const start = dragStartRef.current;
-    if (!start) {
-      view.panMove(e);
-      return;
-    }
+    if (!start) return;
     const dist = Math.hypot(e.clientX - start.pointerX, e.clientY - start.pointerY);
     if (!hasMovedRef.current && dist < DRAG_THRESHOLD_PX) return;
     if (!prepareSourceDrag(start)) return;
@@ -266,8 +265,7 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
 
   const handlePointerUp = (e: PointerEvent | React.PointerEvent) => {
     const drop = mover.flush();
-    view.endPinch();
-    if (!e.isPrimary) return;
+    if (view.releasePointer(e) || !e.isPrimary) return;
     const start = dragStartRef.current;
     if (!start) {
       endPan();
