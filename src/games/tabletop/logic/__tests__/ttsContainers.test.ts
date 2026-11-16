@@ -67,6 +67,24 @@ describe('TTS bags, tiles and fog (#449)', () => {
     expect(drawn.game.widgets.spawn1).toMatchObject({ type: 'token' });
   });
 
+  it('bags with a custom model keep their contents (finite and infinite)', () => {
+    const game = parseTtsSaveFile(
+      save([
+        obj('mb', 'Custom_Model_Bag', {
+          ContainedObjects: [obj('m1', 'Custom_Token'), obj('m2', 'Custom_Token')],
+        }),
+        obj('mi', 'Custom_Model_Infinite_Bag', { ContainedObjects: [obj('m3', 'Custom_Token')] }),
+      ]),
+    );
+    expect(game.widgets.mb).toMatchObject({
+      type: 'bag',
+      isInfinite: false,
+      itemIds: ['m1', 'm2'],
+    });
+    expect(game.widgets.mi).toMatchObject({ type: 'bag', isInfinite: true });
+    expect((game.widgets.mi as BagWidget).templateWidget?.id).toBe('m3');
+  });
+
   it('Custom_Tile shapes map to hex, circle, rounded and box', () => {
     const tile = (Type: number) =>
       obj('x', 'Custom_Tile', { CustomImage: { ImageURL: '', CustomTile: { Type } } });

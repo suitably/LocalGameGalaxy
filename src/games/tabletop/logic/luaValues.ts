@@ -3,8 +3,9 @@
  *
  * Part of the Lua → routine translator (`luaTranslator.ts`, TTS plan slice 8). Evaluates only
  * what is knowable without running code: literals, string concatenation, tables of literals,
- * variables bound to them, `getObjectFromGUID('…')`, `self` and `Global`. Anything else is
- * `unknown`, so a step that needs it is not translated instead of guessed.
+ * variables bound to them, arithmetic and comparisons on them, `getObjectFromGUID('…')`, `self`,
+ * `Global` and `Global.getTable/getVar('…')` (the Global script's top-level value). Anything else
+ * is `unknown`, so a step that needs it is not translated instead of guessed.
  */
 import luaparse from 'luaparse';
 import type {
@@ -28,13 +29,21 @@ export type LuaValue =
   | { k: 'str'; v: string }
   | { k: 'num'; v: number }
   | { k: 'bool'; v: boolean }
+  | { k: 'nil' }
   /** A table object, by TTS GUID. */
   | { k: 'obj'; guid: string }
-  | { k: 'global' }
+  /** The Global script; `scope` is its top level once that script was read. */
+  | { k: 'global'; scope?: LuaScope }
   | { k: 'table'; fields: Map<string, LuaValue> }
   | { k: 'unknown' };
 
 export const UNKNOWN: LuaValue = { k: 'unknown' };
+
+/** A copy that shares no table with `value` (TTS copies tables across scripts). */
+export function cloneLua(value: LuaValue): LuaValue {
+  if (value.k !== 'table') return value;
+  return { k: 'table', fields: new Map([...value.fields].map(([k, v]) => [k, cloneLua(v)])) };
+}
 
 /** Variables visible to a statement: innermost scope first. */
 export class LuaScope {
@@ -58,6 +67,14 @@ export class LuaScope {
   assign(name: string, value: LuaValue): void {
     if (this.vars.has(name) || !this.parent) this.vars.set(name, value);
     else this.parent.assign(name, value);
+  }
+  /** This scope's own variables, copied, for `restore`. */
+  snapshot(): Map<string, LuaValue> {
+    return new Map([...this.vars].map(([k, v]) => [k, cloneLua(v)]));
+  }
+  restore(saved: Map<string, LuaValue>): void {
+    this.vars.clear();
+    for (const [k, v] of saved) this.vars.set(k, cloneLua(v));
   }
 }
 
@@ -96,6 +113,13 @@ export function decodeLuaString(raw: string): string {
   return raw.slice(1, -1).replace(/\\(.)/g, (_, c: string) => ESCAPES[c] ?? c);
 }
 
+/** TTS API namespaces; any other capitalised base (`DeckOBJ.shuffle()`) is a script variable. */
+const TTS_NAMESPACES = new Set(
+  'Wait JSON Timer Player Physics WebRequest Turns UI Color Vector Notes Lighting Hands Grid Backgrounds Tables Time Info Music MusicPlayer Clock Counter RPGFigurine TextTool AssetBundle Container Book Browser LayoutZone Zone'.split(
+    ' ',
+  ),
+);
+
 /** Call node normalised: callee, method name (for `a.m()` / `a:m()`) and argument nodes. */
 export interface LuaCall {
   callee: LuaNode;
@@ -126,7 +150,7 @@ export function asCall(node: LuaNode): LuaCall | null {
     const base = m.base.type === 'Identifier' ? (m.base as Identifier).name : '';
     // `Wait.time`, `JSON.encode`: namespaced globals are reported with their namespace.
     const name =
-      /^[A-Z]/.test(base) && base !== 'Global' && m.indexer === '.'
+      TTS_NAMESPACES.has(base) && m.indexer === '.'
         ? `${base}.${m.identifier.name}`
         : m.identifier.name;
     return { callee, receiver: m.base, name, args };
@@ -139,16 +163,25 @@ const isCallNode = (n: LuaNode) =>
   n.type === 'StringCallExpression' ||
   n.type === 'TableCallExpression';
 
+/** Getters that change nothing; what they return is known only where `evalLua` says so. */
+const PURE_CALLS = new Set(['getObjectFromGUID', 'getTable', 'getVar', 'getButtons']);
+
 /** Name of the first call in an expression that has side effects, if any. */
 export function sideEffectCall(node: LuaNode): string | undefined {
   if (isCallNode(node)) {
     const call = asCall(node);
-    if (call?.name !== 'getObjectFromGUID') return call?.name ?? node.type;
+    if (!call || !PURE_CALLS.has(call.name)) return call?.name ?? node.type;
     return call.args.map(sideEffectCall).find(Boolean);
   }
-  if (node.type === 'BinaryExpression') {
+  if (node.type === 'BinaryExpression' || node.type === 'LogicalExpression') {
     const b = node as BinaryExpression;
     return sideEffectCall(b.left) ?? sideEffectCall(b.right);
+  }
+  if (node.type === 'UnaryExpression') return sideEffectCall((node as UnaryExpression).argument);
+  if (node.type === 'MemberExpression') return sideEffectCall((node as MemberExpression).base);
+  if (node.type === 'IndexExpression') {
+    const ix = node as IndexExpression;
+    return sideEffectCall(ix.base) ?? sideEffectCall(ix.index);
   }
   if (node.type === 'TableConstructorExpression') {
     return (node as TableConstructorExpression).fields
@@ -177,9 +210,68 @@ export function fieldOf(value: LuaValue, key: string): LuaValue {
   return value.k === 'table' ? (value.fields.get(key) ?? UNKNOWN) : UNKNOWN;
 }
 
+const ARITHMETIC: Record<string, (a: number, b: number) => number> = {
+  '+': (a, b) => a + b,
+  '-': (a, b) => a - b,
+  '*': (a, b) => a * b,
+  '/': (a, b) => a / b,
+  '%': (a, b) => a - Math.floor(a / b) * b,
+};
+const ORDER: Record<string, (a: number | string, b: number | string) => boolean> = {
+  '<': (a, b) => a < b,
+  '<=': (a, b) => a <= b,
+  '>': (a, b) => a > b,
+  '>=': (a, b) => a >= b,
+};
+const isScalar = (v: LuaValue): v is Extract<LuaValue, { v: unknown }> =>
+  v.k === 'str' || v.k === 'num' || v.k === 'bool';
+
+/** `l == r` where both sides are known well enough to tell; undefined otherwise. */
+export function luaEquals(l: LuaValue, r: LuaValue): boolean | undefined {
+  if (isScalar(l) && isScalar(r)) return l.k === r.k && l.v === r.v;
+  if (l.k === 'nil' || r.k === 'nil') {
+    const other = l.k === 'nil' ? r : l;
+    if (other.k === 'nil') return true;
+    return isScalar(other) || other.k === 'table' ? false : undefined;
+  }
+  if (l.k === 'obj' && r.k === 'obj' && l.guid === r.guid) return true;
+  return undefined;
+}
+
+function binaryValue(operator: string, l: LuaValue, r: LuaValue): LuaValue {
+  const text = (v: LuaValue) => (v.k === 'str' || v.k === 'num' ? String(v.v) : null);
+  if (operator === '..') {
+    return text(l) === null || text(r) === null ? UNKNOWN : { k: 'str', v: `${text(l)}${text(r)}` };
+  }
+  if (operator === '==' || operator === '~=') {
+    const eq = luaEquals(l, r);
+    return eq === undefined ? UNKNOWN : { k: 'bool', v: (operator === '==') === eq };
+  }
+  if (ARITHMETIC[operator] && l.k === 'num' && r.k === 'num') {
+    const v = ARITHMETIC[operator](l.v, r.v);
+    return Number.isFinite(v) ? { k: 'num', v } : UNKNOWN;
+  }
+  const sameKind = (l.k === 'num' && r.k === 'num') || (l.k === 'str' && r.k === 'str');
+  if (ORDER[operator] && sameKind && isScalar(l) && isScalar(r)) {
+    return { k: 'bool', v: ORDER[operator](l.v as number | string, r.v as number | string) };
+  }
+  return UNKNOWN;
+}
+
+/** `Global.getTable('name')` / `obj.getVar('name')` on the Global script, else null. */
+function globalRead(call: LuaCall, scope: LuaScope): LuaValue | null {
+  if (!call.receiver || (call.name !== 'getTable' && call.name !== 'getVar')) return null;
+  const owner = evalLua(call.receiver, scope);
+  const name = call.args[0] ? evalLua(call.args[0], scope) : UNKNOWN;
+  if (owner.k !== 'global' || !owner.scope || name.k !== 'str') return UNKNOWN;
+  return cloneLua(owner.scope.get(name.v) ?? UNKNOWN);
+}
+
 /** The statically known value of an expression. */
 export function evalLua(node: LuaNode, scope: LuaScope): LuaValue {
   switch (node.type) {
+    case 'NilLiteral':
+      return { k: 'nil' };
     case 'StringLiteral':
       return { k: 'str', v: decodeLuaString((node as StringLiteral).raw) };
     case 'NumericLiteral':
@@ -195,10 +287,7 @@ export function evalLua(node: LuaNode, scope: LuaScope): LuaValue {
     }
     case 'BinaryExpression': {
       const b = node as BinaryExpression;
-      const [l, r] = [evalLua(b.left, scope), evalLua(b.right, scope)];
-      const text = (v: LuaValue) => (v.k === 'str' || v.k === 'num' ? String(v.v) : null);
-      if (b.operator !== '..' || text(l) === null || text(r) === null) return UNKNOWN;
-      return { k: 'str', v: `${text(l)}${text(r)}` };
+      return binaryValue(b.operator, evalLua(b.left, scope), evalLua(b.right, scope));
     }
     case 'MemberExpression': {
       const m = node as MemberExpression;
@@ -215,6 +304,8 @@ export function evalLua(node: LuaNode, scope: LuaScope): LuaValue {
       return tableValue(node as TableConstructorExpression, scope);
     default: {
       const call = isCallNode(node) ? asCall(node) : null;
+      const read = call ? globalRead(call, scope) : null;
+      if (read) return read;
       if (call?.name !== 'getObjectFromGUID' || call.receiver) return UNKNOWN;
       const guid = call.args[0] ? evalLua(call.args[0], scope) : UNKNOWN;
       return guid.k === 'str' ? { k: 'obj', guid: guid.v } : UNKNOWN;

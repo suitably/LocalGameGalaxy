@@ -51,9 +51,16 @@ function previewOf(w: TabletopWidget | undefined): {
   return { previewImage: w.image, previewLabel: w.label };
 }
 
+const INFINITE_BAG_NAMES = new Set(['Infinite_Bag', 'Custom_Model_Infinite_Bag']);
+const BAG_NAMES = new Set(['Bag', 'Custom_Model_Bag', ...INFINITE_BAG_NAMES]);
+
+/** Whether a TTS object name is a container that hands out pieces. */
+export const isTtsBag = (name: string): boolean => BAG_NAMES.has(name);
+
 /**
  * `Bag` → finite bag: its contents become hidden widgets listed in `itemIds` (drawn last-in
  * first-out). `Infinite_Bag` → infinite bag that clones its first object as `templateWidget`.
+ * Bags with a custom 3D model (`Custom_Model_Bag`, …) behave the same; only their look is lost.
  */
 export function convertBag(
   obj: TTSObjectState,
@@ -62,7 +69,7 @@ export function convertBag(
   convertChild: (child: TTSObjectState, pos: Pos) => TabletopWidget,
   out: Record<string, TabletopWidget>,
 ): BagWidget {
-  const isInfinite = obj.Name === 'Infinite_Bag';
+  const isInfinite = INFINITE_BAG_NAMES.has(obj.Name);
   const childPos = { ...pos, zIndex: pos.zIndex + 1 };
   const children = (obj.ContainedObjects ?? []).map((c) => ({
     ...convertChild(c, childPos),

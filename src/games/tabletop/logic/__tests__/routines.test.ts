@@ -29,6 +29,15 @@ describe('routines (#449)', () => {
     expect(parseRoutine([{ op: 'DRAW', deck: 'd', count: 999 }])).toMatchObject({
       error: 'bad_count',
     });
+    expect(parseRoutine([{ op: 'DRAW', deck: 'd', at: { x: 1 } }])).toMatchObject({
+      error: 'missing_field',
+    });
+    expect(parseRoutine([{ op: 'TAKE_FROM_BAG', bag: 'b', at: 'here' }])).toMatchObject({
+      error: 'missing_field',
+    });
+    expect(
+      parseRoutine([{ op: 'DRAW', deck: 'd', at: { x: 1, y: 2, z: 3 }, faceUp: true }]),
+    ).toMatchObject({ routine: [{ op: 'DRAW', deck: 'd', at: { x: 1, y: 2 }, faceUp: true }] });
     expect(parseRoutine([{ op: 'SET', widget: 'w', props: { type: 'card' } }])).toMatchObject({
       error: 'forbidden_prop',
     });
