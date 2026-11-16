@@ -109,6 +109,7 @@ export const PlaylistDetails: React.FC<PlaylistDetailsProps> = ({ playlist }) =>
                 {!playlist.isGlobal && (
                   <ListItemSecondaryAction>
                     <IconButton
+                      aria-label={t('melodiq.a11y.move_up')}
                       size="small"
                       disabled={index === 0}
                       onClick={() => moveSongInPlaylist(playlist.id, index, index - 1)}
@@ -116,6 +117,7 @@ export const PlaylistDetails: React.FC<PlaylistDetailsProps> = ({ playlist }) =>
                       <ArrowUpwardIcon fontSize="small" />
                     </IconButton>
                     <IconButton
+                      aria-label={t('melodiq.a11y.move_down')}
                       size="small"
                       disabled={index === playlistSongs.length - 1}
                       onClick={() => moveSongInPlaylist(playlist.id, index, index + 1)}
@@ -123,6 +125,7 @@ export const PlaylistDetails: React.FC<PlaylistDetailsProps> = ({ playlist }) =>
                       <ArrowDownwardIcon fontSize="small" />
                     </IconButton>
                     <IconButton
+                      aria-label={t('melodiq.a11y.remove')}
                       size="small"
                       color="error"
                       onClick={() => removeSongFromPlaylist(playlist.id, song.id)}

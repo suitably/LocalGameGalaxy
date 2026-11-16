@@ -3,7 +3,7 @@ import { Box, useTheme } from '@mui/material';
 import type { Song } from '../db';
 import type { Note, SongTrack } from '../parser';
 import type { PitchResult } from '../audio/MicrophoneManager';
-import { ErrorBoundary } from '../../../components/ErrorBoundary';
+import { VisualizerBoundary } from './pitch/VisualizerBoundary';
 import {
   computePitchLayout,
   interpolateAudioTime,
@@ -243,7 +243,7 @@ const PitchVisualizerContent = React.memo<PitchVisualizerProps>(
 );
 
 export const PitchVisualizer = (props: PitchVisualizerProps) => (
-  <ErrorBoundary fallback={<Box sx={{ color: 'error.main', p: 1 }}>Visualizer Error</Box>}>
+  <VisualizerBoundary>
     <PitchVisualizerContent {...props} />
-  </ErrorBoundary>
+  </VisualizerBoundary>
 );

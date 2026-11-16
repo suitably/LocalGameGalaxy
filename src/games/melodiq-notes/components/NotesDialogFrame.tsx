@@ -10,6 +10,7 @@ import {
   type SxProps,
   type Theme,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import CloseIcon from '@mui/icons-material/CloseRounded';
 
 interface NotesDialogFrameProps {
@@ -31,30 +32,33 @@ export const NotesDialogFrame: React.FC<NotesDialogFrameProps> = ({
   fullScreen = false,
   titleSx = { pb: 1 },
   children,
-}) => (
-  <Dialog
-    open={open}
-    onClose={onClose}
-    maxWidth={maxWidth}
-    fullWidth
-    fullScreen={fullScreen}
-    PaperProps={{
-      sx: {},
-    }}
-  >
-    <DialogTitle
-      sx={[
-        { display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
-        ...(Array.isArray(titleSx) ? titleSx : [titleSx]),
-      ]}
+}) => {
+  const { t } = useTranslation();
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth={maxWidth}
+      fullWidth
+      fullScreen={fullScreen}
+      PaperProps={{
+        sx: {},
+      }}
     >
-      <Typography variant="h6" fontWeight={700}>
-        {title}
-      </Typography>
-      <IconButton size="small" onClick={onClose}>
-        <CloseIcon />
-      </IconButton>
-    </DialogTitle>
-    {children}
-  </Dialog>
-);
+      <DialogTitle
+        sx={[
+          { display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
+          ...(Array.isArray(titleSx) ? titleSx : [titleSx]),
+        ]}
+      >
+        <Typography variant="h6" fontWeight={700}>
+          {title}
+        </Typography>
+        <IconButton aria-label={t('common.close')} size="small" onClick={onClose}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      {children}
+    </Dialog>
+  );
+};

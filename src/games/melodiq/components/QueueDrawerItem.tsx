@@ -9,6 +9,7 @@ import {
   Avatar,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
+import { useTranslation } from 'react-i18next';
 import DeleteIcon from '@mui/icons-material/DeleteRounded';
 import DragHandleIcon from '@mui/icons-material/DragHandleRounded';
 import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
@@ -57,6 +58,7 @@ export const QueueDrawerItem: React.FC<QueueDrawerItemProps> = ({
   canRemove,
   onRemove,
 }) => {
+  const { t } = useTranslation();
   const participants = (item.participants ?? []) as MelodiqParticipant[];
   const joined =
     selfDeviceId !== undefined && participants.some((p) => p.deviceId === selfDeviceId);
@@ -130,6 +132,7 @@ export const QueueDrawerItem: React.FC<QueueDrawerItemProps> = ({
 
         {selfDeviceId !== undefined && (
           <IconButton
+            aria-label={joined ? t('melodiq.a11y.stop_singing') : t('melodiq.join_prompt.singer')}
             size="small"
             onClick={(e) => {
               e.stopPropagation();
@@ -146,6 +149,7 @@ export const QueueDrawerItem: React.FC<QueueDrawerItemProps> = ({
         )}
         {canEditParticipants && (
           <IconButton
+            aria-label={t('melodiq.a11y.edit')}
             size="small"
             onClick={(e) => {
               e.stopPropagation();
@@ -158,6 +162,7 @@ export const QueueDrawerItem: React.FC<QueueDrawerItemProps> = ({
         )}
         {canRemove && (
           <IconButton
+            aria-label={t('melodiq.a11y.remove')}
             onClick={(e) => {
               e.stopPropagation();
               onRemove();

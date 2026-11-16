@@ -1,5 +1,6 @@
 import React from 'react';
 import { alpha, Box, Typography, IconButton } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import { ScoreDisplay, type ScoreDisplayHandle } from '../ScoreDisplay';
 import { type PlayerRuntime } from '../hooks/PlayerRuntime';
@@ -28,6 +29,7 @@ export const SessionTopControls: React.FC<SessionTopControlsProps> = ({
   progressLineRef,
   isUIVisible = true,
 }) => {
+  const { t } = useTranslation();
   const fade = { opacity: isUIVisible ? 1 : 0, transition: 'opacity 0.5s ease-in-out' };
   return (
     <>
@@ -59,7 +61,12 @@ export const SessionTopControls: React.FC<SessionTopControlsProps> = ({
           }}
         >
           {onMinimize && !isTVMode && (
-            <IconButton onClick={onMinimize} color="inherit" sx={{ ml: 1 }}>
+            <IconButton
+              aria-label={t('melodiq.a11y.minimise')}
+              onClick={onMinimize}
+              color="inherit"
+              sx={{ ml: 1 }}
+            >
               <KeyboardArrowDownIcon />
             </IconButton>
           )}

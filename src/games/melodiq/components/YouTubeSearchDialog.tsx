@@ -20,6 +20,7 @@ import {
   FormControlLabel,
   Checkbox,
 } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import SearchIcon from '@mui/icons-material/SearchRounded';
 import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
 import CheckCircleIcon from '@mui/icons-material/CheckCircleRounded';
@@ -49,6 +50,7 @@ export const YouTubeSearchDialog: React.FC<YouTubeSearchDialogProps> = ({
   initialQuery,
   onSelectUrl,
 }) => {
+  const { t } = useTranslation();
   const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<YouTubeResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -100,18 +102,17 @@ export const YouTubeSearchDialog: React.FC<YouTubeSearchDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Change Video / Audio</DialogTitle>
+      <DialogTitle>{t('melodiq.youtube_dialog.title')}</DialogTitle>
       <DialogContent dividers>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Search for a new YouTube video, or paste a direct YouTube URL to replace the media for
-          this song.
+          {t('melodiq.youtube_dialog.description')}
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
           <TextField
             fullWidth
             size="small"
-            placeholder="Search or Paste URL..."
+            placeholder={t('melodiq.youtube_dialog.placeholder')}
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -123,7 +124,11 @@ export const YouTubeSearchDialog: React.FC<YouTubeSearchDialogProps> = ({
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton onClick={() => handleSearch()} disabled={loading}>
+                  <IconButton
+                    onClick={() => handleSearch()}
+                    disabled={loading}
+                    aria-label={t('melodiq.youtube_dialog.search')}
+                  >
                     <SearchIcon />
                   </IconButton>
                 </InputAdornment>
@@ -167,7 +172,7 @@ export const YouTubeSearchDialog: React.FC<YouTubeSearchDialogProps> = ({
         ) : query.startsWith('http') ? (
           <Box sx={{ py: 2, textAlign: 'center' }}>
             <CheckCircleIcon color="success" sx={{ fontSize: 40, mb: 1 }} />
-            <Typography variant="body1">Valid URL detected</Typography>
+            <Typography variant="body1">{t('melodiq.youtube_dialog.valid_url')}</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-all' }}>
               {selectedUrl}
             </Typography>
@@ -183,16 +188,16 @@ export const YouTubeSearchDialog: React.FC<YouTubeSearchDialogProps> = ({
                 color="primary"
               />
             }
-            label="Nur Video ersetzen (Audio behalten)"
+            label={t('melodiq.youtube_dialog.skip_audio')}
           />
         </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="inherit">
-          Cancel
+          {t('common.cancel')}
         </Button>
         <Button onClick={handleConfirm} variant="contained" color="primary" disabled={!selectedUrl}>
-          Download & Replace
+          {t('melodiq.youtube_dialog.confirm')}
         </Button>
       </DialogActions>
     </Dialog>

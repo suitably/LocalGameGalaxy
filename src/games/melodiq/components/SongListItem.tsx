@@ -197,6 +197,7 @@ export const SongListItem: React.FC<SongListItemProps> = ({
       {/* Cloud Icon for Online Search Items */}
       {!isDownloading && !isDownloaded && song.usdbId && onActionClick && (
         <IconButton
+          aria-label={t('common.a11y.download')}
           size="small"
           sx={{ ml: 1, color: 'primary.text' }}
           onClick={(e) => {
@@ -211,6 +212,7 @@ export const SongListItem: React.FC<SongListItemProps> = ({
       {/* Menu Action (for touch devices mainly, or standard access) */}
       {onMenuClick && (
         <IconButton
+          aria-label={t('melodiq.a11y.more_actions')}
           size="small"
           onClick={(e) => {
             e.stopPropagation();

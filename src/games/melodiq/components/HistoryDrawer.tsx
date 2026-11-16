@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/CloseRounded';
 import HistoryIcon from '@mui/icons-material/HistoryRounded';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAddRounded';
 import { useTranslation } from 'react-i18next';
+import { MINI_PLAYER_OFFSET } from './miniPlayerLayout';
 import { useHistory } from '../hooks/useHistory';
 import { useSongs } from '../hooks/useSongs';
 import { useProfiles } from '../hooks/useProfiles';
@@ -94,7 +95,12 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({ open, onClose }) =
             {t('melodiq.history') || 'History'}
           </Typography>
         </Box>
-        <IconButton onClick={onClose} size="small" sx={{ color: 'text.secondary' }}>
+        <IconButton
+          aria-label={t('common.close')}
+          onClick={onClose}
+          size="small"
+          sx={{ color: 'text.secondary' }}
+        >
           <CloseIcon />
         </IconButton>
       </Box>
@@ -102,7 +108,7 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({ open, onClose }) =
       <Box sx={{ overflow: 'auto', flexGrow: 1, p: 2 }}>
         {isLoading ? (
           <Typography color="text.secondary" align="center">
-            {t('loading') || 'Loading...'}
+            {t('melodiq.session.loading')}
           </Typography>
         ) : history.length === 0 ? (
           <Box sx={{ textAlign: 'center', mt: 8, opacity: 0.6 }}>
@@ -125,7 +131,7 @@ export const HistoryDrawer: React.FC<HistoryDrawerProps> = ({ open, onClose }) =
       <Box
         sx={{
           p: 2,
-          pb: 'calc(16px + 64px)',
+          pb: `calc(16px + ${MINI_PLAYER_OFFSET})`,
           borderTop: 1,
           borderColor: 'divider',
           bgcolor: 'background.paper',

@@ -80,7 +80,7 @@ export const ScoreBoardFooter: React.FC<ScoreBoardFooterProps> = ({
           startIcon={<PlayArrowIcon />}
           sx={{ px: 4 }}
         >
-          Resume
+          {t('melodiq.scoreboard.resume')}
         </Button>
       )}
       {queueLength > 0 && (
@@ -91,7 +91,7 @@ export const ScoreBoardFooter: React.FC<ScoreBoardFooterProps> = ({
           onClick={() => onExit(true)}
           sx={{ px: 4 }}
         >
-          Main Menu
+          {t('melodiq.scoreboard_main_menu')}
         </Button>
       )}
       {countdown !== null && (
@@ -102,7 +102,7 @@ export const ScoreBoardFooter: React.FC<ScoreBoardFooterProps> = ({
           onClick={onCancelAutoPlay}
           sx={{ px: 4 }}
         >
-          Cancel Auto-Skip
+          {t('melodiq.scoreboard.cancel_auto_skip')}
         </Button>
       )}
       <Button

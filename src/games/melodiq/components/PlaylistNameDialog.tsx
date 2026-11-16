@@ -49,7 +49,7 @@ export const PlaylistNameDialog: React.FC<PlaylistNameDialogProps> = ({
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('cancel')}</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
         <Button onClick={onConfirm} variant="contained" disabled={!name.trim()}>
           {confirmLabel}
         </Button>

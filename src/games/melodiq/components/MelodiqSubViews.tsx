@@ -9,8 +9,6 @@ import { type MelodiqView } from '../hooks/useMelodiqNavigation';
 interface MelodiqSubViewsProps {
   currentView: MelodiqView;
   setCurrentView: (view: MelodiqView) => void;
-  /** Unused since the sub views lost their own back buttons; the header back arrow closes them. */
-  onCloseSubView?: () => void;
 }
 
 /**

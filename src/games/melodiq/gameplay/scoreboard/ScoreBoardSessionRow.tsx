@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Avatar, Box, Chip, Paper, Typography } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEventsRounded';
 import StarIcon from '@mui/icons-material/StarRounded';
@@ -14,6 +15,7 @@ const tabularNums = { fontVariantNumeric: 'tabular-nums' } as const;
 
 /** One singer's row in the session ranking; the winner is marked by trophy, size and a primary outline. */
 export const ScoreBoardSessionRow: React.FC<ScoreBoardSessionRowProps> = ({ player, rank }) => {
+  const { t } = useTranslation();
   const isWinner = rank === 1;
   const pieceKey = pieceColorForHue(player.config.hue);
 
@@ -74,19 +76,20 @@ export const ScoreBoardSessionRow: React.FC<ScoreBoardSessionRowProps> = ({ play
         {player.isNewRecord && (
           <Chip
             icon={<StarIcon sx={{ fontSize: '1rem !important' }} />}
-            label="PERSONAL BEST"
+            label={t('melodiq.scoreboard.personal_best')}
             size="small"
             sx={{
               bgcolor: 'primary.main',
               color: 'primary.contrastText',
               fontWeight: 700,
+              textTransform: 'uppercase',
               '& .MuiChip-icon': { color: 'primary.contrastText' },
             }}
           />
         )}
         {player.loadingHistory && (
           <Typography variant="caption" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-            Synchronizing...
+            {t('melodiq.scoreboard.synchronizing')}
           </Typography>
         )}
       </Box>

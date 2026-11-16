@@ -87,12 +87,17 @@ export const MelodiqSearchBar: React.FC<MelodiqSearchBarProps> = ({
             endAdornment: (
               <InputAdornment position="end">
                 {searchQuery && (
-                  <IconButton size="small" onClick={() => setSearchQuery('')}>
+                  <IconButton
+                    aria-label={t('melodiq.a11y.clear_search')}
+                    size="small"
+                    onClick={() => setSearchQuery('')}
+                  >
                     <CloseIcon fontSize="small" />
                   </IconButton>
                 )}
                 {canSearchOnline && (
                   <IconButton
+                    aria-label={t('melodiq.a11y.online_search')}
                     onClick={() => setIsOnlineSearch(!isOnlineSearch)}
                     color={isOnlineSearch ? 'primary' : 'default'}
                     title={t('melodiq.search_online', 'Online suchen')}
@@ -117,6 +122,7 @@ export const MelodiqSearchBar: React.FC<MelodiqSearchBarProps> = ({
         {setSortOption && <SortMenuButton sortOption={sortOption} onSelect={setSortOption} />}
 
         <IconButton
+          aria-label={t('melodiq.a11y.filters')}
           onClick={() => setShowFilters((prev) => !prev)}
           color={showFilters ? 'primary' : 'inherit'}
           size="large"
