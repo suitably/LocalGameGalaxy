@@ -1,0 +1,1 @@
+- **"My area" on the phone at the game table**: next to Hand and Table, a player's phone can jump straight to their own part of the table — their hidden zones (such as the secret tiles in imported Tabletop Simulator games) and hand trays lying on the table — and play there without searching the whole board.

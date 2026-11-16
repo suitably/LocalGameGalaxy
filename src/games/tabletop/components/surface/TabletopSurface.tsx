@@ -37,6 +37,8 @@ interface TabletopSurfaceProps {
   canDeleteSelection?: boolean;
   /** Top offset of the selection bar (below the editor toolbar). */
   selectionBarTop?: number;
+  /** Initial view centred on this box instead of the whole table (phone "My area"). */
+  focus?: Parameters<typeof useFitToScreen>[4];
 }
 
 export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
@@ -48,6 +50,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
   readOnly = false,
   canDeleteSelection = false,
   selectionBarTop,
+  focus,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
@@ -116,7 +119,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     () => filterBoardWidgets(game.widgets, visibleIds, isTvMode),
     [game.widgets, visibleIds, isTvMode],
   );
-  const fitToScreen = useFitToScreen(containerRef, game, setTransform, setContainerSize);
+  const fitToScreen = useFitToScreen(containerRef, game, setTransform, setContainerSize, focus);
   const onPointerDownBoardWidget = (e: React.PointerEvent, w: TabletopWidget) => {
     if (isSpectator) return; // bubbles up to the board pan
     if (!selection.handleWidgetClick(w.id, e.shiftKey)) handlePointerDownWidget(e, w);
