@@ -6,6 +6,7 @@ import { MelodiqSearchBar } from './MelodiqSearchBar';
 import { LibraryEmptyState } from './LibraryEmptyState';
 import { OnlineSongsView } from './OnlineSongsView';
 import { LocalSongsView } from './LocalSongsView';
+import { MINI_PLAYER_OFFSET } from './miniPlayerLayout';
 
 type SearchFilterState = ReturnType<typeof useSearchFilters>;
 type OnlineProps = React.ComponentProps<typeof OnlineSongsView>;
@@ -55,7 +56,7 @@ export const MelodiqHomeView: React.FC<MelodiqHomeViewProps> = ({
         height: '100%',
         flexDirection: 'column',
         overflow: 'hidden',
-        pb: '64px',
+        pb: MINI_PLAYER_OFFSET,
       }}
     >
       {(!hasConnectionError || songs.length > 0) && (

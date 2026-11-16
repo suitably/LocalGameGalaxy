@@ -162,20 +162,23 @@ export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack, backLabe
 
         <Box sx={{ mt: 2, p: 2, bgcolor: 'action.disabledBackground', borderRadius: 2 }}>
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            {t('melodiq.settings.sync_latency', 'Sync & Latency')}
+            {t('melodiq.settings_panel.sync_latency', 'Sync & Latency')}
           </Typography>
           <Typography
             variant="body2"
             color="text.secondary"
             sx={{ mb: 2, fontVariantNumeric: 'tabular-nums' }}
           >
-            {t('melodiq.settings.latency_offset', 'Current Latency Offset: {{ms}}ms', {
+            {t('melodiq.settings_panel.latency_offset', 'Current Latency Offset: {{ms}}ms', {
               ms: latency,
             })}
           </Typography>
           {activeSongId ? (
             <Typography variant="caption" color="error">
-              {t('melodiq.settings.calibrate_blocked', 'Cannot calibrate while a song is playing.')}
+              {t(
+                'melodiq.settings_panel.calibrate_blocked',
+                'Cannot calibrate while a song is playing.',
+              )}
             </Typography>
           ) : (
             <RemoteLatencyCalibrator

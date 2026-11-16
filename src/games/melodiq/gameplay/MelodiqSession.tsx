@@ -1,4 +1,5 @@
 import React, { forwardRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Button, Typography } from '@mui/material';
 import { ScoreBoard } from './ScoreBoard';
 import { ErrorBoundary } from '../../../components/ErrorBoundary';
@@ -12,6 +13,7 @@ export type { MelodiqSessionHandle, MelodiqSessionProps } from './types';
 const MelodiqSessionContent = forwardRef(
   (props: MelodiqSessionProps, ref: React.ForwardedRef<MelodiqSessionHandle>): React.ReactNode => {
     const { song, onExit, onMinimize, isPassive = false, suppressResults = false } = props;
+    const { t } = useTranslation();
     const core = useMelodiqSessionCore(props, ref);
     const { parsedSong, contentLoading, loadError, needsFolderAccess, folderInputRef } = core;
     const { handleFolderInputChange, audioCtrl, players, ready, results } = core;
@@ -35,7 +37,7 @@ const MelodiqSessionContent = forwardRef(
             {loadError}
           </Typography>
           <Button variant="contained" onClick={() => onExit(true)}>
-            Go Back
+            {t('melodiq.session.go_back')}
           </Button>
         </Box>
       );
@@ -53,7 +55,7 @@ const MelodiqSessionContent = forwardRef(
             justifyContent: 'center',
           }}
         >
-          <Typography>Loading...</Typography>
+          <Typography>{t('melodiq.session.loading')}</Typography>
         </Box>
       );
     }
@@ -94,30 +96,33 @@ const MelodiqSessionContent = forwardRef(
 );
 MelodiqSessionContent.displayName = 'MelodiqSessionContent';
 
+const SessionCrashed: React.FC<{ onExit: () => void }> = ({ onExit }) => {
+  const { t } = useTranslation();
+  return (
+    <Box
+      sx={{
+        bgcolor: 'black',
+        height: '100vh',
+        color: 'white',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Typography variant="h5" color="error">
+        {t('melodiq.session.crashed')}
+      </Typography>
+      <Button onClick={onExit} sx={{ mt: 2 }} variant="contained">
+        {t('melodiq.session.exit')}
+      </Button>
+    </Box>
+  );
+};
+
 export const MelodiqSession = forwardRef<MelodiqSessionHandle, MelodiqSessionProps>(
   (props, ref) => (
-    <ErrorBoundary
-      fallback={
-        <Box
-          sx={{
-            bgcolor: 'black',
-            height: '100vh',
-            color: 'white',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Typography variant="h5" color="error">
-            Session Crashed
-          </Typography>
-          <Button onClick={() => props.onExit(true)} sx={{ mt: 2 }} variant="contained">
-            Exit
-          </Button>
-        </Box>
-      }
-    >
+    <ErrorBoundary fallback={<SessionCrashed onExit={() => props.onExit(true)} />}>
       <MelodiqSessionContent {...props} ref={ref} />
     </ErrorBoundary>
   ),

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { MINI_PLAYER_OFFSET } from './miniPlayerLayout';
 import { Drawer, Box, Typography, IconButton, List, Button, Badge, Divider } from '@mui/material';
 import CloseIcon from '@mui/icons-material/CloseRounded';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlayRounded';
@@ -52,13 +53,13 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({
       onClose={onClose}
       PaperProps={{
         sx: {
-          maxHeight: '70vh',
+          maxHeight: '70dvh',
           borderTopLeftRadius: 16,
           borderTopRightRadius: 16,
           bgcolor: 'background.paper',
           display: 'flex',
           flexDirection: 'column',
-          marginBottom: '64px',
+          marginBottom: MINI_PLAYER_OFFSET,
         },
       }}
     >
@@ -98,13 +99,19 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({
             </Button>
           )}
           <IconButton
+            aria-label={t('melodiq.a11y.history')}
             onClick={() => setHistoryOpen(true)}
             size="small"
             sx={{ color: 'text.secondary' }}
           >
             <HistoryIcon />
           </IconButton>
-          <IconButton onClick={onClose} size="small" sx={{ color: 'text.secondary' }}>
+          <IconButton
+            aria-label={t('common.close')}
+            onClick={onClose}
+            size="small"
+            sx={{ color: 'text.secondary' }}
+          >
             <CloseIcon />
           </IconButton>
         </Box>

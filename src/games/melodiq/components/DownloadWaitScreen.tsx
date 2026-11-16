@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Typography, Button, CircularProgress } from '@mui/material';
 import SkipNextIcon from '@mui/icons-material/SkipNextRounded';
 import { ScoreBoardQrCode } from '../gameplay/ScoreBoardQrCode';
@@ -14,6 +15,7 @@ export const DownloadWaitScreen: React.FC<DownloadWaitScreenProps> = ({
   artist,
   onSkipAndRequeue,
 }) => {
+  const { t } = useTranslation();
   return (
     <Box
       sx={{
@@ -34,14 +36,13 @@ export const DownloadWaitScreen: React.FC<DownloadWaitScreenProps> = ({
 
       <Box sx={{ textAlign: 'center' }}>
         <Typography variant="h4" fontWeight="bold" gutterBottom>
-          Warte auf Download...
+          {t('melodiq.download_wait.title')}
         </Typography>
         <Typography variant="h5" color="text.secondary">
           {artist} - {songTitle}
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mt: 1.5, opacity: 0.8 }}>
-          Der Song wird im Hintergrund heruntergeladen und startet automatisch, sobald er bereit
-          ist.
+          {t('melodiq.download_wait.description')}
         </Typography>
       </Box>
 
@@ -60,7 +61,7 @@ export const DownloadWaitScreen: React.FC<DownloadWaitScreenProps> = ({
           },
         }}
       >
-        Überspringen & für später einreihen
+        {t('melodiq.download_wait.skip')}
       </Button>
 
       <ScoreBoardQrCode sx={{ maxWidth: 450, width: '100%', mt: 1 }} />

@@ -30,7 +30,7 @@ export const MelodiqConnection: React.FC = () => {
 
   return (
     <DeviceConnection
-      description="Connect your phone to use as a microphone. Scan the QR code below."
+      description={t('melodiq.connection_description')}
       gameId="melodiq"
       clientPath="/games/melodiq?role=client"
       webrtcData={webrtcData}
@@ -50,10 +50,10 @@ export const MelodiqConnection: React.FC = () => {
             '& .MuiSelect-icon': { color: 'text.primary' },
           }}
         >
-          <MenuItem value="admin">Admin</MenuItem>
-          <MenuItem value="queue_manager">Queue Manager</MenuItem>
-          <MenuItem value="queue_contributor">Queue Contributor</MenuItem>
-          <MenuItem value="singer">Singer</MenuItem>
+          <MenuItem value="admin">{t('melodiq.setup.role_admin')}</MenuItem>
+          <MenuItem value="queue_manager">{t('melodiq.setup.role_queue_manager')}</MenuItem>
+          <MenuItem value="queue_contributor">{t('melodiq.setup.role_queue_contributor')}</MenuItem>
+          <MenuItem value="singer">{t('melodiq.setup.role_singer')}</MenuItem>
         </Select>
       )}
       extraOptions={

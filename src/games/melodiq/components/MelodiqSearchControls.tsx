@@ -26,6 +26,7 @@ export const SortMenuButton: React.FC<SortMenuButtonProps> = ({ sortOption, onSe
   return (
     <>
       <IconButton
+        aria-label={t('melodiq.a11y.sort')}
         onClick={(e) => setAnchor(e.currentTarget)}
         color={sortOption && sortOption !== 'title-asc' ? 'primary' : 'inherit'}
         size="large"

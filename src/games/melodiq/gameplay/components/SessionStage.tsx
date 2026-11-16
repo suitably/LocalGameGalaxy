@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Typography } from '@mui/material';
 import { useStageChrome } from '../hooks/useStageChrome';
 import { STAGE_CHROME_HIDE_MS, TV_STAGE_CHROME_HIDE_MS } from '../logic/stageChrome';
@@ -18,6 +19,7 @@ export interface SessionStageProps {
 
 /** The playing stage: background media, header, transport, pitch lanes and lyrics. */
 export const SessionStage: React.FC<SessionStageProps> = ({ session, core }) => {
+  const { t } = useTranslation();
   const {
     song,
     initialTime,
@@ -178,7 +180,7 @@ export const SessionStage: React.FC<SessionStageProps> = ({ session, core }) => 
       )}
       {!audioSrc && !isClient && (
         <Typography color="error" sx={{ textAlign: 'center', position: 'relative', zIndex: 5 }}>
-          No Audio Source Found
+          {t('melodiq.session.no_audio_source')}
         </Typography>
       )}
 

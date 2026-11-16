@@ -77,10 +77,20 @@ export const SessionRosterRow: React.FC<SessionRosterRowProps> = ({
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-          <IconButton size="small" onClick={() => onMove('up')} disabled={index === 0}>
+          <IconButton
+            aria-label={t('melodiq.a11y.move_up')}
+            size="small"
+            onClick={() => onMove('up')}
+            disabled={index === 0}
+          >
             <KeyboardArrowUpIcon fontSize="small" />
           </IconButton>
-          <IconButton size="small" onClick={() => onMove('down')} disabled={index === count - 1}>
+          <IconButton
+            aria-label={t('melodiq.a11y.move_down')}
+            size="small"
+            onClick={() => onMove('down')}
+            disabled={index === count - 1}
+          >
             <KeyboardArrowDownIcon fontSize="small" />
           </IconButton>
         </Box>
@@ -182,13 +192,17 @@ export const SessionRosterRow: React.FC<SessionRosterRowProps> = ({
                 ))}
               </Select>
             </FormControl>
-            <IconButton size="small" onClick={onOpenSettings}>
+            <IconButton
+              aria-label={t('melodiq.a11y.settings')}
+              size="small"
+              onClick={onOpenSettings}
+            >
               <SettingsIcon fontSize="small" />
             </IconButton>
           </>
         )}
 
-        <IconButton color="error" onClick={onRemove}>
+        <IconButton aria-label={t('melodiq.a11y.remove')} color="error" onClick={onRemove}>
           <CloseIcon />
         </IconButton>
       </Box>

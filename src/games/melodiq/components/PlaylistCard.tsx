@@ -55,6 +55,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
           }}
         >
           <IconButton
+            aria-label={t('melodiq.a11y.edit')}
             size="small"
             onClick={(e) => {
               e.stopPropagation();
@@ -64,6 +65,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
             <EditIcon fontSize="small" />
           </IconButton>
           <IconButton
+            aria-label={t('common.delete')}
             size="small"
             color="error"
             onClick={(e) => {

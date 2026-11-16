@@ -51,7 +51,12 @@ export const CustomLayoutsEditor: React.FC<CustomLayoutsEditorProps> = ({ layout
                 onChange={(e) => onChange({ ...layouts, [count]: e.target.value })}
                 sx={{ flex: 1 }}
               />
-              <IconButton size="small" color="error" onClick={() => handleDelete(count)}>
+              <IconButton
+                aria-label={t('common.delete')}
+                size="small"
+                color="error"
+                onClick={() => handleDelete(count)}
+              >
                 <CloseIcon fontSize="small" />
               </IconButton>
             </Box>

@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, Typography, Snackbar, Alert } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { YouTubeBackgroundPlayer, getYouTubeVideoId } from '../YouTubeBackgroundPlayer';
 import { useYouTubeConsentGate } from '../hooks/useYouTubeConsentGate';
 import { YouTubeConsentDialog } from './YouTubeConsentDialog';
@@ -31,6 +32,7 @@ export const SessionBackgroundMedia: React.FC<SessionBackgroundMediaProps> = ({
   isPassive,
   onPassiveUnblock,
 }) => {
+  const { t } = useTranslation();
   const youTubeVideoId = useMemo(() => getYouTubeVideoId(videoSrc || undefined), [videoSrc]);
   const [youTubeFailed, setYouTubeFailed] = useState(false);
   const youTubeConsent = useYouTubeConsentGate(videoSrc, hideBackgroundVideo);
@@ -49,12 +51,12 @@ export const SessionBackgroundMedia: React.FC<SessionBackgroundMediaProps> = ({
         setYouTubeFailed(true);
         setVideoError(
           err === 101 || err === 150
-            ? 'Video embedding disabled by YouTube owner'
-            : 'YouTube video not available',
+            ? t('melodiq.session.video_embed_disabled')
+            : t('melodiq.session.video_unavailable'),
         );
       }
     },
-    [setVideoError],
+    [setVideoError, t],
   );
 
   return (
@@ -94,8 +96,8 @@ export const SessionBackgroundMedia: React.FC<SessionBackgroundMediaProps> = ({
             }}
             onError={(e) => {
               console.warn('Video playback failed.', e);
-              if (videoError !== 'Video format not supported') {
-                setVideoError('Video format not supported');
+              if (videoError !== t('melodiq.session.video_format_unsupported')) {
+                setVideoError(t('melodiq.session.video_format_unsupported'));
               }
             }}
           />
@@ -134,7 +136,7 @@ export const SessionBackgroundMedia: React.FC<SessionBackgroundMediaProps> = ({
               zIndex: 0,
               opacity: 1.0,
             }}
-            alt="Background"
+            alt={t('melodiq.session.background_alt')}
           />
         ))}
 
@@ -169,10 +171,10 @@ export const SessionBackgroundMedia: React.FC<SessionBackgroundMediaProps> = ({
           }}
         >
           <Typography variant="h3" sx={{ color: 'text.primary', fontWeight: 'bold' }}>
-            Audio blocked
+            {t('melodiq.session.audio_blocked')}
           </Typography>
           <Typography variant="h5" sx={{ color: 'text.secondary' }}>
-            Tap anywhere to start playback
+            {t('melodiq.session.tap_to_start')}
           </Typography>
         </Box>
       )}

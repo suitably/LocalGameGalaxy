@@ -96,7 +96,7 @@ export const ScoreBoardQrCode: React.FC<ScoreBoardQrCodeProps> = ({
         {qrDataUrl ? (
           <img
             src={qrDataUrl}
-            alt="Join Session QR Code"
+            alt={t('melodiq.scoreboard.qr_alt')}
             style={{
               display: 'block',
               width: qrSize,

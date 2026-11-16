@@ -131,7 +131,7 @@ export const MelodiqPlaylists: React.FC<MelodiqPlaylistsProps> = ({ onSelectPlay
       <PlaylistNameDialog
         open={createDialogOpen}
         title={t('melodiq.create_playlist')}
-        confirmLabel={t('create')}
+        confirmLabel={t('melodiq.create')}
         name={newPlaylistName}
         onNameChange={setNewPlaylistName}
         onClose={() => setCreateDialogOpen(false)}
@@ -141,7 +141,7 @@ export const MelodiqPlaylists: React.FC<MelodiqPlaylistsProps> = ({ onSelectPlay
       <PlaylistNameDialog
         open={editDialogOpen}
         title={t('melodiq.edit_playlist')}
-        confirmLabel={t('save')}
+        confirmLabel={t('common.save')}
         name={editName}
         onNameChange={setEditName}
         onClose={() => setEditDialogOpen(false)}

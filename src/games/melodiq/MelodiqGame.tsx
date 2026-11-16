@@ -129,18 +129,14 @@ export const MelodiqGameContent: React.FC = () => {
   return (
     <Box
       sx={{
-        width: '100vw',
+        width: '100%',
         height: '100%',
         overflow: 'hidden',
         bgcolor: 'background.default',
         color: 'text.primary',
       }}
     >
-      <MelodiqSubViews
-        currentView={currentView}
-        setCurrentView={setCurrentView}
-        onCloseSubView={handleCloseSubView}
-      />
+      <MelodiqSubViews currentView={currentView} setCurrentView={setCurrentView} />
 
       <MelodiqHomeView
         visible={currentView === 'Home' || currentView === 'Session'}

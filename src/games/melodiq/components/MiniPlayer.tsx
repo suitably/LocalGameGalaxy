@@ -18,6 +18,7 @@ import QueueMusicIcon from '@mui/icons-material/QueueMusicRounded';
 import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlineRounded';
 import { useTranslation } from 'react-i18next';
+import { MINI_PLAYER_OFFSET, SAFE_AREA_BOTTOM } from './miniPlayerLayout';
 import type { SongMeta, Song } from '../db';
 import { CONTROLLER_TARGET } from '../../../lib/touchTarget';
 
@@ -64,7 +65,8 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({
         bottom: 0,
         left: 0,
         right: 0,
-        height: 64,
+        height: MINI_PLAYER_OFFSET,
+        pb: SAFE_AREA_BOTTOM,
         display: 'flex',
         alignItems: 'center',
         px: 2,
