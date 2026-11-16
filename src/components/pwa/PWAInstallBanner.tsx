@@ -102,7 +102,7 @@ export const PWAInstallBanner: React.FC = () => {
           <IconButton
             size="small"
             onClick={handleDismiss}
-            aria-label="close banner"
+            aria-label={t('common.close', 'Close')}
             sx={{
               position: { xs: 'absolute', sm: 'static' },
               top: { xs: 8, sm: 'auto' },

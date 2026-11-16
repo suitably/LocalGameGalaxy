@@ -27,7 +27,7 @@ export const DeviceQRCodeCard: React.FC<DeviceQRCodeCardProps> = ({
         <Box sx={{ p: 2, bgcolor: 'text.primary', borderRadius: 2, boxShadow: 0 }}>
           <img
             src={qrCodeDataUrl}
-            alt="QR Code"
+            alt={t('common.qrCode', 'QR code')}
             style={{ display: 'block', width: 250, height: 250 }}
           />
         </Box>

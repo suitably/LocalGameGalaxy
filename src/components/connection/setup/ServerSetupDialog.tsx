@@ -23,7 +23,7 @@ export const ServerSetupDialog: React.FC<ServerSetupDialogProps> = ({ open, onCl
             {t('server.setup.dialog_title', 'Server einrichten & anpassen')}
           </Typography>
         </Box>
-        <IconButton onClick={onClose} size="small" aria-label="close">
+        <IconButton onClick={onClose} size="small" aria-label={t('common.close', 'Close')}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
