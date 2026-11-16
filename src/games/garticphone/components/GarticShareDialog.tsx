@@ -82,39 +82,3 @@ export const GarticShareDialog: React.FC<GarticShareDialogProps> = ({ open, room
     </Dialog>
   );
 };
-
-interface GarticEndGameDialogProps {
-  open: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-}
-
-export const GarticEndGameDialog: React.FC<GarticEndGameDialogProps> = ({
-  open,
-  onClose,
-  onConfirm,
-}) => {
-  const { t } = useTranslation();
-
-  return (
-    <Dialog open={open} onClose={onClose}>
-      <DialogTitle sx={{ fontWeight: 800 }}>
-        {t('party.confirmEndTitle', 'Spiel wirklich beenden?')}
-      </DialogTitle>
-      <DialogContent>
-        <Typography variant="body2" color="text.secondary">
-          {t(
-            'party.confirmEndDesc',
-            'Das aktuelle Gartic Phone Spiel wird für alle verbundenen Spieler abgebrochen und alle kehren zur Party-Lobby zurück.',
-          )}
-        </Typography>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>{t('common.cancel', 'Abbrechen')}</Button>
-        <Button color="error" variant="contained" onClick={onConfirm}>
-          {t('party.endGameBtn', 'Beenden')}
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-};

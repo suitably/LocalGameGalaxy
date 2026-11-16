@@ -127,11 +127,13 @@ export const GuessArtHeaderTitle: React.FC<GuessArtHeaderTitleProps> = ({
         variant="subtitle1"
         fontWeight={800}
         sx={{
+          // Phones: the role chip below names the active player; the pairing needs the room.
+          display: { xs: 'none', sm: 'block' },
           fontSize: { xs: '0.92rem', sm: '1.05rem' },
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
-          maxWidth: { xs: '140px', sm: '240px', md: '360px' },
+          maxWidth: { sm: '240px', md: '360px' },
         }}
       >
         {currentDrawer} vs. {currentGuesser}
@@ -189,8 +191,7 @@ export const GuessArtHeaderTitle: React.FC<GuessArtHeaderTitleProps> = ({
           fontWeight: 700,
           fontSize: '0.75rem',
           height: { xs: 22, sm: 24 },
-          display: { xs: isDrawing ? 'inline-flex' : 'none', sm: 'inline-flex' },
-          flexShrink: 0,
+          minWidth: 0,
         }}
       />
     </Box>

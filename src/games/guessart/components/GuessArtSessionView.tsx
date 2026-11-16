@@ -1,8 +1,8 @@
 import React from 'react';
 import { Box } from '@mui/material';
-import { GuessArtHeader } from './GuessArtHeader';
 import { GuessArtRoundBody } from './GuessArtRoundBody';
 import { RoundSuccessModal } from './RoundSuccessModal';
+import { useGuessArtHeader } from '../hooks/useGuessArtHeader';
 import { PlayerJoinedSnackbar } from '../../../modules/player-management/PlayerJoinedSnackbar';
 import type { useCompletedRound } from '../hooks/useCompletedRound';
 import type { useGuessArtGame } from '../hooks/useGuessArtGame';
@@ -30,7 +30,7 @@ interface GuessArtSessionViewProps {
   children?: React.ReactNode;
 }
 
-/** Layout of a running GuessArt game: header, round view, success modal and dialogs. */
+/** Layout of a running GuessArt game: global-header wiring, round view, success modal and dialogs. */
 export const GuessArtSessionView: React.FC<GuessArtSessionViewProps> = ({
   game,
   round,
@@ -50,6 +50,18 @@ export const GuessArtSessionView: React.FC<GuessArtSessionViewProps> = ({
 }) => {
   const { completed } = completedRound;
   const shareHandler = seat.isHost ? onOpenShareLinks : undefined;
+  useGuessArtHeader({
+    game,
+    round,
+    isHost: seat.isHost,
+    isCurrentTurnLocal: seat.isCurrentTurnLocal,
+    isTemporaryTurn: seat.isTemporaryTurn,
+    onToggleLocalRemote: seat.handleToggleLocalRemote,
+    onExit,
+    onOpenHistory,
+    onEditGame,
+    onOpenShareLinks,
+  });
   return (
     <Box
       sx={{
@@ -60,21 +72,6 @@ export const GuessArtSessionView: React.FC<GuessArtSessionViewProps> = ({
         overflow: 'hidden',
       }}
     >
-      {round && (
-        <GuessArtHeader
-          game={game}
-          round={round}
-          onExit={onExit}
-          onOpenHistory={onOpenHistory}
-          onEditGame={onEditGame}
-          onOpenShareLinks={shareHandler}
-          isCurrentTurnLocal={seat.isCurrentTurnLocal}
-          canToggleLocalRemote={seat.isHost}
-          onToggleLocalRemote={seat.handleToggleLocalRemote}
-          isTemporaryTurn={seat.isTemporaryTurn}
-        />
-      )}
-
       <Box
         sx={{
           flexGrow: 1,

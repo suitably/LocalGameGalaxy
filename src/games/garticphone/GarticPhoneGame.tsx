@@ -7,9 +7,10 @@ import { GarticDrawingStep } from './components/GarticDrawingStep';
 import { GarticGuessingStep } from './components/GarticGuessingStep';
 import { GarticAlbumReveal } from './components/GarticAlbumReveal';
 import { GarticWaitingStatus } from './components/GarticWaitingStatus';
-import { GarticHeader } from './components/GarticHeader';
+import { GarticStatusChips } from './components/GarticStatusChips';
 import { GarticSpectatorView } from './components/GarticSpectatorView';
 import { useGarticGameState } from './hooks/useGarticGameState';
+import { useGarticHeader } from './hooks/useGarticHeader';
 
 interface GarticPhoneGameProps {
   onBackToMenu?: () => void;
@@ -49,6 +50,12 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
     endGame();
     handleBack();
   };
+  const headerDialogs = useGarticHeader({
+    roomId,
+    isHost,
+    onBack: handleBack,
+    onEndGame: handleEndGame,
+  });
 
   return (
     <Box
@@ -63,17 +70,13 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
         minHeight: 0,
       }}
     >
-      <GarticHeader
-        onBack={handleBack}
-        roomId={roomId}
+      <GarticStatusChips
         playerName={myPlayer?.name || myPlayerName}
         phase={gameState.phase}
         roundIndex={gameState.roundIndex}
         totalRounds={gameState.totalRounds}
         revealBookIndex={gameState.currentRevealBookIndex}
         totalBooks={gameState.books.length}
-        isHost={isHost}
-        onEndGame={handleEndGame}
       />
 
       {/* Main Game Screen */}
@@ -126,12 +129,12 @@ export const GarticPhoneGame: React.FC<GarticPhoneGameProps> = ({
                 isHost={isHost}
                 onRevealStateChange={updateRevealState}
                 onRestartGame={restartGame}
-                onBackToMenu={handleBack}
               />
             )}
           </>
         )}
       </Box>
+      {headerDialogs}
     </Box>
   );
 };

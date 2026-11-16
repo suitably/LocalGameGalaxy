@@ -60,7 +60,6 @@ export const initKnisterI18n = () => {
             room_place: 'Trage die {{sum}} auf deinem Blatt ein',
             room_waiting: 'Warte auf: {{names}}',
             room_roll: 'Alle haben eingetragen – würfeln!',
-            room_back: 'Zur Party',
             combos: {
               none: 'Nichts',
               pair: 'Zwilling (1 Paar)',
@@ -129,7 +128,6 @@ export const initKnisterI18n = () => {
             room_place: 'Write the {{sum}} on your sheet',
             room_waiting: 'Waiting for: {{names}}',
             room_roll: 'Everyone has placed it – roll!',
-            room_back: 'Back to the party',
             combos: {
               none: 'Nothing',
               pair: 'One pair',

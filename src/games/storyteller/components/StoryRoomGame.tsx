@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { Box, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material';
-import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import React, { useEffect, useState } from 'react';
+import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import MenuBookRoundedIcon from '@mui/icons-material/MenuBookRounded';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { InvitePlayersButton } from '../../../features/party/components/InvitePlayersButton';
+import { usePageTitle } from '../../../context/TitleContext';
+import { useHeaderLayout } from '../../../context/HeaderLayoutContext';
 import { useWakeLock } from '../../../hooks/useWakeLock';
 import { useStoryRoom } from '../hooks/useStoryRoom';
 import { StoryWriterView } from './StoryWriterView';
@@ -19,6 +20,8 @@ export const StoryRoomGame: React.FC<{ roomId: string; language: string }> = ({
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  usePageTitle(t('games.storyteller.title', 'Geschichtenschreiber'));
+  const { setHomeAction, setCustomHeaderActions, setMenuItems } = useHeaderLayout();
   useFollowPartyLobby(roomId);
   useWakeLock(true);
   const live = useStoryRoom(roomId, language);
@@ -26,31 +29,37 @@ export const StoryRoomGame: React.FC<{ roomId: string; language: string }> = ({
   const { game, entries } = live.state;
   const done = game?.status === 'completed';
 
-  // The game goes on while this device visits the lobby (#657); the host ends it there.
-  const backToParty = () => navigate(`/party?room=${roomId}`);
+  // Header: back arrow = lobby (the game goes on while this device visits it, #657).
+  useEffect(() => {
+    setHomeAction(() => navigate(`/party?room=${roomId}`));
+    setCustomHeaderActions(<InvitePlayersButton game="storyteller" variant="icon" />);
+    return () => {
+      setHomeAction(null);
+      setCustomHeaderActions(null);
+      setMenuItems([]);
+    };
+  }, [navigate, roomId, setHomeAction, setCustomHeaderActions, setMenuItems]);
+
+  const hasGame = Boolean(game);
+  useEffect(() => {
+    setMenuItems(
+      hasGame
+        ? [
+            {
+              label: t('storyteller.readStory', 'Geschichte lesen'),
+              icon: <MenuBookRoundedIcon />,
+              action: () => setReaderOpen(true),
+              showAlways: true,
+            },
+          ]
+        : [],
+    );
+  }, [hasGame, t, setMenuItems]);
 
   const writer = game?.players[game.currentPlayerIndex];
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
-      <Stack direction="row" alignItems="center" gap={1} sx={{ p: 1 }}>
-        <Button size="small" startIcon={<ArrowBackRoundedIcon />} onClick={backToParty}>
-          {t('storyteller.roomBack', 'Zur Lobby')}
-        </Button>
-        <Box flex={1} />
-        {game && (
-          <Button
-            size="small"
-            startIcon={<MenuBookRoundedIcon />}
-            onClick={() => setReaderOpen(true)}
-          >
-            {t('storyteller.roomRead', 'Lesen')}
-          </Button>
-        )}
-        <InvitePlayersButton game="storyteller" variant="icon" />
-        <Chip size="small" color="primary" label={roomId} />
-      </Stack>
-
       <Box sx={{ flexGrow: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         {!live.synced || !game ? (
           <Stack alignItems="center" gap={2} py={6}>
