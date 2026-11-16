@@ -79,8 +79,8 @@ export function convertBag(
   const base: BagWidget = {
     id: claimId(obj.GUID),
     type: 'bag',
-    x: pos.x,
-    y: pos.y,
+    x: pos.x - 40,
+    y: pos.y - 40,
     width: 80,
     height: 80,
     zIndex: pos.zIndex,
@@ -104,8 +104,12 @@ export function convertFogOfWar(
   ownerSeat: number | undefined,
   color: string,
 ): HiddenZone {
-  const width = Math.max(80, Math.round((obj.Transform.scaleX || 1) * scale));
-  const height = Math.max(80, Math.round((obj.Transform.scaleZ || 1) * scale));
+  // A zone turned by a quarter (rotY ≈ 90 / 270) is deep where it was wide.
+  const quarter = Math.round((obj.Transform.rotY || 0) / 90) % 2 !== 0;
+  const sx = (quarter ? obj.Transform.scaleZ : obj.Transform.scaleX) || 1;
+  const sz = (quarter ? obj.Transform.scaleX : obj.Transform.scaleZ) || 1;
+  const width = Math.max(80, Math.round(sx * scale));
+  const height = Math.max(80, Math.round(sz * scale));
   return {
     id: `fog_${obj.GUID}`,
     x: Math.round(center.x - width / 2),

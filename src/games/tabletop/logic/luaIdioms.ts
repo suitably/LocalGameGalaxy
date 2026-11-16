@@ -69,7 +69,7 @@ const TAKE_KEYS_UNSUPPORTED = new Set([
 
 /**
  * A TTS vector (`{x, y, z}` or `{x=…, y=…, z=…}`) as a table point: where the importer puts the
- * top-left corner of a piece at that world position.
+ * top-left corner of a standard card centred on that world position.
  */
 function pointOf(v: LuaValue | undefined, ctx: LuaTranslateContext) {
   if (v?.k !== 'table' || !ctx.project) return undefined;
