@@ -44,6 +44,13 @@
       "busted": "Busted!",
       "last_score": "Score: {{score}}",
       "restart_title": "Restart Game?",
+      "remove_player": "Remove player",
+      "multiplier": "Throw multiplier",
+      "bullseye": "BULLSEYE (50)",
+      "bull": "BULL (25)",
+      "setup_reset_title": "Reset game?",
+      "setup_reset_desc": "This change restarts the running game. All throws so far will be lost.",
+      "setup_reset_confirm": "Reset",
       "restart_desc": "Are you sure you want to restart? All current scores and throws will be lost."
     },
     "wordle": {
@@ -337,6 +344,7 @@
         "resume": "Resume",
         "end_round": "End Round",
         "confirm_end": "Are you sure you want to end the round early?",
+        "end_round_confirm": "End now",
         "kick_title": "Who is the Imposter?"
       },
       "result": {
@@ -2339,6 +2347,9 @@
   },
   "storyteller": {
     "title": "Storyteller",
+    "deleteSavedTitle": "Delete story?",
+    "deleteSavedMessage": "The saved story will be deleted permanently.",
+    "deleteSavedAria": "Delete story",
     "turnLabel": "Turn",
     "currentTurnOf": "Turn: ",
     "defaultPlayer": "Player",
@@ -2527,6 +2538,9 @@
       "deleteMessage": "The pot is deleted from the server. The link stops working; participants keep their local history.",
       "noKey": "This device has no host access to this pot. Open the host link to manage it.",
       "openAsParticipant": "Open as participant",
+      "forgetTitle": "Remove from list?",
+      "forgetMessage": "The pot is only removed from your list on this device. You can add it again later with the host link.",
+      "forgetConfirm": "Remove",
       "forget": "Remove from my list"
     },
     "participant": {

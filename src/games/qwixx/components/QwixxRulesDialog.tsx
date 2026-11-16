@@ -62,7 +62,7 @@ export const QwixxRulesDialog: React.FC<QwixxRulesDialogProps> = ({
               {t(def.nameKey)}
             </Typography>
           </Box>
-          <IconButton onClick={onClose} size="small">
+          <IconButton onClick={onClose} size="small" aria-label={t('common.close', 'Schließen')}>
             <CloseIcon />
           </IconButton>
         </Box>
@@ -180,7 +180,7 @@ export const QwixxRulesDialog: React.FC<QwixxRulesDialogProps> = ({
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
+      <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose} color="inherit">
           {t('common.close', 'Schließen')}
         </Button>

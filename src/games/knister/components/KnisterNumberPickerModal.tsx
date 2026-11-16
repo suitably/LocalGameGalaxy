@@ -81,7 +81,12 @@ export const KnisterNumberPickerModal: React.FC<KnisterNumberPickerModalProps> =
           </Typography>
         </Box>
 
-        <IconButton onClick={onClose} size="small" sx={{ color: 'text.secondary' }}>
+        <IconButton
+          onClick={onClose}
+          size="small"
+          aria-label={t('common.close', 'Schließen')}
+          sx={{ color: 'text.secondary' }}
+        >
           <CloseIcon />
         </IconButton>
       </DialogTitle>

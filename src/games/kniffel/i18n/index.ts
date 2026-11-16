@@ -17,6 +17,10 @@ export const initKniffelI18n = () => {
             description:
               'Der Klassiker unter den Würfelspielen. Sammle Punkte durch geschicktes Kombinieren von 5 Würfeln.',
             roll: 'Würfeln',
+            show_dice: 'Würfel anzeigen',
+            hide_dice: 'Würfel ausblenden',
+            show_dice_tooltip: 'Virtuelle Würfel ein-/ausblenden',
+            undo_tooltip: 'Letzten Eintrag rückgängig machen',
             rolling: 'Würfelt...',
             new_game: 'Neues Spiel',
             new_game_confirm:
@@ -78,6 +82,10 @@ export const initKniffelI18n = () => {
             title: 'Yahtzee',
             description: 'The classic dice game. Score points by cleverly combining 5 dice.',
             roll: 'Roll',
+            show_dice: 'Show dice',
+            hide_dice: 'Hide dice',
+            show_dice_tooltip: 'Show or hide virtual dice',
+            undo_tooltip: 'Undo last entry',
             rolling: 'Rolling...',
             new_game: 'New Game',
             new_game_confirm:

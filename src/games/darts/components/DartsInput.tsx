@@ -67,18 +67,30 @@ export function DartsInput({ state }: Props) {
           value={multiplier}
           exclusive
           onChange={handleMultiplierChange}
-          aria-label="throw multiplier"
+          aria-label={t('games.darts.multiplier')}
           sx={{ flexGrow: 1 }}
           color="primary"
           disabled={!!winner}
         >
-          <ToggleButton value={1} aria-label="single" sx={{ flex: 1, py: 1.5, fontWeight: 'bold' }}>
+          <ToggleButton
+            value={1}
+            aria-label={t('games.darts.single')}
+            sx={{ flex: 1, py: 1.5, fontWeight: 'bold' }}
+          >
             {t('games.darts.single')}
           </ToggleButton>
-          <ToggleButton value={2} aria-label="double" sx={{ flex: 1, py: 1.5, fontWeight: 'bold' }}>
+          <ToggleButton
+            value={2}
+            aria-label={t('games.darts.double')}
+            sx={{ flex: 1, py: 1.5, fontWeight: 'bold' }}
+          >
             {t('games.darts.double')}
           </ToggleButton>
-          <ToggleButton value={3} aria-label="triple" sx={{ flex: 1, py: 1.5, fontWeight: 'bold' }}>
+          <ToggleButton
+            value={3}
+            aria-label={t('games.darts.triple')}
+            sx={{ flex: 1, py: 1.5, fontWeight: 'bold' }}
+          >
             {t('games.darts.triple')}
           </ToggleButton>
         </ToggleButtonGroup>
@@ -131,7 +143,7 @@ export function DartsInput({ state }: Props) {
             sx={{ height: 48, fontWeight: 'bold' }}
             disabled={!!winner || multiplier === 3} // No triple bull
           >
-            {multiplier === 2 ? 'BULLSEYE (50)' : 'BULL (25)'}
+            {multiplier === 2 ? t('games.darts.bullseye') : t('games.darts.bull')}
           </Button>
         </Box>
         <Box sx={{ width: { xs: '50%', sm: '33.33%' }, p: 0.5 }}>
