@@ -1,0 +1,1 @@
+- **Tabletop zooms where you pinch**: pinch zoom follows the fingers instead of zooming towards the table corner, two fingers pan and zoom at the same time, and lifting one finger no longer makes the view jump. The mouse wheel and a trackpad pinch zoom at the cursor; the zoom buttons zoom around the screen centre.

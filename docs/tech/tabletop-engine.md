@@ -114,7 +114,7 @@ The dock (`HandDockStrip` → `HandFan`) lays the hand out as an overlapping, sl
 
 ### Table gestures
 
-Pure rules in `logic/tableGestures.ts`, pointer handling in `hooks/useTabletopEngine.ts` (pan and pinch in `hooks/usePanPinch.ts`, deck/bag presses in `hooks/sourcePress.ts`). Decks with cards and non-empty or infinite bags are _sources_ (`sourceKind`; never for spectators):
+Pure rules in `logic/tableGestures.ts`, pointer handling in `hooks/useTabletopEngine.ts` (deck/bag presses in `hooks/sourcePress.ts`). The view (pan, zoom) is `hooks/usePanPinch.ts` over the pure maths in `logic/viewTransform.ts`: one finger or the mouse on free table pans; two fingers pan and zoom around the point between them (`pinchView`), re-anchored whenever a finger lands or lifts; the wheel and a trackpad pinch (`ctrlKey` wheel) zoom at the cursor (`zoomAt`, native non-passive listener on the surface container, only over the table itself); the toolbar buttons zoom around the screen centre. Scale limits `MIN_ZOOM` 0.1 / `MAX_ZOOM` 3. Decks with cards and non-empty or infinite bags are _sources_ (`sourceKind`; never for spectators):
 
 | Gesture                                 | Deck                                                                               | Bag                                                              |
 | --------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------- |

@@ -118,12 +118,14 @@ No `aria-label` or Tooltip: `melodiq-notes/components/NotesDialogFrame.tsx:54` (
 8. `dvh`, safe areas, nested scroll (P7).
 9. Ratchets in `check:architecture`: `GameHeaderBar` / `setHeaderHidden` use outside immersive mode, ArrowBack icons in `src/games`, `IconButton` without `aria-label`.
 
-## Maintainer decisions needed
+## Maintainer decisions (2026-11-16)
 
-1. Back to lobby in room mode: header back arrow (as Melodiq) or header menu item (as Melodiq Notes)?
-2. May a running game hide `GlobalHeader` at all (today GuessArt, Storyteller; Melodiq Notes only when immersive)?
-3. Tabletop: keep floating canvas controls, or move menu and settings to the header?
-4. Close label: one word for all info dialogs ("Schließen")?
+1. Back to lobby in room mode: the header back arrow (`setHomeAction`), the same in every game. The menu-item form (Melodiq Notes) and all in-body buttons go.
+2. A running game does not hide `GlobalHeader`. Only exception: the immersive (fullscreen) stage of Melodiq Notes. GuessArt and Storyteller get the global header back; `GameHeaderBar` is removed.
+3. Tabletop follows the common pattern: menu and table settings move to the header (menu items, `useGameSettingsHost`); only canvas tools (zoom, selection) stay floating.
+4. One close label for info dialogs: `common.close` ("Schließen").
+
+Done from this report: tabletop pan and zoom (not an audit finding, reported with the decisions) — zoom is anchored at the fingers or the cursor, see [tabletop engine](../tech/tabletop-engine.md).
 
 ## Not covered
 

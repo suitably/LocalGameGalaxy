@@ -96,6 +96,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     onShake: dispatch,
     onLongPressRelease: (widgetId, mouseX, mouseY) =>
       setContextMenuPos({ mouseX, mouseY, widgetId }),
+    containerRef,
   });
   const trackHover = useTableKeyShortcuts(game.widgets, activeDragId, dispatch);
 
