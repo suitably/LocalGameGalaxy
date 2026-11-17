@@ -971,6 +971,10 @@
       "title": "Card Games",
       "description": "Digital companion for tabletop card games: Life tracking (Schwimmen) and trick predictor (Oh Hell)."
     },
+    "cabo": {
+      "title": "Cabo",
+      "description": "Card game for 2–6 players on one device: swap cards, use special powers and end the round with “Cabo”."
+    },
     "tabletop": {
       "title": "Game Table",
       "description": "Card, board and dice games: one device passed around or everyone on their own phone, with hidden hands.",

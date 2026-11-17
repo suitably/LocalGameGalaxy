@@ -1,0 +1,1 @@
+- **Cabo card game**: new card game in the Kartenspiele category for 2–6 players on one device. Four face-down cards each, swap or discard drawn cards, special powers (7/8 peek own, 9/10 peek opponent, J/Q blind swap), calling Cabo for a last round, and scoring to 100 points. The device is handed over between turns so hidden hands stay private.
