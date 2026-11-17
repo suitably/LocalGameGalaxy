@@ -1356,6 +1356,8 @@
       "backToHand": "Zurück zur Hand",
       "playerN": "Spieler {{n}}",
       "flipCard": "Umdrehen",
+      "stackFan": "Stapel auffächern",
+      "stackPile": "Stapel zusammenschieben",
       "rollDie": "Würfeln",
       "shuffleDeck": "Mischen",
       "view_hand": "Hand",

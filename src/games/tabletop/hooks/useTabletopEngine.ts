@@ -12,7 +12,11 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { TabletopWidget, GridSnapDef, TokenWidget } from '../logic/types';
 import { isCardInHand } from '../logic/handLayout';
-import { findMatchingSupplyHolder, findSnapTargetAt } from '../logic/boardFilter';
+import {
+  findMatchingSupplyHolder,
+  findSnapTargetAt,
+  findStackTargetAt,
+} from '../logic/boardFilter';
 import {
   createShakeTracker,
   DRAG_THRESHOLD_PX,
@@ -260,7 +264,20 @@ export function useTabletopEngine(options: TabletopEngineOptions) {
       widget.height,
       widget.type,
     );
-    if (targetId && targetId !== dragId) options.onSnapToHolder(dragId, targetId, gesture);
+    if (targetId && targetId !== dragId) {
+      options.onSnapToHolder(dragId, targetId, gesture);
+      return;
+    }
+    const stackTarget = findStackTargetAt(
+      options.widgets,
+      dragId,
+      x,
+      y,
+      widget.width,
+      widget.height,
+    );
+    // The reducer turns a snap onto a card into a stack (#558).
+    if (stackTarget) options.onSnapToHolder(dragId, stackTarget, gesture);
   };
 
   const handlePointerUp = (e: PointerEvent | React.PointerEvent) => {

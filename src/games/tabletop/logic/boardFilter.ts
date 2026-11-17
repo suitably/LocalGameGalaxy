@@ -9,6 +9,7 @@ import type {
   TokenWidget,
   BagWidget,
 } from './types';
+import type { StackDeck } from './reducers/stackReducer';
 import { isHandHolder, isHandHolderWidget } from './handHolder';
 
 export { isHandHolder };
@@ -263,4 +264,56 @@ export function findSnapTargetAt(
     if (cx >= w.x && cx <= w.x + w.width && cy >= w.y && cy <= w.y + w.height) return id;
   }
   return null;
+}
+
+/** A card that is not in a deck or pile. */
+export function isLooseCard(widget: TabletopWidget | undefined): widget is CardWidget {
+  return widget?.type === 'card' && !(widget as CardWidget).inPile;
+}
+
+/** Loose card on the table under the centre of a card at x/y (the one a drop stacks onto), if any. */
+export function findStackTargetAt(
+  widgets: Record<string, TabletopWidget>,
+  dragId: string,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): string | null {
+  if (!isLooseCard(widgets[dragId])) return null;
+  const inHolder = new Set<string>();
+  for (const w of Object.values(widgets)) {
+    if (w.type === 'holder') for (const id of (w as HolderWidget).childIds ?? []) inHolder.add(id);
+  }
+  const cx = x + width / 2;
+  const cy = y + height / 2;
+  let best: TabletopWidget | null = null;
+  for (const [id, w] of Object.entries(widgets)) {
+    if (id === dragId || !isLooseCard(w) || inHolder.has(id)) continue;
+    if (cx < w.x || cx > w.x + w.width || cy < w.y || cy > w.y + w.height) continue;
+    if (!best || w.zIndex >= best.zIndex) best = w;
+  }
+  return best?.id ?? null;
+}
+
+/** Most cards a fanned stack draws (the top ones; the rest only count). */
+export const FAN_MAX_CARDS = 8;
+
+/** A deck as the board draws it: a fanned stack also carries its top cards (never stored). */
+export type BoardDeck = StackDeck & { fanCards?: CardWidget[] };
+
+/** Adds the top cards to every fanned stack of `list` so its view can show what lies underneath. */
+export function withFanCards(
+  list: TabletopWidget[],
+  all: Record<string, TabletopWidget>,
+): TabletopWidget[] {
+  return list.map((w) => {
+    const deck = w as StackDeck;
+    if (w.type !== 'deck' || !deck.isPile || deck.stackDisplay !== 'fan') return w;
+    const fanCards = deck.cardIds
+      .slice(-FAN_MAX_CARDS)
+      .map((id) => all[id])
+      .filter((c): c is CardWidget => c?.type === 'card');
+    return { ...deck, fanCards } as BoardDeck;
+  });
 }

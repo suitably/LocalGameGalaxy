@@ -51,6 +51,9 @@ export const SurfaceContextMenu: React.FC<SurfaceContextMenuProps> = ({
       onResetWidgetScale={(id) =>
         dispatch({ type: 'RESET_WIDGET_SCALE', payload: { widgetIds: [id] } })
       }
+      onSetStackDisplay={(deckId, display) =>
+        dispatch({ type: 'SET_STACK_DISPLAY', payload: { deckId, display } })
+      }
       onZOrder={reorderWidget}
       onFlip={(id) => run(flipActionFor(widgets[id]))}
       onShake={(id) => run(shakeActionFor(widgets[id]))}

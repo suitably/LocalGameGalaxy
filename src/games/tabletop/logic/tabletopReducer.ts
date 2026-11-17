@@ -19,6 +19,7 @@ import { applyGameDelta, type GameDelta } from './stateDelta';
 import { normalizeHandHolders } from './handHolder';
 import { removeFromHolderAndUpdateHand } from './reducers/holderMembership';
 import { deckReducer, placeCardInDeck } from './reducers/deckReducer';
+import { stackReducer, type StackDisplay } from './reducers/stackReducer';
 import { bagReducer } from './reducers/bagReducer';
 import { pieceReducer } from './reducers/pieceReducer';
 import { viewReducer } from './reducers/viewReducer';
@@ -95,6 +96,9 @@ type TabletopActionBody =
       };
     }
   | { type: 'SNAP_TO_HOLDER'; payload: { widgetId: string; holderId: string; gesture?: string } }
+  /** A card dropped on another card builds a stack (a pile deck) from both (#558). */
+  | { type: 'STACK_CARDS'; payload: { cardId: string; targetId: string } }
+  | { type: 'SET_STACK_DISPLAY'; payload: { deckId: string; display: StackDisplay } }
   | { type: 'APPLY_REMOTE_DELTA'; payload: GameDelta }
   /** Undo/redo from the editor; unlike APPLY_REMOTE_DELTA it is synced as an intent. */
   | { type: 'APPLY_EDIT_DELTA'; payload: GameDelta }
@@ -301,6 +305,13 @@ function applyAction(
       const { widgetId, holderId } = action.payload;
       const targetWidget = state.game.widgets[holderId];
       if (!targetWidget) return state;
+      // Dropped on a loose card: both become a stack.
+      if (targetWidget.type === 'card') {
+        return stackReducer(state, {
+          type: 'STACK_CARDS',
+          payload: { cardId: widgetId, targetId: holderId },
+        });
+      }
 
       const card = state.game.widgets[widgetId] as CardWidget | undefined;
       const widgets = { ...state.game.widgets };
@@ -463,6 +474,9 @@ function applyAction(
       };
     }
 
+    case 'STACK_CARDS':
+    case 'SET_STACK_DISPLAY':
+      return stackReducer(state, action);
     case 'SHUFFLE_DECK':
     case 'DRAW_CARD':
     case 'RETURN_CARD_TO_DECK':
