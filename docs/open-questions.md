@@ -19,10 +19,9 @@ Resolve: measure on a real mid-range phone (manual). If p95 stays above 16 ms th
 `src/games/wordle/i18n/index.ts` exports a flat-key `wordleTranslations` that nothing imports (only `src/games/wordle/index.ts` re-exports it); live Wordle strings come from the top-level `wordle` section of `public/locales`. Same situation Sudoku had before 2026-11-16, where the dead bundle was deleted. [i18n-strategy](tech/i18n-strategy.md) no longer lists Wordle as a bundle game.
 Resolve: check that every bundle key exists in `public/locales`, then delete the bundle like Sudoku's, or register it via an `initWordleI18n()` like Kniffel and remove the duplicates from the locale files.
 
-## Q24 — Scripted card games send all hands to every device [user]
+## Resolved 2026-11-17
 
-`src/games/tabletop/scripted` syncs through `useRoomReducer`, which publishes the host's whole state (all hands, stock, skat) to every device in the room; only the UI hides other players' cards. The free tabletop seals hands per seat (`logic/privateHandChannel.ts`). Fine among friends, but a player who reads the room traffic sees every card.
-Resolve: the maintainer decides whether that is acceptable; otherwise the host sends `script.view(state, seat)` per seat, sealed with `logic/sealCrypto.ts`, and `moveAllowed` moves to the host. [scripted card games](tech/tabletop-scripted-games.md) §3.
+- Q24 scripted card games sent all hands to every device → maintainer decision (2026-11-17): seal hands per seat. The host keeps the state and sends each seat only `script.view(state, seat)`, sealed with the seat's key (`PrivateHandChannel`); `moveAllowed` for single-card picks runs on the host (`hints`). [scripted card games](tech/tabletop-scripted-games.md)
 
 ## Resolved 2026-11-15
 

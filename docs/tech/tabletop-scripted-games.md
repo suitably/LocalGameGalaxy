@@ -9,7 +9,7 @@ generated:
   at: 2026-11-16T16:00:00+01:00
   by: claude-code
 verified:
-  at: 2026-11-16
+  at: 2026-11-17
   method: 'Wrote and read src/games/tabletop/scripted/**, TabletopEntry.tsx, logic/tableCatalog.ts; ran the Vitest suites in scripted/logic/__tests__; played Skat, Durak, Schwimmen and Arschloch locally and a Durak room (host table + two player tabs) in headless Chromium.'
 sources:
   - 'src/games/tabletop/scripted/logic/scriptTypes.ts'
@@ -51,11 +51,13 @@ Adding a game: one script file, an entry in `scriptRegistry.ts` and `CARD_GAMES`
 
 `logic/session.ts`: `sessionReducer` over `{ scriptId, players, seed, step, game }` with `START` (players in seat order, seed), `MOVE` (seat, move) and `END` (back to the setup). Randomness comes from `seededRng(seed, step)`, so the reducer is pure and the same actions give the same table.
 
-In a room the party host runs the reducer through `useRoomReducer` (`modules/room-game`, channel `cards-<id>_<room>`; `hooks/useRoomSession.ts`). `sessionAllows` lets the host do everything and every other device only `MOVE` its own seat (matched by party player id). The table device sends "next round" as seat 0.
+In a room the party host runs the reducer in a `SealedRoomPeer` (`logic/sealedRoomPeer.ts`, channel `cards-<id>_<room>`; `hooks/useRoomSession.ts`, kept across lobby visits by `retainRoomPeer`). A guest sends `hello` (with its public key) and `action`; the host accepts a `MOVE` only for the sender's own seat (`sessionAllows`) and only if the script's `move` changes the state. The host never publishes the state: each `views` message holds the public table packet and, per seat, that seat's `SeatPacket` (`logic/sealedViews.ts`: players, step, `script.view(state, seat)`, `hints`) sealed through `PrivateHandChannel.sealFor` / `openFromHost` (`tabletop/logic/privateHandChannel.ts`, `sealCrypto.ts`). Hands, stock and skat stay on the host. The table device sends "next round" as seat 0.
+
+Whether a pick is playable is decided on the host: `hints` lists the single-card moves the script accepts now; larger picks (`many`) and buttons are tried optimistically on the device and refused by the host if illegal. Without WebCrypto (plain-HTTP LAN origins) a seat's packet is sent unsealed, still only its own.
 
 The owner of the state keeps the running game in `STORAGE_PREFIXES.TABLETOP_SCRIPTED` + game id (`logic/sessionStore.ts`), one entry per game with its scope (`local` or the room id); it is removed when the game ends.
 
-**Limit:** the host publishes the whole state, hands included, to every device in the room; only the UI hides other hands. The sealed per-seat hands of the tabletop engine are not used here ([Q24](../open-questions.md)).
+**Limit:** a device that reads the room traffic of its own seat sees that seat's hand only. Spectators and the table see the public view (Q24 resolved).
 
 ## 4. UI (`components/`)
 
