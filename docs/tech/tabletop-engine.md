@@ -36,6 +36,7 @@ Roadmap and comparison with VirtualTabletop: [2026-10-21 plan](../reports/2026-1
 | File                  | Actions                                                                                                                                                       |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `deckReducer.ts`      | `SHUFFLE_DECK`¹, `DRAW_CARD`, `RETURN_CARD_TO_DECK`                                                                                                           |
+| `stackReducer.ts`     | `STACK_CARDS`² (a card snapped onto a loose card), `SET_STACK_DISPLAY`                                                                                        |
 | `bagReducer.ts`       | `DRAW_FROM_BAG`                                                                                                                                               |
 | `pieceReducer.ts`     | `TAKE_PIECE_FROM_SUPPLY`, `PLAY_CARD_FROM_HAND`                                                                                                               |
 | `viewReducer.ts`      | `SCALE_WIDGETS`, `RESET_WIDGET_SCALE`, `SET_WIDGET_SHOW_ALWAYS`, `SET_Z_ORDER`, hidden zones (`MOVE_HIDDEN_ZONE`, `RESIZE_HIDDEN_ZONE`, `TOGGLE_ZONE_REVEAL`) |
@@ -44,6 +45,8 @@ Roadmap and comparison with VirtualTabletop: [2026-10-21 plan](../reports/2026-1
 | `holderMembership.ts` | helper `removeFromHolderAndUpdateHand`                                                                                                                        |
 
 ¹ `SHUFFLE_DECK` also counts `DeckWidget.shuffleCount`; the change syncs like any delta and `components/widgets/DeckShuffleOverlay.tsx` plays a short riffle of the deck's top face above the deck on every device and is removed when it ends (none with reduced motion, #556, #618).
+
+² **Card stacks (#558).** Dropping a card on a loose card (`findStackTargetAt` in `logic/boardFilter.ts`, run by `useTabletopEngine.dropOnTable` when no holder or deck is under the drop) sends `SNAP_TO_HOLDER` with the card as target; the reducer turns it into `STACK_CARDS`: a pile deck `stack_<targetId>` (`isPile`, `stackDisplay: 'pile'`) holds both cards, the dropped one on top, and later drops on the deck use the normal deck snap. The context menu item "Fan out stack" sets `DeckWidget.stackDisplay` (`'pile'` count badge or `'fan'`); `withFanCards` adds the top `FAN_MAX_CARDS` cards to fanned decks at render time (never stored) and `components/widgets/StackFanView.tsx` draws them side by side. Intent authorization treats the snap target as a touched widget, so a card in another seat's hand cannot be stacked.
 
 Holder positions (hand, stack, fan, grid) come from `logic/holderLayout.ts`; a holder without one of these layouts (a game board) keeps a dropped widget where it was dropped, clamped inside the holder.
 

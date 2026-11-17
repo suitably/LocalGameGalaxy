@@ -18,7 +18,7 @@ import { SurfaceContextMenu } from './SurfaceContextMenu';
 import { useTableKeyShortcuts } from '../../hooks/useTableKeyShortcuts';
 import { useAddHiddenZone } from '../../hooks/useAddHiddenZone';
 import { getSeatWidgets } from '../../logic/seatLogic';
-import { filterBoardHolders, filterBoardWidgets } from '../../logic/boardFilter';
+import { filterBoardHolders, filterBoardWidgets, withFanCards } from '../../logic/boardFilter';
 import { SurfaceSeatControls } from './SurfaceSeatControls';
 import { useFitToScreen } from '../../hooks/useFitToScreen';
 import { BoardDragOverlay } from './BoardDragOverlay';
@@ -116,7 +116,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     [game.widgets, visibleIds, isTvMode],
   );
   const boardWidgets = useMemo(
-    () => filterBoardWidgets(game.widgets, visibleIds, isTvMode),
+    () => withFanCards(filterBoardWidgets(game.widgets, visibleIds, isTvMode), game.widgets),
     [game.widgets, visibleIds, isTvMode],
   );
   const fitToScreen = useFitToScreen(containerRef, game, setTransform, setContainerSize, focus);

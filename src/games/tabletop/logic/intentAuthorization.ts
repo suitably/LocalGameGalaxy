@@ -72,7 +72,15 @@ function touchedIds(action: TabletopAction, widgets: Widgets): { ids: string[]; 
         into: action.payload.targetHolderId ? [action.payload.targetHolderId] : [],
       };
     case 'SNAP_TO_HOLDER':
-      return { ids: [action.payload.widgetId], into: [action.payload.holderId] };
+      // The target may be a card (stacking): it must not lie in another seat's hand.
+      return {
+        ids: [action.payload.widgetId, action.payload.holderId],
+        into: [action.payload.holderId],
+      };
+    case 'STACK_CARDS':
+      return { ids: [action.payload.cardId, action.payload.targetId], into: [] };
+    case 'SET_STACK_DISPLAY':
+      return { ids: [action.payload.deckId], into: [] };
     case 'ANIMATE_CARD_TO_TABLE':
       return { ids: [action.payload.cardId], into: [action.payload.targetHolderId] };
     case 'TAKE_PIECE_FROM_SUPPLY':

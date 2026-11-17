@@ -1356,6 +1356,8 @@
       "backToHand": "Back to hand",
       "playerN": "Player {{n}}",
       "flipCard": "Flip",
+      "stackFan": "Fan out stack",
+      "stackPile": "Gather stack into a pile",
       "rollDie": "Roll",
       "shuffleDeck": "Shuffle",
       "view_hand": "Hand",

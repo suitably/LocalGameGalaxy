@@ -1,0 +1,1 @@
+- **Tabletop: stacking cards** (#558): dropping a card on another card builds a stack (a pile deck with a count). Per stack, the context menu toggles between the neat pile and a fanned-out display where the cards underneath are visible (Skip-Bo style).

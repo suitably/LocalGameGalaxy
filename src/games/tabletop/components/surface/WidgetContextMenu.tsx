@@ -22,7 +22,9 @@ import ShuffleIcon from '@mui/icons-material/ShuffleRounded';
 import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import PanToolIcon from '@mui/icons-material/PanToolRounded';
 import GroupsIcon from '@mui/icons-material/GroupsRounded';
+import StyleIcon from '@mui/icons-material/StyleRounded';
 import type { DeckWidget, TabletopWidget } from '../../logic/types';
+import type { StackDeck, StackDisplay } from '../../logic/reducers/stackReducer';
 import type { ZOrderOp } from '../../logic/zOrder';
 import { flipActionFor, shakeActionFor } from '../../logic/tableGestures';
 import { useTranslation } from 'react-i18next';
@@ -47,6 +49,8 @@ interface WidgetContextMenuProps {
   onFlip?: (widgetId: string) => void;
   /** Shuffle a deck / roll a die (S). */
   onShake?: (widgetId: string) => void;
+  /** Stack (pile deck): switch between the neat pile and the fanned-out display (#558). */
+  onSetStackDisplay?: (deckId: string, display: StackDisplay) => void;
   /** Deck: draw the top card into the viewer's hand (absent without a hand). */
   onDrawToHand?: (deckId: string) => void;
   /** Deck: deal `perHand` cards to every player's hand (absent without hands). */
@@ -77,6 +81,9 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = (props) => {
   const id = widget.id;
   const hasCards = widget.type === 'deck' && (widget as DeckWidget).cardIds.length > 0;
   const showAlways = Boolean(widget.showAlways);
+  const stack =
+    widget.type === 'deck' && (widget as DeckWidget).isPile ? (widget as StackDeck) : null;
+  const fanned = stack?.stackDisplay === 'fan';
   const groups: Item[][] = [[], [], [], [], []];
   const add = (group: number, item: Item | false | undefined) => item && groups[group].push(item);
 
@@ -88,6 +95,16 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = (props) => {
         icon: <PanToolIcon fontSize="small" />,
         label: t('games.tabletop.drawToHand'),
         run: () => props.onDrawToHand?.(id),
+      },
+  );
+  add(
+    0,
+    Boolean(stack) &&
+      props.onSetStackDisplay && {
+        key: 'stackDisplay',
+        icon: <StyleIcon fontSize="small" />,
+        label: t(fanned ? 'games.tabletop.stackPile' : 'games.tabletop.stackFan'),
+        run: () => props.onSetStackDisplay?.(id, fanned ? 'pile' : 'fan'),
       },
   );
   for (const perHand of [1, 5]) {
