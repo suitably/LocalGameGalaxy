@@ -12,7 +12,9 @@
  * - After Cabo is called, every other player gets one final turn.
  * - Scoring: sum of hand values (A=1, 2-10 face, J=11, Q=12, red K=0, black K=13, joker=0).
  *   The caller gets +10 unless their hand is strictly the lowest.
- * - The game ends when a total reaches the target score; the lowest total wins.
+ * - A total of exactly the target score (100) falls back to 50.
+ * - The game ends when a total exceeds the target score; the lowest total wins.
+ * - A 7/8 or 9/10 peek shows the card in phase `reveal`; the turn ends on `end_turn`.
  *
  * House rules not in the printed rules: no "snap" discards out of turn.
  */
@@ -28,6 +30,8 @@ export const DEFAULT_TARGET_SCORE = 100;
 
 export interface CreateGameOptions {
   targetScore?: number;
+  /** Seen cards stay face up for their viewer (see `CaboState.memoryAid`). */
+  memoryAid?: boolean;
   /** Top of the deck is the last element. Defaults to a shuffled deck. */
   deck?: Card[];
 }
@@ -76,6 +80,8 @@ function dealRound(
     targetScore,
     lastRound: null,
     winnerIds: [],
+    revealed: null,
+    memoryAid: false,
   };
 }
 
@@ -87,12 +93,13 @@ export function createGame(playerNames: string[], options: CreateGameOptions = {
     memory: [],
     totalScore: 0,
   }));
-  return dealRound(
+  const state = dealRound(
     players,
     1,
     options.targetScore ?? DEFAULT_TARGET_SCORE,
     options.deck ?? shuffledDeck(),
   );
+  return { ...state, memoryAid: options.memoryAid ?? false };
 }
 
 function ok(state: CaboState): CaboResult {
@@ -139,7 +146,14 @@ function endTurn(state: CaboState): CaboResult {
   if (state.callerId !== null && state.players[next].id === state.callerId) {
     return ok(finishRound(state));
   }
-  return ok({ ...state, currentIndex: next, phase: 'turn', drawn: null, power: null });
+  return ok({
+    ...state,
+    currentIndex: next,
+    phase: 'turn',
+    drawn: null,
+    power: null,
+    revealed: null,
+  });
 }
 
 function finishRound(state: CaboState): CaboState {
@@ -152,16 +166,21 @@ function finishRound(state: CaboState): CaboState {
     i === callerIndex && callerPenalty ? value + CABO_PENALTY : value,
   );
 
-  const players = state.players.map((p, i) => ({
-    ...p,
-    totalScore: p.totalScore + roundScores[i],
-  }));
+  // Official rule: a total of exactly the target score falls back to half of it.
+  const resetIds: string[] = [];
+  const players = state.players.map((p, i) => {
+    const total = p.totalScore + roundScores[i];
+    if (total !== state.targetScore) return { ...p, totalScore: total };
+    resetIds.push(p.id);
+    return { ...p, totalScore: Math.floor(state.targetScore / 2) };
+  });
   const lastRound: RoundResult = {
     roundNumber: state.roundNumber,
     roundScores,
     handValues,
     callerId: state.callerId,
     callerPenalty,
+    resetIds,
   };
 
   const gameOver = players.some((p) => p.totalScore >= state.targetScore);
@@ -172,6 +191,7 @@ function finishRound(state: CaboState): CaboState {
     phase: gameOver ? 'game_over' : 'round_over',
     drawn: null,
     power: null,
+    revealed: null,
     lastRound,
     winnerIds: gameOver ? players.filter((p) => p.totalScore === lowest).map((p) => p.id) : [],
   };
@@ -260,7 +280,13 @@ function powerPeekOwn(state: CaboState, slot: number): CaboResult {
 
   const index = state.currentIndex;
   const memory = [...currentPlayer(state).memory, currentPlayer(state).hand[slot].id];
-  return endTurn({ ...state, players: patchPlayer(state.players, index, { memory }) });
+  return ok({
+    ...state,
+    players: patchPlayer(state.players, index, { memory }),
+    phase: 'reveal',
+    power: null,
+    revealed: { ownerId: currentPlayer(state).id, slot },
+  });
 }
 
 function powerPeekOther(state: CaboState, targetId: string, slot: number): CaboResult {
@@ -272,7 +298,13 @@ function powerPeekOther(state: CaboState, targetId: string, slot: number): CaboR
 
   const index = state.currentIndex;
   const memory = [...currentPlayer(state).memory, state.players[target].hand[slot].id];
-  return endTurn({ ...state, players: patchPlayer(state.players, index, { memory }) });
+  return ok({
+    ...state,
+    players: patchPlayer(state.players, index, { memory }),
+    phase: 'reveal',
+    power: null,
+    revealed: { ownerId: state.players[target].id, slot },
+  });
 }
 
 function powerBlindSwap(
@@ -316,8 +348,13 @@ export function applyAction(state: CaboState, action: CaboAction): CaboResult {
       return powerBlindSwap(state, action.slot, action.targetId, action.targetSlot);
     case 'skip_power':
       return state.phase === 'power' ? endTurn(state) : fail('wrong_phase');
+    case 'end_turn':
+      return state.phase === 'reveal' ? endTurn(state) : fail('wrong_phase');
     case 'next_round':
       if (state.phase !== 'round_over') return fail('wrong_phase');
-      return ok(dealRound(state.players, state.roundNumber + 1, state.targetScore, shuffledDeck()));
+      return ok({
+        ...dealRound(state.players, state.roundNumber + 1, state.targetScore, shuffledDeck()),
+        memoryAid: state.memoryAid,
+      });
   }
 }

@@ -1,44 +1,21 @@
 /**
  * Cabo deck: 52 standard cards plus 2 jokers, card values and special powers [ID: LOGIC-CABO-DECK]
  */
-import { shuffle } from '../../../lib/utils/shuffle';
-import type { Card, Power, Rank, Suit } from './types';
-
-export const SUITS: readonly Suit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
-export const RANKS: readonly Rank[] = [
-  'A',
-  '2',
-  '3',
-  '4',
-  '5',
-  '6',
-  '7',
-  '8',
-  '9',
-  '10',
-  'J',
-  'Q',
-  'K',
-];
+import {
+  createDeck as createPlayingDeck,
+  shuffledDeck as shuffledPlayingDeck,
+} from '../../../modules/playing-cards';
+import type { Card, Power } from './types';
 
 export const DECK_SIZE = 54;
 
 /** Creates the unshuffled 54-card deck with ids 0..53. */
 export function createDeck(): Card[] {
-  const cards: Card[] = [];
-  let id = 0;
-  for (const suit of SUITS) {
-    for (const rank of RANKS) {
-      cards.push({ id: id++, rank, suit });
-    }
-  }
-  cards.push({ id: id++, rank: 'JOKER', suit: null });
-  cards.push({ id: id++, rank: 'JOKER', suit: null });
-  return cards;
+  return createPlayingDeck({ jokers: 2 });
 }
 
 export function shuffledDeck(): Card[] {
-  return shuffle(createDeck());
+  return shuffledPlayingDeck({ jokers: 2 });
 }
 
 /** Points of one card: A=1, 2..10 face value, J=11, Q=12, red K=0, black K=13, joker=0. */

@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { CaboState } from '../logic/types';
-import { CaboCard } from './CaboCard';
+import { PlayingCard } from '../../../modules/playing-cards';
 
 interface CaboSummaryProps {
   game: CaboState;
@@ -54,6 +54,17 @@ export const CaboRoundSummary: React.FC<CaboSummaryProps> = ({ game, onNextRound
         </Alert>
       )}
 
+      {result && result.resetIds.length > 0 && (
+        <Alert severity="info">
+          {t('games.cabo.summary.reset_to_half', {
+            names: game.players
+              .filter((p) => result.resetIds.includes(p.id))
+              .map((p) => p.name)
+              .join(', '),
+          })}
+        </Alert>
+      )}
+
       <Paper variant="outlined" sx={{ overflowX: 'auto' }}>
         <Table size="small">
           <TableHead>
@@ -71,7 +82,7 @@ export const CaboRoundSummary: React.FC<CaboSummaryProps> = ({ game, onNextRound
                 <TableCell>
                   <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                     {p.hand.map((card) => (
-                      <CaboCard key={card.id} card={card} faceUp />
+                      <PlayingCard key={card.id} card={card} faceUp size="sm" />
                     ))}
                   </Box>
                 </TableCell>

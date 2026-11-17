@@ -1,5 +1,8 @@
 /**
  * Cabo: one device, pass and play, hidden hands [ID: UI-CABO-GAME]
+ *
+ * While the handover cover is up, only the cover is rendered — the board of the next player is
+ * not in the DOM until they reveal it.
  */
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -19,7 +22,7 @@ export const CaboGame: React.FC = () => {
   const { t } = useTranslation();
   usePageTitle(t('games.cabo.title', 'Cabo'));
 
-  const { game, coverFor, start, act, reveal, retarget, restart } = useCaboGame();
+  const { game, coverFor, startPeek, start, act, reveal, ackStartPeek, restart } = useCaboGame();
 
   if (!game) {
     return (
@@ -29,21 +32,14 @@ export const CaboGame: React.FC = () => {
     );
   }
 
-  const handoverPlayers = game.players.map((p) => ({ id: p.id, name: p.name }));
-  const covered = coverFor ? handoverPlayers.find((p) => p.id === coverFor) : undefined;
-  const finished = game.phase === 'round_over' || game.phase === 'game_over';
+  const covered = coverFor ? game.players.find((p) => p.id === coverFor) : undefined;
+  if (covered) {
+    return <HandoverCover player={{ id: covered.id, name: covered.name }} onReveal={reveal} />;
+  }
 
+  const finished = game.phase === 'round_over' || game.phase === 'game_over';
   return (
     <GameLayout maxWidth="md">
-      {covered && (
-        <HandoverCover
-          player={covered}
-          players={handoverPlayers}
-          onReveal={reveal}
-          onRetarget={retarget}
-          onCancel={reveal}
-        />
-      )}
       {finished ? (
         <CaboRoundSummary
           game={game}
@@ -51,7 +47,7 @@ export const CaboGame: React.FC = () => {
           onRestart={restart}
         />
       ) : (
-        <CaboTable game={game} onAct={act} />
+        <CaboTable game={game} startPeek={startPeek} onAct={act} onAckStartPeek={ackStartPeek} />
       )}
     </GameLayout>
   );

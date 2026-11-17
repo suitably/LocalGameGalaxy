@@ -1,50 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { applyAction, createGame, handValue } from './engine';
+import { applyAction, createGame } from './engine';
 import { DECK_SIZE } from './deck';
-import type { Card, CaboResult, CaboState, Rank, Suit } from './types';
-
-const c = (id: number, rank: Rank, suit: Suit | null = 'clubs'): Card => ({ id, rank, suit });
-
-/** Deal order first (players in turn, four cards each), then the discard top, then the draw pile. */
-const deckFrom = (dealOrder: Card[]): Card[] => [...dealOrder].reverse();
-
-/**
- * Ann (p1) holds 5, K♣(13), 9, 3 and Ben (p2) holds 2, K♥(0), A, Q.
- * Discard top is 6. Draw pile in order: 4♣, 7♣, 10♠, J♥.
- */
-const scenario = (targetScore = 100): CaboState =>
-  createGame(['Ann', 'Ben'], {
-    targetScore,
-    deck: deckFrom([
-      c(0, '5'),
-      c(1, 'K', 'clubs'),
-      c(2, '9', 'hearts'),
-      c(3, '3', 'spades'),
-      c(4, '2', 'diamonds'),
-      c(5, 'K', 'hearts'),
-      c(6, 'A', 'spades'),
-      c(7, 'Q', 'clubs'),
-      c(8, '6', 'diamonds'),
-      c(9, '4', 'clubs'),
-      c(10, '7', 'clubs'),
-      c(11, '10', 'spades'),
-      c(12, 'J', 'hearts'),
-    ]),
-  });
-
-function run(state: CaboState, ...actions: Parameters<typeof applyAction>[1][]): CaboState {
-  let current = state;
-  for (const action of actions) {
-    const result = applyAction(current, action);
-    if (!result.ok) throw new Error(`${action.type} failed: ${result.error}`);
-    current = result.state;
-  }
-  return current;
-}
-
-function expectError(result: CaboResult, error: string) {
-  expect(result).toEqual({ ok: false, error });
-}
+import { c, deckFrom, expectError, run, scenario } from './testFixtures';
 
 describe('createGame', () => {
   it('deals four cards each, one discard and the rest in the deck', () => {
@@ -127,8 +84,15 @@ describe('special powers', () => {
     expect(power.phase).toBe('power');
     expect(power.power).toBe('peek_own');
     const seen = run(power, { type: 'power_peek_own', slot: 0 });
+    // The card stays revealed to Ben until he ends the turn.
+    expect(seen.phase).toBe('reveal');
+    expect(seen.revealed).toEqual({ ownerId: 'p2', slot: 0 });
+    expect(seen.currentIndex).toBe(1);
     expect(seen.players[1].memory).toContain(4);
-    expect(seen.currentIndex).toBe(0);
+    expectError(applyAction(seen, { type: 'draw', source: 'deck' }), 'wrong_phase');
+    const done = run(seen, { type: 'end_turn' });
+    expect(done.currentIndex).toBe(0);
+    expect(done.revealed).toBeNull();
   });
 
   it('10 peeks one opponent card and rejects the wrong power', () => {
@@ -145,7 +109,9 @@ describe('special powers', () => {
     );
     expect(state.power).toBe('peek_other');
     expectError(applyAction(state, { type: 'power_peek_own', slot: 0 }), 'no_power');
-    const after = run(state, { type: 'power_peek_other', targetId: 'p2', slot: 2 });
+    const peeked = run(state, { type: 'power_peek_other', targetId: 'p2', slot: 2 });
+    expect(peeked.revealed).toEqual({ ownerId: 'p2', slot: 2 });
+    const after = run(peeked, { type: 'end_turn' });
     expect(after.players[0].memory).toContain(6);
     expect(after.currentIndex).toBe(1);
   });
@@ -209,85 +175,6 @@ describe('special powers', () => {
       applyAction(state, { type: 'power_peek_other', targetId: 'p1', slot: 0 }),
       'invalid_target',
     );
-  });
-});
-
-describe('Cabo and scoring', () => {
-  it('gives the caller a penalty when not strictly lowest, and ends the round after the last turn', () => {
-    const state = run(
-      scenario(),
-      { type: 'call_cabo' },
-      { type: 'draw', source: 'deck' },
-      { type: 'discard_drawn' },
-    );
-    expect(state.phase).toBe('round_over');
-    expect(state.lastRound?.handValues).toEqual([30, 15]);
-    expect(state.lastRound?.callerPenalty).toBe(true);
-    expect(state.lastRound?.roundScores).toEqual([40, 15]);
-    expect(state.players.map((p) => p.totalScore)).toEqual([40, 15]);
-    expect(state.winnerIds).toEqual([]);
-  });
-
-  it('gives no penalty when the caller holds the strictly lowest hand', () => {
-    const state = createGame(['Ann', 'Ben'], {
-      deck: deckFrom([
-        c(0, 'A'),
-        c(1, '2'),
-        c(2, '3'),
-        c(3, '4'),
-        c(4, 'K', 'clubs'),
-        c(5, 'K', 'clubs'),
-        c(6, 'K', 'clubs'),
-        c(7, 'K', 'clubs'),
-        c(8, '6', 'diamonds'),
-        c(9, '4', 'clubs'),
-      ]),
-    });
-    const done = run(
-      state,
-      { type: 'call_cabo' },
-      { type: 'draw', source: 'deck' },
-      { type: 'discard_drawn' },
-    );
-    expect(done.lastRound?.handValues).toEqual([10, 52]);
-    expect(done.lastRound?.callerPenalty).toBe(false);
-    expect(done.players[0].totalScore).toBe(10);
-  });
-
-  it('ends the game when a total reaches the target, and the lowest total wins', () => {
-    const state = run(
-      scenario(40),
-      { type: 'call_cabo' },
-      { type: 'draw', source: 'deck' },
-      { type: 'discard_drawn' },
-    );
-    expect(state.phase).toBe('game_over');
-    expect(state.winnerIds).toEqual(['p2']);
-  });
-
-  it('starts a new round with totals kept and the next first player', () => {
-    const over = run(
-      scenario(),
-      { type: 'call_cabo' },
-      { type: 'draw', source: 'deck' },
-      { type: 'discard_drawn' },
-    );
-    const next = run(over, { type: 'next_round' });
-    expect(next.roundNumber).toBe(2);
-    expect(next.currentIndex).toBe(1);
-    expect(next.phase).toBe('turn');
-    expect(next.players.map((p) => p.totalScore)).toEqual([40, 15]);
-    expect(next.players.map((p) => p.hand.length)).toEqual([4, 4]);
-    expect(next.callerId).toBeNull();
-  });
-
-  it('allows only one Cabo call per round', () => {
-    const state = run(scenario(), { type: 'call_cabo' });
-    expectError(applyAction(state, { type: 'call_cabo' }), 'cabo_already_called');
-  });
-
-  it('computes hand values through handValue', () => {
-    expect(handValue([c(0, 'K', 'hearts'), c(1, '10'), c(2, 'J'), c(3, 'A')])).toBe(22);
   });
 });
 

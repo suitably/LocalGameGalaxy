@@ -189,7 +189,8 @@ for (const filePath of allFiles) {
         // from '../../<otherGame>/...'
         // from 'src/games/<otherGame>/...'
         // from '@/games/<otherGame>/...'
-        const crossGamePattern = new RegExp(`from\\s+['"][^'"]*\\b${otherGame}\\b[^'"]*['"]`);
+        // The game name must be a whole path segment, so `modules/playing-cards` is not `cards`.
+        const crossGamePattern = new RegExp(`from\\s+['"](?:[^'"]*/)?${otherGame}(?:/[^'"]*)?['"]`);
         if (crossGamePattern.test(line)) {
           violations.crossGameImports.push({
             file: relativePath,

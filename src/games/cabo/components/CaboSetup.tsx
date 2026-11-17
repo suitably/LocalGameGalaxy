@@ -1,13 +1,15 @@
 /**
  * Player names and the start button, using the shared player roster [ID: UI-CABO-SETUP]
  */
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Button,
+  FormControlLabel,
   Stack,
+  Switch,
   Typography,
 } from '@mui/material';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
@@ -15,15 +17,17 @@ import { useTranslation } from 'react-i18next';
 import { STORAGE_KEYS } from '../../../lib/storage';
 import { PlayerManagerCard, useLobbyPlayers } from '../../../modules/player-management';
 import { MAX_PLAYERS, MIN_PLAYERS } from '../logic/engine';
+import type { CaboStartOptions } from '../hooks/useCaboGame';
 
 interface CaboSetupProps {
-  onStart: (playerNames: string[]) => void;
+  onStart: (playerNames: string[], options: CaboStartOptions) => void;
 }
 
-const RULE_KEYS = ['draw', 'powers', 'cabo', 'scoring'] as const;
+const RULE_KEYS = ['peek', 'draw', 'powers', 'cabo', 'scoring', 'variants'] as const;
 
 export const CaboSetup: React.FC<CaboSetupProps> = ({ onStart }) => {
   const { t } = useTranslation();
+  const [memoryAid, setMemoryAid] = useState(false);
   const { players, addPlayer, removePlayer, hasMinPlayers } = useLobbyPlayers({
     storageKey: STORAGE_KEYS.CABO_LOBBY_PLAYERS,
     defaultPlayers: [
@@ -62,11 +66,24 @@ export const CaboSetup: React.FC<CaboSetupProps> = ({ onStart }) => {
         </AccordionDetails>
       </Accordion>
 
+      <FormControlLabel
+        control={<Switch checked={memoryAid} onChange={(e) => setMemoryAid(e.target.checked)} />}
+        label={t('games.cabo.setup.memory_aid')}
+      />
+      <Typography variant="body2" color="text.secondary" sx={{ mt: -1 }}>
+        {t('games.cabo.setup.memory_aid_hint')}
+      </Typography>
+
       <Button
         variant="contained"
         size="large"
         disabled={!hasMinPlayers}
-        onClick={() => onStart(players.map((p) => p.name))}
+        onClick={() =>
+          onStart(
+            players.map((p) => p.name),
+            { memoryAid },
+          )
+        }
       >
         {t('games.cabo.setup.start')}
       </Button>

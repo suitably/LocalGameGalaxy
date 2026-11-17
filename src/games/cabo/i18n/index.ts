@@ -11,24 +11,30 @@ const de = {
     players: 'Mitspieler',
     start: 'Partie starten',
     default_player: 'Spieler {{n}}',
+    memory_aid: 'Gedächtnishilfe',
+    memory_aid_hint:
+      'Gesehene Karten bleiben für dich offen liegen. Leichter, aber ohne das Merken, um das es bei Cabo eigentlich geht.',
   },
   rules: {
     title: 'Regeln in Kürze',
+    peek: 'Zu Beginn jeder Runde schaust du dir einmal deine beiden unteren Karten an und merkst sie dir. Danach liegen alle Karten verdeckt.',
     draw: 'Ziehe eine Karte vom Stapel oder nimm die oberste Karte der Ablage. Dann tauschst du sie gegen eine deiner Karten oder legst sie ab. Statt zu ziehen kannst du Cabo rufen.',
     powers:
       'Ablegen einer 7 oder 8: eine eigene Karte ansehen. 9 oder 10: eine Karte eines Mitspielers ansehen. J oder Q: eine eigene und eine fremde Karte blind tauschen. Die Kraft ist optional und gilt nur für direkt vom Stapel abgelegte Karten.',
     cabo: 'Wer Cabo ruft, beendet die Runde: Alle anderen spielen noch einen letzten Zug. Hat der Rufer nicht die niedrigste Hand, bekommt er 10 Strafpunkte.',
     scoring:
-      'Punkte: A=1, 2–10 Augenzahl, J=11, Q=12, schwarzer König=13, roter König und Joker=0. Die Partie endet, wenn ein Spieler 100 Punkte erreicht. Am wenigsten Punkte gewinnt.',
+      'Punkte: A=1, 2–10 Augenzahl, J=11, Q=12, schwarzer König=13, roter König und Joker=0. Wer genau 100 Punkte erreicht, fällt auf 50 zurück. Die Partie endet, sobald jemand über 100 liegt. Am wenigsten Punkte gewinnt.',
+    variants: 'Nicht enthalten: Ablegen außer der Reihe („Snap“).',
   },
   card: {
-    face_down: 'Verdeckte Karte',
-    joker: 'Joker',
+    slot: 'Karte {{n}} von {{name}}',
+    own_slot: 'Deine Karte {{n}}',
   },
   table: {
     turn_of: 'Am Zug: {{name}}',
     cabo_called: 'Cabo gerufen von {{name}} – letzte Runde!',
     total: 'Punkte: {{score}}',
+    cabo_chip: 'Cabo',
     draw_pile: 'Stapel ({{count}})',
     discard_pile: 'Ablage',
     drawn: 'Gezogen',
@@ -36,6 +42,8 @@ const de = {
   },
   hint: {
     turn: 'Ziehe eine Karte oder rufe Cabo.',
+    start_peek: 'Merk dir deine beiden unteren Karten – danach werden sie wieder verdeckt.',
+    reveal: 'Merk dir die Karte. Danach endet dein Zug.',
     must_swap: 'Diese Karte kam von der Ablage – du musst sie gegen eine eigene Karte tauschen.',
     swap_or_discard: 'Tippe eine eigene Karte an, um sie zu tauschen, oder lege die Karte ab.',
     power: {
@@ -52,6 +60,8 @@ const de = {
     call_cabo: 'Cabo rufen',
     discard: 'Ablegen',
     skip_power: 'Kraft verzichten',
+    got_it: 'Gemerkt',
+    end_turn: 'Fertig – Zug beenden',
     next_round: 'Nächste Runde',
     restart: 'Neue Partie',
   },
@@ -61,6 +71,7 @@ const de = {
     winner: '{{names}} gewinnt!',
     caller_penalty: 'Cabo-Strafe: Der Rufer hatte nicht die niedrigste Hand (+10).',
     caller_ok: 'Cabo war erfolgreich: keine Strafe für den Rufer.',
+    reset_to_half: '{{names}}: genau 100 Punkte – zurück auf 50!',
     player: 'Spieler',
     hand: 'Hand',
     round: 'Runde',
@@ -76,24 +87,30 @@ const en: typeof de = {
     players: 'Players',
     start: 'Start game',
     default_player: 'Player {{n}}',
+    memory_aid: 'Memory aid',
+    memory_aid_hint:
+      'Cards you have seen stay face up for you. Easier, but it removes the remembering that Cabo is about.',
   },
   rules: {
     title: 'Rules in brief',
+    peek: 'At the start of every round you look at your two bottom cards once and memorise them. After that, all cards lie face down.',
     draw: 'Draw a card from the deck or take the top card of the discard pile. Then swap it with one of your cards or discard it. Instead of drawing you may call Cabo.',
     powers:
       'Discarding a 7 or 8: look at one of your own cards. 9 or 10: look at one card of another player. J or Q: blind-swap one of your cards with one of another player’s without looking. Powers are optional and only apply to cards discarded straight from the deck.',
     cabo: 'Whoever calls Cabo ends the round: every other player gets one last turn. If the caller does not hold the lowest hand, they get 10 penalty points.',
     scoring:
-      'Points: A=1, 2–10 face value, J=11, Q=12, black king=13, red king and joker=0. The game ends when a player reaches 100 points. Lowest total wins.',
+      'Points: A=1, 2–10 face value, J=11, Q=12, black king=13, red king and joker=0. A total of exactly 100 falls back to 50. The game ends once someone is above 100. Lowest total wins.',
+    variants: 'Not included: discarding out of turn ("snap").',
   },
   card: {
-    face_down: 'Face-down card',
-    joker: 'Joker',
+    slot: 'Card {{n}} of {{name}}',
+    own_slot: 'Your card {{n}}',
   },
   table: {
     turn_of: 'Turn: {{name}}',
     cabo_called: 'Cabo called by {{name}} – last round!',
     total: 'Score: {{score}}',
+    cabo_chip: 'Cabo',
     draw_pile: 'Deck ({{count}})',
     discard_pile: 'Discard',
     drawn: 'Drawn',
@@ -101,6 +118,8 @@ const en: typeof de = {
   },
   hint: {
     turn: 'Draw a card or call Cabo.',
+    start_peek: 'Memorise your two bottom cards – they will be turned face down again.',
+    reveal: 'Memorise the card. Your turn ends after this.',
     must_swap: 'This card came from the discard pile – you must swap it with one of your cards.',
     swap_or_discard: 'Tap one of your cards to swap it, or discard the card.',
     power: {
@@ -117,6 +136,8 @@ const en: typeof de = {
     call_cabo: 'Call Cabo',
     discard: 'Discard',
     skip_power: 'Skip power',
+    got_it: 'Got it',
+    end_turn: 'Done – end turn',
     next_round: 'Next round',
     restart: 'New game',
   },
@@ -126,6 +147,7 @@ const en: typeof de = {
     winner: '{{names}} wins!',
     caller_penalty: 'Cabo penalty: the caller did not hold the lowest hand (+10).',
     caller_ok: 'Cabo succeeded: no penalty for the caller.',
+    reset_to_half: '{{names}}: exactly 100 points – back to 50!',
     player: 'Player',
     hand: 'Hand',
     round: 'Round',

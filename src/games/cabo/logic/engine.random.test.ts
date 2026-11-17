@@ -52,6 +52,9 @@ describe('random play', () => {
               };
             break;
           }
+          case 'reveal':
+            action = { type: 'end_turn' };
+            break;
           case 'round_over':
             action = { type: 'next_round' };
             break;

@@ -5,18 +5,8 @@
  * (`memory`, by card id). The UI shows a card face up only when its id is in the viewer's memory.
  */
 
-export type Suit = 'hearts' | 'diamonds' | 'clubs' | 'spades';
-
-/** `JOKER` cards have no suit. */
-export type Rank =
-  'A' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '10' | 'J' | 'Q' | 'K' | 'JOKER';
-
-export interface Card {
-  /** Unique within one game (0..53), stable while the card moves between piles. */
-  id: number;
-  rank: Rank;
-  suit: Suit | null;
-}
+export type { Card, Rank, Suit } from '../../../modules/playing-cards';
+import type { Card } from '../../../modules/playing-cards';
 
 /** Special power of a discarded card. Only powers of cards discarded straight from the deck count. */
 export type Power = 'peek_own' | 'peek_other' | 'blind_swap';
@@ -39,6 +29,8 @@ export type CaboPhase =
   | 'drawn'
   /** Current player discarded a power card and may use or skip the power. */
   | 'power'
+  /** A peeked card is shown to the current player until they end the turn (`end_turn`). */
+  | 'reveal'
   | 'round_over'
   | 'game_over';
 
@@ -54,6 +46,8 @@ export interface RoundResult {
   handValues: number[];
   callerId: string | null;
   callerPenalty: boolean;
+  /** Players whose total hit exactly the target and was reset to half of it. */
+  resetIds: string[];
 }
 
 export interface CaboState {
@@ -76,6 +70,10 @@ export interface CaboState {
   lastRound: RoundResult | null;
   /** Players with the lowest total when the game ended. */
   winnerIds: string[];
+  /** Card shown to the current player during `reveal` (7/8 or 9/10 power). */
+  revealed: { ownerId: string; slot: number } | null;
+  /** House option: cards a player has seen stay face up for them (easier, less memory). */
+  memoryAid: boolean;
 }
 
 export type CaboAction =
@@ -87,6 +85,7 @@ export type CaboAction =
   | { type: 'power_peek_other'; targetId: string; slot: number }
   | { type: 'power_blind_swap'; slot: number; targetId: string; targetSlot: number }
   | { type: 'skip_power' }
+  | { type: 'end_turn' }
   | { type: 'next_round' };
 
 export type CaboErrorCode =

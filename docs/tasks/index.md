@@ -12,3 +12,4 @@ Agent-ready specs for **open** work. Each mirrors a GitHub issue in `suitably/Lo
 | [Tabletop hidden space: move, resize, visibility](ISSUE-539-tabletop-hidden-space.md)                                         | #539  | open (waiting on §3 decisions)                                                   |
 | [Eliminate `any` in Melodiq](ISSUE-SOLID-13-eliminate-typescript-any-types-in-melodiq.md)                                     | —     | open (see [warning budget](../tech/coding-conventions.md#eslint-warning-budget)) |
 | [Eliminate `any` in shared connection/party](ISSUE-SOLID-14-eliminate-typescript-any-types-in-shared-connection-and-party.md) | —     | open                                                                             |
+| [Classic card games: Golf, Mau-Mau, Schwarzer Peter](CARD-CLASSICS.md)                                                        | —     | done on branch `ccr-9f24cfd2-mxv95b` (PR #784)                                   |
