@@ -2,6 +2,7 @@
 
 Dated snapshots, audits and evaluations. Not maintained after writing (only corrections are added as notes). Living docs link here for evidence. Name files `YYYY-MM-DD-topic.md`, newest first.
 
+- [2026-11-18 tabletop player areas plan](2026-11-18-tabletop-player-areas-plan.md) — hands, hidden zones and the other-players strip in scripted card games vs. the free table, how other apps do it on phones, one `PlayerAreaView` model with per-player show/hide, slice plan, open decisions, notes on three Workshop mods.
 - [2026-11-16 UI/UX audit](2026-11-16-ui-ux-audit.md) — second top bars, own back buttons, settings containers, missing confirmations, icon-button labels, i18n literals and safe areas across all games; Melodiq Notes settings pilot; PR sequence and open decisions.
 - [2026-11-08 TTS compatibility plan](2026-11-08-tts-compatibility-plan.md) — tiers of "a Workshop game runs", the compatibility harness, nine decisions taken (ADR-0005, Cloudflare Worker for Steam, per-device asset cache, no publishing of imports, DOM renderer, wasmoon) and 13 slices with acceptance criteria.
 - [2026-11-08 Melodiq Notes and Spieltisch analysis](2026-11-08-melodiq-notes-and-tabletop-analysis.md) — multi-agent audit of Melodiq Notes (engine, mic, parser, dead code) and the Spieltisch (sync authorization, performance, publishing, TTS import bugs found in Catan/Elfenland exports) plus research on running Workshop Lua scripts in the browser; staged macros → JS plugin → Lua VM recommendation.
