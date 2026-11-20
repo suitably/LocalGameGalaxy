@@ -104,7 +104,7 @@ A cast TV (Presentation API) runs in its own storage partition and only gets JSO
 
 | Source                                                               | Games                                                                                                                |
 | -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Per-game bundle `src/games/<id>/i18n/index.ts` (`addResourceBundle`) | cabo, cards, golf, kniffel, knister, maumau, melodiq, qwixx, schwarzer-peter, sudoku, wordle                         |
+| Per-game bundle `src/games/<id>/i18n/index.ts` (`addResourceBundle`) | cabo, cards, golf, kniffel, knister, maumau, melodiq, qwixx, schwarzer-peter                                         |
 | `public/locales/{de,en}/translation.json`                            | darts, drawpot, guessart, storyteller, melodiq-notes, werewolf, imposter, tabletop, garticphone, party, hub/settings |
 
 Details: [i18n-strategy.md](i18n-strategy.md).

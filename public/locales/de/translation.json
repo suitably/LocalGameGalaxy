@@ -2464,6 +2464,20 @@
       "empty": "Noch keine Tagesrätsel gespielt.",
       "target_word": "Gesuchtes Wort:",
       "btn_tooltip": "Verlauf"
+    },
+    "not_in_dictionary": "Nicht im Wörterbuch!",
+    "settings": {
+      "dictionary_only": "Nur Wörterbuch-Wörter",
+      "dictionary_only_hint": "Tipps müssen ein bekanntes Wort sein. Ungültige Wörter kosten keinen Versuch."
+    },
+    "key_enter": "Eingabe",
+    "key_delete": "Löschen",
+    "letter_state": {
+      "correct": "richtige Stelle",
+      "present": "andere Stelle",
+      "absent": "nicht im Wort",
+      "tbd": "Eingabe",
+      "empty": "leer"
     }
   },
   "sudoku": {

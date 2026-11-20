@@ -2464,6 +2464,20 @@
       "empty": "No daily challenges played yet.",
       "target_word": "Target Word:",
       "btn_tooltip": "History"
+    },
+    "not_in_dictionary": "Not in word list!",
+    "settings": {
+      "dictionary_only": "Only dictionary words",
+      "dictionary_only_hint": "Guesses must be a known word. Invalid words do not use up an attempt."
+    },
+    "key_enter": "Enter",
+    "key_delete": "Delete",
+    "letter_state": {
+      "correct": "correct spot",
+      "present": "wrong spot",
+      "absent": "not in word",
+      "tbd": "typed",
+      "empty": "empty"
     }
   },
   "sudoku": {

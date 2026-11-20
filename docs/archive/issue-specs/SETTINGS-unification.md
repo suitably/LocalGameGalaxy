@@ -3,7 +3,7 @@ type: Task
 title: 'Settings unification: app settings vs. game settings (one PR)'
 description: 'Implementation spec for the settings unification plan: typed settings routes, shared settings UI kit, registry-driven game settings, master–detail settings page, in-game settings sheet, Melodiq/Melodiq Notes/Wordle/Darts migration.'
 tags: [settings, ux, navigation, melodiq, melodiq-notes, wordle, darts]
-status: stable
+status: deprecated
 generated:
   at: 2026-10-26T14:00:00+01:00
   by: claude-code
@@ -16,7 +16,7 @@ sources:
 
 # Settings unification (one PR)
 
-Background, target model and maintainer decisions D1–D6: [plan report](../reports/2026-10-26-settings-unification-plan.md). This spec fixes the concrete contracts. Branch `claude/settings-struktur-plan-ougni3`. Rules: AGENTS.md §4 (no cross-game imports, storage via `src/lib/storage.ts`, no native dialogs, new `.tsx` ≤ 250 lines, no `any`, i18n `de` + `en`, theme tokens only).
+Background, target model and maintainer decisions D1–D6: [plan report](../../reports/2026-10-26-settings-unification-plan.md). This spec fixes the concrete contracts. Branch `claude/settings-struktur-plan-ougni3`. Rules: AGENTS.md §4 (no cross-game imports, storage via `src/lib/storage.ts`, no native dialogs, new `.tsx` ≤ 250 lines, no `any`, i18n `de` + `en`, theme tokens only).
 
 ## Contracts
 

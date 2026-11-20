@@ -4,15 +4,10 @@ Living list. Each item: what is unclear or broken, the evidence, what would reso
 
 Found by the [2026-10-18 docs-vs-code audit](reports/2026-10-18-docs-vs-code-audit.md) unless noted.
 
-## Q22 — Tabletop p95 frame time at 800 widgets above 16 ms under emulation [user]
+## Resolved 2026-11-20
 
-TTS plan D5: optimise the DOM renderer, measure at 800 widgets, and consider a Canvas renderer only if p95 stays above 16 ms. After #684 (`npm run perf:tabletop`, headless Chromium in a 4-vCPU cloud container): a token drag reaches p95 16.7 ms unthrottled (`main`: 100–150 ms), but 50–67 ms at 4× CPU throttling (`main`: 580–750 ms); panning stays at 16.8 ms. The acceptance criterion names a real mid-range phone, and the 4× emulation is only an approximation of one.
-Resolve: measure on a real mid-range phone (manual). If p95 stays above 16 ms there, the maintainer decides between further DOM work (remaining cost: re-rendering the whole table tree on each 50 ms commit, layout of ~5,500 layout objects per commit, layerization) and the Canvas renderer of D5.
-
-## Q23 — Wordle's `i18n` bundle is never registered
-
-`src/games/wordle/i18n/index.ts` exports a flat-key `wordleTranslations` that nothing imports (only `src/games/wordle/index.ts` re-exports it); live Wordle strings come from the top-level `wordle` section of `public/locales`. Same situation Sudoku had before 2026-11-16, where the dead bundle was deleted. [i18n-strategy](tech/i18n-strategy.md) no longer lists Wordle as a bundle game.
-Resolve: check that every bundle key exists in `public/locales`, then delete the bundle like Sudoku's, or register it via an `initWordleI18n()` like Kniffel and remove the duplicates from the locale files.
+- Q23 Wordle's unregistered `i18n` bundle → maintainer decision (2026-11-20): deleted, like Sudoku's. `src/games/wordle/i18n/index.ts` and its re-export are gone; ten keys the code calls via `t()` but `public/locales` lacked (`not_in_dictionary`, `settings.dictionary_only` and `_hint`, `key_enter`, `key_delete`, `letter_state.*`) were added to both locale files (before, they fell back to the inline defaults or showed the key). [i18n-strategy](tech/i18n-strategy.md)
+- Q22 tabletop drag p95 at 800 widgets → maintainer measured it on a real mid-range phone (2026-11-20) and found it fast enough (p95 at or below 16 ms; exact figure not recorded). The DOM renderer stays; the Canvas renderer of TTS plan D5 is not needed. [tabletop-engine, Performance](tech/tabletop-engine.md#performance-684)
 
 ## Resolved 2026-11-17
 

@@ -1,15 +1,10 @@
 # Tasks
 
-Agent-ready specs for **open** work. Each mirrors a GitHub issue in `suitably/LocalGameGalaxy`. When the issue closes, move the spec to [archive/](../archive/index.md) and update this list. Status checked 2026-10-21 on `main`; #361 closed and SOLID-17 archived as duplicate of #359 that day.
+Agent-ready specs for **open** work. Each mirrors a GitHub issue in `suitably/LocalGameGalaxy`. When the issue closes, move the spec to [archive/](../archive/index.md) and update this list. Status checked 2026-11-20 on `main` (issue state via the GitHub API).
 
-| Spec                                                                                                                          | Issue | State on PR #384 branch                                                          |
-| ----------------------------------------------------------------------------------------------------------------------------- | ----- | -------------------------------------------------------------------------------- |
-| [Settings unification: app vs. game settings](SETTINGS-unification.md)                                                        | —     | done on branch `claude/settings-struktur-plan-ougni3`                            |
-| [Melodiq RemoteHostSettingsModal + typed WebRTC RPC](ISSUE-356-melodiq-remote-host-settings.md)                               | #356  | open                                                                             |
-| [Decompose PartyLobby](ISSUE-359-decompose-party-lobby.md)                                                                    | #359  | done (`PartyLobby.tsx` 96 lines, sections in `components/`)                      |
-| [Cards score views dedup](ISSUE-360-cards-views-dedup.md)                                                                     | #360  | open                                                                             |
-| [One lobby for all multiplayer games](ISSUE-647-one-lobby.md)                                                                 | #647  | done in code (S11 out of scope; device checks pending)                           |
-| [Tabletop hidden space: move, resize, visibility](ISSUE-539-tabletop-hidden-space.md)                                         | #539  | open (waiting on §3 decisions)                                                   |
-| [Eliminate `any` in Melodiq](ISSUE-SOLID-13-eliminate-typescript-any-types-in-melodiq.md)                                     | —     | open (see [warning budget](../tech/coding-conventions.md#eslint-warning-budget)) |
-| [Eliminate `any` in shared connection/party](ISSUE-SOLID-14-eliminate-typescript-any-types-in-shared-connection-and-party.md) | —     | open                                                                             |
-| [Classic card games: Golf, Mau-Mau, Schwarzer Peter](CARD-CLASSICS.md)                                                        | —     | done on branch `ccr-9f24cfd2-mxv95b` (PR #784)                                   |
+| Spec                                                                                      | Issue | State on `main`                                                                  |
+| ----------------------------------------------------------------------------------------- | ----- | -------------------------------------------------------------------------------- |
+| [Eliminate `any` in Melodiq](ISSUE-SOLID-13-eliminate-typescript-any-types-in-melodiq.md) | —     | open (see [warning budget](../tech/coding-conventions.md#eslint-warning-budget)) |
+| [Classic card games: Cabo, Golf, Mau-Mau, Schwarzer Peter](CARD-CLASSICS.md)              | —     | done (PR #784)                                                                   |
+
+Archived 2026-11-20 (issue closed or work verified in code): #356, #359, #360, #539, #647, the settings unification and SOLID-14, all in [archive](../archive/index.md).
