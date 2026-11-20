@@ -5,6 +5,8 @@ import type { Song, SongMeta } from '../db';
 import { TvMediaSender, withAbsoluteMediaUrls } from '../logic/tvMediaTransfer';
 import type { PresentationConnection } from './presentationTypes';
 import { loadTvSettings } from './settingsStorage';
+import { useMultiChannelSync } from '../../../modules/sync';
+import { TV_CONTROL_SYNC, type TvControlMessage } from '../logic/syncChannels';
 
 export interface TVEvent {
   type: string;
@@ -47,7 +49,6 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
   }, []);
 
   // Transports
-  const channelRef = useRef<BroadcastChannel | null>(null);
   const presentationConnectionRef = useRef<PresentationConnection | null>(null);
   const mediaSenderRef = useRef(new TvMediaSender());
   const tvWindowRef = useRef<Window | null>(null);
@@ -85,24 +86,17 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
     [sendSessionInfo],
   );
 
-  // Setup Broadcast Channel (Local Window)
+  // Broadcast channel to a TV window on this device (shared sync hook, no self-echo)
+  const { publish: publishLocal } = useMultiChannelSync<TvControlMessage>({
+    ...TV_CONTROL_SYNC,
+    selfEcho: false,
+    onMessage: ({ type, payload }) => handleMessage(type, payload),
+  });
+
+  // Check if a TV window is already open (ping)
   useEffect(() => {
-    const channel = new BroadcastChannel('melodiq_tv_control');
-    channelRef.current = channel;
-
-    channel.onmessage = (event) => {
-      const { type, payload } = event.data;
-      handleMessage(type, payload);
-    };
-
-    // Check if already open (ping)
-    channel.postMessage({ type: 'PING' });
-
-    return () => {
-      channel.close();
-      channelRef.current = null;
-    };
-  }, [handleMessage]);
+    publishLocal({ type: 'PING' });
+  }, [publishLocal]);
 
   // Check Presentation Availability
   useEffect(() => {
@@ -143,26 +137,27 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
   }, []);
 
   // Unified Sender
-  const sendMessage = useCallback((type: string, payload?: any) => {
-    const msg = { type, payload };
+  const sendMessage = useCallback(
+    (type: string, payload?: any) => {
+      const msg = { type, payload };
 
-    // Send via BroadcastChannel
-    if (channelRef.current) {
-      channelRef.current.postMessage(msg);
-    }
+      // Send via the local broadcast channel
+      publishLocal(msg);
 
-    // Send via PresentationConnection
-    if (
-      presentationConnectionRef.current &&
-      presentationConnectionRef.current.state === 'connected'
-    ) {
-      try {
-        presentationConnectionRef.current.send(JSON.stringify(msg));
-      } catch (e) {
-        console.error('Failed to send to PresentationConnection:', e);
+      // Send via PresentationConnection
+      if (
+        presentationConnectionRef.current &&
+        presentationConnectionRef.current.state === 'connected'
+      ) {
+        try {
+          presentationConnectionRef.current.send(JSON.stringify(msg));
+        } catch (e) {
+          console.error('Failed to send to PresentationConnection:', e);
+        }
       }
-    }
-  }, []);
+    },
+    [publishLocal],
+  );
 
   useEffect(() => {
     sendMessageRef.current = sendMessage;
