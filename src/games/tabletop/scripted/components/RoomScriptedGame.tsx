@@ -14,7 +14,6 @@ import { useFollowPartyLobby } from '../../../../features/party/hooks/useFollowP
 import { usePartyLobbyReturn } from '../../hooks/usePartyLobbyReturn';
 import { newSeed } from '../../logic/rng';
 import { getScript } from '../logic/scriptRegistry';
-import { moveAllowed, sessionView } from '../logic/session';
 import { useRoomSession } from '../hooks/useRoomSession';
 import { useScriptedHeader } from '../hooks/useScriptedHeader';
 import { CardTable } from './CardTable';
@@ -30,8 +29,9 @@ export const RoomScriptedGame: React.FC<{ scriptId: string; roomId: string }> = 
   useWakeLock(true);
   useFollowPartyLobby(roomId);
   const { returnToLobby } = usePartyLobbyReturn(roomId);
-  const { room, state, dispatch, synced, seat } = useRoomSession(scriptId, roomId);
-  const running = state.game !== null;
+  const { room, packet, dispatch, synced, seat, allowed } = useRoomSession(scriptId, roomId);
+  const view = packet?.view ?? null;
+  const running = view !== null;
   const rules = useScriptedHeader({
     scriptId,
     // Guests visit the lobby while the game goes on; the host ends it for everyone.
@@ -48,8 +48,7 @@ export const RoomScriptedGame: React.FC<{ scriptId: string; roomId: string }> = 
       </Stack>
     );
   }
-  const view = sessionView(state, seat);
-  if (!view) {
+  if (!view || !packet) {
     return (
       <>
         {rules}
@@ -67,10 +66,10 @@ export const RoomScriptedGame: React.FC<{ scriptId: string; roomId: string }> = 
   const table = (
     <CardTable
       view={view}
-      names={state.players.map((p) => p.name)}
+      names={packet.players.map((p) => p.name)}
       viewer={seat}
-      step={state.step}
-      allowed={(move) => moveAllowed(state, actor, move)}
+      step={packet.step}
+      allowed={allowed}
       onMove={(move) => dispatch({ type: 'MOVE', seat: actor, move })}
       tableHint={t('games.tabletop.scripted.tableHint')}
     />
