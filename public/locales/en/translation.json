@@ -971,6 +971,10 @@
       "title": "Card Games",
       "description": "Digital companion for tabletop card games: Life tracking (Schwimmen) and trick predictor (Oh Hell)."
     },
+    "cabo": {
+      "title": "Cabo",
+      "description": "Card game for 2–6 players on one device: swap cards, use special powers and end the round with “Cabo”."
+    },
     "tabletop": {
       "title": "Game Table",
       "description": "Card, board and dice games: one device passed around or everyone on their own phone, with hidden hands.",
@@ -1531,6 +1535,18 @@
     "drawpot": {
       "title": "Draw Pot",
       "description": "Draw names, teams or secret santa partners via a shared link"
+    },
+    "golf": {
+      "title": "Golf",
+      "description": "Classic card game for 2–6 players: six cards in a grid, pairs in a column score zero. Nine holes, lowest score wins."
+    },
+    "maumau": {
+      "title": "Mau-Mau",
+      "description": "The German classic with a 32-card deck for 2–5 players on one device: match suit or rank, 7 draws two, 8 skips, jack wishes a suit."
+    },
+    "schwarzer-peter": {
+      "title": "Old Maid",
+      "description": "Collect pairs and draw cards from each other – whoever holds the black jack at the end loses. For 2–6 players on one device."
     }
   },
   "lobby": {
@@ -2763,5 +2779,9 @@
       "add_one": "Add {{count}} group",
       "add_other": "Add {{count}} groups"
     }
+  },
+  "playingCards": {
+    "faceDown": "Face-down card",
+    "joker": "Joker"
   }
 }

@@ -971,6 +971,10 @@
       "title": "Kartenspiele",
       "description": "Digitale Punkte-, Lebens- (Schwimmen) und Stichverwaltung (Oh Hell) für Kartenspiele am Tisch."
     },
+    "cabo": {
+      "title": "Cabo",
+      "description": "Kartenspiel für 2–6 Spieler an einem Gerät: Karten tauschen, Sonderkräfte nutzen und mit „Cabo“ die Runde beenden."
+    },
     "tabletop": {
       "title": "Spieltisch",
       "description": "Karten-, Brett- und Würfelspiele: ein Gerät reihum oder jeder am eigenen Handy, mit verdeckten Handkarten.",
@@ -1531,6 +1535,18 @@
     "drawpot": {
       "title": "Lostopf",
       "description": "Namen, Teams oder Wichtelpartner per Link auslosen"
+    },
+    "golf": {
+      "title": "Golf",
+      "description": "Kartenklassiker für 2–6 Spieler: sechs Karten im Raster, Paare in einer Spalte zählen null. Neun Löcher, wenigste Punkte gewinnt."
+    },
+    "maumau": {
+      "title": "Mau-Mau",
+      "description": "Der deutsche Klassiker mit Skatblatt für 2–5 Spieler an einem Gerät: Farbe oder Wert bedienen, 7 zieht zwei, 8 setzt aus, Bube wünscht."
+    },
+    "schwarzer-peter": {
+      "title": "Schwarzer Peter",
+      "description": "Paare sammeln und reihum Karten ziehen – wer am Ende den Schwarzen Peter hält, verliert. Für 2–6 Spieler an einem Gerät."
     }
   },
   "lobby": {
@@ -2763,5 +2779,9 @@
       "add_one": "{{count}} Gruppe hinzufügen",
       "add_other": "{{count}} Gruppen hinzufügen"
     }
+  },
+  "playingCards": {
+    "faceDown": "Verdeckte Karte",
+    "joker": "Joker"
   }
 }
