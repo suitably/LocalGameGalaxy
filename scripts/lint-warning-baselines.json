@@ -58,7 +58,7 @@
   "src/games/melodiq/gameplay/ScoreBoardQrCode.test.tsx": 1,
   "src/games/melodiq/gameplay/YouTubeBackgroundPlayer.tsx": 5,
   "src/games/melodiq/hooks/handleHostApiRequest.ts": 3,
-  "src/games/melodiq/hooks/SettingsContext.tsx": 9,
+  "src/games/melodiq/hooks/SettingsContext.tsx": 3,
   "src/games/melodiq/hooks/useDownloadSync.ts": 7,
   "src/games/melodiq/hooks/useHistory.ts": 1,
   "src/games/melodiq/hooks/useLocalLibrary.ts": 3,
