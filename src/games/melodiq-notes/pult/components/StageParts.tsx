@@ -9,10 +9,8 @@
 import React, { useEffect, useMemo } from 'react';
 import {
   Button,
-  Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   List,
   ListItem,
   ListItemText,
@@ -23,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import { InvitePlayersButton } from '../../../../features/party/components/InvitePlayersButton';
 import { usePartyRoomPlayers } from '../../../../features/party/hooks/usePartyRoomPlayers';
 import { universalPartyManager } from '../../../../features/party/logic/universalPartyManager';
+import { NotesDialogFrame } from '../../components/NotesDialogFrame';
 import type { StageEngine } from '../../stage/engine/StageEngine';
 import { pultSongOf } from '../logic/pultSong';
 import { useStageRoom } from '../useStageRoom';
@@ -60,8 +59,12 @@ export const StageParts: React.FC<StagePartsProps> = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle>{k('parts_title', { room: roomId })}</DialogTitle>
+    <NotesDialogFrame
+      open={open}
+      onClose={onClose}
+      maxWidth="xs"
+      title={k('parts_title', { room: roomId })}
+    >
       <DialogContent>
         <Typography variant="body2" color="text.secondary" gutterBottom>
           {k('parts_hint')}
@@ -88,8 +91,7 @@ export const StageParts: React.FC<StagePartsProps> = ({
       <DialogActions sx={{ flexWrap: 'wrap', gap: 1 }}>
         <InvitePlayersButton game="melodiq-notes" />
         <Button onClick={backToParty}>{k('parts_back')}</Button>
-        <Button onClick={onClose}>{t('common.close', 'Schließen')}</Button>
       </DialogActions>
-    </Dialog>
+    </NotesDialogFrame>
   );
 };

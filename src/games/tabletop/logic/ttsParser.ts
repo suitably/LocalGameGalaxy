@@ -4,12 +4,13 @@
  * Converts TTS save file JSON (3D ObjectStates) into the Galaxy
  * TabletopGameDefinition (2D widget-based) format.
  */
-import { attachStates, convertBag, convertFogOfWar, tileShape } from './ttsContainers';
+import { attachStates, convertBag, convertFogOfWar, isTtsBag, tileShape } from './ttsContainers';
 import type {
   TTSSaveFile,
   TTSObjectState,
   TTSCustomDeckEntry,
   TTSSnapPoint,
+  TTSTransform,
   TTSVector3,
 } from './ttsTypes';
 import {
@@ -44,9 +45,16 @@ import { resolveCardSprite, resolveBackSprite } from './ttsSpritesheet';
 
 /** Scale factor: 1 TTS unit ≈ this many pixels */
 const TTS_SCALE = 50;
-/** Default card dimensions in pixels */
-const CARD_W = 135;
-const CARD_H = 190;
+/** A standard TTS card at scale 1 is about 2.2 × 3.1 units. */
+const CARD_W = 110;
+const CARD_H = 155;
+/**
+ * Play surface of the custom rectangle table (`Table_Custom`), centred on the origin; the
+ * `TableURL` image is stretched over it whatever its aspect ratio.
+ */
+const CUSTOM_TABLE = { width: 88, depth: 52 };
+/** Widget id of the board made from the custom table image. */
+export const TTS_TABLE_WIDGET_ID = 'tts_table';
 /** Token/figurine default size */
 const TOKEN_SIZE = 76;
 /** Die default size */
@@ -54,7 +62,10 @@ const DIE_SIZE = 80;
 
 export { HEX_CLIP_PATH, CIRCLE_CLIP_PATH };
 
-export function getCardShapeAndSize(deck?: TTSCustomDeckEntry): {
+export function getCardShapeAndSize(
+  deck?: TTSCustomDeckEntry,
+  transform?: TTSTransform,
+): {
   width: number;
   height: number;
   clipPath?: string;
@@ -67,7 +78,20 @@ export function getCardShapeAndSize(deck?: TTSCustomDeckEntry): {
     // Circle cards
     return { width: 100, height: 100, clipPath: CIRCLE_CLIP_PATH };
   }
-  return { width: CARD_W, height: CARD_H };
+  return {
+    width: Math.round(CARD_W * (transform?.scaleX || 1)),
+    height: Math.round(CARD_H * (transform?.scaleZ || 1)),
+  };
+}
+
+/** The custom table image of a save, when its table shows one. */
+function customTableImage(save: TTSSaveFile): string | undefined {
+  return save.Table === 'Table_Custom' ? sanitizeTtsUrl(save.TableURL) || undefined : undefined;
+}
+
+/** Top-left corner of a widget of the given size centred on a projected object position. */
+function topLeft(pos: { x: number; y: number }, width: number, height: number) {
+  return { x: Math.round(pos.x - width / 2), y: Math.round(pos.y - height / 2) };
 }
 
 // ─── Detection ───────────────────────────────────────────────────────
@@ -107,11 +131,11 @@ interface BoundingBox {
   maxZ: number;
 }
 
-function computeBounds(objects: TTSObjectState[]): BoundingBox {
-  let minX = Infinity,
-    maxX = -Infinity;
-  let minZ = Infinity,
-    maxZ = -Infinity;
+function computeBounds(objects: TTSObjectState[], hasTableImage: boolean): BoundingBox {
+  let minX = hasTableImage ? -CUSTOM_TABLE.width / 2 : Infinity,
+    maxX = hasTableImage ? CUSTOM_TABLE.width / 2 : -Infinity;
+  let minZ = hasTableImage ? -CUSTOM_TABLE.depth / 2 : Infinity,
+    maxZ = hasTableImage ? CUSTOM_TABLE.depth / 2 : -Infinity;
 
   for (const obj of objects) {
     const { posX, posZ } = obj.Transform;
@@ -149,8 +173,9 @@ function projectPosition(
   bounds: BoundingBox,
   margin: number,
 ): { x: number; y: number; zIndex: number } {
+  // TTS looks down on the table with +Z away from the viewer: +Z is up on screen.
   const x = (obj.Transform.posX - bounds.minX) * TTS_SCALE + margin;
-  const y = (obj.Transform.posZ - bounds.minZ) * TTS_SCALE + margin;
+  const y = (bounds.maxZ - obj.Transform.posZ) * TTS_SCALE + margin;
   // posY (height) → zIndex — higher objects are on top
   const zIndex = Math.round(obj.Transform.posY * 100);
   return { x: Math.round(x), y: Math.round(y), zIndex: Math.max(1, zIndex) };
@@ -190,7 +215,7 @@ function projectWorldPos(
   margin: number,
 ): { x: number; y: number } {
   const x = (worldPos.x - bounds.minX) * TTS_SCALE + margin;
-  const y = (worldPos.z - bounds.minZ) * TTS_SCALE + margin;
+  const y = (bounds.maxZ - worldPos.z) * TTS_SCALE + margin;
   return { x: Math.round(x), y: Math.round(y) };
 }
 
@@ -306,15 +331,14 @@ function convertCard(
   const decks = { ...allCustomDecks, ...sanitizeCustomDecks(obj.CustomDeck) };
   const deckIndex = Math.floor(cardId / 100);
   const deckEntry = decks[String(deckIndex)];
-  const shapeInfo = getCardShapeAndSize(deckEntry);
+  const shapeInfo = getCardShapeAndSize(deckEntry, obj.Transform);
 
   const { faceUp, rotation } = cardOrientation(obj.Transform);
 
   return {
     id: claimId(obj.GUID),
     type: 'card',
-    x: pos.x,
-    y: pos.y,
+    ...topLeft(pos, shapeInfo.width, shapeInfo.height),
     width: shapeInfo.width,
     height: shapeInfo.height,
     clipPath: shapeInfo.clipPath,
@@ -356,7 +380,7 @@ function convertDeck(
   }
   const thisDeck =
     (deckIndex ? mergedDecks[deckIndex] : undefined) || Object.values(mergedDecks)[0];
-  const shapeInfo = getCardShapeAndSize(thisDeck);
+  const shapeInfo = getCardShapeAndSize(thisDeck, obj.Transform);
   const cardIds: string[] = [];
 
   // Create cards from ContainedObjects
@@ -381,12 +405,11 @@ function convertDeck(
       const cId = nextId('card');
       const dIndex = Math.floor(dId / 100);
       const cardDeck = mergedDecks[String(dIndex)] || thisDeck;
-      const cardShape = getCardShapeAndSize(cardDeck);
+      const cardShape = getCardShapeAndSize(cardDeck, obj.Transform);
       const card: CardWidget = {
         id: cId,
         type: 'card',
-        x: pos.x,
-        y: pos.y,
+        ...topLeft(pos, cardShape.width, cardShape.height),
         width: cardShape.width,
         height: cardShape.height,
         clipPath: cardShape.clipPath,
@@ -417,8 +440,7 @@ function convertDeck(
   return {
     id: deckId,
     type: 'deck',
-    x: pos.x,
-    y: pos.y,
+    ...topLeft(pos, shapeInfo.width, shapeInfo.height),
     width: shapeInfo.width,
     height: shapeInfo.height,
     clipPath: shapeInfo.clipPath,
@@ -442,8 +464,7 @@ function convertDie(
   return {
     id: obj.GUID,
     type: 'die',
-    x: pos.x,
-    y: pos.y,
+    ...topLeft(pos, DIE_SIZE, DIE_SIZE),
     width: DIE_SIZE,
     height: DIE_SIZE,
     zIndex: pos.zIndex,
@@ -495,24 +516,31 @@ function convertToken(
   const imageUrl = obj.CustomImage?.ImageURL ? sanitizeTtsUrl(obj.CustomImage.ImageURL) : undefined;
   const scale = Math.max(obj.Transform.scaleX || 1, obj.Transform.scaleZ || 1);
   const rawSize = Math.round(TOKEN_SIZE * Math.min(Math.max(scale, 0.85), 3));
-  const size = Math.max(68, rawSize);
-
   const rawName = obj.Name || '';
-  const isGeneric = rawName.startsWith('backgammon') || rawName.startsWith('PiecePack');
+  // A unit cube keeps its real footprint, so markers stacked on a board do not cover each other.
+  const isBlock = rawName === 'BlockSquare';
+  const size = isBlock ? Math.max(24, Math.round(scale * TTS_SCALE)) : Math.max(68, rawSize);
+
+  const isGeneric = isBlock || rawName.startsWith('backgammon') || rawName.startsWith('PiecePack');
   const label = obj.Nickname || (isGeneric ? undefined : rawName);
+  // A flat image piece is upright at rotY 180 (readable from the −Z side of the table).
+  const rotation =
+    rawName === 'Custom_Token' || rawName === 'Custom_Tile'
+      ? cardOrientation(obj.Transform).rotation
+      : 0;
 
   return {
     id: obj.GUID,
     type: 'token',
-    x: pos.x,
-    y: pos.y,
+    ...topLeft(pos, size, size),
     width: size,
     height: size,
     zIndex: pos.zIndex,
     label,
     color: ttsColorToHex(obj.ColorDiffuse),
     image: imageUrl,
-    shape: 'circle',
+    ...(rotation ? { rotation } : {}),
+    shape: isBlock ? 'square' : 'circle',
     movable: !obj.Locked,
     pinned: Boolean(obj.Locked),
   };
@@ -530,6 +558,8 @@ function convertModel(
   return {
     ...convertToken(obj, pos),
     image: diffuse,
+    // The texture is a UV atlas; the usual chip/tile layout has the front face first.
+    ...(diffuse ? { imageFit: 'atlas-front' as const } : {}),
     label: obj.Nickname || undefined,
     ...(obj.Nickname ? {} : { labelKey: 'games.tabletop.labels.model' }),
   };
@@ -579,8 +609,29 @@ export function parseTtsSaveFile(
   resetIdClaims();
 
   const widgets: Record<string, TabletopWidget> = {};
-  const bounds = computeBounds(save.ObjectStates);
+  const tableImage = customTableImage(save);
+  const bounds = computeBounds(save.ObjectStates, Boolean(tableImage));
   const margin = 80;
+  if (tableImage) {
+    const size = {
+      width: CUSTOM_TABLE.width * TTS_SCALE,
+      height: CUSTOM_TABLE.depth * TTS_SCALE,
+    };
+    widgets[TTS_TABLE_WIDGET_ID] = {
+      id: TTS_TABLE_WIDGET_ID,
+      type: 'token',
+      shape: 'rectangle',
+      ...topLeft(projectWorldPos({ x: 0, z: 0 }, bounds, margin), size.width, size.height),
+      ...size,
+      zIndex: 0,
+      label: 'Board',
+      labelKey: 'games.tabletop.labels.board',
+      image: tableImage,
+      imageFit: 'fill',
+      movable: false,
+      pinned: true,
+    };
+  }
 
   // Collect all CustomDeck entries globally
   const globalDecks: Record<string, TTSCustomDeckEntry> = {};
@@ -692,7 +743,7 @@ export function parseTtsSaveFile(
     }
 
     // Bag / Infinite_Bag → BagWidget (finite contents or infinite template)
-    if (name === 'Infinite_Bag' || name === 'Bag') {
+    if (isTtsBag(name)) {
       const bag = convertBag(obj, pos, ttsColorToHex(obj.ColorDiffuse), convertChild, widgets);
       widgets[bag.id] = bag;
       track(obj.GUID, bag.id);
@@ -804,6 +855,8 @@ export function parseTtsSaveFile(
     guidIds,
     seats,
     scale: TTS_SCALE,
+    // Scripts place cards: the corner of a standard card centred on the world position.
+    project: (x, z) => topLeft(projectWorldPos({ x, z }, bounds, margin), CARD_W, CARD_H),
   });
 
   return validateAndSanitizeGame({

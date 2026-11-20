@@ -58,10 +58,10 @@ export const PartyGameSelection: React.FC<{ lobby: PartyLobbyController }> = ({ 
             <Box>
               <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
                 <Typography variant="h6" fontWeight={800} color="primary.main">
-                  Spielauswahl
+                  {t('party.gameSelectionTitle', 'Game selection')}
                 </Typography>
                 <Chip
-                  label="Party-Modus"
+                  label={t('party.partyModeChip', 'Party mode')}
                   color="primary"
                   size="small"
                   sx={{ fontWeight: 'bold' }}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { alpha, Box, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import type { CardContent } from '../../logic/types';
 import { StandardSuitCardFace, parseCardText } from './StandardSuitCardFace';
 import { useAssetResolver, type AssetUrlResolver } from '../../hooks/useAssetUrls';
@@ -45,6 +46,7 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
   clipPath,
 }) => {
   const resolve = useAssetResolver();
+  const { t } = useTranslation();
   if (!isFaceUp) {
     if (backContent?.type === 'image' && backContent.value) {
       if (backContent.spriteSheet) {
@@ -54,7 +56,7 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
         <Box
           component="img"
           src={resolve(backContent.value)}
-          alt="Card back"
+          alt={t('games.tabletop.cardBack')}
           draggable={false}
           sx={{
             width: '100%',
@@ -133,7 +135,7 @@ export const PlayingCardFace: React.FC<PlayingCardFaceProps> = ({
       <Box
         component="img"
         src={resolve(frontContent.value)}
-        alt={label || 'Card'}
+        alt={label || t('games.tabletop.cardFront')}
         draggable={false}
         sx={{
           width: '100%',

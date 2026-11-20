@@ -7,6 +7,7 @@
  */
 import type { TabletopAction, TabletopGameState } from './tabletopReducer';
 import type {
+  BagWidget,
   DeckWidget,
   DieWidget,
   RoutineSeatRef,
@@ -81,6 +82,13 @@ export function stepActions(
 ): TabletopAction[] {
   switch (step.op) {
     case 'SHUFFLE': {
+      const bag = widgets[step.deck];
+      if (bag?.type === 'bag') {
+        const itemIds = (bag as BagWidget).itemIds;
+        if (!itemIds?.length) return [];
+        const patches = { [bag.id]: { itemIds: shuffled(itemIds, ctx.rng) } as WidgetPatch };
+        return [{ type: 'PATCH_WIDGETS', payload: { patches } }];
+      }
       const deckId = resolveDeckId(widgets, step.deck);
       if (!deckId) return [];
       const order = shuffled((widgets[deckId] as DeckWidget).cardIds, ctx.rng);
@@ -91,7 +99,11 @@ export function stepActions(
       if (!deckId) return [];
       return times(step.count, () => ({
         type: 'DRAW_CARD' as const,
-        payload: { deckId, targetHolderId: step.to },
+        payload: {
+          deckId,
+          targetHolderId: step.to,
+          ...(step.at ? { position: step.at, faceUp: step.faceUp ?? false } : {}),
+        },
       }));
     }
     case 'DEAL': {
@@ -147,7 +159,12 @@ export function stepActions(
     case 'TAKE_FROM_BAG':
       return times(step.count, () => ({
         type: 'DRAW_FROM_BAG' as const,
-        payload: { bagId: step.bag, targetHolderId: step.to, spawnedId: spawnId(ctx.rng) },
+        payload: {
+          bagId: step.bag,
+          targetHolderId: step.to,
+          spawnedId: spawnId(ctx.rng),
+          ...(step.at ? { position: step.at } : {}),
+        },
       }));
     case 'PLACE_IN_HOLDER':
       return [

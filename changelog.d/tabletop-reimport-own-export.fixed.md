@@ -1,0 +1,1 @@
+- **Tabletop: importing a game exported from the app keeps it intact**: a `.json` written by "Export as .json" was converted like a foreign file on import, which put buttons underneath their pieces and removed their routines. It is now read as it is, so a game can be passed to another phone as a file.

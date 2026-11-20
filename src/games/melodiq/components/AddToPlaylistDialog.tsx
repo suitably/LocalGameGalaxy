@@ -63,13 +63,13 @@ export const AddToPlaylistDialog: React.FC<AddToPlaylistDialogProps> = ({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('cancel') || 'Cancel'}</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
         <Button
           onClick={onConfirm}
           variant="contained"
           disabled={selectedPlaylistId === 'new' && !newPlaylistName.trim()}
         >
-          {t('confirm') || 'Confirm'}
+          {t('common.confirm')}
         </Button>
       </DialogActions>
     </Dialog>

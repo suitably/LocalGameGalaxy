@@ -93,7 +93,14 @@ export const TokenWidgetView: React.FC<TokenWidgetViewProps> = ({
           sx={{
             width: '100%',
             height: '100%',
-            objectFit: isBoard ? 'cover' : 'contain',
+            objectFit: widget.imageFit
+              ? widget.imageFit === 'fill'
+                ? 'fill'
+                : 'cover'
+              : isBoard
+                ? 'cover'
+                : 'contain',
+            objectPosition: widget.imageFit === 'atlas-front' ? '7% 0' : undefined,
             display: 'block',
             pointerEvents: 'none',
           }}

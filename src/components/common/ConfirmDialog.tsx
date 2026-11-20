@@ -36,15 +36,11 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     <Dialog open={open} onClose={onCancel} maxWidth="xs" fullWidth>
       {title && <DialogTitle sx={{ fontWeight: 700 }}>{title}</DialogTitle>}
       <DialogContent>
-        {typeof message === 'string' ? (
-          <DialogContentText>{message}</DialogContentText>
-        ) : (
-          message
-        )}
+        {typeof message === 'string' ? <DialogContentText>{message}</DialogContentText> : message}
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onCancel} color="inherit">
-          {cancelText || t('common.cancel', 'Abbrechen')}
+          {cancelText || t('common.cancel')}
         </Button>
         <Button
           onClick={onConfirm}
@@ -53,7 +49,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           autoFocus
           sx={{ fontWeight: 700 }}
         >
-          {confirmText || t('common.confirm', 'Bestätigen')}
+          {confirmText || t('common.confirm')}
         </Button>
       </DialogActions>
     </Dialog>

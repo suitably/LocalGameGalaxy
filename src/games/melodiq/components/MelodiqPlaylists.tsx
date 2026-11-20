@@ -9,7 +9,6 @@ import {
   FormControlLabel,
   Tooltip,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBackRounded';
 import CloudSyncIcon from '@mui/icons-material/CloudSyncRounded';
 import CloudOffIcon from '@mui/icons-material/CloudOffRounded';
 import AddIcon from '@mui/icons-material/AddRounded';
@@ -22,11 +21,10 @@ import { PlaylistNameDialog } from './PlaylistNameDialog';
 import { ConfirmDialog } from '../../../components/common/ConfirmDialog';
 
 interface MelodiqPlaylistsProps {
-  onBack: () => void;
   onSelectPlaylist: (playlist: Playlist) => void;
 }
 
-export const MelodiqPlaylists: React.FC<MelodiqPlaylistsProps> = ({ onBack, onSelectPlaylist }) => {
+export const MelodiqPlaylists: React.FC<MelodiqPlaylistsProps> = ({ onSelectPlaylist }) => {
   const { t } = useTranslation();
   const {
     playlists,
@@ -66,9 +64,6 @@ export const MelodiqPlaylists: React.FC<MelodiqPlaylistsProps> = ({ onBack, onSe
   return (
     <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <IconButton onClick={onBack} sx={{ mr: 2 }}>
-          <ArrowBackIcon />
-        </IconButton>
         <Typography variant="h5" sx={{ flexGrow: 1 }}>
           {t('melodiq.playlists')}
         </Typography>
@@ -136,7 +131,7 @@ export const MelodiqPlaylists: React.FC<MelodiqPlaylistsProps> = ({ onBack, onSe
       <PlaylistNameDialog
         open={createDialogOpen}
         title={t('melodiq.create_playlist')}
-        confirmLabel={t('create')}
+        confirmLabel={t('melodiq.create')}
         name={newPlaylistName}
         onNameChange={setNewPlaylistName}
         onClose={() => setCreateDialogOpen(false)}
@@ -146,7 +141,7 @@ export const MelodiqPlaylists: React.FC<MelodiqPlaylistsProps> = ({ onBack, onSe
       <PlaylistNameDialog
         open={editDialogOpen}
         title={t('melodiq.edit_playlist')}
-        confirmLabel={t('save')}
+        confirmLabel={t('common.save')}
         name={editName}
         onNameChange={setEditName}
         onClose={() => setEditDialogOpen(false)}

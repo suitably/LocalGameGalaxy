@@ -21,20 +21,23 @@ interface SelectionFloatingBarProps {
   selection: ReturnType<typeof useTabletopSelection>;
   /** Host only; phones omit it, since the host rejects their deletes (#685). */
   canDelete: boolean;
+  /** Distance from the table's top edge; the editor puts the bar below its toolbar. */
+  top?: number;
 }
 
 /** Distance of one nudge, in table pixels. */
 export const MOVE_STEP = 40;
 const ARROWS = [
-  { key: 'moveLeft', label: 'Nach links', Icon: ArrowBackIcon, dx: -1, dy: 0 },
-  { key: 'moveUp', label: 'Nach oben', Icon: ArrowUpIcon, dx: 0, dy: -1 },
-  { key: 'moveDown', label: 'Nach unten', Icon: ArrowDownIcon, dx: 0, dy: 1 },
-  { key: 'moveRight', label: 'Nach rechts', Icon: ArrowForwardIcon, dx: 1, dy: 0 },
+  { key: 'moveLeft', Icon: ArrowBackIcon, dx: -1, dy: 0 },
+  { key: 'moveUp', Icon: ArrowUpIcon, dx: 0, dy: -1 },
+  { key: 'moveDown', Icon: ArrowDownIcon, dx: 0, dy: 1 },
+  { key: 'moveRight', Icon: ArrowForwardIcon, dx: 1, dy: 0 },
 ] as const;
 
 export const SelectionFloatingBar: React.FC<SelectionFloatingBarProps> = ({
   selection,
   canDelete,
+  top = 20,
 }) => {
   const selectedCount = selection.selectedWidgetIds.length;
   const { t } = useTranslation();
@@ -46,9 +49,12 @@ export const SelectionFloatingBar: React.FC<SelectionFloatingBarProps> = ({
       elevation={0}
       sx={{
         position: 'absolute',
-        top: 20,
-        left: '50%',
-        transform: 'translateX(-50%)',
+        top,
+        // centred over the full width (left: 50% would cap the bar at half the table and wrap it)
+        left: 0,
+        right: 0,
+        mx: 'auto',
+        width: 'fit-content',
         borderRadius: 5,
         bgcolor: 'background.paper',
         border: '1px solid',
@@ -66,7 +72,7 @@ export const SelectionFloatingBar: React.FC<SelectionFloatingBarProps> = ({
       }}
     >
       <Chip
-        label={t('games.tabletop.selectedCount', '{{count}} markiert', { count: selectedCount })}
+        label={t('games.tabletop.selectedCount', { count: selectedCount })}
         size="small"
         color="primary"
         variant="filled"
@@ -75,19 +81,19 @@ export const SelectionFloatingBar: React.FC<SelectionFloatingBarProps> = ({
 
       <Divider orientation="vertical" flexItem sx={{ my: 0.5 }} />
 
-      <Tooltip title={t('games.tabletop.scaleUp', 'Vergrößern (+25%)')}>
+      <Tooltip title={t('games.tabletop.scaleUp')}>
         <IconButton size="small" onClick={() => selection.scaleSelected(1.25)} color="primary">
           <ZoomInIcon fontSize="small" />
         </IconButton>
       </Tooltip>
 
-      <Tooltip title={t('games.tabletop.scaleDown', 'Verkleinern (-20%)')}>
+      <Tooltip title={t('games.tabletop.scaleDown')}>
         <IconButton size="small" onClick={() => selection.scaleSelected(0.8)}>
           <ZoomOutIcon fontSize="small" />
         </IconButton>
       </Tooltip>
 
-      <Tooltip title={t('games.tabletop.resetScale', 'Originalgröße (100%)')}>
+      <Tooltip title={t('games.tabletop.resetScale')}>
         <IconButton size="small" onClick={selection.resetScaleSelected}>
           <RestartAltIcon fontSize="small" />
         </IconButton>
@@ -95,8 +101,8 @@ export const SelectionFloatingBar: React.FC<SelectionFloatingBarProps> = ({
 
       <Divider orientation="vertical" flexItem sx={{ my: 0.5 }} />
 
-      {ARROWS.map(({ key, label, Icon, dx, dy }) => (
-        <Tooltip key={key} title={t(`games.tabletop.${key}`, label)}>
+      {ARROWS.map(({ key, Icon, dx, dy }) => (
+        <Tooltip key={key} title={t(`games.tabletop.${key}`)}>
           <IconButton
             size="small"
             onClick={() => selection.moveSelected(dx * MOVE_STEP, dy * MOVE_STEP)}
@@ -106,20 +112,20 @@ export const SelectionFloatingBar: React.FC<SelectionFloatingBarProps> = ({
         </Tooltip>
       ))}
 
-      <Tooltip title={t('games.tabletop.flipSelected', 'Karten umdrehen')}>
+      <Tooltip title={t('games.tabletop.flipSelected')}>
         <IconButton size="small" onClick={selection.flipSelected}>
           <FlipIcon fontSize="small" />
         </IconButton>
       </Tooltip>
 
-      <Tooltip title={t('games.tabletop.rotateSelected', 'Drehen (+90°)')}>
+      <Tooltip title={t('games.tabletop.rotateSelected')}>
         <IconButton size="small" onClick={() => selection.rotateSelected(90)}>
           <RotateIcon fontSize="small" />
         </IconButton>
       </Tooltip>
 
       {canDelete && (
-        <Tooltip title={t('games.tabletop.deleteSelected', 'Auswahl löschen')}>
+        <Tooltip title={t('games.tabletop.deleteSelected')}>
           <IconButton size="small" onClick={selection.deleteSelected} color="error">
             <DeleteIcon fontSize="small" />
           </IconButton>
@@ -128,7 +134,7 @@ export const SelectionFloatingBar: React.FC<SelectionFloatingBarProps> = ({
 
       <Divider orientation="vertical" flexItem sx={{ my: 0.5 }} />
 
-      <Tooltip title={t('games.tabletop.clearSelection', 'Auswahl aufheben')}>
+      <Tooltip title={t('games.tabletop.clearSelection')}>
         <IconButton size="small" onClick={selection.clearSelection}>
           <CloseIcon fontSize="small" />
         </IconButton>

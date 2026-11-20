@@ -78,7 +78,11 @@ export const ControllerActionToolbar: React.FC<ControllerActionToolbarProps> = (
             gap: 1,
           }}
         >
-          <IconButton size="small" onClick={() => onUpdateCounter(c.id, -(c.step || 1))}>
+          <IconButton
+            size="small"
+            onClick={() => onUpdateCounter(c.id, -(c.step || 1))}
+            aria-label={t('games.tabletop.counterDecrement')}
+          >
             <RemoveIcon fontSize="small" />
           </IconButton>
           <Box textAlign="center">
@@ -91,7 +95,11 @@ export const ControllerActionToolbar: React.FC<ControllerActionToolbarProps> = (
               </Typography>
             )}
           </Box>
-          <IconButton size="small" onClick={() => onUpdateCounter(c.id, c.step || 1)}>
+          <IconButton
+            size="small"
+            onClick={() => onUpdateCounter(c.id, c.step || 1)}
+            aria-label={t('games.tabletop.counterIncrement')}
+          >
             <AddIcon fontSize="small" />
           </IconButton>
         </Paper>

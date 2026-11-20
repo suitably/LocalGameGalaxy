@@ -60,7 +60,7 @@ export const SessionPhoneRow: React.FC<SessionPhoneRowProps> = ({
         </MenuItem>
         <MenuItem value="singer">{t('melodiq.setup.role_singer', 'Singer')}</MenuItem>
       </Select>
-      <IconButton color="error" onClick={onRemove}>
+      <IconButton aria-label={t('melodiq.a11y.remove')} color="error" onClick={onRemove}>
         <CloseIcon />
       </IconButton>
     </Box>

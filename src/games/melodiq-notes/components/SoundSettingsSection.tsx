@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Typography, Button, Stack } from '@mui/material';
+import { Box, Button, Stack } from '@mui/material';
 import VolumeUpIcon from '@mui/icons-material/VolumeUpRounded';
 import { useTranslation } from 'react-i18next';
 import { SoundfontProviderFields } from './SoundfontProviderFields';
@@ -39,14 +39,6 @@ export const SoundSettingsSection: React.FC<SoundSettingsSectionProps> = ({
 
   return (
     <Box>
-      <Typography
-        variant="caption"
-        color="text.secondary"
-        fontWeight={700}
-        sx={{ textTransform: 'uppercase', letterSpacing: 0.8, display: 'block', mb: 1.5 }}
-      >
-        {t('games.melodiq_notes.sound_settings', 'Sound & Klänge')}
-      </Typography>
       <Stack spacing={1.5}>
         <SoundfontProviderFields config={config} onChange={handleConfigChange} />
 

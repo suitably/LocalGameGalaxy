@@ -19,6 +19,8 @@ import { useDartsGame } from '../useDartsGame';
 import { useState, useEffect } from 'react';
 import DeleteIcon from '@mui/icons-material/DeleteRounded';
 import AddIcon from '@mui/icons-material/AddRounded';
+import { ConfirmDialog } from '../../../components/common/ConfirmDialog';
+import { setupChangeResetsProgress } from '../logic/settingsChange';
 
 type DartsGameState = ReturnType<typeof useDartsGame>;
 
@@ -43,10 +45,24 @@ export function DartsGameSetupDialog({ open, onClose, state }: Props) {
     }
   }, [open, state.settings, state.players]);
 
-  const handleSave = () => {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const applySetup = () => {
     state.updateSettings({ mode, doubleOut });
     state.updatePlayers(players);
+    setConfirmOpen(false);
     onClose();
+  };
+
+  const handleSave = () => {
+    const hasProgress = state.turns.length > 0 || state.currentTurnThrows.length > 0;
+    const resets = setupChangeResetsProgress(
+      { mode: state.settings.mode, playerIds: state.players.map((p) => p.id) },
+      { mode, playerIds: players.map((p) => p.id) },
+      hasProgress,
+    );
+    if (resets) setConfirmOpen(true);
+    else applySetup();
   };
 
   const handleAddPlayer = () => {
@@ -121,6 +137,7 @@ export function DartsGameSetupDialog({ open, onClose, state }: Props) {
                   />
                   <IconButton
                     color="error"
+                    aria-label={t('games.darts.remove_player')}
                     onClick={() => handleRemovePlayer(p.id)}
                     disabled={players.length <= 1}
                   >
@@ -133,11 +150,20 @@ export function DartsGameSetupDialog({ open, onClose, state }: Props) {
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('cancel')}</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
         <Button onClick={handleSave} variant="contained">
-          {t('save')}
+          {t('common.save')}
         </Button>
       </DialogActions>
+      <ConfirmDialog
+        open={confirmOpen}
+        title={t('games.darts.setup_reset_title')}
+        message={t('games.darts.setup_reset_desc')}
+        confirmText={t('games.darts.setup_reset_confirm')}
+        confirmColor="error"
+        onConfirm={applySetup}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </Dialog>
   );
 }

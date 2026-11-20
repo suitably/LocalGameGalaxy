@@ -143,6 +143,8 @@ export const STORAGE_KEYS = {
 
   // Cards
   CARDS_LOBBY_PLAYERS: 'cards_lobby_players',
+  /** Player names for scripted card games on one device (Spieltisch). */
+  TABLETOP_CARD_PLAYERS: 'tabletop_card_players',
 
   // Knister & Qwixx
   KNISTER_CURRENT_GAME: 'knister_current_game',
@@ -193,6 +195,8 @@ export const STORAGE_PREFIXES = {
   PARTY_STATE: 'galaxy_party_state_',
   PARTY_HOST_ID: 'party_host_id_',
   GAME_RELAY: 'galaxy_game_relay_',
+  /** Running scripted card game per game id (local table or the room this device hosts). */
+  TABLETOP_SCRIPTED: 'tabletop_scripted_',
   GUESSART_GAME_ALIAS: 'guessart_game_alias_',
   GUESSART_LOCAL_PLAYERS: 'guessart_local_players_',
   GUESSART_TEMP_LOCAL_PLAYERS: 'guessart_temp_local_players_',

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { tabletopReducer } from '../tabletopReducer';
 import type {
+  BagWidget,
   CounterWidget,
   DeckWidget,
   DieWidget,
@@ -20,6 +21,7 @@ const deckTable = (routine: unknown[]) =>
     button('b', routine),
   ]);
 const ids = (w: TabletopWidget) => (w as HolderWidget).childIds;
+const items = (w: TabletopWidget) => (w as BagWidget).itemIds;
 
 describe('routine ops (#694)', () => {
   it('DEAL gives every hand n cards, round robin in seat order', () => {
@@ -50,6 +52,44 @@ describe('routine ops (#694)', () => {
     expect(spawned).toHaveLength(2);
     expect(new Set(spawned).size).toBe(2);
     expect(ids(tabletopReducer(state, run('b')).game.widgets.tray)).toEqual(spawned);
+  });
+
+  it('DRAW and TAKE_FROM_BAG put the piece `at` a point; the card shows the asked side', () => {
+    const card = (id: string) =>
+      wid(id, { type: 'card', inPile: true, pileId: 'deck', width: 20, height: 30 });
+    const state = table([
+      wid('deck', { type: 'deck', cardIds: ['c1', 'c2'], width: 20, height: 30 }),
+      card('c1'),
+      card('c2'),
+      wid('bag', { type: 'bag', itemIds: ['t1'] }),
+      wid('t1', { type: 'token', width: 40, height: 40 }),
+      button('b', [
+        { op: 'DRAW', deck: 'deck', at: { x: 100, y: 200 }, faceUp: true },
+        { op: 'DRAW', deck: 'deck', at: { x: 300, y: 200 } },
+        { op: 'TAKE_FROM_BAG', bag: 'bag', at: { x: 500, y: 500 } },
+      ]),
+    ]);
+    const w = tabletopReducer(state, run('b')).game.widgets;
+    expect(w.c2).toMatchObject({ x: 100, y: 200, faceUp: true, inPile: false });
+    expect(w.c1).toMatchObject({ x: 300, y: 200, faceUp: false, inPile: false });
+    expect(w.t1).toMatchObject({ x: 500, y: 500 });
+    // laid out later = on top
+    expect(w.c1.zIndex).toBeGreaterThan(w.c2.zIndex);
+    expect(items(w.bag)).toEqual([]);
+  });
+
+  it('SHUFFLE reorders a finite bag with the host seed', () => {
+    const all = ['t1', 't2', 't3', 't4', 't5', 't6'];
+    const state = table([
+      wid('bag', { type: 'bag', itemIds: all }),
+      ...all.map((id) => wid(id, { type: 'token' })),
+      button('b', [{ op: 'SHUFFLE', deck: 'bag' }]),
+    ]);
+    const order = (seed: number) =>
+      items(tabletopReducer(state, run('b', 0, seed)).game.widgets.bag) ?? [];
+    expect(order(1)).toEqual(order(1));
+    expect([...order(1)].sort()).toEqual(all);
+    expect([1, 2, 3, 4].some((seed) => order(seed).join() !== all.join())).toBe(true);
   });
 
   it('PLACE_IN_HOLDER and SET_STATE', () => {

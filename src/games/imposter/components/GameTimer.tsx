@@ -1,20 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import {
-  alpha,
-  Box,
-  Typography,
-  Button,
-  Paper,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from '@mui/material';
+import { alpha, Box, Typography, Button, Paper } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import PauseIcon from '@mui/icons-material/PauseRounded';
 import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
 import StopIcon from '@mui/icons-material/StopRounded';
 import { scoreText } from '../../../themeTokens';
+import { ConfirmDialog } from '../../../components/common/ConfirmDialog';
 
 interface GameTimerProps {
   timerLength: number; // in seconds
@@ -98,18 +89,18 @@ export const GameTimer: React.FC<GameTimerProps> = ({ timerLength, onTimeUp, onE
         </Box>
       </Paper>
 
-      <Dialog open={showConfirm} onClose={() => setShowConfirm(false)}>
-        <DialogTitle>{t('games.imposter.game.end_round')}</DialogTitle>
-        <DialogContent>
-          <Typography>{t('games.imposter.game.confirm_end')}</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowConfirm(false)}>{t('common.no')}</Button>
-          <Button onClick={() => onEndEarly()} color="error" variant="contained">
-            {t('common.yes')}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmDialog
+        open={showConfirm}
+        title={t('games.imposter.game.end_round')}
+        message={t('games.imposter.game.confirm_end')}
+        confirmText={t('games.imposter.game.end_round_confirm')}
+        confirmColor="error"
+        onCancel={() => setShowConfirm(false)}
+        onConfirm={() => {
+          setShowConfirm(false);
+          onEndEarly();
+        }}
+      />
     </Box>
   );
 };

@@ -8,11 +8,11 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListItemSecondaryAction,
   Chip,
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  Tooltip,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/DeleteRounded';
 import EditIcon from '@mui/icons-material/EditRounded';
@@ -20,6 +20,7 @@ import AddIcon from '@mui/icons-material/AddRounded';
 import SaveIcon from '@mui/icons-material/SaveRounded';
 import CloseIcon from '@mui/icons-material/CloseRounded';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
+import RestartAltIcon from '@mui/icons-material/RestartAltRounded';
 import { useTranslation } from 'react-i18next';
 import { generateUUID } from '../../../lib/uuid';
 import type { RoleDefinition } from '../logic/types';
@@ -122,10 +123,14 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
     const displayDescription = isDefaultId
       ? t(`games.werewolf.role_descriptions.${role.id}`, role.description)
       : role.description;
+    const editLabel = `${t('games.werewolf.ui.editor.edit_role')}: ${displayName}`;
+    const removeAction = isDefaultId ? t('common.reset') : t('common.delete');
+    const removeLabel = `${removeAction}: ${displayName}`;
 
     return (
-      <ListItem key={role.id} divider>
+      <ListItem key={role.id} divider sx={{ alignItems: 'flex-start', gap: 1 }}>
         <ListItemText
+          sx={{ flex: '1 1 auto', minWidth: 0 }}
           primary={
             <Box display="flex" alignItems="center" gap={1}>
               <Typography>
@@ -143,27 +148,37 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
           }
           secondary={displayDescription}
         />
-        <ListItemSecondaryAction>
-          <IconButton edge="end" onClick={() => handleEditRole(role)} sx={{ mr: 1 }}>
-            <EditIcon />
-          </IconButton>
-          <IconButton
-            edge="end"
-            onClick={() => handleDeleteRole(role.id, isDefaultId)}
-            color={isDefaultId ? 'default' : 'error'}
-            title={isDefaultId ? t('common.reset', 'Reset') : t('common.delete', 'Delete')}
-          >
-            {isDefaultId ? <CloseIcon /> : <DeleteIcon />}
-          </IconButton>
-        </ListItemSecondaryAction>
+        <Box display="flex" flexShrink={0} alignItems="center" gap={0.5}>
+          <Tooltip title={editLabel}>
+            <IconButton edge="end" onClick={() => handleEditRole(role)} aria-label={editLabel}>
+              <EditIcon />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={removeLabel}>
+            <IconButton
+              edge="end"
+              onClick={() => handleDeleteRole(role.id, isDefaultId)}
+              color={isDefaultId ? 'default' : 'error'}
+              aria-label={removeLabel}
+            >
+              {isDefaultId ? <RestartAltIcon /> : <DeleteIcon />}
+            </IconButton>
+          </Tooltip>
+        </Box>
       </ListItem>
     );
   };
 
   return (
     <Box p={2}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h5">{t('games.werewolf.ui.editor.title', 'Role Editor')}</Typography>
+      {/* Dialog title bar: close X (discards changes), title, add role */}
+      <Box display="flex" alignItems="center" gap={1} mb={2}>
+        <IconButton edge="start" onClick={onClose} aria-label={t('common.close')}>
+          <CloseIcon />
+        </IconButton>
+        <Typography variant="h5" component="h2" sx={{ flexGrow: 1 }}>
+          {t('games.werewolf.ui.editor.title', 'Role Editor')}
+        </Typography>
         <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddRole}>
           {t('games.werewolf.ui.editor.add_role', 'Add Role')}
         </Button>
@@ -173,7 +188,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
         {customRolesList.length > 0 && (
           <Paper variant="outlined" sx={{ mb: 2 }}>
             <Typography variant="h6" sx={{ p: 2, pb: 0 }}>
-              {t('games.werewolf.ui.editor.custom_roles', 'Custom Roles')}
+              {t('games.werewolf.ui.editor.custom_roles')}
             </Typography>
             <List sx={{ width: '100%' }}>{customRolesList.map(renderRoleItem)}</List>
           </Paper>
@@ -182,8 +197,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
         <Accordion defaultExpanded={false} variant="outlined" disableGutters>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography variant="h6">
-              {t('games.werewolf.ui.editor.standard_roles', 'Standard Roles')} (
-              {standardRolesList.length})
+              {t('games.werewolf.ui.editor.standard_roles')} ({standardRolesList.length})
             </Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ p: 0 }}>
@@ -193,7 +207,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
       </Box>
 
       <Box mt={3} display="flex" justifyContent="flex-end" gap={2}>
-        <Button onClick={onClose}>{t('common.back')}</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
         <Button
           variant="contained"
           color="primary"

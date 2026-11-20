@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   IconButton,
   Tooltip,
@@ -28,6 +29,7 @@ export const TVModeButton: React.FC<TVModeButtonProps> = ({
   onStartPresentation,
   onDisconnect,
 }) => {
+  const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -61,10 +63,18 @@ export const TVModeButton: React.FC<TVModeButtonProps> = ({
     <>
       <Tooltip
         title={
-          isTVConnected ? 'TV Connected' : hasPresentationAPI ? 'Connect to TV' : 'Open TV Window'
+          isTVConnected
+            ? t('melodiq.tv_menu.connected')
+            : hasPresentationAPI
+              ? t('melodiq.tv_menu.connect')
+              : t('melodiq.tv_menu.open_window_tooltip')
         }
       >
-        <IconButton color="inherit" onClick={handleClick}>
+        <IconButton
+          color="inherit"
+          onClick={handleClick}
+          aria-label={t('melodiq.tv_menu.open_window_tooltip')}
+        >
           <Badge color="success" variant="dot" invisible={!isTVConnected}>
             {isTVConnected ? <CastConnectedIcon /> : hasPresentationAPI ? <CastIcon /> : <TvIcon />}
           </Badge>
@@ -77,7 +87,7 @@ export const TVModeButton: React.FC<TVModeButtonProps> = ({
             <ListItemIcon>
               <CastIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>Cast to TV</ListItemText>
+            <ListItemText>{t('melodiq.tv_menu.cast')}</ListItemText>
           </MenuItem>
         )}
         {!isTVConnected && (
@@ -85,7 +95,7 @@ export const TVModeButton: React.FC<TVModeButtonProps> = ({
             <ListItemIcon>
               <OpenInNewIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>Open Window</ListItemText>
+            <ListItemText>{t('melodiq.tv_menu.open_window')}</ListItemText>
           </MenuItem>
         )}
         {isTVConnected && (
@@ -93,7 +103,7 @@ export const TVModeButton: React.FC<TVModeButtonProps> = ({
             <ListItemIcon>
               <CancelIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>Disconnect</ListItemText>
+            <ListItemText>{t('melodiq.tv_menu.disconnect')}</ListItemText>
           </MenuItem>
         )}
       </Menu>

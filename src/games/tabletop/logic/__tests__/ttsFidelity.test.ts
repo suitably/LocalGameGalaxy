@@ -11,6 +11,7 @@ import type {
   HolderWidget,
   LabelWidget,
   TabletopWidget,
+  TokenWidget,
 } from '../types';
 
 const obj = (
@@ -82,7 +83,7 @@ describe('TTS parser fidelity (#683)', () => {
     for (const id of ids) expect(game.widgets[id]).toBeDefined();
   });
 
-  it('turns a card face down at rotZ 180 and takes the rotation from rotY', () => {
+  it('turns a card face down at rotZ 180 and takes the rotation from rotY (180 = upright)', () => {
     const game = parseTtsSaveFile(
       save([
         card('up', 100, { rotZ: 0, rotY: 90 }),
@@ -92,10 +93,62 @@ describe('TTS parser fidelity (#683)', () => {
       ]),
     );
     const w = game.widgets as Record<string, CardWidget>;
-    expect([w.up.faceUp, w.up.rotation]).toEqual([true, 90]);
-    expect([w.down.faceUp, w.down.rotation]).toEqual([false, 180]);
+    expect([w.up.faceUp, w.up.rotation]).toEqual([true, 270]);
+    expect([w.down.faceUp, w.down.rotation]).toEqual([false, 0]);
     expect(w.nearUp.faceUp).toBe(true);
     expect(w.nearDown.faceUp).toBe(false);
+  });
+
+  it('lays the custom table image under the pieces and puts +Z at the top', () => {
+    const at = (guid: string, posX: number, posZ: number, scale = 1) => {
+      const o = obj(guid, 'BlockSquare');
+      return { ...o, Transform: { ...o.Transform, posX, posZ, scaleX: scale, scaleZ: scale } };
+    };
+    const game = parseTtsSaveFile(
+      save([at('far', 0, 20), at('near', 0, -20), at('right', 30, 0, 0.75)], {
+        Table: 'Table_Custom',
+        TableURL: 'http://cloud-3.steamusercontent.com/ugc/1/A/',
+      }),
+    );
+    const board = game.widgets.tts_table as TokenWidget;
+    expect(board).toMatchObject({
+      type: 'token',
+      shape: 'rectangle',
+      width: 4400,
+      height: 2600,
+      zIndex: 0,
+      pinned: true,
+      imageFit: 'fill',
+      image: 'https://steamusercontent-a.akamaihd.net/ugc/1/A/',
+    });
+    const centre = (w: TabletopWidget) => ({ x: w.x + w.width / 2, y: w.y + w.height / 2 });
+    const middle = centre(board);
+    // Pieces are centred on their position: 50 px per unit from the middle of the table image.
+    expect(centre(game.widgets.far)).toEqual({ x: middle.x, y: middle.y - 1000 });
+    expect(centre(game.widgets.near)).toEqual({ x: middle.x, y: middle.y + 1000 });
+    expect(centre(game.widgets.right)).toEqual({ x: middle.x + 1500, y: middle.y });
+    // A cube keeps its footprint (0.75 units), other tables get no board.
+    expect(game.widgets.right).toMatchObject({ width: 38, height: 38, shape: 'square' });
+    expect(
+      parseTtsSaveFile(save([at('a', 0, 0)], { TableURL: 'https://x/t' })).widgets,
+    ).not.toHaveProperty('tts_table');
+  });
+
+  it('sizes cards by their scale, turns flat image pieces and crops model textures', () => {
+    const scaled = card('big', 100, { rotY: 180 });
+    scaled.Transform = { ...scaled.Transform, scaleX: 2, scaleZ: 2 };
+    const game = parseTtsSaveFile(
+      save([
+        scaled,
+        obj('mat', 'Custom_Token', { CustomImage: { ImageURL: 'https://x/m.png' } }, { rotY: 90 }),
+        obj('chip', 'Custom_Model', {
+          CustomMesh: { MeshURL: 'https://x/m.obj', DiffuseURL: 'https://x/atlas.png' },
+        }),
+      ]),
+    );
+    expect(game.widgets.big).toMatchObject({ width: 220, height: 310, rotation: 0 });
+    expect(game.widgets.mat).toMatchObject({ rotation: 270 });
+    expect(game.widgets.chip).toMatchObject({ imageFit: 'atlas-front' });
   });
 
   it('imports 3DText as a label and keeps ScriptingTrigger out of the board', () => {

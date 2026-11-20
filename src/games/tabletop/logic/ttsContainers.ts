@@ -51,9 +51,16 @@ function previewOf(w: TabletopWidget | undefined): {
   return { previewImage: w.image, previewLabel: w.label };
 }
 
+const INFINITE_BAG_NAMES = new Set(['Infinite_Bag', 'Custom_Model_Infinite_Bag']);
+const BAG_NAMES = new Set(['Bag', 'Custom_Model_Bag', ...INFINITE_BAG_NAMES]);
+
+/** Whether a TTS object name is a container that hands out pieces. */
+export const isTtsBag = (name: string): boolean => BAG_NAMES.has(name);
+
 /**
  * `Bag` → finite bag: its contents become hidden widgets listed in `itemIds` (drawn last-in
  * first-out). `Infinite_Bag` → infinite bag that clones its first object as `templateWidget`.
+ * Bags with a custom 3D model (`Custom_Model_Bag`, …) behave the same; only their look is lost.
  */
 export function convertBag(
   obj: TTSObjectState,
@@ -62,7 +69,7 @@ export function convertBag(
   convertChild: (child: TTSObjectState, pos: Pos) => TabletopWidget,
   out: Record<string, TabletopWidget>,
 ): BagWidget {
-  const isInfinite = obj.Name === 'Infinite_Bag';
+  const isInfinite = INFINITE_BAG_NAMES.has(obj.Name);
   const childPos = { ...pos, zIndex: pos.zIndex + 1 };
   const children = (obj.ContainedObjects ?? []).map((c) => ({
     ...convertChild(c, childPos),
@@ -72,8 +79,8 @@ export function convertBag(
   const base: BagWidget = {
     id: claimId(obj.GUID),
     type: 'bag',
-    x: pos.x,
-    y: pos.y,
+    x: pos.x - 40,
+    y: pos.y - 40,
     width: 80,
     height: 80,
     zIndex: pos.zIndex,
@@ -97,8 +104,12 @@ export function convertFogOfWar(
   ownerSeat: number | undefined,
   color: string,
 ): HiddenZone {
-  const width = Math.max(80, Math.round((obj.Transform.scaleX || 1) * scale));
-  const height = Math.max(80, Math.round((obj.Transform.scaleZ || 1) * scale));
+  // A zone turned by a quarter (rotY ≈ 90 / 270) is deep where it was wide.
+  const quarter = Math.round((obj.Transform.rotY || 0) / 90) % 2 !== 0;
+  const sx = (quarter ? obj.Transform.scaleZ : obj.Transform.scaleX) || 1;
+  const sz = (quarter ? obj.Transform.scaleX : obj.Transform.scaleZ) || 1;
+  const width = Math.max(80, Math.round(sx * scale));
+  const height = Math.max(80, Math.round(sz * scale));
   return {
     id: `fog_${obj.GUID}`,
     x: Math.round(center.x - width / 2),

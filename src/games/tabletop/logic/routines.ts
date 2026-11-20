@@ -6,7 +6,7 @@
  * fields are rejected when parsing; limits keep a routine from flooding the table or the sync
  * channel. Triggers (`triggers` on a button) are validated here too.
  */
-import type { RoutineSeatRef, RoutineStep, RoutineTrigger } from './types';
+import type { RoutinePoint, RoutineSeatRef, RoutineStep, RoutineTrigger } from './types';
 import { parseCondition } from './routineConditions';
 
 /** Steps in one routine, nested `IF` branches included. */
@@ -23,6 +23,14 @@ const isStrList = (v: unknown): v is string[] => Array.isArray(v) && v.length > 
 const isSeatRef = (v: unknown): v is RoutineSeatRef => v === 'caller' || v === 'turn';
 const badCount = (v: unknown) => v !== undefined && (!isNum(v) || v < 1 || v > MAX_DRAW_COUNT);
 const optStr = (v: unknown) => v === undefined || isStr(v);
+const isPoint = (v: unknown): v is RoutinePoint =>
+  Boolean(v) &&
+  typeof v === 'object' &&
+  isNum((v as RoutinePoint).x) &&
+  isNum((v as RoutinePoint).y);
+/** A valid optional `at`, as the fields to spread into the step; null when malformed. */
+const atOf = (v: unknown): { at?: RoutinePoint } | null =>
+  v === undefined ? {} : isPoint(v) ? { at: { x: v.x, y: v.y } } : null;
 
 /** Parse state: steps counted so far across all branches. */
 interface Budget {
@@ -39,11 +47,15 @@ function checkStep(raw: unknown, depth: number, budget: Budget): RoutineStep | s
     case 'DRAW':
       if (!isStr(s.deck) || !optStr(s.to)) return 'missing_field';
       if (badCount(s.count)) return 'bad_count';
+      if (!atOf(s.at) || (s.faceUp !== undefined && typeof s.faceUp !== 'boolean'))
+        return 'missing_field';
       return {
         op: 'DRAW',
         deck: s.deck,
         count: s.count as number | undefined,
         to: s.to as string | undefined,
+        ...atOf(s.at),
+        ...(typeof s.faceUp === 'boolean' ? { faceUp: s.faceUp } : {}),
       };
     case 'ROLL':
       if (isStrList(s.dice)) return { op: 'ROLL', dice: s.dice };
@@ -80,11 +92,13 @@ function checkStep(raw: unknown, depth: number, budget: Budget): RoutineStep | s
     case 'TAKE_FROM_BAG':
       if (!isStr(s.bag) || !optStr(s.to)) return 'missing_field';
       if (badCount(s.count)) return 'bad_count';
+      if (!atOf(s.at)) return 'missing_field';
       return {
         op: 'TAKE_FROM_BAG',
         bag: s.bag,
         count: s.count as number | undefined,
         to: s.to as string | undefined,
+        ...atOf(s.at),
       };
     case 'PLACE_IN_HOLDER':
       return isStr(s.widget) && isStr(s.holder)

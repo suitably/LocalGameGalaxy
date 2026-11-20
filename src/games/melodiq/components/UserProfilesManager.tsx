@@ -53,7 +53,7 @@ export const UserProfilesManager: React.FC<UserProfilesManagerProps> = ({
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6">User Profiles</Typography>
+        <Typography variant="h6">{t('melodiq.profiles.title')}</Typography>
         <Button
           startIcon={<PersonAddIcon />}
           variant="contained"
@@ -64,7 +64,7 @@ export const UserProfilesManager: React.FC<UserProfilesManagerProps> = ({
             py: 1,
           }}
         >
-          New User
+          {t('melodiq.profiles.new_user')}
         </Button>
       </Box>
 
@@ -77,6 +77,7 @@ export const UserProfilesManager: React.FC<UserProfilesManagerProps> = ({
               border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.1)}`,
               borderRadius: 2,
               display: 'flex',
+              flexWrap: 'wrap',
               alignItems: 'center',
               gap: 2,
             }}
@@ -84,9 +85,9 @@ export const UserProfilesManager: React.FC<UserProfilesManagerProps> = ({
             <Avatar sx={{ bgcolor: singerColor(profile.hue), color: piecePalette.contrastText }}>
               {profile.name.charAt(0).toUpperCase()}
             </Avatar>
-            <Box sx={{ flex: 1 }}>
+            <Box sx={{ flex: '1 1 140px', minWidth: 0 }}>
               <TextField
-                label="Name"
+                label={t('melodiq.profiles.name')}
                 value={profile.name}
                 onChange={(e) => onUpdateProfile(profile.id, { name: e.target.value })}
                 size="small"
@@ -127,10 +128,11 @@ export const UserProfilesManager: React.FC<UserProfilesManagerProps> = ({
                   onChange={(e) => onUpdateProfile(profile.id, { hidePitch: e.target.checked })}
                 />
               }
-              label={<Typography variant="caption">Hide Pitch</Typography>}
+              label={<Typography variant="caption">{t('melodiq.profiles.hide_pitch')}</Typography>}
               labelPlacement="top"
             />
             <IconButton
+              aria-label={t('common.delete')}
               onClick={() => onDeleteProfile(profile.id)}
               color="error"
               disabled={profiles.length <= 1}

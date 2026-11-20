@@ -44,6 +44,13 @@
       "busted": "Busted!",
       "last_score": "Score: {{score}}",
       "restart_title": "Restart Game?",
+      "remove_player": "Remove player",
+      "multiplier": "Throw multiplier",
+      "bullseye": "BULLSEYE (50)",
+      "bull": "BULL (25)",
+      "setup_reset_title": "Reset game?",
+      "setup_reset_desc": "This change restarts the running game. All throws so far will be lost.",
+      "setup_reset_confirm": "Reset",
       "restart_desc": "Are you sure you want to restart? All current scores and throws will be lost."
     },
     "wordle": {
@@ -231,6 +238,8 @@
         "editor": {
           "title": "Role Editor",
           "add_role": "Add Role",
+          "standard_roles": "Standard roles",
+          "custom_roles": "Custom roles",
           "edit_role": "Edit Role",
           "new_role": "New Role",
           "role_name": "Role Name",
@@ -337,6 +346,7 @@
         "resume": "Resume",
         "end_round": "End Round",
         "confirm_end": "Are you sure you want to end the round early?",
+        "end_round_confirm": "End now",
         "kick_title": "Who is the Imposter?"
       },
       "result": {
@@ -542,6 +552,11 @@
       "custom_sound_url": "Custom Audio URL / Sample",
       "test_sound": "Preview Sound",
       "reset_foss": "Reset to FOSS Default",
+      "gm_program": "GM #{{n}}",
+      "custom_sound_url_placeholder": "https://… (audio URL or sample)",
+      "volume": "Volume",
+      "instrument_volume": "{{name}} volume",
+      "reset_foss_confirm": "Reset all sound settings (soundfont, custom URLs, volumes) to the FOSS default?",
       "accuracy": "Accuracy",
       "combo": "Streak",
       "measures": "Measures",
@@ -1341,10 +1356,13 @@
       "backToHand": "Back to hand",
       "playerN": "Player {{n}}",
       "flipCard": "Flip",
+      "stackFan": "Fan out stack",
+      "stackPile": "Gather stack into a pile",
       "rollDie": "Roll",
       "shuffleDeck": "Shuffle",
       "view_hand": "Hand",
       "view_board": "Table",
+      "view_my_area": "My area",
       "flick_hint": "Swipe a card up to throw it onto the TV!",
       "current_table_card": "Current card on the table",
       "table_card": "Table: {{card}}",
@@ -1381,10 +1399,134 @@
       "counterDecrement": "Decrease",
       "counterIncrement": "Increase",
       "drawToHand": "Draw to my hand",
+      "dealEach": "Deal {{count}} to everyone",
       "dealEach_one": "Deal {{count}} card to everyone",
       "dealEach_other": "Deal {{count}} cards to everyone",
       "server_unreachable": "The companion server is not reachable right now.",
-      "gameMenu": "Game menu"
+      "timerStart": "Start timer",
+      "timerPause": "Pause timer",
+      "timerReset": "Reset timer",
+      "cardBack": "Card back",
+      "cardFront": "Card",
+      "card_games": "Card games",
+      "scripted": {
+        "games": {
+          "schwimmen": {
+            "title": "Schwimmen (Thirty-One)",
+            "desc": "Collect 31, knock, three lives – for 2 to 9 players."
+          },
+          "durak": {
+            "title": "Durak",
+            "desc": "Attack, beat, throw in – whoever is left with cards is the durak. 2 to 6 players."
+          },
+          "arschloch": {
+            "title": "President (Arschloch)",
+            "desc": "Get rid of your cards and become president. 3 to 8 players."
+          },
+          "skat": {
+            "title": "Skat",
+            "desc": "Bid, discard, take 61 points – for exactly 3 players."
+          }
+        },
+        "turn": "{{name}}'s turn",
+        "yourTurn": "Your turn",
+        "roundOver": "Round over",
+        "matchWon": "{{name}} wins the game",
+        "nextRound": "Next round",
+        "newMatch": "New game",
+        "play": "Play",
+        "trump": "Trump {{suit}}",
+        "tableHint": "This is the shared table. Everyone has their hand and moves on their own device.",
+        "setup": {
+          "title": "Who is playing?",
+          "players": "This game needs {{min}} to {{max}} players.",
+          "tooMany": "The first {{max}} play; the others watch.",
+          "start": "Deal",
+          "tableOnly": "This device only shows the table",
+          "tableOnlyHint": "For the TV: cast this device's screen. All players use their own phone for their hand and moves. Switch off if you play on this device.",
+          "waitingForHost": "The host is about to start the game …"
+        },
+        "schwimmen": {
+          "out": "out",
+          "swimming": "swimming",
+          "knocked": "knocked",
+          "dealerChoice": "{{name}} deals and picks a hand",
+          "keep": "Keep hand",
+          "takeOther": "Take the other hand",
+          "lastTurn": "{{name}} – last turn",
+          "swapOne": "Swap card",
+          "swapAll": "Swap all three",
+          "pass": "Pass",
+          "knock": "Knock",
+          "fire": "{{name}} has 31 – everyone else loses a life",
+          "tie": "Tie – nobody loses a life"
+        },
+        "durak": {
+          "attacker": "attacks",
+          "defender": "defends",
+          "losses": "{{count}}× durak",
+          "draw": "Draw – no durak",
+          "isDurak": "{{name}} is the durak",
+          "defends": "{{name}} defends",
+          "attacks": "{{name}} attacks",
+          "mayAdd": "{{name}} may throw in",
+          "beat": "Beat",
+          "take": "Take",
+          "attack": "Attack",
+          "add": "Throw in",
+          "done": "Done"
+        },
+        "arschloch": {
+          "president": "President",
+          "vicePresident": "Vice",
+          "citizen": "Citizen",
+          "viceArschloch": "Vice scum",
+          "arschloch": "Scum",
+          "passed": "passed",
+          "roundWon": "{{name}} is president",
+          "gives": "{{name}} gives back {{count}} card(s)",
+          "give": "Give {{count}} card(s)",
+          "leads": "{{name}} leads",
+          "pass": "Pass"
+        },
+        "skat": {
+          "grand": "Grand",
+          "null": "Null",
+          "nullOuvert": "Null Ouvert",
+          "hand": "Hand",
+          "declarer": "Declarer",
+          "dealer": "Dealer",
+          "tricks": "{{count}} tricks",
+          "bidInfo": "Bid {{value}}",
+          "skat": "Skat",
+          "passedIn": "Everyone passed – thrown in",
+          "won": "{{name}} wins",
+          "lost": "{{name}} loses",
+          "resultWon": "{{name}}: +{{value}}",
+          "resultLost": "{{name}}: −{{value}} × 2",
+          "points": "{{points}} card points",
+          "schwarz": "Schwarz",
+          "schneider": "Schneider",
+          "overbid": "Overbid (bid up to {{bid}})",
+          "asked": "{{name}}: {{value}}?",
+          "hold": "Yes, {{value}}",
+          "pass": "Pass",
+          "bids": "{{name}} is bidding",
+          "decides": "{{name}}: pick up the skat or play hand?",
+          "pickup": "Pick up the skat",
+          "playHand": "Play hand",
+          "discards": "{{name}} is discarding",
+          "discard": "Discard 2 cards",
+          "declares": "{{name}} declares the game",
+          "trickTo": "Trick for {{name}}"
+        },
+        "rules": {
+          "schwimmen": "<p>32 cards. Everyone holds three cards, three lie open in the middle. The dealer first picks one of two hands; the other goes to the middle.</p><p><b>Your turn:</b> swap one card, swap all three, pass or knock. After a knock everyone else plays once more. If everyone passes, three new cards come to the middle.</p><p><b>Scoring:</b> the sum of one suit (ace 11, court cards 10). Three of a kind count 30.5. 31 or three aces end the round at once – everyone else loses a life. Otherwise the lowest hand loses.</p><p>Everyone has three lives, then you \"swim\", and with the next loss you are out. The last player wins.</p>",
+          "durak": "<p>36 cards (6 to ace), six in hand. The bottom card of the stock shows trumps. In the first round the lowest trump attacks.</p><p><b>Attack:</b> one or more cards of one rank. <b>Defence:</b> beat every card with a higher one of its suit or with a trump – or take everything.</p><p>Once everything is beaten, the others may throw in cards of ranks already on the table (six attack cards at most, never more than the defender held). Then everyone draws up to six. A successful defender attacks next; whoever takes is skipped.</p><p>Whoever still holds cards at the end is the durak.</p>",
+          "arschloch": "<p>All cards are dealt (32 up to four players, 52 above). The leader plays one or more cards of one rank. The others play as many cards of a higher rank or pass – a pass lasts until the trick ends. Whoever played last leads again.</p><p>First out is the president, last the scum. Before the next round the scum hands their best cards to the president (two from four players, otherwise one), who returns cards of their choice; from four players the vices swap one card too. The scum leads.</p>",
+          "skat": "<p>Three players, 32 cards, ten each, two in the skat. Middlehand bids to forehand, then rearhand to the winner. The winner picks up the skat and discards two cards – or plays hand – and declares a suit, grand or null.</p><p>You must follow suit; the jacks are the highest trumps (not in null). The declarer needs 61 card points; in null they must not take a trick.</p><p><b>Value:</b> matadors + 1 (+ hand, schneider, schwarz) × base value (diamonds 9, hearts 10, spades 11, clubs 12, grand 24); null 23, hand 35, ouvert 46, ouvert hand 59. Lost games count double negative. If everyone passes, the next dealer deals. No Ramsch, no announced schneider/schwarz.</p>"
+        }
+      }
     },
     "drawpot": {
       "title": "Draw Pot",
@@ -1653,7 +1795,8 @@
       "hint_order": "The first enabled microphone is assigned to player 1, the second to player 2, and so on.",
       "unknown_device": "Unknown audio device",
       "disabled": "Disabled",
-      "active": "Active (assigned to local player {{n}})"
+      "active": "Active (assigned to local player {{n}})",
+      "rename_device": "Rename device"
     },
     "privacy_title": "Privacy",
     "privacy_desc": "Which data the games use, which services they contact and your rights.",
@@ -1919,6 +2062,9 @@
     "duplicatePlayer": "Player already exists!",
     "minPlayers": "At least 2 players required!",
     "optionsTitle": "Options",
+    "hintFailed": "Hint failed",
+    "guessFailed": "Guess failed",
+    "publishFailed": "Failed to publish catalogue",
     "manualWordModeToggle": "Manual Word Creation",
     "manualWordModeDesc": "Players enter their own custom words instead of picking from the catalogue.",
     "startGame": "Start New Game",
@@ -1951,6 +2097,7 @@
     "noMoreHints": "No more hints available",
     "getHint": "Get Hint",
     "guessPlaceholder": "What was drawn?",
+    "submitGuess": "Submit guess",
     "repeatedGuess": "You already tried this guess!",
     "wrongGuess": "Incorrect! Keep guessing.",
     "correctCelebration": "Correct Guess!",
@@ -1987,7 +2134,6 @@
     "statusDrawing": "Drawing",
     "statusGuessing": "Guessing",
     "garticDesc": "Telephone drawing game! Write phrase ➔ Draw ➔ Guess ➔ Draw ➔ Hilarious album reveal!",
-    "roomBack": "Back to lobby",
     "roomNeedTwo": "At least 2 players are needed in the lobby.",
     "roomConnecting": "Connecting to the room …",
     "liveTitle": "Live on several devices",
@@ -2004,6 +2150,15 @@
     "promptStepHint": "Your phrase will be passed to the next player who must draw it!",
     "promptPlaceholder": "e.g. A penguin skydiving with balloons...",
     "randomPrompt": "Random Idea",
+    "promptSuggestions": [
+      "A robot flipping pancakes",
+      "Cat in sunglasses on a skateboard",
+      "Astronaut riding a llama on the moon",
+      "Dinosaur drinking coffee in no rush",
+      "Penguin floating away with colorful balloons",
+      "Snowman on a hot beach in Hawaii",
+      "Superhero losing their cape in a storm"
+    ],
     "drawThisPrompt": "Draw this phrase:",
     "whatIsThisDrawing": "What does this drawing depict? Describe it!",
     "describeDrawingPlaceholder": "Describe the drawing in one sentence...",
@@ -2225,7 +2380,9 @@
     "backToHub": "Back to overview",
     "invite_players": "Invite players",
     "spectatorWatching": "You are watching",
-    "spectatorPickHint": "Pick whose view to follow"
+    "spectatorPickHint": "Pick whose view to follow",
+    "gameSelectionTitle": "Game selection",
+    "partyModeChip": "Party mode"
   },
   "gartic": {
     "waitingHeader": "Waiting for other players...",
@@ -2316,6 +2473,19 @@
       "title": "Solved!",
       "new_record": "New personal best time!"
     },
+    "share": {
+      "title": "Sudoku result",
+      "text": "🔢 Sudoku ({{difficulty}}) solved in {{time}}!\nMistakes: {{mistakes}}, hints: {{hints}}"
+    },
+    "menu": {
+      "stats": "Statistics",
+      "help": "Rules"
+    },
+    "confirm_new": {
+      "title": "Start a new game?",
+      "message": "The current Sudoku ends and your progress is lost. Start a new game on \"{{difficulty}}\"?",
+      "confirm": "New game"
+    },
     "game_over": {
       "title": "Game Over"
     },
@@ -2334,6 +2504,9 @@
   },
   "storyteller": {
     "title": "Storyteller",
+    "deleteSavedTitle": "Delete story?",
+    "deleteSavedMessage": "The saved story will be deleted permanently.",
+    "deleteSavedAria": "Delete story",
     "turnLabel": "Turn",
     "currentTurnOf": "Turn: ",
     "defaultPlayer": "Player",
@@ -2364,7 +2537,6 @@
     "characters": "characters",
     "finishStory": "Finish Story",
     "submitTurn": "Submit Contribution",
-    "roomBack": "Back to lobby",
     "roomRead": "Read",
     "roomNeedTwo": "At least 2 players are needed in the lobby.",
     "roomConnecting": "Connecting to the room …",
@@ -2522,6 +2694,9 @@
       "deleteMessage": "The pot is deleted from the server. The link stops working; participants keep their local history.",
       "noKey": "This device has no host access to this pot. Open the host link to manage it.",
       "openAsParticipant": "Open as participant",
+      "forgetTitle": "Remove from list?",
+      "forgetMessage": "The pot is only removed from your list on this device. You can add it again later with the host link.",
+      "forgetConfirm": "Remove",
       "forget": "Remove from my list"
     },
     "participant": {

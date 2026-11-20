@@ -97,10 +97,10 @@ const MelodiqTVScreen: React.FC = () => {
       >
         <GamepadIcon sx={{ fontSize: 80, color: isConnected ? 'success.main' : 'text.disabled' }} />
         <Typography variant="h2" fontWeight="bold">
-          Melodiq TV
+          {t('melodiq.tv_menu.tv_title')}
         </Typography>
         <Typography variant="h5" color="text.secondary">
-          {isConnected ? 'Connected to Controller' : 'Waiting for Controller...'}
+          {isConnected ? t('melodiq.tv_menu.tv_connected') : t('melodiq.tv_menu.tv_waiting')}
         </Typography>
 
         <ScoreBoardQrCode sx={{ maxWidth: 450, width: '100%', mt: 1 }} />
@@ -108,7 +108,7 @@ const MelodiqTVScreen: React.FC = () => {
         {!isConnected && (
           <Box sx={{ mt: 1 }}>
             <Typography variant="body2" color="text.secondary" sx={{ opacity: 0.7 }}>
-              Stuck? Try reloading this page or the host.
+              {t('melodiq.tv_menu.tv_stuck')}
             </Typography>
           </Box>
         )}

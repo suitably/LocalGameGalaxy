@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Paper, Typography } from '@mui/material';
 import HistoryIcon from '@mui/icons-material/HistoryRounded';
 import { pieceColorForHue } from '../../logic/singerColor';
@@ -72,45 +73,48 @@ const HistoryRow: React.FC<{ entry: HistoricalEntry; rank: number }> = ({ entry,
   );
 };
 
-export const ScoreBoardHistory: React.FC<{ entries: HistoricalEntry[] }> = ({ entries }) => (
-  <Paper
-    elevation={0}
-    sx={{
-      flex: 1,
-      minHeight: 0,
-      bgcolor: 'background.paper',
-      borderRadius: 5,
-      border: 1,
-      borderColor: 'divider',
-      display: 'flex',
-      flexDirection: 'column',
-      overflow: 'hidden',
-    }}
-  >
-    <Box
+export const ScoreBoardHistory: React.FC<{ entries: HistoricalEntry[] }> = ({ entries }) => {
+  const { t } = useTranslation();
+  return (
+    <Paper
+      elevation={0}
       sx={{
-        p: 2,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1,
-        borderBottom: 1,
+        flex: 1,
+        minHeight: 0,
+        bgcolor: 'background.paper',
+        borderRadius: 5,
+        border: 1,
         borderColor: 'divider',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}
     >
-      <HistoryIcon sx={{ color: 'text.secondary' }} />
-      <Typography variant="h6" sx={{ color: 'text.secondary' }}>
-        ALL-TIME BEST
-      </Typography>
-    </Box>
+      <Box
+        sx={{
+          p: 2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          borderBottom: 1,
+          borderColor: 'divider',
+        }}
+      >
+        <HistoryIcon sx={{ color: 'text.secondary' }} />
+        <Typography variant="h6" sx={{ color: 'text.secondary', textTransform: 'uppercase' }}>
+          {t('melodiq.scoreboard.all_time_best')}
+        </Typography>
+      </Box>
 
-    <Box sx={{ flex: 1, overflowY: 'auto' }}>
-      {entries.length === 0 ? (
-        <Box sx={{ p: 4, textAlign: 'center' }}>
-          <Typography color="text.secondary">No history available yet.</Typography>
-        </Box>
-      ) : (
-        entries.map((entry, index) => <HistoryRow key={index} entry={entry} rank={index + 1} />)
-      )}
-    </Box>
-  </Paper>
-);
+      <Box sx={{ flex: 1, overflowY: 'auto' }}>
+        {entries.length === 0 ? (
+          <Box sx={{ p: 4, textAlign: 'center' }}>
+            <Typography color="text.secondary">{t('melodiq.scoreboard.no_history')}</Typography>
+          </Box>
+        ) : (
+          entries.map((entry, index) => <HistoryRow key={index} entry={entry} rank={index + 1} />)
+        )}
+      </Box>
+    </Paper>
+  );
+};

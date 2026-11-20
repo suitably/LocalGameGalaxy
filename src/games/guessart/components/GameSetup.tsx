@@ -184,7 +184,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
       <Card sx={{ borderRadius: 3, boxShadow: 0 }}>
         <CardContent sx={{ p: 3 }}>
           <Typography variant="h6" fontWeight={700} gutterBottom>
-            {t('guessart.optionsTitle', 'Einstellungen')}
+            {t('guessart.optionsTitle')}
           </Typography>
 
           <TextField

@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-11-07
+  at: 2026-11-16
   method: 'read against src/lib/gameRegistry.tsx, src/modules/*, src/context/*, src/lib/storage.ts, server/src/{index,config}.ts, server/src/core/*, server/src/plugins/*, signaling/src/index.js'
 sources:
   - 'src/lib/gameRegistry.tsx'
@@ -109,7 +109,6 @@ Other shared building blocks outside `src/modules/` (check these before writing 
 | ------------------------ | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Confirm dialog           | `src/components/common/ConfirmDialog.tsx`                                              | MUI confirmation modal (replaces `confirm()`)                                                                                                     |
 | List states              | `src/components/common/{EmptyState,ErrorState,ListSkeleton}.tsx`                       | Empty / error (+retry) / loading placeholder for lists and lobbies (DESIGN.md §6); no shimmer                                                     |
-| Game header bar          | `src/components/common/GameHeaderBar.tsx`                                              | Flat AppBar + toolbar shell for in-game top bars (GuessArt, Storyteller)                                                                          |
 | 3D dice                  | `src/components/games/Die3D.tsx`, `useDiceRollAnimation.ts`                            | animated die; roll delay before values are revealed                                                                                               |
 | Header & titles          | `src/context/TitleContext.tsx`, `src/context/HeaderLayoutContext.tsx`                  | `usePageTitle`, `useHeaderLayout` — actions, menu items, safe hub exit (§3.4)                                                                     |
 | Settings UI kit          | `src/components/settings/`                                                             | `SettingsSection`, `SettingRow`, `SettingSwitch` / `SettingSlider` / `SettingToggleGroup`, `SettingsResetButton`, `GameSettingsSheet` (§3.8)      |
@@ -138,6 +137,7 @@ UI layout state is split to avoid app-wide re-renders (`src/context/`):
 
 - `TitleContext` — `usePageTitle`, `useTitle`.
 - `HeaderLayoutContext` — header visibility, custom title/actions, menu items, home action (`useHeaderLayout`).
+  - In a running game `GlobalHeader` is the only top bar: games set the title (`usePageTitle`, or `setCustomHeaderTitle` for richer content), put actions into `setMenuItems` (`showAlways` keeps an item in the toolbar on phones; the rest collapse into the burger menu) or `setCustomHeaderActions`, and route the back arrow with `setHomeAction` — in party-room mode it returns to `/party?room=<code>`. Each game resets what it set on unmount. `setMenuItems` only re-renders the header when what it shows changes (label, icon element type/key/primitive props, `disabled`, `showAlways`), so callers may pass a fresh array with inline arrows on every render without looping; clicks always run the action from the most recent call (`commitMenuItems` in `src/context/headerMenuItems.ts`), so callers need neither memoised actions nor their own action ref. `setCustomHeaderActions` and `setHomeAction` always store the new node/function; set them from effects with stable deps. Examples: `src/games/guessart/hooks/useGuessArtHeader.tsx`, `src/games/storyteller/hooks/useStoryHeader.tsx`, `src/games/garticphone/hooks/useGarticHeader.tsx`. `setHeaderHidden` is not used by running games (only Melodiq Notes immersive mode).
 - `SettingsModeContext` — `isSettingsMode` (`useSettingsMode`); kept for `LayoutContext.setHeader`, no reader left (`GlobalHeader` detects settings pages by pathname).
 - `GameSettingsContext` — `useGameSettings()` (`openGameSettings`, `closeGameSettings`), `useGameSettingsHost({ audience, onClose })` for the active game (§3.8).
 - `LayoutContext` — backward-compatible composite (`useLayout`, `useLayoutContext`, `useHeader`). New code should use the specific context.

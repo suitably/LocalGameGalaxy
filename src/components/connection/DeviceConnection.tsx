@@ -1,6 +1,5 @@
 import React from 'react';
 import { Box, Button, Typography, TextField, Paper, Container, Divider } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBackRounded';
 import { useTranslation } from 'react-i18next';
 import type { RemotePeerBase } from '../../lib/webrtc';
 import { useDeviceConnectionSettings } from './useDeviceConnectionSettings';
@@ -12,9 +11,12 @@ import type { DeviceConnectionProps } from './types';
 
 export * from './types';
 
+/**
+ * QR code, connected peers and connection details for phone controllers. It renders no own top
+ * bar: the host screen sets the page title (usePageTitle / setHeader) and the GlobalHeader back
+ * arrow (setHomeAction) leaves the screen.
+ */
 export const DeviceConnection = <T extends RemotePeerBase = RemotePeerBase>({
-  onBack,
-  title,
   description,
   gameId,
   clientPath,
@@ -25,7 +27,6 @@ export const DeviceConnection = <T extends RemotePeerBase = RemotePeerBase>({
   helperTokenKey,
 }: DeviceConnectionProps<T>): React.ReactElement => {
   const { t } = useTranslation();
-  const displayTitle = title ?? t('connection.default_title', 'Connect Devices');
   const displayDescription =
     description ??
     t(
@@ -57,19 +58,7 @@ export const DeviceConnection = <T extends RemotePeerBase = RemotePeerBase>({
     });
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-      <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={onBack}
-          variant="outlined"
-          sx={{ borderRadius: 999, px: 3, py: 1, borderColor: 'rgba(0,0,0,0.2)' }}
-        >
-          {t('common.back', 'Back')}
-        </Button>
-        <Typography variant="h4">{displayTitle}</Typography>
-      </Box>
-
+    <Container maxWidth="md" sx={{ mt: { xs: 2, sm: 4 }, mb: 4 }}>
       <Paper sx={{ p: 4, display: 'flex', flexDirection: 'column', gap: 4 }}>
         <Typography variant="body1" color="text.secondary">
           {displayDescription}

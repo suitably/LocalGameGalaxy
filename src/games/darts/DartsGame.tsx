@@ -39,25 +39,30 @@ export function DartsGame() {
     <Box
       sx={{
         height: '100%',
+        // The only scroll container: the input bar sticks to the bottom while the
+        // scoreboard grows with the player list.
         overflowY: 'auto',
         WebkitOverflowScrolling: 'touch',
         display: 'flex',
         flexDirection: 'column',
         bgcolor: 'background.default',
-        pb: 'env(safe-area-inset-bottom, 0px)',
       }}
     >
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-        <Box sx={{ flex: 1, overflowY: 'auto', minHeight: '30vh' }}>
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ flex: 1, minHeight: '30dvh' }}>
           <DartsScoreboard state={gameState} />
         </Box>
 
         <Box
           sx={{
+            position: 'sticky',
+            bottom: 0,
+            zIndex: 11,
             flexShrink: 0,
             borderTop: 1,
             borderColor: 'divider',
             bgcolor: 'background.paper',
+            pb: 'env(safe-area-inset-bottom, 0px)',
           }}
         >
           <DartsInput state={gameState} />

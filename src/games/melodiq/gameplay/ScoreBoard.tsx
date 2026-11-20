@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Box, Grid, Typography } from '@mui/material';
 import { useQueue } from '../hooks/useQueue';
 import { useMelodiqSettings } from '../hooks/SettingsContext';
@@ -30,6 +31,7 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({
   isPassive,
   onMinimize,
 }) => {
+  const { t } = useTranslation();
   const { queue } = useQueue();
   const { settings } = useMelodiqSettings();
   const { countdown, cancel } = useScoreBoardAutoplay({
@@ -65,9 +67,10 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({
             mb: 3,
             color: 'primary.text',
             fontSize: { xs: '2rem', md: '3.5rem' },
+            textTransform: 'uppercase',
           }}
         >
-          SESSION RESULTS
+          {t('melodiq.scoreboard.session_results')}
         </Typography>
       )}
 

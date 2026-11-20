@@ -57,7 +57,7 @@ export const WitchView: React.FC<RoleViewProps> = ({
         players={alivePlayers.filter((p) => !p.powerState.isDeadSoon)}
         onSelect={(id) => onAction({ type: 'KILL', targetId: id })}
         onSkip={() => setAction(null)}
-        skipLabel={t('common.back')}
+        skipLabel={t('common.skip')}
         buttonColor="error"
       />
     );

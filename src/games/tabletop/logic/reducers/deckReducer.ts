@@ -13,6 +13,9 @@ export type DeckAction = Extract<
   { type: 'SHUFFLE_DECK' | 'DRAW_CARD' | 'RETURN_CARD_TO_DECK' }
 >;
 
+/** Stacking order of a card that left its deck. */
+const DRAWN_Z = 2000000;
+
 /** Adds `card` to `deck` and marks it as a pile member (mutates the widget map). */
 export function placeCardInDeck(
   widgets: Record<string, TabletopWidget>,
@@ -195,6 +198,10 @@ export function deckReducer(state: TabletopGameState, action: DeckAction): Table
 
       if (card && (action.payload.position || action.payload.targetHolderId)) {
         const faceUp = action.payload.position ? (action.payload.faceUp ?? true) : true;
+        // Laid on the table, a card goes on top of what lies there (a layout overlaps in order).
+        const zIndex = action.payload.position
+          ? Math.max(DRAWN_Z - 1, ...Object.values(widgets).map((w) => w.zIndex || 0)) + 1
+          : DRAWN_Z;
         widgets[drawnCardId] = {
           ...card,
           x: nextX,
@@ -203,7 +210,7 @@ export function deckReducer(state: TabletopGameState, action: DeckAction): Table
           pileId: undefined,
           faceUp,
           activeFace: faceUp ? 1 : 0,
-          zIndex: 2000000,
+          zIndex,
         };
       }
 

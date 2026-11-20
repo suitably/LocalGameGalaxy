@@ -1,7 +1,6 @@
 import React, { useRef, useState, useMemo } from 'react';
 import { Box } from '@mui/material';
 import { TabletopToolbar } from './TabletopToolbar';
-import { RulesDialog } from './RulesDialog';
 import { FlyingCardsLayer } from './FlyingCardsLayer';
 import type { TabletopGameState, TabletopAction } from '../../logic/tabletopReducer';
 import type { TabletopWidget } from '../../logic/types';
@@ -19,7 +18,7 @@ import { SurfaceContextMenu } from './SurfaceContextMenu';
 import { useTableKeyShortcuts } from '../../hooks/useTableKeyShortcuts';
 import { useAddHiddenZone } from '../../hooks/useAddHiddenZone';
 import { getSeatWidgets } from '../../logic/seatLogic';
-import { filterBoardHolders, filterBoardWidgets } from '../../logic/boardFilter';
+import { filterBoardHolders, filterBoardWidgets, withFanCards } from '../../logic/boardFilter';
 import { SurfaceSeatControls } from './SurfaceSeatControls';
 import { useFitToScreen } from '../../hooks/useFitToScreen';
 import { BoardDragOverlay } from './BoardDragOverlay';
@@ -36,6 +35,10 @@ interface TabletopSurfaceProps {
   readOnly?: boolean;
   /** Host table: the selection can be deleted (phones may not, #685). */
   canDeleteSelection?: boolean;
+  /** Top offset of the selection bar (below the editor toolbar). */
+  selectionBarTop?: number;
+  /** Initial view centred on this box instead of the whole table (phone "My area"). */
+  focus?: Parameters<typeof useFitToScreen>[4];
 }
 
 export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
@@ -46,10 +49,11 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
   editMode = false,
   readOnly = false,
   canDeleteSelection = false,
+  selectionBarTop,
+  focus,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-  const [rulesOpen, setRulesOpen] = useState(false);
   const [contextMenuPos, setContextMenuPos] = useState<WidgetContextMenuPosition | null>(null);
 
   const { game, flyingCards } = state;
@@ -96,6 +100,7 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     onShake: dispatch,
     onLongPressRelease: (widgetId, mouseX, mouseY) =>
       setContextMenuPos({ mouseX, mouseY, widgetId }),
+    containerRef,
   });
   const trackHover = useTableKeyShortcuts(game.widgets, activeDragId, dispatch);
 
@@ -111,10 +116,10 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
     [game.widgets, visibleIds, isTvMode],
   );
   const boardWidgets = useMemo(
-    () => filterBoardWidgets(game.widgets, visibleIds, isTvMode),
+    () => withFanCards(filterBoardWidgets(game.widgets, visibleIds, isTvMode), game.widgets),
     [game.widgets, visibleIds, isTvMode],
   );
-  const fitToScreen = useFitToScreen(containerRef, game, setTransform, setContainerSize);
+  const fitToScreen = useFitToScreen(containerRef, game, setTransform, setContainerSize, focus);
   const onPointerDownBoardWidget = (e: React.PointerEvent, w: TabletopWidget) => {
     if (isSpectator) return; // bubbles up to the board pan
     if (!selection.handleWidgetClick(w.id, e.shiftKey)) handlePointerDownWidget(e, w);
@@ -196,7 +201,11 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
         />
       </Box>
 
-      <SelectionFloatingBar selection={selection} canDelete={canDeleteSelection && !isSpectator} />
+      <SelectionFloatingBar
+        selection={selection}
+        canDelete={canDeleteSelection && !isSpectator}
+        top={selectionBarTop}
+      />
 
       <SurfaceSeatControls
         seats={seats}
@@ -211,15 +220,12 @@ export const TabletopSurface: React.FC<TabletopSurfaceProps> = ({
           onZoomIn={zoomIn}
           onZoomOut={zoomOut}
           onResetView={fitToScreen}
-          onOpenRules={() => setRulesOpen(true)}
-          hasRules={Boolean(game.ruleText)}
           isSelectionMode={selection.isSelectionMode}
           onToggleSelectionMode={isSpectator ? undefined : selection.toggleSelectionMode}
           onAddHiddenZone={isSpectator ? undefined : handleAddHiddenZone}
+          besideInspector={editMode}
         />
       )}
-
-      <RulesDialog open={rulesOpen} onClose={() => setRulesOpen(false)} ruleText={game.ruleText} />
 
       <BoardDragOverlay
         widget={activeDragId && isDraggingActive ? game.widgets[activeDragId] : null}

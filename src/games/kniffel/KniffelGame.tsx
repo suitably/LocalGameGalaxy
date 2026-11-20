@@ -77,12 +77,13 @@ export const KniffelGame: React.FC = () => {
               size="small"
               color="secondary"
               startIcon={<CasinoIcon />}
+              aria-pressed={showDice}
               onClick={() => setShowDice((prev) => !prev)}
               sx={{ borderRadius: 999, fontWeight: 700, textTransform: 'none' }}
             >
               {showDice
-                ? t('games.kniffel.hide_dice', 'Würfel')
-                : t('games.kniffel.show_dice', 'Würfel')}
+                ? t('games.kniffel.hide_dice', 'Würfel ausblenden')
+                : t('games.kniffel.show_dice', 'Würfel anzeigen')}
             </Button>
           </Tooltip>
 

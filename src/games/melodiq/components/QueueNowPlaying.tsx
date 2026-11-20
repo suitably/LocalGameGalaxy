@@ -61,6 +61,7 @@ export const QueueNowPlaying: React.FC<QueueNowPlayingProps> = ({
         </Box>
         {canEdit && (
           <IconButton
+            aria-label={t('melodiq.a11y.edit')}
             size="small"
             onClick={onEdit}
             sx={{ color: 'text.secondary', '&:hover': { color: 'text.primary' } }}

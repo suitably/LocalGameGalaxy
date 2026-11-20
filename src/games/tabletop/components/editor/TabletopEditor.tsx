@@ -22,7 +22,13 @@ interface TabletopEditorProps {
   isTvMode?: boolean;
   /** Pass and play: seat chips hidden, seats change through the handover. */
   hideSeatSelector?: boolean;
+  /** Table settings are opened from the header menu (`TableGameMenu`). */
+  tableSettingsOpen?: boolean;
+  onCloseTableSettings?: () => void;
 }
+
+/** The selection bar starts below the floating `EditorToolbar` (top 12 + 48 px buttons + gap). */
+const EDITOR_TOOLBAR_CLEARANCE = 72;
 
 /** Outlines the selected widget; board widgets sit in a `display: contents` wrapper. */
 const selectionCss = (id: string, color: string) => {
@@ -35,10 +41,11 @@ export const TabletopEditor: React.FC<TabletopEditorProps> = ({
   dispatch,
   isTvMode,
   hideSeatSelector,
+  tableSettingsOpen = false,
+  onCloseTableSettings,
 }) => {
   const editor = useTabletopEditor(state, dispatch);
   const theme = useTheme();
-  const [tableOpen, setTableOpen] = useState(false);
   const [deckOpen, setDeckOpen] = useState(false);
 
   return (
@@ -59,6 +66,7 @@ export const TabletopEditor: React.FC<TabletopEditorProps> = ({
           hideSeatSelector={hideSeatSelector}
           editMode={editor.editMode}
           canDeleteSelection
+          selectionBarTop={EDITOR_TOOLBAR_CLEARANCE}
         />
       </Box>
       {editor.editMode && editor.selectedId && (
@@ -71,17 +79,13 @@ export const TabletopEditor: React.FC<TabletopEditorProps> = ({
           onCommit={(p) => editor.selectedId && editor.patch(editor.selectedId, p)}
         />
       )}
-      <EditorToolbar
-        editor={editor}
-        onOpenTableSettings={() => setTableOpen(true)}
-        onOpenDeckBuilder={() => setDeckOpen(true)}
-      />
+      <EditorToolbar editor={editor} onOpenDeckBuilder={() => setDeckOpen(true)} />
       {editor.editMode && <WidgetInspector game={state.game} editor={editor} />}
       <TableSettingsDialog
-        open={tableOpen}
+        open={tableSettingsOpen}
         table={state.game.table}
         onChange={editor.updateTable}
-        onClose={() => setTableOpen(false)}
+        onClose={() => onCloseTableSettings?.()}
       />
       <DeckBuilderDialog
         open={deckOpen}

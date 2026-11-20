@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import { useTranslation } from 'react-i18next';
+import { ConfirmDialog } from '../../../components/common/ConfirmDialog';
 import type { StoryGameRecord } from '../types';
 
 interface SavedStoriesCardProps {
@@ -27,6 +28,7 @@ export const SavedStoriesCard: React.FC<SavedStoriesCardProps> = ({
   onDeleteGame,
 }) => {
   const { t } = useTranslation();
+  const [pendingDeleteId, setPendingDeleteId] = React.useState<string | null>(null);
 
   return (
     <Card variant="outlined">
@@ -72,9 +74,10 @@ export const SavedStoriesCard: React.FC<SavedStoriesCardProps> = ({
                 <IconButton
                   size="small"
                   edge="end"
+                  aria-label={t('storyteller.deleteSavedAria', 'Geschichte löschen')}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onDeleteGame(g.id);
+                    setPendingDeleteId(g.id);
                   }}
                 >
                   <DeleteRoundedIcon fontSize="small" />
@@ -84,6 +87,21 @@ export const SavedStoriesCard: React.FC<SavedStoriesCardProps> = ({
           ))}
         </List>
       </CardContent>
+      <ConfirmDialog
+        open={pendingDeleteId !== null}
+        title={t('storyteller.deleteSavedTitle', 'Geschichte löschen?')}
+        message={t(
+          'storyteller.deleteSavedMessage',
+          'Die gespeicherte Geschichte wird endgültig gelöscht.',
+        )}
+        confirmText={t('common.delete', 'Löschen')}
+        confirmColor="error"
+        onCancel={() => setPendingDeleteId(null)}
+        onConfirm={() => {
+          if (pendingDeleteId) onDeleteGame(pendingDeleteId);
+          setPendingDeleteId(null);
+        }}
+      />
     </Card>
   );
 };

@@ -4,13 +4,14 @@
  * Shows the participant link (copy, share, QR), progress, the draw log (only with
  * `hostSeesResults`), the entries and the host actions.
  */
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../context/TitleContext';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { ErrorState } from '../../components/common/ErrorState';
+import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { useAdminPot } from './hooks/useAdminPot';
 import { adminLink, participantLink, potPath, serverOf } from './logic/api';
 import { ShareLinkCard } from './components/ShareLinkCard';
@@ -23,6 +24,7 @@ export const DrawPotAdmin: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const a = useAdminPot(potId);
+  const [confirmForget, setConfirmForget] = useState(false);
   usePageTitle(a.pot?.title ?? t('games.drawpot.title'));
 
   if (a.error === 'no_key' || a.error === 'forbidden')
@@ -46,11 +48,23 @@ export const DrawPotAdmin: React.FC = () => {
         />
         {a.error === 'not_found' && (
           <Box textAlign="center">
-            <Button color="error" onClick={() => void a.remove()}>
+            <Button color="error" onClick={() => setConfirmForget(true)}>
               {t('drawpot.admin.forget')}
             </Button>
           </Box>
         )}
+        <ConfirmDialog
+          open={confirmForget}
+          title={t('drawpot.admin.forgetTitle')}
+          message={t('drawpot.admin.forgetMessage')}
+          confirmText={t('drawpot.admin.forgetConfirm')}
+          confirmColor="error"
+          onCancel={() => setConfirmForget(false)}
+          onConfirm={() => {
+            setConfirmForget(false);
+            void a.remove();
+          }}
+        />
       </GameLayout>
     ) : (
       <Box display="flex" justifyContent="center" py={6}>

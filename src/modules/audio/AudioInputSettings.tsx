@@ -189,7 +189,10 @@ export const AudioInputSettings: React.FC = () => {
                     }}
                     autoFocus
                   />
-                  <IconButton onClick={() => saveName(d.deviceId)}>
+                  <IconButton
+                    onClick={() => saveName(d.deviceId)}
+                    aria-label={t('common.save', 'Save')}
+                  >
                     <CheckIcon />
                   </IconButton>
                 </Box>
@@ -202,6 +205,7 @@ export const AudioInputSettings: React.FC = () => {
                   />
                   <IconButton
                     size="small"
+                    aria-label={t('settings.audio.rename_device', 'Rename device')}
                     onClick={() => {
                       setEditingId(d.deviceId);
                       setEditValue(displayName);

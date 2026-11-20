@@ -4,29 +4,20 @@ Living list. Each item: what is unclear or broken, the evidence, what would reso
 
 Found by the [2026-10-18 docs-vs-code audit](reports/2026-10-18-docs-vs-code-audit.md) unless noted.
 
-## Q5 — Root `config.example.json` is obsolete
-
-**[user]** The repo root contains `config.example.json` with an `ssl` block, and README step 2 says `cp config.example.json config.json`. The companion server has no TLS support any more (removed in the backend simplification, see [archive](archive/backend-simplification/03-remove-ssl-generator.md)), looks for `config.json` in `CONFIG_PATH`, the working directory or next to the executable, and ships its own `server/config.example.json`.
-Resolve: delete the root example and point README to `server/config.example.json`.
-
-## Q6 — Dead translation files
-
-`src/i18n/locales/{de,en}/imposter.json` are tracked but imported nowhere (Imposter strings come from `public/locales/*/translation.json`).
-Resolve: delete them, or wire them up if they hold newer strings.
-
-## Q7 — Scaffolder generates a `gameManifest.ts` pattern no game uses
-
-`scripts/scaffold-game.mjs` writes `src/games/<id>/gameManifest.ts`, `tests/<id>.test.ts` and a `hooks/use<Game>State.ts`, then patches `src/lib/gameRegistry.tsx`. None of the 15 existing games has a `gameManifest.ts`; the registry is a hand-written array. **Unverified:** whether the registry patch step still matches the current file layout.
-Resolve: run the scaffolder in a scratch branch; either align it with the existing pattern or adopt manifests everywhere.
-## Q4 — Melodiq uses inline `BroadcastChannel`
-
-The anti-pattern matrix forbids inline `BroadcastChannel` sync in games, but Melodiq creates channels directly in `hooks/useTVMode.ts`, `hooks/useTVReceiver.ts`, `hooks/SettingsContext.tsx`, `gameplay/hooks/useSessionEnd.ts` (channel `melodiq_tv_control`) and `hooks/useQueue.ts` (queue sync). `check-architecture.mjs` does not check this rule.
-Resolve: migrate to `useMultiChannelSync` or document Melodiq TV sync as an explicit exception.
-
 ## Q22 — Tabletop p95 frame time at 800 widgets above 16 ms under emulation [user]
 
 TTS plan D5: optimise the DOM renderer, measure at 800 widgets, and consider a Canvas renderer only if p95 stays above 16 ms. After #684 (`npm run perf:tabletop`, headless Chromium in a 4-vCPU cloud container): a token drag reaches p95 16.7 ms unthrottled (`main`: 100–150 ms), but 50–67 ms at 4× CPU throttling (`main`: 580–750 ms); panning stays at 16.8 ms. The acceptance criterion names a real mid-range phone, and the 4× emulation is only an approximation of one.
 Resolve: measure on a real mid-range phone (manual). If p95 stays above 16 ms there, the maintainer decides between further DOM work (remaining cost: re-rendering the whole table tree on each 50 ms commit, layout of ~5,500 layout objects per commit, layerization) and the Canvas renderer of D5.
+
+## Q23 — Wordle's `i18n` bundle is never registered
+
+`src/games/wordle/i18n/index.ts` exports a flat-key `wordleTranslations` that nothing imports (only `src/games/wordle/index.ts` re-exports it); live Wordle strings come from the top-level `wordle` section of `public/locales`. Same situation Sudoku had before 2026-11-16, where the dead bundle was deleted. [i18n-strategy](tech/i18n-strategy.md) no longer lists Wordle as a bundle game.
+Resolve: check that every bundle key exists in `public/locales`, then delete the bundle like Sudoku's, or register it via an `initWordleI18n()` like Kniffel and remove the duplicates from the locale files.
+
+## Q24 — Scripted card games send all hands to every device [user]
+
+`src/games/tabletop/scripted` syncs through `useRoomReducer`, which publishes the host's whole state (all hands, stock, skat) to every device in the room; only the UI hides other players' cards. The free tabletop seals hands per seat (`logic/privateHandChannel.ts`). Fine among friends, but a player who reads the room traffic sees every card.
+Resolve: the maintainer decides whether that is acceptable; otherwise the host sends `script.view(state, seat)` per seat, sealed with `logic/sealCrypto.ts`, and `moveAllowed` moves to the host. [scripted card games](tech/tabletop-scripted-games.md) §3.
 
 ## Resolved 2026-11-15
 
@@ -35,9 +26,6 @@ Resolve: measure on a real mid-range phone (manual). If p95 stays above 16 ms th
 - Q5 root `config.example.json` → maintainer decision (2026-11-15): deleted; README step 2 copies `server/config.example.json`. [secrets-management](tech/secrets-management.md)
 - Q6 dead `imposter.json` locale files → maintainer decision (2026-11-15): deleted. They held a legacy word/hint list (1066 keys per language) superseded by `src/games/imposter/logic/wordPairs_{de,en}.ts`; none of the keys is referenced.
 - Q13 ADR-0004 vs. separation stack → maintainer decision (2026-11-15, "whichever is more stable"): the running stack is documented. [ADR-0006](adr/0006-audio-separator-onnx-whisper-alignment.md) supersedes ADR-0004 (`audio-separator[cpu]` + `UVR-MDX-NET-Inst_HQ_3.onnx`, `whisper-timestamped`, CPU PyTorch kept for Whisper); the Demucs → ONNX rationale is marked **Unverified:** there.
-
-## Resolved 2026-11-15
-
 - Q4 Melodiq inline `BroadcastChannel` → maintainer decision (2026-11-15): migrate. TV control (`melodiq_tv_control`), settings, session end and queue sync (`melodiq_queue_channel`) now use `useMultiChannelSync` with the new `selfEcho: false` option; channel names and messages are unchanged. [sync-protocol §3](tech/sync-protocol.md#3-multi-channel-sync-usemultichannelsynct)
 
 ## Resolved 2026-11-08

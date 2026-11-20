@@ -75,7 +75,7 @@ export const GameInfoDialog: React.FC<GameInfoDialogProps> = ({ open, onClose })
           fullWidth
           sx={{ borderRadius: 2 }}
         >
-          {t('games.imposter.info.got_it', 'Got it!')}
+          {t('common.close')}
         </Button>
       </DialogActions>
     </Dialog>

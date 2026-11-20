@@ -60,7 +60,8 @@ export const LeadInIndicator: React.FC<LeadInIndicatorProps> = React.memo(
                     width: `${0.65 * scale}rem`,
                     height: `${0.65 * scale}rem`,
                     borderRadius: '50%',
-                    bgcolor: isLit ? primaryColor : 'rgba(255,255,255,0.25)',
+                    bgcolor: (theme) =>
+                      isLit ? primaryColor : alpha(theme.palette.common.white, 0.25),
                     transform: isLit ? 'scale(1.2)' : 'scale(1.0)',
                     transition: transitionOf(['background-color', 'transform'], 'short', 'bounce'),
                   }}

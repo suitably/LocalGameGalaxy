@@ -108,7 +108,7 @@ export const QueueList: React.FC<QueueListProps> = ({
                 <Box>
                   <IconButton
                     edge="end"
-                    aria-label="up"
+                    aria-label={t('melodiq.a11y.move_up')}
                     onClick={() => handleMove(index, 'up')}
                     disabled={index === 0}
                   >
@@ -116,7 +116,7 @@ export const QueueList: React.FC<QueueListProps> = ({
                   </IconButton>
                   <IconButton
                     edge="end"
-                    aria-label="down"
+                    aria-label={t('melodiq.a11y.move_down')}
                     onClick={() => handleMove(index, 'down')}
                     disabled={index === queue.length - 1}
                   >
@@ -124,7 +124,7 @@ export const QueueList: React.FC<QueueListProps> = ({
                   </IconButton>
                   <IconButton
                     edge="end"
-                    aria-label="delete"
+                    aria-label={t('common.delete')}
                     onClick={() => removeFromQueue(item.id)}
                     color="error"
                   >

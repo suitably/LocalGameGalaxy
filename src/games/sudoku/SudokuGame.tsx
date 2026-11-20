@@ -21,6 +21,9 @@ import { SudokuHeader } from './components/SudokuHeader';
 import { SudokuGrid } from './components/SudokuGrid';
 import { SudokuNumpad } from './components/SudokuNumpad';
 import { SudokuVictoryModal } from './components/SudokuVictoryModal';
+import { ConfirmDialog } from '../../components/common/ConfirmDialog';
+import { useSudokuHeaderActions } from './hooks/useSudokuHeaderActions';
+import { hasSudokuProgress } from './logic/progress';
 import type { SudokuDifficulty } from './logic/types';
 
 export const SudokuGame: React.FC = () => {
@@ -29,6 +32,11 @@ export const SudokuGame: React.FC = () => {
 
   const [helpOpen, setHelpOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
+  const [pendingDifficulty, setPendingDifficulty] = useState<SudokuDifficulty | null>(null);
+  useSudokuHeaderActions({
+    onOpenStats: () => setStatsOpen(true),
+    onOpenHelp: () => setHelpOpen(true),
+  });
 
   const {
     state,
@@ -44,8 +52,10 @@ export const SudokuGame: React.FC = () => {
     togglePause,
   } = useSudoku('medium');
 
+  // Switching difficulty starts a new board; ask first when that would discard progress.
   const handleChangeDifficulty = (diff: SudokuDifficulty) => {
-    startNewGame(diff);
+    if (hasSudokuProgress(state)) setPendingDifficulty(diff);
+    else startNewGame(diff);
   };
 
   return (
@@ -69,8 +79,21 @@ export const SudokuGame: React.FC = () => {
           timeElapsed={state.timeElapsed}
           isPaused={state.isPaused}
           onTogglePause={togglePause}
-          onOpenHelp={() => setHelpOpen(true)}
-          onOpenStats={() => setStatsOpen(true)}
+        />
+
+        <ConfirmDialog
+          open={pendingDifficulty !== null}
+          title={t('sudoku.confirm_new.title', 'Neues Spiel starten?')}
+          message={t('sudoku.confirm_new.message', {
+            difficulty: pendingDifficulty ? t(`sudoku.difficulty.${pendingDifficulty}`) : '',
+          })}
+          confirmText={t('sudoku.confirm_new.confirm', 'Neues Spiel')}
+          confirmColor="error"
+          onConfirm={() => {
+            if (pendingDifficulty) startNewGame(pendingDifficulty);
+            setPendingDifficulty(null);
+          }}
+          onCancel={() => setPendingDifficulty(null)}
         />
 
         {/* 9x9 Grid */}
@@ -174,7 +197,7 @@ export const SudokuGame: React.FC = () => {
             </Typography>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setHelpOpen(false)}>{t('common.close', 'Verstanden')}</Button>
+            <Button onClick={() => setHelpOpen(false)}>{t('common.close')}</Button>
           </DialogActions>
         </Dialog>
       </Box>

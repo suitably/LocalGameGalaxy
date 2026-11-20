@@ -5,11 +5,11 @@
  * sum on their own sheet (`modules/room-game`).
  */
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material';
-import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import { Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../../context/TitleContext';
+import { useHeaderLayout } from '../../context/HeaderLayoutContext';
 import { useWakeLock } from '../../hooks/useWakeLock';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { useRoomReducer } from '../../modules/room-game';
@@ -64,8 +64,12 @@ export const KnisterRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
     [state.players, state.placed],
   );
 
-  // The game goes on while this device visits the lobby (#657); the host ends it there.
-  const backToParty = () => navigate(`/party?room=${roomId}`);
+  // Header back arrow = party lobby; the game goes on while this device visits it (#657).
+  const { setHomeAction } = useHeaderLayout();
+  useEffect(() => {
+    setHomeAction(() => navigate(`/party?room=${roomId}`));
+    return () => setHomeAction(null);
+  }, [navigate, roomId, setHomeAction]);
 
   let status = '';
   if (roll && !iPlaced) status = t('games.knister.room_place', { sum: roll.sum });
@@ -74,14 +78,6 @@ export const KnisterRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
 
   return (
     <GameLayout maxWidth="sm">
-      <Stack direction="row" alignItems="center" gap={1} mb={1}>
-        <Button size="small" startIcon={<ArrowBackRoundedIcon />} onClick={backToParty}>
-          {t('games.knister.room_back')}
-        </Button>
-        <Box flex={1} />
-        <Chip size="small" color="primary" label={roomId} />
-      </Stack>
-
       {!synced || (!me && state.players.length === 0) ? (
         <Stack alignItems="center" gap={2} py={6}>
           <CircularProgress />

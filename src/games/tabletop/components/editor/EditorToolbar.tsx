@@ -1,5 +1,7 @@
 /**
- * Edit-mode switch, undo/redo (also while playing), add-widget menu and table settings [ID: COMP-TABLETOP-EDITOR-TOOLBAR]
+ * Edit-mode switch, undo/redo (also while playing) and add-widget menu [ID: COMP-TABLETOP-EDITOR-TOOLBAR]
+ *
+ * Canvas tools only; the table settings are in the header menu (`TableGameMenu`).
  */
 import React, { useState } from 'react';
 import { Divider, IconButton, Menu, MenuItem, Paper, Tooltip } from '@mui/material';
@@ -8,22 +10,16 @@ import DoneIcon from '@mui/icons-material/DoneRounded';
 import UndoIcon from '@mui/icons-material/UndoRounded';
 import RedoIcon from '@mui/icons-material/RedoRounded';
 import AddBoxIcon from '@mui/icons-material/AddBoxRounded';
-import TableRestaurantIcon from '@mui/icons-material/TableRestaurantRounded';
 import { useTranslation } from 'react-i18next';
 import { NEW_WIDGET_KINDS } from '../../logic/widgetTemplates';
 import type { TabletopEditorApi } from './useTabletopEditor';
 
 interface EditorToolbarProps {
   editor: TabletopEditorApi;
-  onOpenTableSettings: () => void;
   onOpenDeckBuilder: () => void;
 }
 
-export const EditorToolbar: React.FC<EditorToolbarProps> = ({
-  editor,
-  onOpenTableSettings,
-  onOpenDeckBuilder,
-}) => {
+export const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor, onOpenDeckBuilder }) => {
   const { t } = useTranslation();
   const [addAnchor, setAddAnchor] = useState<HTMLElement | null>(null);
 
@@ -45,7 +41,14 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
       <Tooltip
         title={editor.editMode ? t('games.tabletop.editor.done') : t('games.tabletop.editor.edit')}
       >
-        <IconButton onClick={editor.toggleEditMode} color={editor.editMode ? 'primary' : 'default'}>
+        <IconButton
+          onClick={editor.toggleEditMode}
+          color={editor.editMode ? 'primary' : 'default'}
+          aria-label={
+            editor.editMode ? t('games.tabletop.editor.done') : t('games.tabletop.editor.edit')
+          }
+          aria-pressed={editor.editMode}
+        >
           {editor.editMode ? <DoneIcon /> : <EditIcon />}
         </IconButton>
       </Tooltip>
@@ -73,18 +76,15 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
         </span>
       </Tooltip>
       {editor.editMode && (
-        <>
-          <Tooltip title={t('games.tabletop.editor.add')}>
-            <IconButton onClick={(e) => setAddAnchor(e.currentTarget)}>
-              <AddBoxIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={t('games.tabletop.editor.table')}>
-            <IconButton onClick={onOpenTableSettings}>
-              <TableRestaurantIcon />
-            </IconButton>
-          </Tooltip>
-        </>
+        <Tooltip title={t('games.tabletop.editor.add')}>
+          <IconButton
+            onClick={(e) => setAddAnchor(e.currentTarget)}
+            aria-label={t('games.tabletop.editor.add')}
+            aria-haspopup="menu"
+          >
+            <AddBoxIcon />
+          </IconButton>
+        </Tooltip>
       )}
       <Menu anchorEl={addAnchor} open={Boolean(addAnchor)} onClose={() => setAddAnchor(null)}>
         {NEW_WIDGET_KINDS.map((kind) => (

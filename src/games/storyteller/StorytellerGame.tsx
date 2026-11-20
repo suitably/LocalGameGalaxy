@@ -1,11 +1,10 @@
 import { NotificationChoiceDialog } from '../../components/push/NotificationChoiceDialog';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../../context/TitleContext';
 import { useWakeLock } from '../../hooks/useWakeLock';
-import { useHeaderLayout } from '../../context/HeaderLayoutContext';
 import { useStorytellerLobby } from './hooks/useStorytellerLobby';
 import { StoryLobby } from './components/StoryLobby';
 import { StoryActiveView } from './components/StoryActiveView';
@@ -44,12 +43,6 @@ const StorytellerLocalGame: React.FC = () => {
 
   const isGameActive = Boolean(activeGameId || game);
   useWakeLock(isGameActive);
-  const { setHeaderHidden } = useHeaderLayout();
-
-  useEffect(() => {
-    setHeaderHidden(isGameActive);
-    return () => setHeaderHidden(false);
-  }, [isGameActive, setHeaderHidden]);
 
   // Shared player links: import the story and take the player's seat here
   useStoryJoinLink(async (joinedGame, joinedEntries) => {

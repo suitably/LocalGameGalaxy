@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import type { DeckWidget, CardWidget } from '../../logic/types';
 import { CardFaceContent } from './CardFaceContent';
 import { DeckShuffleOverlay } from './DeckShuffleOverlay';
+import { StackFanView } from './StackFanView';
+import type { BoardDeck } from '../../logic/boardFilter';
 
 interface DeckWidgetViewProps {
   widget: DeckWidget;
@@ -43,6 +45,18 @@ export const DeckWidgetView: React.FC<DeckWidgetViewProps> = ({
       isFaceUp={hasFront}
     />
   );
+
+  const fanCards = (widget as BoardDeck).fanCards;
+  if (fanCards && !isEmpty) {
+    return (
+      <StackFanView
+        widget={widget}
+        cards={fanCards}
+        isDragging={isDragging}
+        onPointerDown={onPointerDown}
+      />
+    );
+  }
 
   return (
     <>

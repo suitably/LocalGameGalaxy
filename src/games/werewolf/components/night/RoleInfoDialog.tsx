@@ -29,7 +29,7 @@ export const RoleInfoDialog: React.FC<RoleInfoDialogProps> = ({
     <Dialog open={open} onClose={onClose} maxWidth="xs">
       <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         {title}
-        <IconButton onClick={onClose} size="small" aria-label={t('common.close', 'Close')}>
+        <IconButton onClick={onClose} size="small" aria-label={t('common.close')}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -37,7 +37,7 @@ export const RoleInfoDialog: React.FC<RoleInfoDialogProps> = ({
         <Typography variant="body1">{description}</Typography>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('common.close', 'Close')}</Button>
+        <Button onClick={onClose}>{t('common.close')}</Button>
       </DialogActions>
     </Dialog>
   );

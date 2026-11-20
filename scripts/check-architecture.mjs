@@ -14,6 +14,12 @@
  * 5. [CRITICAL] Tracked server media (server/music/)
  * 6. [CRITICAL] Hard-coded colours (hex, non-black rgb/rgba) in src .tsx files: per-file count ratchet in
  *    scripts/hardcoded-color-baselines.json (a file may only go down; --diff checks changed files only)
+ * 7. [CRITICAL] No second top bar: MUI AppBar must not be imported under src/games (GlobalHeader only)
+ * 8. [CRITICAL] setHeaderHidden( only in the allowlist of scripts/lib/header-rules.mjs
+ * 9. [CRITICAL] Back-icon ratchet (ArrowBack*, ChevronLeft*, KeyboardBackspace* imports) in src/games and
+ *    src/components: per-file count in scripts/back-icon-baselines.json, may only go down
+ * 10. [CRITICAL] IconButton without aria-label/title/Tooltip: per-file count ratchet in
+ *    scripts/icon-button-label-baselines.json, may only go down
  *
  * Usage:
  *   node scripts/check-architecture.mjs           # Full audit with summary
@@ -21,6 +27,8 @@
  *   node scripts/check-architecture.mjs --diff    # Checks only files changed vs git HEAD
  *   node scripts/check-architecture.mjs --update-colors  # Lower colour baselines (never raises them)
  *   node scripts/check-architecture.mjs --init-colors    # Write colour baselines from the current tree
+ *   node scripts/check-architecture.mjs --update-ratchets # Lower back-icon / IconButton baselines (never raises them)
+ *   node scripts/check-architecture.mjs --init-ratchets   # Write those baselines from the current tree
  */
 
 import fs from 'node:fs';
@@ -29,6 +37,15 @@ import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { getChangedFiles as getRepoChangedFiles } from './lib/changed-files.mjs';
 import { countHardcodedColors, isColorCheckedFile } from './lib/hardcoded-colors.mjs';
+import {
+  countAppBarImports,
+  countBackIconImports,
+  findSetHeaderHiddenCalls,
+  findUnlabeledIconButtons,
+  isAppBarCheckedFile,
+  isBackIconCheckedFile,
+  isSetHeaderHiddenAllowed,
+} from './lib/header-rules.mjs';
 import { compareToBaseline, lowerBaseline, sortCounts } from './lib/lint-budget.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -38,6 +55,8 @@ const SRC_DIR = path.join(ROOT_DIR, 'src');
 const GAMES_DIR = path.join(SRC_DIR, 'games');
 const BASELINE_FILE = path.join(__dirname, 'architecture-baseline.json');
 const COLOR_BASELINE_FILE = path.join(__dirname, 'hardcoded-color-baselines.json');
+const BACK_ICON_BASELINE_FILE = path.join(__dirname, 'back-icon-baselines.json');
+const ICON_BUTTON_BASELINE_FILE = path.join(__dirname, 'icon-button-label-baselines.json');
 
 const isStrict = process.argv.includes('--strict');
 /** Same limit as MAX_LINES in check-component-budget.js. */
@@ -46,6 +65,11 @@ const isDiff = process.argv.includes('--diff');
 const colorMode = process.argv.includes('--init-colors')
   ? 'init'
   : process.argv.includes('--update-colors')
+    ? 'update'
+    : 'check';
+const ratchetMode = process.argv.includes('--init-ratchets')
+  ? 'init'
+  : process.argv.includes('--update-ratchets')
     ? 'update'
     : 'check';
 
@@ -128,7 +152,15 @@ const violations = {
   nativeDialogs: [],
   largeComponents: [],
   trackedServerMedia: [],
+  appBarInGames: [],
+  headerHiddenCalls: [],
 };
+/** Back-icon imports / unlabeled IconButtons per file (only files with at least one). */
+const backIconCounts = {};
+const iconButtonCounts = {};
+/** Files each ratchet looked at, so diff mode compares only those. */
+const backIconScanned = new Set();
+const iconButtonScanned = new Set();
 /** Hard-coded colour count per checked file (only files with at least one). */
 const colorCounts = {};
 /** Files the colour rule looked at, so diff mode compares only those. */
@@ -221,6 +253,26 @@ for (const filePath of allFiles) {
     colorScanned.add(posixPath);
     const colorCount = countHardcodedColors(content);
     if (colorCount > 0) colorCounts[posixPath] = colorCount;
+  }
+
+  // Checks 7-10: header rules (second top bar, setHeaderHidden, back icons, unlabeled IconButtons)
+  if (isAppBarCheckedFile(posixPath) && countAppBarImports(content) > 0) {
+    violations.appBarInGames.push({ file: posixPath });
+  }
+  if (!isSetHeaderHiddenAllowed(posixPath)) {
+    for (const line of findSetHeaderHiddenCalls(content)) {
+      violations.headerHiddenCalls.push({ file: posixPath, line });
+    }
+  }
+  if (isBackIconCheckedFile(posixPath)) {
+    backIconScanned.add(posixPath);
+    const n = countBackIconImports(content);
+    if (n > 0) backIconCounts[posixPath] = n;
+  }
+  if (posixPath.endsWith('.tsx') && !/\.(test|spec)\./.test(posixPath)) {
+    iconButtonScanned.add(posixPath);
+    const n = findUnlabeledIconButtons(content).length;
+    if (n > 0) iconButtonCounts[posixPath] = n;
   }
 
   // Check 4: Large components (> COMPONENT_MAX_LINES for React UI .tsx files; enforced by check:budget)
@@ -320,6 +372,38 @@ if (violations.nativeDialogs.length > 0) {
   console.log('');
 } else {
   console.log(`${GREEN}✔ No blocking window.confirm/prompt/alert${RESET}`);
+}
+
+// Report second top bars (AppBar in games)
+if (violations.appBarInGames.length > 0) {
+  hasErrors = true;
+  console.log(
+    `${RED}${BOLD}✖ MUI AppBar Imported In A Game (${violations.appBarInGames.length})${RESET}`,
+  );
+  console.log(
+    `  Rule: GlobalHeader is the only top bar. Set the title with usePageTitle() and actions with useHeaderLayout() (setHomeAction, setMenuItems, setCustomHeaderActions); for a dialog use <DialogTitle> (DESIGN.md §6, AGENTS.md §4).`,
+  );
+  for (const v of violations.appBarInGames) console.log(`  ${RED}•${RESET} ${v.file}`);
+  console.log('');
+} else {
+  console.log(`${GREEN}✔ No AppBar in games (GlobalHeader is the only top bar)${RESET}`);
+}
+
+// Report setHeaderHidden calls outside the allowlist
+if (violations.headerHiddenCalls.length > 0) {
+  hasErrors = true;
+  console.log(
+    `${RED}${BOLD}✖ setHeaderHidden() Called Outside The Allowlist (${violations.headerHiddenCalls.length})${RESET}`,
+  );
+  console.log(
+    `  Rule: A running game never hides GlobalHeader; back/exit is the header arrow (useHeaderLayout().setHomeAction). Only Melodiq Notes immersive mode (src/games/melodiq-notes/stage/useImmersive.ts) may hide it. Allowlist: scripts/lib/header-rules.mjs.`,
+  );
+  for (const v of violations.headerHiddenCalls) {
+    console.log(`  ${RED}•${RESET} ${v.file}:${v.line}`);
+  }
+  console.log('');
+} else {
+  console.log(`${GREEN}✔ setHeaderHidden() only used by the allowlist${RESET}`);
 }
 
 // Report Tracked Server Media
@@ -439,8 +523,92 @@ if (colorStale.length > 0) {
   }
 }
 
-if (colorFailed) {
-  console.error(`${RED}${BOLD}✖ Architecture gate failed: hard-coded colour ratchet.${RESET}\n`);
+// Header ratchets: back icons and unlabeled IconButtons (per-file counts, never fail on decrease)
+const RATCHETS = [
+  {
+    title: 'Back-Arrow Icons Increased',
+    unit: 'back icon import(s)',
+    file: BACK_ICON_BASELINE_FILE,
+    label: 'scripts/back-icon-baselines.json',
+    counts: backIconCounts,
+    scanned: backIconScanned,
+    rule: 'Back/exit belongs in the global header: useHeaderLayout().setHomeAction (no in-body back buttons). Pager/wizard arrows inside a dialog are the legitimate exception and need a baseline entry (npm run check:architecture -- --init-ratchets, then review the diff). Baselines are never raised silently.',
+  },
+  {
+    title: 'IconButtons Without An Accessible Name Increased',
+    unit: 'unlabeled IconButton(s)',
+    file: ICON_BUTTON_BASELINE_FILE,
+    label: 'scripts/icon-button-label-baselines.json',
+    counts: iconButtonCounts,
+    scanned: iconButtonScanned,
+    rule: 'Every icon-only button needs a name for screen readers: add aria-label={t(...)} (or wrap it in <Tooltip title={t(...)}>). Baselines are never raised.',
+  },
+];
+const readRatchetBaseline = (file) =>
+  fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf-8')) : {};
+
+if (ratchetMode === 'init' || ratchetMode === 'update') {
+  if (isDiff) {
+    console.error(
+      `${RED}--init-ratchets / --update-ratchets need a full scan (no --diff).${RESET}`,
+    );
+    process.exit(1);
+  }
+  for (const r of RATCHETS) {
+    const existing = readRatchetBaseline(r.file);
+    const { increased } = compareToBaseline(r.counts, existing);
+    if (ratchetMode === 'update' && increased.length > 0) {
+      console.error(
+        `${RED}${r.label}: counts grew; fix them first (baselines are never raised).${RESET}`,
+      );
+      for (const g of increased)
+        console.error(`  ${RED}•${RESET} ${g.file}: ${g.current} > ${g.baseline}`);
+      process.exit(1);
+    }
+    const next = ratchetMode === 'init' ? r.counts : lowerBaseline(r.counts, existing);
+    fs.writeFileSync(r.file, `${JSON.stringify(sortCounts(next), null, 2)}\n`);
+    console.log(`${GREEN}✔ Wrote ${r.label}${RESET}`);
+  }
+  process.exit(0);
+}
+
+let ratchetFailed = false;
+for (const r of RATCHETS) {
+  const full = readRatchetBaseline(r.file);
+  const scoped = isDiff
+    ? Object.fromEntries(Object.entries(full).filter(([f]) => r.scanned.has(f)))
+    : full;
+  const { increased, stale } = compareToBaseline(r.counts, scoped);
+  const total = Object.values(r.counts).reduce((sum, n) => sum + n, 0);
+  if (increased.length > 0) {
+    ratchetFailed = true;
+    console.log(`${RED}${BOLD}✖ ${r.title} (${increased.length} file(s))${RESET}`);
+    console.log(`  Rule: ${r.rule}`);
+    for (const { file, baseline: allowed, current } of increased) {
+      console.log(`  ${RED}•${RESET} ${file}: ${current} ${r.unit}, allowed ${allowed}`);
+    }
+    console.log('');
+  } else {
+    console.log(
+      `${GREEN}✔ ${r.unit} not above baseline (${total} in ${Object.keys(r.counts).length} file(s))${RESET}`,
+    );
+  }
+  if (stale.length > 0) {
+    // Informational only: other branches remove these concurrently, so a decrease must not fail.
+    console.log(
+      `${YELLOW}ℹ ${stale.length} ${r.label} entr${stale.length === 1 ? 'y is' : 'ies are'} higher than the current count - lower with \`npm run check:architecture -- --update-ratchets\`.${RESET}`,
+    );
+  }
+}
+
+if (colorFailed || ratchetFailed) {
+  const failed = [
+    colorFailed && 'hard-coded colour ratchet',
+    ratchetFailed && 'header / accessibility ratchet',
+  ];
+  console.error(
+    `${RED}${BOLD}✖ Architecture gate failed: ${failed.filter(Boolean).join(' and ')}.${RESET}\n`,
+  );
   process.exit(1);
 }
 
@@ -456,6 +624,16 @@ const allCritical = [
     type: 'nativeDialogs',
     file: v.file,
     detail: v.snippet,
+  })),
+  ...violations.appBarInGames.map((v) => ({
+    type: 'appBarInGames',
+    file: v.file,
+    detail: 'use GlobalHeader via usePageTitle / useHeaderLayout, not AppBar',
+  })),
+  ...violations.headerHiddenCalls.map((v) => ({
+    type: 'headerHiddenCalls',
+    file: v.file,
+    detail: `line ${v.line}: setHeaderHidden( is reserved for Melodiq Notes immersive mode`,
   })),
   ...violations.trackedServerMedia.map((f) => ({
     type: 'trackedServerMedia',

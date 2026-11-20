@@ -12,7 +12,6 @@ import {
   Avatar,
   ListItemSecondaryAction,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBackRounded';
 import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAddRounded';
 import DeleteIcon from '@mui/icons-material/DeleteRounded';
@@ -28,10 +27,9 @@ import { type Playlist, type SongMeta } from '../db';
 
 interface PlaylistDetailsProps {
   playlist: Playlist;
-  onBack: () => void;
 }
 
-export const PlaylistDetails: React.FC<PlaylistDetailsProps> = ({ playlist, onBack }) => {
+export const PlaylistDetails: React.FC<PlaylistDetailsProps> = ({ playlist }) => {
   const { t } = useTranslation();
   const { removeSongFromPlaylist, moveSongInPlaylist } = usePlaylists();
   const { songs } = useSongs();
@@ -55,9 +53,6 @@ export const PlaylistDetails: React.FC<PlaylistDetailsProps> = ({ playlist, onBa
   return (
     <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <IconButton onClick={onBack} sx={{ mr: 2 }}>
-          <ArrowBackIcon />
-        </IconButton>
         <Typography variant="h5" sx={{ flexGrow: 1 }}>
           {playlist.name}
         </Typography>
@@ -114,6 +109,7 @@ export const PlaylistDetails: React.FC<PlaylistDetailsProps> = ({ playlist, onBa
                 {!playlist.isGlobal && (
                   <ListItemSecondaryAction>
                     <IconButton
+                      aria-label={t('melodiq.a11y.move_up')}
                       size="small"
                       disabled={index === 0}
                       onClick={() => moveSongInPlaylist(playlist.id, index, index - 1)}
@@ -121,6 +117,7 @@ export const PlaylistDetails: React.FC<PlaylistDetailsProps> = ({ playlist, onBa
                       <ArrowUpwardIcon fontSize="small" />
                     </IconButton>
                     <IconButton
+                      aria-label={t('melodiq.a11y.move_down')}
                       size="small"
                       disabled={index === playlistSongs.length - 1}
                       onClick={() => moveSongInPlaylist(playlist.id, index, index + 1)}
@@ -128,6 +125,7 @@ export const PlaylistDetails: React.FC<PlaylistDetailsProps> = ({ playlist, onBa
                       <ArrowDownwardIcon fontSize="small" />
                     </IconButton>
                     <IconButton
+                      aria-label={t('melodiq.a11y.remove')}
                       size="small"
                       color="error"
                       onClick={() => removeSongFromPlaylist(playlist.id, song.id)}

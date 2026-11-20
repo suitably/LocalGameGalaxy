@@ -1,18 +1,11 @@
 import React, { useCallback, useState } from 'react';
-import {
-  Typography,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-} from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { initQwixxI18n } from './i18n';
 import { usePageTitle } from '../../context/TitleContext';
 import { useWakeLock } from '../../hooks/useWakeLock';
 import { getSheetDefinition } from './logic/sheetDefinitions';
 import { GameLayout } from '../../components/Layout/GameLayout';
+import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { QwixxSheet } from './components/QwixxSheet';
 import { QwixxDiceRoller } from './components/QwixxDiceRoller';
 import { QwixxSheetSelector } from './components/QwixxSheetSelector';
@@ -71,29 +64,18 @@ export const QwixxGame: React.FC = () => {
         }
       />
 
-      <Dialog open={resetDialogOpen} onClose={() => setResetDialogOpen(false)}>
-        <DialogTitle>{t('games.qwixx.new_game', 'Neues Spiel')}</DialogTitle>
-        <DialogContent>
-          <Typography>
-            {t('games.qwixx.reset_confirm', 'Möchtest du deinen Zettel wirklich zurücksetzen?')}
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setResetDialogOpen(false)} color="inherit">
-            {t('common.cancel', 'Abbrechen')}
-          </Button>
-          <Button
-            onClick={() => {
-              game.resetGame();
-              setResetDialogOpen(false);
-            }}
-            color="error"
-            variant="contained"
-          >
-            {t('games.qwixx.new_game', 'Zurücksetzen')}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmDialog
+        open={resetDialogOpen}
+        title={t('games.qwixx.new_game', 'Neues Spiel')}
+        message={t('games.qwixx.reset_confirm', 'Möchtest du deinen Zettel wirklich zurücksetzen?')}
+        confirmText={t('games.qwixx.reset_action', 'Zettel zurücksetzen')}
+        confirmColor="error"
+        onCancel={() => setResetDialogOpen(false)}
+        onConfirm={() => {
+          game.resetGame();
+          setResetDialogOpen(false);
+        }}
+      />
 
       <QwixxSheetSelector
         open={sheetSelectorOpen}

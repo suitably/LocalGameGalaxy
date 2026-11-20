@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { parseTtsSaveFile } from '../ttsParser';
 import { validateAndSanitizeGame } from '../gameValidator';
 import { tabletopReducer } from '../tabletopReducer';
-import type { ButtonWidget, DeckWidget, HolderWidget } from '../types';
+import type { ButtonWidget, CardWidget, DeckWidget, HolderWidget } from '../types';
 import type { TTSObjectState, TTSSaveFile } from '../ttsTypes';
 import { run } from './routineFixture';
 
@@ -45,6 +45,40 @@ const SAVE: TTSSaveFile = {
     piece('b00001', 'Custom_Token', -5, { LuaScript: BOARD_LUA }),
   ],
 };
+
+describe('TTS import: scripted layout positions', () => {
+  it('a card taken to a world position lands where the importer puts a piece at that position', () => {
+    const lua = `function onload()
+  self.createButton({ click_function = 'lay', function_owner = self, label = 'Lay out' })
+end
+function lay()
+  getObjectFromGUID('d00001').takeObject({ position = {-5, 2, 0}, flip = true })
+end`;
+    const game = parseTtsSaveFile({
+      ...SAVE,
+      ObjectStates: [
+        ...SAVE.ObjectStates.slice(0, 2),
+        piece('b00001', 'Custom_Token', -5, { LuaScript: lua }),
+      ],
+    });
+    const lay = Object.values(game.widgets).find((w): w is ButtonWidget => w.type === 'button');
+    const board = game.widgets.b00001;
+    const deckSize = Object.values(game.widgets).find((w) => w.type === 'deck') as DeckWidget;
+    // Both are centred on the same world position.
+    const spot = {
+      x: Math.round(board.x + board.width / 2 - deckSize.width / 2),
+      y: Math.round(board.y + board.height / 2 - deckSize.height / 2),
+    };
+    expect(lay?.routine).toEqual([
+      { op: 'DRAW', deck: expect.any(String), count: 1, at: spot, faceUp: true },
+    ]);
+    const state = tabletopReducer({ game, flyingCards: [] }, run(lay?.id ?? ''));
+    const deck = Object.values(game.widgets).find((w) => w.type === 'deck') as DeckWidget;
+    const drawn = deck.cardIds.find((id) => !(state.game.widgets[id] as CardWidget).inPile) ?? '';
+    const card = state.game.widgets[drawn];
+    expect(card).toMatchObject({ faceUp: true, ...spot });
+  });
+});
 
 describe('TTS import with Lua setup buttons (#704)', () => {
   const game = parseTtsSaveFile(SAVE);

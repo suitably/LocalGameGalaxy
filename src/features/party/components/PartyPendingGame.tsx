@@ -6,7 +6,11 @@ import { Box, Button, Card, Typography, useTheme } from '@mui/material';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import { useTranslation } from 'react-i18next';
 import { AreaSymbol } from '../../../components/brand/AreaSymbol';
-import { TABLETOP_STARTERS, DICE_GAMES } from '../../../games/tabletop/logic/tableCatalog';
+import {
+  TABLETOP_STARTERS,
+  CARD_GAMES,
+  DICE_GAMES,
+} from '../../../games/tabletop/logic/tableCatalog';
 import type { PartyLobbyController } from '../hooks/usePartyLobbyController';
 import { PARTY_GAME_TITLES } from '../logic/partyGameTitles';
 import type { PartyGameType } from '../logic/universalPartyManager';
@@ -17,7 +21,7 @@ export const PartyPendingGame: React.FC<{ lobby: PartyLobbyController }> = ({ lo
   const { pendingLaunch, amIHost, players, startPendingGame, clearPendingLaunch } = lobby;
   if (!pendingLaunch || !amIHost) return null;
   const id = pendingLaunch.gameId ?? pendingLaunch.gameType;
-  const starter = [...TABLETOP_STARTERS, ...DICE_GAMES].find((g) => g.id === id);
+  const starter = [...TABLETOP_STARTERS, ...CARD_GAMES, ...DICE_GAMES].find((g) => g.id === id);
   const title = starter
     ? t(starter.titleKey, starter.title)
     : (PARTY_GAME_TITLES[id as PartyGameType] ?? id);

@@ -12,7 +12,6 @@ interface GarticAlbumRevealProps {
   isHost?: boolean;
   onRevealStateChange?: (bookIndex: number, stepIndex: number) => void;
   onRestartGame: () => void;
-  onBackToMenu: () => void;
 }
 
 export const GarticAlbumReveal: React.FC<GarticAlbumRevealProps> = ({
@@ -20,7 +19,6 @@ export const GarticAlbumReveal: React.FC<GarticAlbumRevealProps> = ({
   isHost = false,
   onRevealStateChange,
   onRestartGame,
-  onBackToMenu,
 }) => {
   const { t } = useTranslation();
   const {
@@ -113,7 +111,6 @@ export const GarticAlbumReveal: React.FC<GarticAlbumRevealProps> = ({
         onPrev={handlePrevStep}
         onNext={handleNextStep}
         onRestartGame={onRestartGame}
-        onBackToMenu={onBackToMenu}
       />
     </Box>
   );

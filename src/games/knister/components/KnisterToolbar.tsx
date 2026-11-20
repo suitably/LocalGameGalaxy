@@ -41,12 +41,11 @@ export const KnisterToolbar: React.FC<KnisterToolbarProps> = ({
           size="small"
           color="secondary"
           startIcon={<CasinoIcon />}
+          aria-pressed={showDice}
           onClick={onToggleDice}
           sx={{ borderRadius: 3, fontWeight: 700, textTransform: 'none' }}
         >
-          {showDice
-            ? t('games.knister.hide_dice', 'Würfel')
-            : t('games.knister.show_dice', 'Würfel')}
+          {showDice ? t('games.knister.hide_dice') : t('games.knister.show_dice')}
         </Button>
       </Tooltip>
 
@@ -76,7 +75,7 @@ export const KnisterToolbar: React.FC<KnisterToolbarProps> = ({
           onClick={onOpenLegend}
           sx={{ borderRadius: 3, textTransform: 'none', borderColor: 'divider' }}
         >
-          {t('games.knister.legend_title', 'Regeln')}
+          {t('games.knister.show_legend', 'Punkteübersicht')}
         </Button>
       </Tooltip>
 

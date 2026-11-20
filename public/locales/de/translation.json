@@ -44,6 +44,13 @@
       "busted": "Überworfen!",
       "last_score": "Wurf: {{score}}",
       "restart_title": "Spiel neustarten?",
+      "remove_player": "Spieler entfernen",
+      "multiplier": "Wurf-Multiplikator",
+      "bullseye": "BULLSEYE (50)",
+      "bull": "BULL (25)",
+      "setup_reset_title": "Spiel zurücksetzen?",
+      "setup_reset_desc": "Diese Änderung startet das laufende Spiel neu. Alle bisherigen Würfe gehen verloren.",
+      "setup_reset_confirm": "Zurücksetzen",
       "restart_desc": "Bist du sicher? Der aktuelle Spielstand geht verloren."
     },
     "wordle": {
@@ -231,6 +238,8 @@
         "editor": {
           "title": "Rollen-Editor",
           "add_role": "Rolle hinzufügen",
+          "standard_roles": "Standard-Rollen",
+          "custom_roles": "Eigene Rollen",
           "edit_role": "Rolle bearbeiten",
           "new_role": "Neue Rolle",
           "role_name": "Rollenname",
@@ -337,6 +346,7 @@
         "resume": "Weiter",
         "end_round": "Runde beenden",
         "confirm_end": "Bist du sicher, dass du die Runde vorzeitig beenden möchtest?",
+        "end_round_confirm": "Jetzt beenden",
         "kick_title": "Wer ist der Imposter?"
       },
       "result": {
@@ -542,6 +552,11 @@
       "custom_sound_url": "Eigene Audio-URL / Sample",
       "test_sound": "Probe anhören",
       "reset_foss": "Auf FOSS-Standard zurücksetzen",
+      "gm_program": "GM-Nr. {{n}}",
+      "custom_sound_url_placeholder": "https://… (Audio-URL oder Sample)",
+      "volume": "Lautstärke",
+      "instrument_volume": "Lautstärke {{name}}",
+      "reset_foss_confirm": "Alle Soundeinstellungen (Soundfont, eigene URLs, Lautstärken) auf den FOSS-Standard zurücksetzen?",
       "accuracy": "Genauigkeit",
       "combo": "Streak",
       "measures": "Takte",
@@ -1341,10 +1356,13 @@
       "backToHand": "Zurück zur Hand",
       "playerN": "Spieler {{n}}",
       "flipCard": "Umdrehen",
+      "stackFan": "Stapel auffächern",
+      "stackPile": "Stapel zusammenschieben",
       "rollDie": "Würfeln",
       "shuffleDeck": "Mischen",
       "view_hand": "Hand",
       "view_board": "Tisch",
+      "view_my_area": "Mein Bereich",
       "flick_hint": "Wische eine Karte nach oben, um sie auf den TV zu werfen!",
       "current_table_card": "Aktuelle Karte auf dem Tisch",
       "table_card": "Tisch: {{card}}",
@@ -1381,10 +1399,134 @@
       "counterDecrement": "Verringern",
       "counterIncrement": "Erhöhen",
       "drawToHand": "Auf die Hand ziehen",
+      "dealEach": "{{count}} an alle austeilen",
       "dealEach_one": "{{count}} Karte an alle austeilen",
       "dealEach_other": "{{count}} Karten an alle austeilen",
       "server_unreachable": "Der Companion-Server ist gerade nicht erreichbar.",
-      "gameMenu": "Spielmenü"
+      "timerStart": "Timer starten",
+      "timerPause": "Timer pausieren",
+      "timerReset": "Timer zurücksetzen",
+      "cardBack": "Kartenrückseite",
+      "cardFront": "Karte",
+      "card_games": "Kartenspiele",
+      "scripted": {
+        "games": {
+          "schwimmen": {
+            "title": "Schwimmen",
+            "desc": "31 sammeln, klopfen, drei Leben – für 2 bis 9 Spieler."
+          },
+          "durak": {
+            "title": "Durak",
+            "desc": "Angreifen, schlagen, nachlegen – wer zuletzt Karten hat, ist der Durak. 2 bis 6 Spieler."
+          },
+          "arschloch": {
+            "title": "Arschloch",
+            "desc": "Karten loswerden und Präsident werden. 3 bis 8 Spieler."
+          },
+          "skat": {
+            "title": "Skat",
+            "desc": "Reizen, drücken, 61 Augen holen – für genau 3 Spieler."
+          }
+        },
+        "turn": "{{name}} ist dran",
+        "yourTurn": "Du bist dran",
+        "roundOver": "Runde vorbei",
+        "matchWon": "{{name}} gewinnt das Spiel",
+        "nextRound": "Nächste Runde",
+        "newMatch": "Neues Spiel",
+        "play": "Spielen",
+        "trump": "Trumpf {{suit}}",
+        "tableHint": "Das ist der gemeinsame Tisch. Handkarten und Züge hat jeder auf dem eigenen Gerät.",
+        "setup": {
+          "title": "Wer spielt mit?",
+          "players": "Dieses Spiel braucht {{min}} bis {{max}} Spieler.",
+          "tooMany": "Es spielen die ersten {{max}}; die anderen schauen zu.",
+          "start": "Karten geben",
+          "tableOnly": "Dieses Gerät zeigt nur den Tisch",
+          "tableOnlyHint": "Für den Fernseher: Bildschirm dieses Geräts übertragen. Alle Spieler nutzen ihr eigenes Handy für Handkarten und Züge. Ausschalten, wenn du auf diesem Gerät mitspielst.",
+          "waitingForHost": "Der Gastgeber startet das Spiel gleich …"
+        },
+        "schwimmen": {
+          "out": "raus",
+          "swimming": "schwimmt",
+          "knocked": "hat geklopft",
+          "dealerChoice": "{{name}} gibt und wählt ein Blatt",
+          "keep": "Blatt behalten",
+          "takeOther": "Anderes Blatt nehmen",
+          "lastTurn": "{{name}} – letzter Zug",
+          "swapOne": "Karte tauschen",
+          "swapAll": "Alle drei tauschen",
+          "pass": "Schieben",
+          "knock": "Klopfen",
+          "fire": "{{name}} hat 31 – alle anderen verlieren ein Leben",
+          "tie": "Gleichstand – niemand verliert ein Leben"
+        },
+        "durak": {
+          "attacker": "greift an",
+          "defender": "verteidigt",
+          "losses": "{{count}}× Durak",
+          "draw": "Unentschieden – kein Durak",
+          "isDurak": "{{name}} ist der Durak",
+          "defends": "{{name}} verteidigt",
+          "attacks": "{{name}} greift an",
+          "mayAdd": "{{name}} darf nachlegen",
+          "beat": "Schlagen",
+          "take": "Aufnehmen",
+          "attack": "Angreifen",
+          "add": "Nachlegen",
+          "done": "Fertig"
+        },
+        "arschloch": {
+          "president": "Präsident",
+          "vicePresident": "Vize",
+          "citizen": "Bürger",
+          "viceArschloch": "Vize-Arschloch",
+          "arschloch": "Arschloch",
+          "passed": "passt",
+          "roundWon": "{{name}} ist Präsident",
+          "gives": "{{name}} gibt {{count}} Karte(n) zurück",
+          "give": "{{count}} Karte(n) abgeben",
+          "leads": "{{name}} spielt aus",
+          "pass": "Passen"
+        },
+        "skat": {
+          "grand": "Grand",
+          "null": "Null",
+          "nullOuvert": "Null Ouvert",
+          "hand": "Hand",
+          "declarer": "Alleinspieler",
+          "dealer": "Geber",
+          "tricks": "{{count}} Stiche",
+          "bidInfo": "Reizwert {{value}}",
+          "skat": "Skat",
+          "passedIn": "Alle passen – eingepasst",
+          "won": "{{name}} gewinnt",
+          "lost": "{{name}} verliert",
+          "resultWon": "{{name}}: +{{value}}",
+          "resultLost": "{{name}}: −{{value}} × 2",
+          "points": "{{points}} Augen",
+          "schwarz": "Schwarz",
+          "schneider": "Schneider",
+          "overbid": "Überreizt (gereizt bis {{bid}})",
+          "asked": "{{name}}: {{value}}?",
+          "hold": "Ja, {{value}}",
+          "pass": "Passe",
+          "bids": "{{name}} reizt",
+          "decides": "{{name}}: Skat aufnehmen oder Hand?",
+          "pickup": "Skat aufnehmen",
+          "playHand": "Hand spielen",
+          "discards": "{{name}} drückt",
+          "discard": "2 Karten drücken",
+          "declares": "{{name}} sagt das Spiel an",
+          "trickTo": "Stich für {{name}}"
+        },
+        "rules": {
+          "schwimmen": "<p>32 Karten. Jeder hat drei Karten, drei liegen offen in der Mitte. Der Geber wählt zu Beginn eines von zwei Blättern; das andere kommt in die Mitte.</p><p><b>Dein Zug:</b> eine Karte tauschen, alle drei tauschen, schieben oder klopfen. Nach dem Klopfen sind alle anderen noch einmal dran. Schieben alle, kommen drei neue Karten in die Mitte.</p><p><b>Wertung:</b> Summe einer Farbe (Ass 11, Bilder 10). Drei Gleiche zählen 30,5. Wer 31 oder drei Asse hat, beendet die Runde sofort – alle anderen verlieren ein Leben. Sonst verliert das niedrigste Blatt.</p><p>Jeder hat drei Leben, danach „schwimmt“ man, beim nächsten Verlust ist man raus. Der Letzte gewinnt.</p>",
+          "durak": "<p>36 Karten (6 bis Ass), sechs auf der Hand. Die unterste Karte des Stapels zeigt Trumpf. In der ersten Runde greift der niedrigste Trumpf an.</p><p><b>Angriff:</b> eine oder mehrere Karten gleichen Werts. <b>Verteidigung:</b> jede Karte mit einer höheren derselben Farbe oder mit Trumpf schlagen – oder alles aufnehmen.</p><p>Ist alles geschlagen, dürfen die anderen Karten nachlegen, deren Wert schon auf dem Tisch liegt (höchstens sechs Angriffskarten, nie mehr als der Verteidiger Karten hatte). Danach ziehen alle auf sechs nach. Wer abwehrt, greift als Nächster an; wer aufnimmt, setzt aus.</p><p>Wer am Ende noch Karten hat, ist der Durak.</p>",
+          "arschloch": "<p>Alle Karten werden verteilt (32 bis vier Spieler, sonst 52). Wer ausspielt, legt eine oder mehrere Karten gleichen Werts. Die anderen legen gleich viele höhere Karten oder passen – wer passt, setzt bis zum Ende des Stichs aus. Wer zuletzt gelegt hat, spielt neu aus.</p><p>Wer zuerst keine Karten mehr hat, ist Präsident, der Letzte das Arschloch. Vor der nächsten Runde gibt das Arschloch seine besten Karten an den Präsidenten (zwei ab vier Spielern, sonst eine), der beliebige zurückgibt; ab vier Spielern tauschen auch die Vizes eine Karte. Das Arschloch spielt aus.</p>",
+          "skat": "<p>Drei Spieler, 32 Karten, je zehn auf der Hand, zwei im Skat. Mittelhand reizt Vorhand, danach Hinterhand den Gewinner. Wer das Reizen gewinnt, nimmt den Skat auf und drückt zwei Karten – oder spielt Hand – und sagt Farbe, Grand oder Null an.</p><p>Farbe bedienen ist Pflicht; die Buben sind die höchsten Trümpfe (außer bei Null). Der Alleinspieler braucht 61 Augen, bei Null darf er keinen Stich machen.</p><p><b>Wert:</b> Spitzen + 1 (+ Hand, Schneider, Schwarz) × Grundwert (Karo 9, Herz 10, Pik 11, Kreuz 12, Grand 24); Null 23, Hand 35, Ouvert 46, Ouvert Hand 59. Verlorene Spiele zählen doppelt minus. Passen alle, gibt der Nächste. Ohne Ramsch und ohne Schneider-/Schwarz-Ansage.</p>"
+        }
+      }
     },
     "drawpot": {
       "title": "Lostopf",
@@ -1653,7 +1795,8 @@
       "hint_order": "Das erste aktivierte Mikrofon bekommt Spieler 1, das zweite Spieler 2 usw.",
       "unknown_device": "Unbekanntes Audiogerät",
       "disabled": "Deaktiviert",
-      "active": "Aktiv (zugewiesen an lokalen Spieler {{n}})"
+      "active": "Aktiv (zugewiesen an lokalen Spieler {{n}})",
+      "rename_device": "Gerät umbenennen"
     },
     "privacy_title": "Datenschutz",
     "privacy_desc": "Welche Daten die Spiele nutzen, welche Dienste sie kontaktieren und welche Rechte du hast.",
@@ -1919,6 +2062,9 @@
     "duplicatePlayer": "Spieler existiert bereits!",
     "minPlayers": "Mindestens 2 Spieler werden benötigt!",
     "optionsTitle": "Optionen",
+    "hintFailed": "Hinweis konnte nicht geladen werden",
+    "guessFailed": "Tipp konnte nicht gesendet werden",
+    "publishFailed": "Katalog konnte nicht veröffentlicht werden",
     "manualWordModeToggle": "Manuelle Worterstellung",
     "manualWordModeDesc": "Spieler geben eigene Begriffe ein, anstatt aus dem Katalog zu wählen.",
     "startGame": "Neues Spiel starten",
@@ -1951,6 +2097,7 @@
     "noMoreHints": "Keine weiteren Tipps verfügbar",
     "getHint": "Tipp anfordern",
     "guessPlaceholder": "Was wurde gezeichnet?",
+    "submitGuess": "Tipp abgeben",
     "repeatedGuess": "Dieses Wort hast du schon versucht!",
     "wrongGuess": "Leider falsch! Versuch es weiter.",
     "correctCelebration": "Richtig erraten!",
@@ -1987,7 +2134,6 @@
     "statusDrawing": "Zeichnen",
     "statusGuessing": "Raten",
     "garticDesc": "Das Flüsterpost-Zeichenspiel! Satz schreiben ➔ Zeichnen ➔ Raten ➔ Zeichnen ➔ Finale Auflösung!",
-    "roomBack": "Zur Lobby",
     "roomNeedTwo": "Es werden mindestens 2 Spieler in der Lobby benötigt.",
     "roomConnecting": "Verbinde mit dem Raum …",
     "liveTitle": "Live auf mehreren Geräten",
@@ -2004,6 +2150,15 @@
     "promptStepHint": "Dein Satz wird an den nächsten Spieler weitergegeben, der ihn zeichnen muss!",
     "promptPlaceholder": "z.B. Ein Pinguin der Fallschirm springt...",
     "randomPrompt": "Zufällige Idee",
+    "promptSuggestions": [
+      "Ein Roboter der Pfannkuchen backt",
+      "Katze mit Sonnenbrille auf einem Skateboard",
+      "Astronaut reitet ein Lama auf dem Mond",
+      "Dinosaurier trinkt gemütlich Kaffee",
+      "Pinguin fliegt mit bunten Luftballons",
+      "Schneemann am heißen Strand in Hawaii",
+      "Superheld verliert seinen Umhang im Sturm"
+    ],
     "drawThisPrompt": "Zeichne diesen Satz:",
     "whatIsThisDrawing": "Was stellt diese Zeichnung dar? Beschreibe sie!",
     "describeDrawingPlaceholder": "Beschreibe die Zeichnung in einem Satz...",
@@ -2225,7 +2380,9 @@
     "backToHub": "Zur Übersicht",
     "invite_players": "Mitspieler einladen",
     "spectatorWatching": "Du schaust zu",
-    "spectatorPickHint": "Wähle, wessen Sicht du sehen willst"
+    "spectatorPickHint": "Wähle, wessen Sicht du sehen willst",
+    "gameSelectionTitle": "Spielauswahl",
+    "partyModeChip": "Party-Modus"
   },
   "gartic": {
     "waitingHeader": "Warte auf die anderen Spieler...",
@@ -2316,6 +2473,19 @@
       "title": "Gelöst!",
       "new_record": "Neue persönliche Bestzeit!"
     },
+    "share": {
+      "title": "Sudoku-Ergebnis",
+      "text": "🔢 Sudoku ({{difficulty}}) gelöst in {{time}}!\nFehler: {{mistakes}}, Hinweise: {{hints}}"
+    },
+    "menu": {
+      "stats": "Statistiken",
+      "help": "Regeln"
+    },
+    "confirm_new": {
+      "title": "Neues Spiel starten?",
+      "message": "Das laufende Sudoku wird beendet und dein Fortschritt geht verloren. Neues Spiel auf „{{difficulty}}“ starten?",
+      "confirm": "Neues Spiel"
+    },
     "game_over": {
       "title": "Game Over"
     },
@@ -2334,6 +2504,9 @@
   },
   "storyteller": {
     "title": "Geschichtenschreiber",
+    "deleteSavedTitle": "Geschichte löschen?",
+    "deleteSavedMessage": "Die gespeicherte Geschichte wird endgültig gelöscht.",
+    "deleteSavedAria": "Geschichte löschen",
     "turnLabel": "Zug",
     "currentTurnOf": "Am Zug: ",
     "defaultPlayer": "Spieler",
@@ -2364,7 +2537,6 @@
     "characters": "Zeichen",
     "finishStory": "Geschichte beenden",
     "submitTurn": "Abschnitt senden",
-    "roomBack": "Zur Lobby",
     "roomRead": "Lesen",
     "roomNeedTwo": "Es werden mindestens 2 Spieler in der Lobby benötigt.",
     "roomConnecting": "Verbinde mit dem Raum …",
@@ -2522,6 +2694,9 @@
       "deleteMessage": "Der Lostopf wird vom Server gelöscht. Der Link funktioniert nicht mehr; Teilnehmende behalten ihren lokalen Verlauf.",
       "noKey": "Dieses Gerät hat keinen Host-Zugriff auf diesen Lostopf. Öffne den Host-Link, um ihn zu verwalten.",
       "openAsParticipant": "Als Teilnehmende*r öffnen",
+      "forgetTitle": "Aus Liste entfernen?",
+      "forgetMessage": "Der Lostopf wird nur aus deiner Liste auf diesem Gerät entfernt. Mit dem Host-Link kannst du ihn später wieder hinzufügen.",
+      "forgetConfirm": "Entfernen",
       "forget": "Aus meiner Liste entfernen"
     },
     "participant": {

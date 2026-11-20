@@ -262,4 +262,46 @@ describe('Tabletop pcioParser', () => {
     expect(resourceDeck.faceUp).toBe(true);
     expect(resourceDeck.activeFace).toBe(1);
   });
+
+  it('reads a game exported by this app as it is: stacking order and routines kept', async () => {
+    const exported = {
+      id: 'my-game',
+      name: 'My game',
+      version: '1',
+      minPlayers: 1,
+      maxPlayers: 2,
+      supportedModes: ['party_multi_device'],
+      table: { width: 2000, height: 1000 },
+      widgets: {
+        tok: { id: 'tok', type: 'token', x: 10, y: 10, width: 50, height: 50, zIndex: 7 },
+        go: {
+          id: 'go',
+          type: 'button',
+          x: 10,
+          y: 10,
+          width: 80,
+          height: 40,
+          zIndex: 8,
+          text: 'Go',
+          routine: [{ op: 'MOVE', widget: 'tok', x: 100, y: 100 }],
+        },
+        bad: {
+          id: 'bad',
+          type: 'button',
+          x: 0,
+          y: 0,
+          width: 80,
+          height: 40,
+          zIndex: 9,
+          text: 'Bad',
+          routine: [{ op: 'EVAL', code: 'x' }],
+        },
+      },
+    };
+    const game = await parsePcioFile(JSON.stringify(exported));
+    expect(game).toMatchObject({ id: 'my-game', table: { width: 2000, height: 1000 } });
+    expect(game.widgets.tok.zIndex).toBe(7);
+    expect(game.widgets.go).toMatchObject({ zIndex: 8, routine: exported.widgets.go.routine });
+    expect(game.widgets.bad).toMatchObject({ routine: [] });
+  });
 });

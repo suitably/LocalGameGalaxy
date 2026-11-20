@@ -107,6 +107,40 @@ declare module 'luaparse' {
     type: 'ReturnStatement';
     arguments: LuaNode[];
   }
+  export interface LogicalExpression extends LuaNode {
+    type: 'LogicalExpression';
+    operator: 'and' | 'or';
+    left: LuaNode;
+    right: LuaNode;
+  }
+  /** `IfClause`, `ElseifClause` (both with `condition`) or `ElseClause`. */
+  export interface IfClause extends LuaNode {
+    condition?: LuaNode;
+    body: LuaNode[];
+  }
+  export interface IfStatement extends LuaNode {
+    type: 'IfStatement';
+    clauses: IfClause[];
+  }
+  export interface ForGenericStatement extends LuaNode {
+    type: 'ForGenericStatement';
+    variables: Identifier[];
+    iterators: LuaNode[];
+    body: LuaNode[];
+  }
+  export interface ForNumericStatement extends LuaNode {
+    type: 'ForNumericStatement';
+    variable: Identifier;
+    start: LuaNode;
+    end: LuaNode;
+    step: LuaNode | null;
+    body: LuaNode[];
+  }
+  /** `WhileStatement`, `RepeatStatement` and `DoStatement` (no condition). */
+  export interface BlockStatement extends LuaNode {
+    condition?: LuaNode;
+    body: LuaNode[];
+  }
   export interface Chunk extends LuaNode {
     type: 'Chunk';
     body: LuaNode[];

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Box, Paper, Typography, ToggleButtonGroup, ToggleButton, Chip } from '@mui/material';
 import PanToolIcon from '@mui/icons-material/PanToolRounded';
 import MapIcon from '@mui/icons-material/MapRounded';
+import PersonPinIcon from '@mui/icons-material/PersonPinCircleRounded';
 import { useTranslation } from 'react-i18next';
 import type { TabletopGameState, TabletopAction } from '../../logic/tabletopReducer';
 import { useDynamicControllerState } from '../../hooks/useDynamicControllerState';
@@ -9,6 +10,7 @@ import { CardHandDock } from './CardHandDock';
 import { ControllerActionToolbar } from './ControllerActionToolbar';
 import { TargetSelectionDialog } from './TargetSelectionDialog';
 import { TabletopSurface } from '../surface/TabletopSurface';
+import { myAreaBounds } from '../../logic/myArea';
 
 interface TabletopControllerViewProps {
   state: TabletopGameState;
@@ -27,7 +29,7 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
   onFlickCardToTable,
 }) => {
   const { t } = useTranslation();
-  const [viewMode, setViewMode] = useState<'hand' | 'board'>('hand');
+  const [viewMode, setViewMode] = useState<'hand' | 'board' | 'area'>('hand');
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [pendingFlickCardId, setPendingFlickCardId] = useState<string | null>(null);
 
@@ -41,6 +43,10 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
     topDiscardCard,
   } = useDynamicControllerState(state.game, mySeat);
   const isSpectator = readOnly || mySeat === null;
+  // Keyed by value: moving a piece must not re-centre the view.
+  const areaKey = JSON.stringify(isSpectator ? null : myAreaBounds(state.game, mySeat));
+  const myArea = useMemo(() => JSON.parse(areaKey) as ReturnType<typeof myAreaBounds>, [areaKey]);
+  const mode = viewMode === 'area' && !myArea ? 'board' : viewMode;
 
   const handleCardFlick = (cardId: string) => {
     if (dropTargets.length === 0) {
@@ -110,7 +116,7 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
 
         <ToggleButtonGroup
           size="small"
-          value={viewMode}
+          value={mode}
           exclusive
           onChange={(_, next) => next && setViewMode(next)}
         >
@@ -120,13 +126,24 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
           <ToggleButton value="board">
             <MapIcon sx={{ mr: 0.5, fontSize: 18 }} /> {t('games.tabletop.view_board', 'Tisch')}
           </ToggleButton>
+          {myArea && (
+            <ToggleButton value="area">
+              <PersonPinIcon sx={{ mr: 0.5, fontSize: 18 }} /> {t('games.tabletop.view_my_area')}
+            </ToggleButton>
+          )}
         </ToggleButtonGroup>
       </Paper>
 
       {/* Main View Area */}
       <Box sx={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
-        {viewMode === 'board' ? (
-          <TabletopSurface state={state} dispatch={dispatch} readOnly={isSpectator} />
+        {mode !== 'hand' ? (
+          <TabletopSurface
+            key={mode}
+            state={state}
+            dispatch={dispatch}
+            readOnly={isSpectator}
+            focus={mode === 'area' ? myArea : null}
+          />
         ) : (
           <Box
             sx={{

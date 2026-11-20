@@ -1,4 +1,4 @@
-import { Box, Button, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { Box, Button, ToggleButton, ToggleButtonGroup, Tooltip } from '@mui/material';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDartsGame, type ThrowMultiplier, type ThrowValue } from '../useDartsGame';
@@ -67,32 +67,48 @@ export function DartsInput({ state }: Props) {
           value={multiplier}
           exclusive
           onChange={handleMultiplierChange}
-          aria-label="throw multiplier"
+          aria-label={t('games.darts.multiplier')}
           sx={{ flexGrow: 1 }}
           color="primary"
           disabled={!!winner}
         >
-          <ToggleButton value={1} aria-label="single" sx={{ flex: 1, py: 1.5, fontWeight: 'bold' }}>
+          <ToggleButton
+            value={1}
+            aria-label={t('games.darts.single')}
+            sx={{ flex: 1, py: 1.5, fontWeight: 'bold' }}
+          >
             {t('games.darts.single')}
           </ToggleButton>
-          <ToggleButton value={2} aria-label="double" sx={{ flex: 1, py: 1.5, fontWeight: 'bold' }}>
+          <ToggleButton
+            value={2}
+            aria-label={t('games.darts.double')}
+            sx={{ flex: 1, py: 1.5, fontWeight: 'bold' }}
+          >
             {t('games.darts.double')}
           </ToggleButton>
-          <ToggleButton value={3} aria-label="triple" sx={{ flex: 1, py: 1.5, fontWeight: 'bold' }}>
+          <ToggleButton
+            value={3}
+            aria-label={t('games.darts.triple')}
+            sx={{ flex: 1, py: 1.5, fontWeight: 'bold' }}
+          >
             {t('games.darts.triple')}
           </ToggleButton>
         </ToggleButtonGroup>
 
-        <Button
-          variant="outlined"
-          color="error"
-          onClick={undoThrow}
-          aria-label={t('common.a11y.undo_throw', 'Undo last throw')}
-          disabled={state.turns.length === 0 && state.currentTurnThrows.length === 0}
-          sx={{ px: 3 }}
-        >
-          <BackspaceIcon />
-        </Button>
+        <Tooltip title={t('common.a11y.undo_throw')}>
+          <span>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={undoThrow}
+              aria-label={t('common.a11y.undo_throw')}
+              disabled={state.turns.length === 0 && state.currentTurnThrows.length === 0}
+              sx={{ px: 3, height: '100%' }}
+            >
+              <BackspaceIcon />
+            </Button>
+          </span>
+        </Tooltip>
       </Box>
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', margin: -0.5 }}>
@@ -131,7 +147,7 @@ export function DartsInput({ state }: Props) {
             sx={{ height: 48, fontWeight: 'bold' }}
             disabled={!!winner || multiplier === 3} // No triple bull
           >
-            {multiplier === 2 ? 'BULLSEYE (50)' : 'BULL (25)'}
+            {multiplier === 2 ? t('games.darts.bullseye') : t('games.darts.bull')}
           </Button>
         </Box>
         <Box sx={{ width: { xs: '50%', sm: '33.33%' }, p: 0.5 }}>
