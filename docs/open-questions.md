@@ -4,15 +4,14 @@ Living list. Each item: what is unclear or broken, the evidence, what would reso
 
 Found by the [2026-10-18 docs-vs-code audit](reports/2026-10-18-docs-vs-code-audit.md) unless noted.
 
-## Q24 — Scripted card games send all hands to every device [user]
-
-`src/games/tabletop/scripted` syncs through `useRoomReducer`, which publishes the host's whole state (all hands, stock, skat) to every device in the room; only the UI hides other players' cards. The free tabletop seals hands per seat (`logic/privateHandChannel.ts`). Fine among friends, but a player who reads the room traffic sees every card.
-Resolve: the maintainer decides whether that is acceptable; otherwise the host sends `script.view(state, seat)` per seat, sealed with `logic/sealCrypto.ts`, and `moveAllowed` moves to the host. [scripted card games](tech/tabletop-scripted-games.md) §3.
-
 ## Resolved 2026-11-20
 
 - Q23 Wordle's unregistered `i18n` bundle → maintainer decision (2026-11-20): deleted, like Sudoku's. `src/games/wordle/i18n/index.ts` and its re-export are gone; ten keys the code calls via `t()` but `public/locales` lacked (`not_in_dictionary`, `settings.dictionary_only` and `_hint`, `key_enter`, `key_delete`, `letter_state.*`) were added to both locale files (before, they fell back to the inline defaults or showed the key). [i18n-strategy](tech/i18n-strategy.md)
 - Q22 tabletop drag p95 at 800 widgets → maintainer measured it on a real mid-range phone (2026-11-20) and found it fast enough (p95 at or below 16 ms; exact figure not recorded). The DOM renderer stays; the Canvas renderer of TTS plan D5 is not needed. [tabletop-engine, Performance](tech/tabletop-engine.md#performance-684)
+
+## Resolved 2026-11-17
+
+- Q24 scripted card games sent all hands to every device → maintainer decision (2026-11-17): seal hands per seat. The host keeps the state and sends each seat only `script.view(state, seat)`, sealed with the seat's key (`PrivateHandChannel`); `moveAllowed` for single-card picks runs on the host (`hints`). [scripted card games](tech/tabletop-scripted-games.md)
 
 ## Resolved 2026-11-15
 

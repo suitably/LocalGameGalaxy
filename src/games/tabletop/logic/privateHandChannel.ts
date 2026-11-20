@@ -109,6 +109,12 @@ export class PrivateHandChannel {
     return { delta: { ...full, widgets }, sealed: await this.sealAll(secrets) };
   }
 
+  /** Any JSON value sealed for one seat (scripted card games); `undefined` without a seat key. */
+  async sealFor(seat: number, value: unknown): Promise<SealedBox | undefined> {
+    const key = this.seatKeys.get(seat);
+    return key ? seal(key, value) : undefined;
+  }
+
   // ─── Seat device ──────────────────────────────────────────────────────
 
   private async keyFor(hostPublic: JsonWebKey): Promise<CryptoKey | null> {
@@ -138,6 +144,16 @@ export class PrivateHandChannel {
       return restoreCards(widgets as never, secrets) as T;
     } catch {
       return widgets;
+    }
+  }
+
+  /** Opens a box the host sealed for this device; `null` when it cannot be opened. */
+  async openFromHost<T>(box: SealedBox): Promise<T | null> {
+    if (!this.hostKey) return null;
+    try {
+      return await unseal<T>(this.hostKey.key, box);
+    } catch {
+      return null;
     }
   }
 }
