@@ -1,0 +1,1 @@
+- **Melodiq TV and queue sync on the shared sync layer**: the host, TV window and host tabs on one device now exchange TV control, settings and queue updates through the app's shared sync hook instead of their own channels. Nothing changes for players; channel names and messages stay the same.

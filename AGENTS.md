@@ -38,7 +38,7 @@ Full rule set and what enforces each rule: [`docs/tech/coding-conventions.md`](d
 - **Game logic** pure, in `logic/*.ts`, with Vitest tests; components hold no game rules.
 - **Discriminated unions**, not contradictory boolean flags.
 - **No `any`** in new or changed code — generics, interfaces or `unknown` with guards. _(ESLint warning; `check:lint-budget` fails if a file gains warnings)_
-- **No inline `BroadcastChannel`** in games — use `useMultiChannelSync()`. _(review only; Melodiq still violates it: Q4)_
+- **No inline `BroadcastChannel`** in games — use `useMultiChannelSync()`. _(review only)_
 - **No hardcoded UI strings** (§6).
 - **Header:** integrate with `GlobalHeader` via `TitleContext` / `HeaderLayoutContext` (`usePageTitle`, `useHeaderLayout`); `LayoutContext` is the backward-compatible composite. No second top bar, no floating hub-exit buttons, no in-body back buttons: back/exit is the header arrow (`useHeaderLayout().setHomeAction`). A running game never hides the header; the only exception is Melodiq Notes immersive mode (`src/games/melodiq-notes/stage/useImmersive.ts`). _(check:architecture fails on `AppBar` imports in `src/games`, on `setHeaderHidden(` outside its allowlist, and when a file gains back-arrow icon imports (`scripts/back-icon-baselines.json`; dialog pager arrows need a baseline entry) or unnamed `IconButton`s (`scripts/icon-button-label-baselines.json`); decreases never fail)_
 - **CSS:** theme tokens (no hard-coded hex or non-black `rgb()`/`rgba()` in `.tsx`; per-file count ratchet in `scripts/hardcoded-color-baselines.json`, _check:architecture fails when a count rises_), Grid/Flexbox, `100dvh`. Visual system (colors, type, spacing, components): [`DESIGN.md`](DESIGN.md).
