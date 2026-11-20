@@ -1,0 +1,1 @@
+Scripted card games (Schwimmen, Durak, Arschloch, Skat) in a party room no longer send every hand to every device: the host seals each seat's own view for that seat, so other players' cards never appear in the room traffic.
