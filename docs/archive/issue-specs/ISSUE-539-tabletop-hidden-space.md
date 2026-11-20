@@ -3,7 +3,7 @@ type: Task
 title: 'Tabletop hidden space: move, resize, visibility toggle (#539)'
 description: 'Owner moves and resizes their hidden zone in edit mode like a widget (contained unlocked widgets move along) and toggles its visibility with an in-zone button; also the worked example for the multi-agent token workflow.'
 tags: [tabletop, hidden-zone, editor, task, agents]
-status: stable
+status: deprecated
 generated:
   at: 2026-10-24T18:00:00+02:00
   by: claude-code
@@ -20,7 +20,7 @@ sources:
 
 # Tabletop hidden space (#539)
 
-Workflow: [multi-agent token strategy](../workflows/multi-agent-token-strategy.md). This file is the shared memory for all agents on this task — prompts point here instead of repeating context.
+Workflow: [multi-agent token strategy](../../workflows/multi-agent-token-strategy.md). This file is the shared memory for all agents on this task — prompts point here instead of repeating context.
 
 ## 1. Request
 
@@ -98,7 +98,7 @@ Each slice = one `slice-implementer` run; prompt: "Implement slice N of `docs/ta
 | Review           | orchestrator      | session | `git diff --stat` + logic diff             |
 | Gates            | gate-runner       | haiku   | ≤ 20 lines                                 |
 
-Before the session ends: `npm run tokens` and paste the table into the PR description ([workflow §7](../workflows/multi-agent-token-strategy.md#7-measuring)).
+Before the session ends: `npm run tokens` and paste the table into the PR description ([workflow §7](../../workflows/multi-agent-token-strategy.md#7-measuring)).
 
 ## 7. Progress
 
