@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { getHelperToken, getHelperUrl } from '../../../lib/companion/companionSettings';
+import { canTryPresentation, currentScreenPlatform } from '../../../lib/secondScreen';
 import type { Song, SongMeta } from '../db';
 import { TvMediaSender, withAbsoluteMediaUrls } from '../logic/tvMediaTransfer';
 import type { PresentationConnection } from './presentationTypes';
@@ -20,7 +21,11 @@ export interface TVSessionInfo {
   baseUrl?: string;
 }
 
-export const useTVMode = (sessionInfo?: TVSessionInfo) => {
+export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void) => {
+  const onCastFailedRef = useRef(onCastFailed);
+  useEffect(() => {
+    onCastFailedRef.current = onCastFailed;
+  }, [onCastFailed]);
   const [isTVConnected, setIsTVConnected] = useState(false);
   const [lastEvent, setLastEvent] = useState<TVEvent | null>(null);
   const [isPresentationAvailable, setIsPresentationAvailable] = useState(false);
@@ -100,7 +105,7 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
 
   // Check Presentation Availability
   useEffect(() => {
-    if (window.PresentationRequest) {
+    if (window.PresentationRequest && canTryPresentation(currentScreenPlatform())) {
       const request = new window.PresentationRequest(['/games/melodiq/tv']);
       request
         .getAvailability()
@@ -208,7 +213,10 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
   );
 
   const startPresentation = useCallback(async () => {
-    if (!window.PresentationRequest) return;
+    if (!window.PresentationRequest || !canTryPresentation(currentScreenPlatform())) {
+      onCastFailedRef.current?.();
+      return;
+    }
 
     try {
       const request = new window.PresentationRequest(['/games/melodiq/tv']);
@@ -216,6 +224,10 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
       setupPresentationConnection(connection);
     } catch (error) {
       console.error('Presentation request failed:', error);
+      // A dismissed device picker is not an error worth a message
+      if (!(error instanceof DOMException && error.name === 'NotAllowedError')) {
+        onCastFailedRef.current?.();
+      }
     }
   }, [setupPresentationConnection]);
 

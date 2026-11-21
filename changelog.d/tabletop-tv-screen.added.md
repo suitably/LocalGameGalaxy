@@ -1,0 +1,2 @@
+- **Tabletop: host plays on the phone, table on the TV**: the host can play its own seat with its own hand (`role=tv&seat=N`) while a TV opens a read-only table (`role=screen`) via the new "Show on TV" menu entry (QR code, link, Cast). The menu switches between "Play along" and "Show table only".
+- **Scripted card games on the TV**: the room host gets a "Show on TV" button; the TV opens the public table (`role=screen`) without joining the party and never receives a hand.

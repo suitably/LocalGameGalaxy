@@ -30,6 +30,12 @@ interface TableGameMenuProps {
   onBackToLobby?: () => void;
   /** Owner only: opens the table settings of the editor. */
   onOpenTableSettings?: () => void;
+  /** Host: opens the "Show on TV" dialog. */
+  onShowOnTv?: () => void;
+  /** Table-only host: switch to playing a seat on this device. */
+  onPlayAlong?: () => void;
+  /** Host with a seat: back to the table-only view. */
+  onShowTableOnly?: () => void;
 }
 
 const noop = () => {};
@@ -42,6 +48,9 @@ export const TableGameMenu: React.FC<TableGameMenuProps> = ({
   onRestart,
   onBackToLobby,
   onOpenTableSettings,
+  onShowOnTv,
+  onPlayAlong,
+  onShowTableOnly,
 }) => {
   const { t } = useTranslation();
   const [dialog, setDialog] = useState<'saves' | 'restart' | 'rules' | null>(null);
@@ -54,6 +63,9 @@ export const TableGameMenu: React.FC<TableGameMenuProps> = ({
     onOpenRules: game.ruleText ? () => setDialog('rules') : undefined,
     onOpenSaves: owner ? () => setDialog('saves') : undefined,
     onOpenTableSettings,
+    onShowOnTv,
+    onPlayAlong,
+    onShowTableOnly,
     onRestart: owner ? () => setDialog('restart') : undefined,
   });
 

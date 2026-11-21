@@ -1629,7 +1629,10 @@
             "memoryAidHint": "Karten, die du schon gesehen hast, bleiben für dich offen – leichter, weniger Merken."
           }
         }
-      }
+      },
+      "showOnTv": "Auf dem TV anzeigen",
+      "playAlong": "Mitspielen (Tisch auf dem TV)",
+      "showTableOnly": "Nur Tisch anzeigen"
     },
     "drawpot": {
       "title": "Lostopf",
@@ -2870,5 +2873,14 @@
   "playingCards": {
     "faceDown": "Verdeckte Karte",
     "joker": "Joker"
+  },
+  "secondScreen": {
+    "title": "Auf TV zeigen",
+    "openOnTv": "Öffne diese Adresse im Browser des Fernsehers (Smart-TV, Laptop am HDMI oder anderes Gerät) oder scanne den Code. Der TV zeigt nur den gemeinsamen Tisch, deine Karten bleiben auf diesem Handy.",
+    "androidHint": "Chrome auf Android und die App können keine einzelne Seite an einen Chromecast senden. Öffne den Link stattdessen am TV. Bildschirm-Spiegelung würde auch deine Karten zeigen.",
+    "castFailed": "Kein Cast-Bildschirm gefunden. Öffne den Link stattdessen am TV.",
+    "cast": "Streamen",
+    "copyLink": "Link kopieren",
+    "copied": "Kopiert"
   }
 }

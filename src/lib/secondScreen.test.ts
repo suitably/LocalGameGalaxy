@@ -1,0 +1,33 @@
+import { describe, expect, it } from 'vitest';
+import { buildScreenUrl, canTryPresentation, screenOrigin } from './secondScreen';
+import { PUBLIC_APP_URL } from './publicAppUrl';
+
+const web = {
+  native: false,
+  android: false,
+  hasPresentationApi: true,
+  origin: 'http://192.168.1.5:5173',
+};
+
+describe('secondScreen', () => {
+  it('uses the page origin on the web and the hosted app in the native shell', () => {
+    expect(screenOrigin(web)).toBe('http://192.168.1.5:5173');
+    expect(screenOrigin({ native: true, origin: 'https://localhost' })).toBe(PUBLIC_APP_URL);
+  });
+
+  it('joins origin and route with exactly one slash', () => {
+    expect(buildScreenUrl('/games/tabletop?room=AB&role=screen', web)).toBe(
+      'http://192.168.1.5:5173/games/tabletop?room=AB&role=screen',
+    );
+    expect(buildScreenUrl('games/x', { native: false, origin: 'https://a.de/' })).toBe(
+      'https://a.de/games/x',
+    );
+  });
+
+  it('offers Presentation API casting only on desktop browsers that have it', () => {
+    expect(canTryPresentation(web)).toBe(true);
+    expect(canTryPresentation({ ...web, android: true })).toBe(false);
+    expect(canTryPresentation({ ...web, native: true })).toBe(false);
+    expect(canTryPresentation({ ...web, hasPresentationApi: false })).toBe(false);
+  });
+});
