@@ -56,7 +56,9 @@ export const RoomScriptedGame: React.FC<{ scriptId: string; roomId: string }> = 
           script={script}
           roster={room.players}
           isHost={room.isHost}
-          onStart={(players) => dispatch({ type: 'START', scriptId, players, seed: newSeed() })}
+          onStart={(players, options) =>
+            dispatch({ type: 'START', scriptId, players, options, seed: newSeed() })
+          }
         />
       </>
     );

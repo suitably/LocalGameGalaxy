@@ -104,6 +104,17 @@ export interface ScriptView {
   summary?: RoundSummary;
 }
 
+/** A switch the setup offers before a match (house rules, aids); off by default. */
+export interface ScriptOption {
+  id: string;
+  /** i18n key under `games.tabletop.scripted`. */
+  label: string;
+  hint?: string;
+}
+
+/** Chosen options by id; a missing id is off. */
+export type ScriptOptions = Readonly<Record<string, boolean>>;
+
 export interface GameScript<G> {
   id: string;
   minPlayers: number;
@@ -114,8 +125,9 @@ export interface GameScript<G> {
   removed?: readonly CardId[];
   /** Jokers in the deck. */
   jokers?: number;
+  options?: readonly ScriptOption[];
   /** A new match with a first deal. */
-  start(playerCount: number, rng: Rng): G;
+  start(playerCount: number, rng: Rng, options?: ScriptOptions): G;
   /** The state after `seat`'s move; the same object when the move is not allowed. */
   move(state: G, seat: number, move: ScriptMove, rng: Rng): G;
   /** What `viewer` sees (`null`: a spectator). */

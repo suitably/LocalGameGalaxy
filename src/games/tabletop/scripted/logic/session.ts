@@ -7,7 +7,7 @@
  */
 import { seededRng, type Rng } from '../../logic/rng';
 import { getScript } from './scriptRegistry';
-import type { ScriptMove, ScriptView } from './scriptTypes';
+import type { ScriptMove, ScriptOptions, ScriptView } from './scriptTypes';
 
 export interface SessionPlayer {
   id: string;
@@ -25,7 +25,13 @@ export interface SessionState {
 }
 
 export type SessionAction =
-  | { type: 'START'; scriptId: string; players: SessionPlayer[]; seed: number }
+  | {
+      type: 'START';
+      scriptId: string;
+      players: SessionPlayer[];
+      seed: number;
+      options?: ScriptOptions;
+    }
   | { type: 'MOVE'; seat: number; move: ScriptMove }
   /** Back to the setup (new players, other seats). */
   | { type: 'END' };
@@ -52,7 +58,7 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
         players: action.players,
         seed: action.seed,
         step: 0,
-        game: script.start(count, rngFor(action.seed, -1)),
+        game: script.start(count, rngFor(action.seed, -1), action.options ?? {}),
       };
     }
     case 'MOVE': {

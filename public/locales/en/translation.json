@@ -1623,7 +1623,11 @@
           "lastLap": "{{name}} called Cabo – last lap",
           "won": "{{name}} wins with the fewest points",
           "penalty": "{{name}} called Cabo but was not strictly lowest: +{{points}}",
-          "reset": "{{name}} had exactly 100 – back to {{points}}"
+          "reset": "{{name}} had exactly 100 – back to {{points}}",
+          "option": {
+            "memoryAid": "Memory aid",
+            "memoryAidHint": "Cards you have already seen stay face up for you – easier, less to remember."
+          }
         }
       }
     },

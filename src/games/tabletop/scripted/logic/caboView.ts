@@ -11,6 +11,7 @@ import { emptyView, msg, type ActionView, type ScriptView, type SlotRef } from '
 /** What `viewer` sees of `seat`'s slot. */
 function visible(s: CaboState, viewer: number | null, seat: number, slot: number): boolean {
   if (s.phase === 'roundEnd' || s.phase === 'matchEnd') return true;
+  if (viewer !== null && s.memoryAid && s.seen[viewer]?.includes(s.hands[seat][slot])) return true;
   if (viewer === null || viewer !== s.turn) return false;
   if (s.phase === 'peek') return seat === viewer && START_PEEK.includes(slot);
   return s.phase === 'reveal' && s.revealed?.seat === seat && s.revealed.slot === slot;
