@@ -26,6 +26,7 @@ Cabo, Mau-Mau, Golf and Schwarzer Peter were built as standalone pass-and-play h
 - The hub tile, the game folder, its i18n bundle and its `*_LOBBY_PLAYERS` storage key are deleted. No shortcut tile.
 - The `cards` score tracker (`src/games/cards`: Schwimmen lives, Oh Hell bids, universal counter) moves onto the Spieltisch too, **as a score tracker without cards**.
 - One PR per game.
+- Every Spieltisch card game can be exported in the format the app imports (native `.json`); imported again, it plays with the same enforced rules. Done for all scripted games ([tabletop-scripted-games §3a](../tech/tabletop-scripted-games.md#3a-export-and-import-as-a-game-file)); a new script gets it through `ranks`.
 
 ## 2. Per game
 
@@ -50,7 +51,7 @@ Port the house rules of the existing engines unchanged (header comments of `src/
 
 ## 4. Per-PR checklist
 
-1. Script + tests in `scripted/logic/` (`__tests__/<id>.test.ts`, random playthrough with min/max players, card conservation).
+1. Script (with `ranks`, so "Export as .json" works) + tests in `scripted/logic/` (`__tests__/<id>.test.ts`, random playthrough with min/max players, card conservation).
 2. `scriptRegistry.ts`, `CARD_GAMES` in `tableCatalog.ts`.
 3. Strings in both locales: `games.tabletop.scripted.games.<id>`, `rules.<id>`, `<id>.*`.
 4. Delete `src/games/<id>`, its `extraGameEntries.ts` line, its `STORAGE_KEYS` entry, `games.<id>` hub keys; update AGENTS.md §6 bundle list, `docs/tech/game-catalog.md`, `docs/tech/architecture.md` §3.2 users, §5 of the scripted-games doc.

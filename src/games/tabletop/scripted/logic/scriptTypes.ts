@@ -92,6 +92,8 @@ export interface GameScript<G> {
   id: string;
   minPlayers: number;
   maxPlayers: number;
+  /** Every rank the game can deal (all four suits), for exporting its deck. */
+  ranks: readonly string[];
   /** A new match with a first deal. */
   start(playerCount: number, rng: Rng): G;
   /** The state after `seat`'s move; the same object when the move is not allowed. */

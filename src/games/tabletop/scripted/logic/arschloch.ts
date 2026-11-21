@@ -234,6 +234,7 @@ function view(s: ArschlochState, viewer: number | null): ScriptView {
 
 export const arschloch: GameScript<ArschlochState> = {
   id: 'arschloch',
+  ranks: RANKS_52,
   minPlayers: 3,
   maxPlayers: 8,
   start: (count, rng) => deal(count, rng, Array<number>(count).fill(0), null),

@@ -16,6 +16,7 @@ sources:
   - 'src/games/tabletop/scripted/logic/session.ts'
   - 'src/games/tabletop/scripted/components/CardTable.tsx'
   - 'src/games/tabletop/TabletopEntry.tsx'
+  - 'src/games/tabletop/scripted/logic/scriptExport.ts'
 ---
 
 # Scripted card games
@@ -45,6 +46,8 @@ A `GameScript<G>` is a pure state machine:
 
 Texts are `Text`: a plain string or `{ key, params, seat }`, resolved under `games.tabletop.scripted.*` in `public/locales` with the seat's name as `{{name}}` (`hooks/useScriptText.ts`). The UI holds no rules: whether the picked cards can be played is asked from the script (`moveAllowed` in `logic/session.ts` tries the move). Every seat acts in turn; `active` has one seat or none.
 
+`ranks` lists every rank the game can deal (all four suits); the export builds its deck from it.
+
 Adding a game: one script file, an entry in `scriptRegistry.ts` and `CARD_GAMES`, strings (`games.<id>`, `rules.<id>` and the script's keys) in both locales, tests. `__tests__/playthrough.ts` plays any script with random legal moves found through its view.
 
 ## 3. Session, sync, storage
@@ -58,6 +61,12 @@ Whether a pick is playable is decided on the host: `hints` lists the single-card
 The owner of the state keeps the running game in `STORAGE_PREFIXES.TABLETOP_SCRIPTED` + game id (`logic/sessionStore.ts`), one entry per game with its scope (`local` or the room id); it is removed when the game ends.
 
 **Limit:** a device that reads the room traffic of its own seat sees that seat's hand only. Spectators and the table see the public view (Q24 resolved).
+
+## 3a. Export and import as a game file
+
+The header menu of a running scripted game has "Export as .json" (`onExportJson`, `useScriptedHeader`). It writes the tabletop's own format, the same `TabletopGameDefinition` the free table exports and the import dialog reads (`logic/nativeGameFile.ts`): `scriptedGameDefinition` in `logic/scriptExport.ts` builds the full deck from `script.ranks` (`buildDeck`, shuffled on start, cards labelled via `games.tabletop.labels.card`), a discard pile, one hand per seat up to `maxPlayers`, the rule text (`rules.<id>`) and `ruleScript: '<script id>'`. The file names the script, it carries no code ([ADR-0005](../adr/0005-tabletop-scripting-for-imported-games.md)).
+
+Imported again (import dialog "Upload file", a device or server game), the game keeps `ruleScript` (`validateAndSanitizeGame` accepts `[a-z0-9-]{1,40}`). When `TabletopGame` resolves a game whose `ruleScript` this app knows (`ruleScriptOf`), it replaces `gameId` in the URL with the script id, so `TabletopEntry` opens the scripted game with enforced rules; other query parameters (`local`, `room`, …) stay. An app without that script ignores the field and shows the free table with the same cards. **Limit:** in a party room every device resolves the game itself, so a phone that has neither the file nor the companion copy cannot open it — use the built-in entry in `CARD_GAMES` there.
 
 ## 4. UI (`components/`)
 

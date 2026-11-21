@@ -11,6 +11,7 @@ import { resolveTableGame, type TableOrigin } from './logic/gameSource';
 import { createGameSourceLoaders } from './logic/gameSourceLoaders';
 import { decksToShuffleOnStart } from './logic/startShuffle';
 import { localizeLabels } from './logic/localizeLabels';
+import { ruleScriptOf } from './scripted/logic/scriptExport';
 import { TabletopEditor } from './components/editor/TabletopEditor';
 import { HandDockStrip } from './components/surface/HandDockStrip';
 import { TabletopControllerView } from './components/controller/TabletopControllerView';
@@ -75,6 +76,14 @@ export function TabletopGame() {
           gameId,
           createGameSourceLoaders(gameId, ownsState ? saveKey : null),
         );
+        // A game file naming a built-in rule script plays with enforced rules.
+        const scriptId = resolved && ruleScriptOf(resolved.game);
+        if (scriptId) {
+          const next = new URLSearchParams(searchParams);
+          next.set('gameId', scriptId);
+          navigate({ search: next.toString() }, { replace: true });
+          return;
+        }
         if (resolved) {
           setOrigin(resolved.origin);
           const game = localizeLabels(resolved.game, (key, options) => String(t(key, options)));

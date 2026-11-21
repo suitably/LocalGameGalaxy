@@ -286,6 +286,9 @@ export function validateAndSanitizeGame(raw: RawTabletopGameInput): TabletopGame
     assetFiles: raw.assetFiles || {},
     updatedAt: raw.updatedAt || Date.now(),
     ruleText: typeof raw.ruleText === 'string' ? raw.ruleText : undefined,
+    ...(typeof raw.ruleScript === 'string' && /^[a-z0-9-]{1,40}$/.test(raw.ruleScript)
+      ? { ruleScript: raw.ruleScript }
+      : {}),
     hiddenZones: Object.keys(cleanHiddenZones).length > 0 ? cleanHiddenZones : undefined,
     scriptZones: Object.keys(cleanScriptZones).length > 0 ? cleanScriptZones : undefined,
     importReport: sanitizeImportReport(raw.importReport),

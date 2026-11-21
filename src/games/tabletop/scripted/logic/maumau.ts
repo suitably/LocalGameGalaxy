@@ -219,6 +219,7 @@ function view(s: MauMauState, viewer: number | null): ScriptView {
 
 export const maumau: GameScript<MauMauState> = {
   id: 'maumau',
+  ranks: RANKS_32,
   minPlayers: 2,
   maxPlayers: 5,
   start: (count, rng) => deal(Array<number>(count).fill(0), 1, rng),
