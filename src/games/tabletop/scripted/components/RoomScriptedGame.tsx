@@ -5,9 +5,11 @@
  * table, spectators) shows the public table, made for casting to the TV.
  */
 import React from 'react';
-import { CircularProgress, Stack } from '@mui/material';
+import { Button, CircularProgress, Stack } from '@mui/material';
+import CastRoundedIcon from '@mui/icons-material/CastRounded';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { ShowOnTvDialog } from '../../../../components/common/ShowOnTvDialog';
 import { useWakeLock } from '../../../../hooks/useWakeLock';
 import { TvThemeProvider } from '../../../../components/common/TvThemeProvider';
 import { useFollowPartyLobby } from '../../../../features/party/hooks/useFollowPartyLobby';
@@ -32,6 +34,7 @@ export const RoomScriptedGame: React.FC<{ scriptId: string; roomId: string }> = 
   const { room, packet, dispatch, synced, seat, allowed } = useRoomSession(scriptId, roomId);
   const view = packet?.view ?? null;
   const running = view !== null;
+  const [tvOpen, setTvOpen] = React.useState(false);
   const rules = useScriptedHeader({
     scriptId,
     // Guests visit the lobby while the game goes on; the host ends it for everyone.
@@ -40,10 +43,29 @@ export const RoomScriptedGame: React.FC<{ scriptId: string; roomId: string }> = 
     onRestart: room.isHost && running ? () => dispatch({ type: 'END' }) : undefined,
   });
 
+  const tvAction = room.isHost ? (
+    <>
+      <Button
+        size="small"
+        startIcon={<CastRoundedIcon />}
+        onClick={() => setTvOpen(true)}
+        sx={{ alignSelf: 'flex-end', m: 1 }}
+      >
+        {t('secondScreen.title')}
+      </Button>
+      <ShowOnTvDialog
+        open={tvOpen}
+        onClose={() => setTvOpen(false)}
+        screenRoute={`/games/tabletop?room=${encodeURIComponent(roomId)}&gameId=${encodeURIComponent(scriptId)}&role=screen`}
+      />
+    </>
+  ) : null;
+
   if (!synced) {
     return (
       <Stack alignItems="center" py={6}>
         {rules}
+        {tvAction}
         <CircularProgress />
       </Stack>
     );
@@ -79,6 +101,7 @@ export const RoomScriptedGame: React.FC<{ scriptId: string; roomId: string }> = 
   return (
     <>
       {rules}
+      {tvAction}
       {seat === null ? <TvThemeProvider>{table}</TvThemeProvider> : table}
     </>
   );
