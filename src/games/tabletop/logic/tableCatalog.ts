@@ -128,6 +128,21 @@ export const DICE_GAMES: TableGameEntry[] = [
   },
 ];
 
+/** Score trackers for games played with real cards: no cards on screen, only the scores. */
+export const SCORE_TRACKERS: TableGameEntry[] = [
+  {
+    id: 'cards',
+    kind: 'route',
+    route: '/games/cards',
+    titleKey: 'games.cards.title',
+    title: 'Kartenspiel-Zähler',
+    descKey: 'games.cards.description',
+    icon: 'cards',
+    color: piecePalette.purple,
+    modes: ['shared_device'],
+  },
+];
+
 /** Where a game in a mode opens; `own_devices` goes through the party lobby. */
 export function routeFor(
   entry: Pick<TableGameEntry, 'id' | 'kind' | 'route'>,

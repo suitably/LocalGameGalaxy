@@ -3,7 +3,7 @@ type: Spec
 title: 'Move the standalone card games onto the Spieltisch'
 description: 'Migration plan: Mau-Mau, Schwarzer Peter, Golf and Cabo become rule scripts of the Spieltisch (CardTable, party rooms with sealed hands); the cards score tracker is listed on the Spieltisch as a score tracker without cards. One PR per game.'
 tags: [games, cards, tabletop, scripted, migration, spec]
-status: draft
+status: stable
 generated:
   at: 2026-11-21T14:00:00+01:00
   by: claude-code
@@ -36,7 +36,7 @@ Cabo, Mau-Mau, Golf and Schwarzer Peter were built as standalone pass-and-play h
 | Schwarzer Peter | done (`schwarzerPeter.ts`)      | Drawing blind from the neighbour's hand is a `slot` move on face-down slots (slice 0).                       |
 | Golf            | done (`golf.ts`)                | No: a 2×3 grid per seat, face down even for its owner, flips and slot swaps.                                 |
 | Cabo            | done (`cabo.ts`, `caboView.ts`) | No: four face-down slots, peeks of own/other slots, blind swaps, Cabo call.                                  |
-| cards tracker   | open                            | Not a script: no cards. Listed on the Spieltisch like `DICE_GAMES` (`kind: 'route'`), hub tile filtered out. |
+| cards tracker   | done (`SCORE_TRACKERS`)         | Not a script: no cards. Listed on the Spieltisch like `DICE_GAMES` (`kind: 'route'`), hub tile filtered out. |
 
 Port the house rules of the existing engines unchanged (header comments of `src/games/<id>/logic/engine.ts`); their tests are the checklist for the new script tests.
 
@@ -55,4 +55,4 @@ Port the house rules of the existing engines unchanged (header comments of `src/
 2. `scriptRegistry.ts`, `CARD_GAMES` in `tableCatalog.ts`.
 3. Strings in both locales: `games.tabletop.scripted.games.<id>`, `rules.<id>`, `<id>.*`.
 4. Delete `src/games/<id>`, its `extraGameEntries.ts` line, its `STORAGE_KEYS` entry, `games.<id>` hub keys; update AGENTS.md §6 bundle list, `docs/tech/game-catalog.md`, `docs/tech/architecture.md` §3.2 users, §5 of the scripted-games doc.
-5. Once Cabo, Golf and Schwarzer Peter are gone, check whether `src/modules/playing-cards` and `HandoverCover` without `players` still have users; remove dead code in a separate PR.
+5. Done: `src/modules/playing-cards` had no users left and was removed (scripted games use `scripted/logic/cardDeck.ts`); `HandoverCover` is still used by `LocalScriptedGame` and the local tabletop.

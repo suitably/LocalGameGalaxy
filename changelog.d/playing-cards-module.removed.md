@@ -1,0 +1,1 @@
+- **Internal:** the unused shared `playing-cards` module is removed; the Spieltisch card games have their own card model.

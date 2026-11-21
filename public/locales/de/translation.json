@@ -968,7 +968,7 @@
       "description": "Das beliebte 5x5 Würfel-Bingo! Bilde Paare, Straßen und Full Houses auf deinem Raster."
     },
     "cards": {
-      "title": "Kartenspiele",
+      "title": "Kartenspiel-Zähler",
       "description": "Digitale Punkte-, Lebens- (Schwimmen) und Stichverwaltung (Oh Hell) für Kartenspiele am Tisch."
     },
     "tabletop": {
@@ -1340,6 +1340,7 @@
       "mode_own_devices": "Jeder am eigenen Gerät",
       "mode_own_devices_hint": "Session öffnen, Mitspieler treten per QR-Code oder Link bei.",
       "dice_games": "Würfelspiele",
+      "score_trackers": "Punktezähler",
       "custom_game_meta": "{{min}}–{{max}} Spieler",
       "save_to_server": "Auf Server speichern",
       "local_games_title": "Auf diesem Gerät ({{count}})",

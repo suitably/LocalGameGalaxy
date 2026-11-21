@@ -968,7 +968,7 @@
       "description": "The popular 5x5 Dice Bingo! Form pairs, straights, and full houses on your grid."
     },
     "cards": {
-      "title": "Card Games",
+      "title": "Card game scores",
       "description": "Digital companion for tabletop card games: Life tracking (Schwimmen) and trick predictor (Oh Hell)."
     },
     "tabletop": {
@@ -1340,6 +1340,7 @@
       "mode_own_devices": "Everyone on their own device",
       "mode_own_devices_hint": "Open a session, players join with a QR code or link.",
       "dice_games": "Dice games",
+      "score_trackers": "Score trackers",
       "custom_game_meta": "{{min}}–{{max}} players",
       "save_to_server": "Save to server",
       "local_games_title": "On this device ({{count}})",

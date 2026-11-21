@@ -6,6 +6,6 @@ Agent-ready specs for **open** work. Each mirrors a GitHub issue in `suitably/Lo
 | ----------------------------------------------------------------------------------------- | ----- | -------------------------------------------------------------------------------- |
 | [Eliminate `any` in Melodiq](ISSUE-SOLID-13-eliminate-typescript-any-types-in-melodiq.md) | —     | open (see [warning budget](../tech/coding-conventions.md#eslint-warning-budget)) |
 | [Classic card games: Cabo, Golf, Mau-Mau, Schwarzer Peter](CARD-CLASSICS.md)              | —     | done (PR #784)                                                                   |
-| [Card games onto the Spieltisch](CARD-GAMES-TO-SPIELTISCH.md)                             | —     | in progress: Mau-Mau, Schwarzer Peter, Golf, Cabo done; cards tracker open       |
+| [Card games onto the Spieltisch](CARD-GAMES-TO-SPIELTISCH.md)                             | —     | done (PRs #788–#792)                                                             |
 
 Archived 2026-11-20 (issue closed or work verified in code): #356, #359, #360, #539, #647, the settings unification and SOLID-14, all in [archive](../archive/index.md).
