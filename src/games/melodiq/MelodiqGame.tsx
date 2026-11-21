@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Box } from '@mui/material';
 import { initMelodiqI18n } from './i18n';
 import { WebRTCProvider, WebRTCMockProvider, useWebRTC } from './audio/WebRTCContext';
@@ -42,6 +43,9 @@ export const MelodiqGameContent: React.FC = () => {
     useQueue();
   const { jobs } = useDownloads(isClient ? 0 : 2000);
 
+  const { t } = useTranslation();
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+
   const { manager, partyId, activeTrackerUrls } = useWebRTC();
   const {
     isTVConnected,
@@ -53,13 +57,14 @@ export const MelodiqGameContent: React.FC = () => {
     sendRemoteCommand,
     sendGameUpdate,
     disconnectTV,
-  } = useTVMode({ partyId, activeTrackerUrls });
+  } = useTVMode({ partyId, activeTrackerUrls }, () =>
+    setFeedbackMessage(t('secondScreen.castFailed')),
+  );
   const { settings } = useMelodiqSettings();
   const { clientRole, clientProfile } = useClientEngine();
 
   const searchFilterState = useSearchFilters(songs, jobs);
 
-  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [showQueueDrawer, setShowQueueDrawer] = useState(false);
 
   const { currentView, setCurrentView, handleSetCurrentView, handleCloseSubView } =
