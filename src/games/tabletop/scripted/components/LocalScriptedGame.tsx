@@ -19,6 +19,8 @@ import { moveAllowed, sessionReducer, sessionView } from '../logic/session';
 import { loadSession, saveSession } from '../logic/sessionStore';
 import { useScriptedHeader } from '../hooks/useScriptedHeader';
 import { CardTable } from './CardTable';
+import { ScriptOptionSwitches } from './ScriptOptionSwitches';
+import type { ScriptOptions } from '../logic/scriptTypes';
 
 const SCOPE = 'local';
 
@@ -45,6 +47,7 @@ export const LocalScriptedGame: React.FC<{ scriptId: string }> = ({ scriptId }) 
   const table = sessionView(state, null);
   const acting = table?.active[0] ?? null;
   const [viewer, setViewer] = useState(acting ?? 0);
+  const [options, setOptions] = useState<ScriptOptions>({});
 
   if (!table) {
     const count = lobby.players.length;
@@ -63,6 +66,7 @@ export const LocalScriptedGame: React.FC<{ scriptId: string }> = ({ scriptId }) 
           })}
           sx={{ mb: 2 }}
         />
+        <ScriptOptionSwitches script={script} value={options} onChange={setOptions} />
         <Button
           variant="contained"
           size="large"
@@ -74,6 +78,7 @@ export const LocalScriptedGame: React.FC<{ scriptId: string }> = ({ scriptId }) 
               type: 'START',
               scriptId,
               seed: newSeed(),
+              options,
               players: lobby.players.map((p, i) => ({ id: `p${i}`, name: p.name })),
             });
             setViewer(-1);

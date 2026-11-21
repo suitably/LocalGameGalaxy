@@ -1623,7 +1623,11 @@
           "lastLap": "{{name}} hat Cabo gerufen – letzte Runde",
           "won": "{{name}} gewinnt mit den wenigsten Punkten",
           "penalty": "{{name}} hat Cabo gerufen, war aber nicht allein vorn: +{{points}}",
-          "reset": "{{name}} hatte genau 100 – zurück auf {{points}}"
+          "reset": "{{name}} hatte genau 100 – zurück auf {{points}}",
+          "option": {
+            "memoryAid": "Gedächtnisstütze",
+            "memoryAidHint": "Karten, die du schon gesehen hast, bleiben für dich offen – leichter, weniger Merken."
+          }
         }
       }
     },

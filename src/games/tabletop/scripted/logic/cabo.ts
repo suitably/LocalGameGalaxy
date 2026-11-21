@@ -9,7 +9,7 @@
  * seat's card (optional). After Cabo everyone else plays once more. Points: A 1, 2–10 face value,
  * J 11, Q 12, red K 0, black K 13, joker 0; the caller gets +10 unless strictly lowest. A total
  * of exactly 100 falls back to 50; the match ends when a total passes 100, lowest wins.
- * House rules: no snap discards out of turn; the memory aid of the old game is not offered.
+ * House rules: no snap discards out of turn. Option `memoryAid`: seen cards stay face up.
  */
 import { shuffled, type Rng } from '../../logic/rng';
 import { RANKS_52, isJoker, makeDeck, rankOf, suitOf } from './cardDeck';
@@ -44,7 +44,18 @@ export interface CaboState {
   revealed: SlotRef | null;
   caller: number | null;
   result: { values: number[]; scores: number[]; penalty: boolean; resets: number[] } | null;
+  /** Option `memoryAid`: cards a seat has seen stay face up for it. */
+  memoryAid: boolean;
+  /** Card ids each seat has seen this round (start peek, draws, peeks). */
+  seen: CardId[][];
 }
+
+/** `card` joins what `seat` has seen. */
+const remember = (s: CaboState, seat: number, card: CardId): CardId[][] =>
+  // `?? []`: a game saved before the option existed has no `seen`.
+  (s.seen ?? s.hands.map(() => [])).map((cards, i) =>
+    i === seat && !cards.includes(card) ? [...cards, card] : cards,
+  );
 
 export function cardValue(card: CardId): number {
   if (isJoker(card)) return 0;
@@ -66,7 +77,7 @@ export function powerOf(card: CardId): CaboPower | null {
 
 const handValue = (hand: readonly CardId[]) => hand.reduce((sum, c) => sum + cardValue(c), 0);
 
-function deal(totals: number[], round: number, rng: Rng): CaboState {
+function deal(totals: number[], round: number, rng: Rng, memoryAid: boolean): CaboState {
   const deck = shuffled(makeDeck(RANKS_52, 2), rng);
   const hands = totals.map(() => deck.splice(0, HAND));
   const discard = deck.splice(0, 1);
@@ -85,6 +96,8 @@ function deal(totals: number[], round: number, rng: Rng): CaboState {
     revealed: null,
     caller: null,
     result: null,
+    memoryAid,
+    seen: hands.map((hand) => START_PEEK.map((slot) => hand[slot])),
   };
 }
 
@@ -135,7 +148,8 @@ function takeFromStock(s: CaboState, rng: Rng): CaboState | null {
     discard = discard.slice(-1);
   }
   const drawn = { card: stock[0], fromStock: true };
-  return { ...s, stock: stock.slice(1), discard, drawn, phase: 'drawn' };
+  const seen = remember(s, s.turn, stock[0]);
+  return { ...s, stock: stock.slice(1), discard, drawn, seen, phase: 'drawn' };
 }
 
 function onAction(s: CaboState, id: string, rng: Rng): CaboState {
@@ -149,7 +163,8 @@ function onAction(s: CaboState, id: string, rng: Rng): CaboState {
     if (id === 'takeDiscard' && s.discard.length > 0) {
       const card = s.discard[s.discard.length - 1];
       const drawn = { card, fromStock: false };
-      return { ...s, discard: s.discard.slice(0, -1), drawn, phase: 'drawn' };
+      const seen = remember(s, s.turn, card);
+      return { ...s, discard: s.discard.slice(0, -1), drawn, seen, phase: 'drawn' };
     }
     if (id === 'cabo' && s.caller === null) return endTurn({ ...s, caller: s.turn });
   }
@@ -177,8 +192,10 @@ function onSlot(s: CaboState, ref: SlotRef): CaboState {
   const own = ref.seat === s.turn;
   if (s.phase === 'drawn' && s.drawn && own) return swapIn(s, ref.slot, s.drawn.card);
   if (s.phase !== 'power') return s;
-  if (s.power === 'peekOwn' && own) return { ...s, phase: 'reveal', power: null, revealed: ref };
-  if (s.power === 'peekOther' && !own) return { ...s, phase: 'reveal', power: null, revealed: ref };
+  if ((s.power === 'peekOwn' && own) || (s.power === 'peekOther' && !own)) {
+    const seen = remember(s, s.turn, s.hands[ref.seat][ref.slot]);
+    return { ...s, phase: 'reveal', power: null, revealed: ref, seen };
+  }
   if (s.power !== 'blindSwap') return s;
   if (own) return { ...s, swapFrom: ref.slot };
   if (s.swapFrom === null) return s;
@@ -197,8 +214,8 @@ function move(s: CaboState, seat: number, m: ScriptMove, rng: Rng): CaboState {
   if (s.phase === 'roundEnd' || s.phase === 'matchEnd') {
     if (m.kind !== 'action' || m.id !== 'next') return s;
     return s.phase === 'matchEnd'
-      ? cabo.start(s.totals.length, rng)
-      : deal(s.totals, s.round + 1, rng);
+      ? deal(Array<number>(s.totals.length).fill(0), 1, rng, s.memoryAid)
+      : deal(s.totals, s.round + 1, rng, s.memoryAid);
   }
   if (seat !== s.turn) return s;
   if (m.kind === 'slot') return onSlot(s, m);
@@ -211,7 +228,9 @@ export const cabo: GameScript<CaboState> = {
   jokers: 2,
   minPlayers: 2,
   maxPlayers: 6,
-  start: (count, rng) => deal(Array<number>(count).fill(0), 1, rng),
+  options: [{ id: 'memoryAid', label: 'cabo.option.memoryAid', hint: 'cabo.option.memoryAidHint' }],
+  start: (count, rng, options) =>
+    deal(Array<number>(count).fill(0), 1, rng, options?.memoryAid === true),
   move,
   view: caboView,
 };

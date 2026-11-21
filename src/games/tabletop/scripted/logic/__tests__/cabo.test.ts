@@ -26,6 +26,8 @@ const table = (over: Partial<CaboState>): CaboState => ({
   revealed: null,
   caller: null,
   result: null,
+  memoryAid: false,
+  seen: [[], [], []],
   ...over,
 });
 
@@ -106,6 +108,20 @@ describe('Cabo', () => {
     // Seat 0: 1+2+0+3 = 6; seat 1: 4+9+13+0 = 26; seat 2: 9+6+7+8 = 30.
     expect(s).toMatchObject({ phase: 'roundEnd', totals: [6, 26, 30] });
     expect(s.result?.penalty).toBe(false);
+  });
+
+  it('with the memory aid, seen cards stay face up for that seat only', () => {
+    const start = cabo.start(2, seededRng(1), { memoryAid: true });
+    expect(start.memoryAid).toBe(true);
+    expect(cabo.view(start, 1).seats[1].slots?.slice(2)).toEqual(start.hands[1].slice(2));
+    let s = table({ memoryAid: true, seen: [['DK', 'C3'], [], []] });
+    s = cabo.move(s, 0, act('drawStock'), rng);
+    s = cabo.move(s, 0, act('discard'), rng);
+    s = cabo.move(s, 0, slot(0, 0), rng);
+    s = cabo.move(s, 0, act('endTurn'), rng);
+    expect(cabo.view(s, 0).seats[0].slots).toEqual(['HA', null, 'DK', 'C3']);
+    expect(cabo.view(s, 1).seats[0].slots).toEqual([null, null, null, null]);
+    expect(cabo.start(2, seededRng(1)).memoryAid).toBe(false);
   });
 
   it('a total of exactly 100 falls back to 50', () => {

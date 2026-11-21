@@ -19,14 +19,15 @@ import {
 import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
 import { useTranslation } from 'react-i18next';
 import type { RoomPlayer } from '../../../../features/party/hooks/usePartyRoomPlayers';
-import type { AnyGameScript } from '../logic/scriptTypes';
+import type { AnyGameScript, ScriptOptions } from '../logic/scriptTypes';
+import { ScriptOptionSwitches } from './ScriptOptionSwitches';
 import { seatPlayers, type SessionPlayer } from '../logic/session';
 
 interface RoomSetupProps {
   script: AnyGameScript;
   roster: RoomPlayer[];
   isHost: boolean;
-  onStart: (players: SessionPlayer[]) => void;
+  onStart: (players: SessionPlayer[], options: ScriptOptions) => void;
 }
 
 export const RoomSetup: React.FC<RoomSetupProps> = ({ script, roster, isHost, onStart }) => {
@@ -34,6 +35,7 @@ export const RoomSetup: React.FC<RoomSetupProps> = ({ script, roster, isHost, on
   const guests = roster.filter((p) => !p.isHost);
   // Enough players without the host: its screen is the table by default.
   const [choice, setChoice] = useState<boolean | null>(null);
+  const [options, setOptions] = useState<ScriptOptions>({});
   const tableOnly = choice ?? guests.length >= script.minPlayers;
   const candidates = (tableOnly ? guests : roster).map(({ id, name }) => ({ id, name }));
   const players = seatPlayers(script.id, candidates);
@@ -60,6 +62,7 @@ export const RoomSetup: React.FC<RoomSetupProps> = ({ script, roster, isHost, on
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {t('games.tabletop.scripted.setup.tableOnlyHint')}
       </Typography>
+      <ScriptOptionSwitches script={script} value={options} onChange={setOptions} />
       <Stack direction="row" gap={0.75} flexWrap="wrap" mb={2}>
         {candidates.map((p, i) => (
           <Chip
@@ -89,7 +92,7 @@ export const RoomSetup: React.FC<RoomSetupProps> = ({ script, roster, isHost, on
         fullWidth
         startIcon={<PlayArrowIcon />}
         disabled={!players}
-        onClick={() => players && onStart(players)}
+        onClick={() => players && onStart(players, options)}
       >
         {t('games.tabletop.scripted.setup.start')}
       </Button>
