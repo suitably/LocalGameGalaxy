@@ -163,7 +163,7 @@ function move(s: DurakState, seat: number, m: ScriptMove, rng: Rng): DurakState 
     if (m.kind !== 'action' || m.id !== 'next') return s;
     return deal(s.hands.length, rng, s.losses, s.durak);
   }
-  if (seat !== s.turn) return s;
+  if (seat !== s.turn || m.kind === 'slot') return s;
   if (seat === s.defender) {
     if (m.kind === 'cards') return defend(s, m.cards, m.target);
     return m.id === 'take' ? endBout(s, true) : s;

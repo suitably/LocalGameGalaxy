@@ -1,6 +1,6 @@
 ---
 type: Reference
-title: 'Tabletop: scripted card games (Schwimmen, Durak, Arschloch, Skat, Mau-Mau)'
+title: 'Tabletop: scripted card games (Schwimmen, Durak, Arschloch, Skat, Mau-Mau, Schwarzer Peter)'
 description: 'Card games with enforced rules on the Spieltisch: the rule-script contract, the session reducer, the TV table and phone views, sync and storage, and the house rules of each game.'
 resource: src/games/tabletop/scripted/
 tags: [tabletop, cards, scripted, skat, durak, schwimmen, arschloch, maumau, sync]
@@ -41,12 +41,14 @@ The free tabletop ([tabletop-engine](tabletop-engine.md)) moves widgets and know
 A `GameScript<G>` is a pure state machine:
 
 - `start(playerCount, rng)` — a new match with the first deal.
-- `move(state, seat, move, rng)` — the next state, or **the same object** when the move is not allowed. Moves are `{ kind: 'cards', cards, target? }` (hand cards, optionally onto a table card) or `{ kind: 'action', id, arg? }` (a button).
-- `view(state, viewer)` — what a seat (or `null`, the table) sees: `status`, `info` chips, `seats` (card count, chips, optionally revealed cards), `active` seats, `piles` (`row` of open cards with optional `cover`/`seat`, `stock`), the viewer's sorted `hand`, `select` (`none` / `one` / `many`), `targets` (table cards that can be picked), `actions` (buttons), `playLabel`, and a `summary` between rounds.
+- `move(state, seat, move, rng)` — the next state, or **the same object** when the move is not allowed. Moves are `{ kind: 'cards', cards, target? }` (hand cards, optionally onto a table card), `{ kind: 'action', id, arg? }` (a button) or `{ kind: 'slot', seat, slot }` (a card lying in front of a seat, by position).
+- `view(state, viewer)` — what a seat (or `null`, the table) sees: `status`, `info` chips, `seats` (card count, chips, optionally revealed cards and `slots`: cards lying in front of the seat, each a `CardId` or `null` = face down for this viewer, in a grid of `slotColumns`), `active` seats, `piles` (`row` of open cards with optional `cover`/`seat`, `stock`), the viewer's sorted `hand`, `select` (`none` / `one` / `many`), `targets` (table cards that can be picked), `slotTargets` (`{ seat, slot }` the viewer may tap), `actions` (buttons), `playLabel`, and a `summary` between rounds.
 
 Texts are `Text`: a plain string or `{ key, params, seat }`, resolved under `games.tabletop.scripted.*` in `public/locales` with the seat's name as `{{name}}` (`hooks/useScriptText.ts`). The UI holds no rules: whether the picked cards can be played is asked from the script (`moveAllowed` in `logic/session.ts` tries the move). Every seat acts in turn; `active` has one seat or none.
 
-`ranks` lists every rank the game can deal (all four suits); the export builds its deck from it.
+`ranks` lists every rank the game can deal (all four suits), `removed` the cards of that deck it leaves out; the export builds its deck from them.
+
+**Slots.** Because the script decides per viewer, a slot can be open for everyone, known only to one seat or face down for all, and sealing stays correct (Golf grids, Cabo cards, a hand to draw from blind). `SlotGrid` draws them: other seats' slots small in their `SeatBadges`, the viewer's own slots large above the hand; slots in `slotTargets` are highlighted and send `{ kind: 'slot' }` on tap. Slot moves are tried optimistically on a device and checked on the host like buttons.
 
 Adding a game: one script file, an entry in `scriptRegistry.ts` and `CARD_GAMES`, strings (`games.<id>`, `rules.<id>` and the script's keys) in both locales, tests. `__tests__/playthrough.ts` plays any script with random legal moves found through its view.
 
@@ -78,6 +80,7 @@ Imported again (import dialog "Upload file", a device or server game), the game 
 - **Durak** (`durak.ts`, 2–6): 36 cards, podkidnoy. Lowest trump attacks first, later the player before the durak. Attack with cards of one rank; throw-ins of ranks on the table, asked in turn after each full defence (attackers who cannot add are skipped); at most six attack cards and never more than the defender held. Taking picks up at once (no throw-in after taking) and skips the defender. No passing on (perevodnoy).
 - **Arschloch** (`arschloch.ts`, 3–8): 32 cards up to four players, 52 above, ace high. Same count of a higher rank or pass; a pass lasts for the trick. Points per round: players − 1 for the president down to 0. Exchange before the next round: Arschloch → president two best cards (one with three players), vices one from four players; the winners choose what to return. The Arschloch leads.
 - **Mau-Mau** (`maumau.ts`, 2–5): 32 cards, five each; the start card has no effect. Suit or rank on the top card. 7: the next seat draws two or answers with a 7 (stacking +2). 8: the next seat is skipped. Jack: on anything but a jack, wishes a suit for the next card (action `wish` with the suit as `arg`). Drawing one card leaves only that card playable, otherwise pass; an empty stock reshuffles the discard pile under its top card. First empty hand wins the round; round wins are counted, the round starter rotates. Replaced the pass-and-play game `src/games/maumau` (2026-11-21, [migration plan](../tasks/CARD-GAMES-TO-SPIELTISCH.md)).
+- **Schwarzer Peter** (`schwarzerPeter.ts`, id `schwarzer-peter`, 2–6): 52 cards without J♣, J♠ is the Peter. All dealt, pairs (same rank and colour) go down at once. The drawer takes one card blind from the next seat clockwise that still holds cards: that hand is shuffled when the turn starts and shown to everyone else as face-down slots; a pair goes down. After a draw the drawer sees the card and ends the turn with `done`. Seats without cards are out; the Peter holder loses the round (losses counted, the starter rotates). Replaced the pass-and-play game `src/games/schwarzer-peter` (2026-11-21).
 - **Skat** (`skat.ts`, `skatRules.ts`, exactly 3): bidding middlehand → forehand, rearhand → winner, forehand alone at 18 when nobody bid; all pass → next dealer. Pick up and discard two, or hand. Suit, grand, null, null ouvert (also as hand). Values per the International Skat Order including matadors, hand, schneider, schwarz, overbidding (lost at the next multiple of the base value) and lost games counted double. Not implemented: announced schneider/schwarz, ouvert suit/grand games, Ramsch, Kontra/Re, a fourth player sitting out.
 
 ## 6. Existing scripts that were checked

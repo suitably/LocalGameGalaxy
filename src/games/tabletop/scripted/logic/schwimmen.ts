@@ -128,6 +128,7 @@ function playMove(s: SchwimmenState, seat: number, move: ScriptMove): SchwimmenS
       s.middle.map((c) => (c === target ? card : c)),
     );
   }
+  if (move.kind === 'slot') return s;
   if (move.id === 'swapAll') return setHand(s.middle, hand);
   if (move.id === 'knock') {
     if (s.knocker !== null) return s;
