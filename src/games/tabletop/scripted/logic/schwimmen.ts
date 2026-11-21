@@ -248,6 +248,7 @@ function view(s: SchwimmenState, viewer: number | null): ScriptView {
 
 export const schwimmen: GameScript<SchwimmenState> = {
   id: 'schwimmen',
+  ranks: RANKS_32,
   minPlayers: 2,
   maxPlayers: 9,
   start: (count, rng) =>

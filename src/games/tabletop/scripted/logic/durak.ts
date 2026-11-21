@@ -275,6 +275,7 @@ function view(s: DurakState, viewer: number | null): ScriptView {
 
 export const durak: GameScript<DurakState> = {
   id: 'durak',
+  ranks: RANKS_36,
   minPlayers: 2,
   maxPlayers: 6,
   start: (count, rng) => deal(count, rng, Array<number>(count).fill(0), null),

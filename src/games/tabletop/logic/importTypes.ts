@@ -60,3 +60,8 @@ export interface GameScripts {
   global?: ScriptEntry;
   objects: Record<string, ScriptEntry>;
 }
+
+/** A game file that names a built-in rule script (`scripted/`, e.g. `maumau`); never code. */
+export interface RuleScriptRef {
+  ruleScript?: string;
+}

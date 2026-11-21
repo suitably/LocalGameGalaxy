@@ -1430,6 +1430,10 @@
           "skat": {
             "title": "Skat",
             "desc": "Bid, discard, take 61 points – for exactly 3 players."
+          },
+          "maumau": {
+            "title": "Mau-Mau",
+            "desc": "Match suit or rank, 7 draws two, 8 skips, jack wishes a suit – for 2 to 5 players."
           }
         },
         "turn": "{{name}}'s turn",
@@ -1528,7 +1532,27 @@
           "schwimmen": "<p>32 cards. Everyone holds three cards, three lie open in the middle. The dealer first picks one of two hands; the other goes to the middle.</p><p><b>Your turn:</b> swap one card, swap all three, pass or knock. After a knock everyone else plays once more. If everyone passes, three new cards come to the middle.</p><p><b>Scoring:</b> the sum of one suit (ace 11, court cards 10). Three of a kind count 30.5. 31 or three aces end the round at once – everyone else loses a life. Otherwise the lowest hand loses.</p><p>Everyone has three lives, then you \"swim\", and with the next loss you are out. The last player wins.</p>",
           "durak": "<p>36 cards (6 to ace), six in hand. The bottom card of the stock shows trumps. In the first round the lowest trump attacks.</p><p><b>Attack:</b> one or more cards of one rank. <b>Defence:</b> beat every card with a higher one of its suit or with a trump – or take everything.</p><p>Once everything is beaten, the others may throw in cards of ranks already on the table (six attack cards at most, never more than the defender held). Then everyone draws up to six. A successful defender attacks next; whoever takes is skipped.</p><p>Whoever still holds cards at the end is the durak.</p>",
           "arschloch": "<p>All cards are dealt (32 up to four players, 52 above). The leader plays one or more cards of one rank. The others play as many cards of a higher rank or pass – a pass lasts until the trick ends. Whoever played last leads again.</p><p>First out is the president, last the scum. Before the next round the scum hands their best cards to the president (two from four players, otherwise one), who returns cards of their choice; from four players the vices swap one card too. The scum leads.</p>",
-          "skat": "<p>Three players, 32 cards, ten each, two in the skat. Middlehand bids to forehand, then rearhand to the winner. The winner picks up the skat and discards two cards – or plays hand – and declares a suit, grand or null.</p><p>You must follow suit; the jacks are the highest trumps (not in null). The declarer needs 61 card points; in null they must not take a trick.</p><p><b>Value:</b> matadors + 1 (+ hand, schneider, schwarz) × base value (diamonds 9, hearts 10, spades 11, clubs 12, grand 24); null 23, hand 35, ouvert 46, ouvert hand 59. Lost games count double negative. If everyone passes, the next dealer deals. No Ramsch, no announced schneider/schwarz.</p>"
+          "skat": "<p>Three players, 32 cards, ten each, two in the skat. Middlehand bids to forehand, then rearhand to the winner. The winner picks up the skat and discards two cards – or plays hand – and declares a suit, grand or null.</p><p>You must follow suit; the jacks are the highest trumps (not in null). The declarer needs 61 card points; in null they must not take a trick.</p><p><b>Value:</b> matadors + 1 (+ hand, schneider, schwarz) × base value (diamonds 9, hearts 10, spades 11, clubs 12, grand 24); null 23, hand 35, ouvert 46, ouvert hand 59. Lost games count double negative. If everyone passes, the next dealer deals. No Ramsch, no announced schneider/schwarz.</p>",
+          "maumau": "<p>32 cards, five each. The face-up start card has no effect.</p><p><b>Your turn:</b> play a card of the same suit or rank as the top card. If you cannot or do not want to, draw one card; if it fits you may play only that card, otherwise you pass.</p><p><b>Special cards:</b> 7 – the next player draws two cards or answers with a 7 (then four, and so on). 8 – the next player is skipped. Jack – on anything but a jack; you wish a suit for the next card.</p><p>The first player without cards wins the round. Round wins are counted.</p>"
+        },
+        "maumau": {
+          "wins_one": "{{count}} win",
+          "wins_other": "{{count}} wins",
+          "mau": "Mau!",
+          "wished": "Wish: {{suit}}",
+          "pending": "Penalty: {{count}} cards",
+          "drew": "Drawn: {{card}}",
+          "wishes": "{{name}} wishes a suit",
+          "roundWon": "{{name}} wins the round – Mau-Mau!",
+          "draw": "Draw a card",
+          "penalty": "Draw {{count}} cards",
+          "pass": "Pass",
+          "suit": {
+            "C": "♣ Clubs",
+            "S": "♠ Spades",
+            "H": "♥ Hearts",
+            "D": "♦ Diamonds"
+          }
         }
       }
     },
@@ -1539,10 +1563,6 @@
     "golf": {
       "title": "Golf",
       "description": "Classic card game for 2–6 players: six cards in a grid, pairs in a column score zero. Nine holes, lowest score wins."
-    },
-    "maumau": {
-      "title": "Mau-Mau",
-      "description": "The German classic with a 32-card deck for 2–5 players on one device: match suit or rank, 7 draws two, 8 skips, jack wishes a suit."
     },
     "schwarzer-peter": {
       "title": "Old Maid",

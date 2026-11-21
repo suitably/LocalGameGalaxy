@@ -7,6 +7,7 @@ export const HEADER_MENU_ENTRIES = [
   { key: 'onOpenRules', labelKey: 'games.tabletop.rulesButton' },
   { key: 'onOpenSaves', labelKey: 'games.tabletop.saves.title' },
   { key: 'onOpenTableSettings', labelKey: 'games.tabletop.editor.table' },
+  { key: 'onExportJson', labelKey: 'games.tabletop.export_json' },
   { key: 'onRestart', labelKey: 'games.tabletop.restart' },
 ] as const;
 

@@ -13,6 +13,7 @@ import SaveIcon from '@mui/icons-material/SaveRounded';
 import ReplayIcon from '@mui/icons-material/ReplayRounded';
 import MenuBookIcon from '@mui/icons-material/MenuBookRounded';
 import TableRestaurantIcon from '@mui/icons-material/TableRestaurantRounded';
+import DownloadIcon from '@mui/icons-material/DownloadRounded';
 import { useHeaderLayout, type MenuItem } from '../../../context/HeaderLayoutContext';
 import { HEADER_MENU_ENTRIES, headerMenuKeys, type HeaderMenuKey } from '../logic/headerMenu';
 
@@ -26,6 +27,7 @@ const ICONS: Record<HeaderMenuKey, ReactNode> = {
   onOpenRules: <MenuBookIcon />,
   onOpenSaves: <SaveIcon />,
   onOpenTableSettings: <TableRestaurantIcon />,
+  onExportJson: <DownloadIcon />,
   onRestart: <ReplayIcon />,
 };
 
