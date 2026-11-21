@@ -88,6 +88,7 @@ export const CARD_GAMES: TableGameEntry[] = [
   cardGame('maumau', 'Mau-Mau', piecePalette.orange),
   cardGame('schwarzer-peter', 'Schwarzer Peter', piecePalette.green),
   cardGame('golf', 'Golf', piecePalette.teal),
+  cardGame('cabo', 'Cabo', piecePalette.purple),
 ];
 
 /** Dice games with their own score sheets; with own devices once they sync (#467 slice 5). */

@@ -971,10 +971,6 @@
       "title": "Kartenspiele",
       "description": "Digitale Punkte-, Lebens- (Schwimmen) und Stichverwaltung (Oh Hell) für Kartenspiele am Tisch."
     },
-    "cabo": {
-      "title": "Cabo",
-      "description": "Kartenspiel für 2–6 Spieler an einem Gerät: Karten tauschen, Sonderkräfte nutzen und mit „Cabo“ die Runde beenden."
-    },
     "tabletop": {
       "title": "Spieltisch",
       "description": "Karten-, Brett- und Würfelspiele: ein Gerät reihum oder jeder am eigenen Handy, mit verdeckten Handkarten.",
@@ -1442,6 +1438,10 @@
           "golf": {
             "title": "Golf",
             "desc": "Sechs Karten im Raster, Paare in einer Spalte zählen null. Neun Löcher, wenigste Punkte gewinnt – für 2 bis 6 Spieler."
+          },
+          "cabo": {
+            "title": "Cabo",
+            "desc": "Vier verdeckte Karten, merken, tauschen, spicken – wer die wenigsten Punkte hat, ruft Cabo. Für 2 bis 6 Spieler."
           }
         },
         "turn": "{{name}} ist dran",
@@ -1543,7 +1543,8 @@
           "skat": "<p>Drei Spieler, 32 Karten, je zehn auf der Hand, zwei im Skat. Mittelhand reizt Vorhand, danach Hinterhand den Gewinner. Wer das Reizen gewinnt, nimmt den Skat auf und drückt zwei Karten – oder spielt Hand – und sagt Farbe, Grand oder Null an.</p><p>Farbe bedienen ist Pflicht; die Buben sind die höchsten Trümpfe (außer bei Null). Der Alleinspieler braucht 61 Augen, bei Null darf er keinen Stich machen.</p><p><b>Wert:</b> Spitzen + 1 (+ Hand, Schneider, Schwarz) × Grundwert (Karo 9, Herz 10, Pik 11, Kreuz 12, Grand 24); Null 23, Hand 35, Ouvert 46, Ouvert Hand 59. Verlorene Spiele zählen doppelt minus. Passen alle, gibt der Nächste. Ohne Ramsch und ohne Schneider-/Schwarz-Ansage.</p>",
           "maumau": "<p>32 Karten, jeder bekommt fünf. Die aufgedeckte Startkarte hat keine Wirkung.</p><p><b>Dein Zug:</b> lege eine Karte mit gleicher Farbe oder gleichem Wert wie die oberste Karte. Kannst oder willst du nicht, ziehst du eine Karte; passt sie, darfst du nur sie legen, sonst passt du.</p><p><b>Sonderkarten:</b> 7 – der Nächste zieht zwei Karten oder antwortet mit einer 7 (dann vier usw.). 8 – der Nächste setzt aus. Bube – auf alles außer einen Buben, du wünschst dir eine Farbe für die nächste Karte.</p><p>Wer zuerst keine Karte mehr hat, gewinnt die Runde. Gezählt werden die gewonnenen Runden.</p>",
           "schwarzer-peter": "<p>52 Karten ohne den Kreuz-Buben; der Pik-Bube ist der Schwarze Peter. Alle Karten werden verteilt, Paare (gleicher Wert, gleiche Farbe: rot oder schwarz) werden sofort abgelegt.</p><p><b>Dein Zug:</b> ziehe verdeckt eine Karte vom nächsten Spieler im Uhrzeigersinn, der noch Karten hat. Seine Karten werden vorher gemischt. Passt sie zu einer deiner Karten, legst du das Paar ab.</p><p>Wer keine Karten mehr hat, ist fertig. Wer am Ende den Schwarzen Peter hält, verliert die Runde.</p>",
-          "golf": "<p>52 Karten und zwei Joker, ab fünf Spielern zwei Decks. Jeder hat sechs verdeckte Karten in zwei Reihen zu drei und deckt zu Beginn zwei davon auf. Verdeckte Karten kennt auch ihr Besitzer nicht.</p><p><b>Dein Zug:</b> ziehe vom Stapel oder nimm die oberste Karte der Ablage. Tausche sie gegen eine deiner Karten (die alte kommt offen auf die Ablage) oder – nur wenn vom Stapel gezogen – lege sie ab und decke eine verdeckte Karte auf.</p><p>Hat jemand alle sechs Karten offen, ist jeder andere noch einmal dran.</p><p><b>Wertung:</b> Ass 1, 2–10 Augenzahl, Bube und Dame 10, König 0, Joker −2. Zwei gleiche Werte in einer Spalte zählen 0 (Joker nie). Nach neun Löchern gewinnt die niedrigste Summe.</p>"
+          "golf": "<p>52 Karten und zwei Joker, ab fünf Spielern zwei Decks. Jeder hat sechs verdeckte Karten in zwei Reihen zu drei und deckt zu Beginn zwei davon auf. Verdeckte Karten kennt auch ihr Besitzer nicht.</p><p><b>Dein Zug:</b> ziehe vom Stapel oder nimm die oberste Karte der Ablage. Tausche sie gegen eine deiner Karten (die alte kommt offen auf die Ablage) oder – nur wenn vom Stapel gezogen – lege sie ab und decke eine verdeckte Karte auf.</p><p>Hat jemand alle sechs Karten offen, ist jeder andere noch einmal dran.</p><p><b>Wertung:</b> Ass 1, 2–10 Augenzahl, Bube und Dame 10, König 0, Joker −2. Zwei gleiche Werte in einer Spalte zählen 0 (Joker nie). Nach neun Löchern gewinnt die niedrigste Summe.</p>",
+          "cabo": "<p>52 Karten und zwei Joker. Jeder hat vier verdeckte Karten und sieht sich zu Beginn jeder Runde die unteren zwei an – danach musst du sie dir merken.</p><p><b>Dein Zug:</b> ziehe vom Stapel oder nimm die oberste Karte der Ablage – oder rufe <b>Cabo</b>. Tausche die gezogene Karte gegen eine deiner Karten (die alte kommt auf die Ablage) oder lege sie ab, wenn sie vom Stapel kam.</p><p><b>Abgelegte Sonderkarten (nur vom Stapel):</b> 7/8 – schau eine eigene Karte an. 9/10 – schau eine Karte eines Mitspielers an. Bube/Dame – tausche blind eine eigene Karte mit einer eines Mitspielers. Du darfst die Fähigkeit auslassen.</p><p>Nach Cabo ist jeder andere noch einmal dran. <b>Punkte:</b> Ass 1, 2–10 Augenzahl, Bube 11, Dame 12, roter König 0, schwarzer König 13, Joker 0. Wer Cabo ruft und nicht allein die wenigsten Punkte hat, bekommt 10 dazu. Genau 100 Punkte fallen auf 50 zurück. Über 100 endet das Spiel, die niedrigste Summe gewinnt.</p>"
         },
         "maumau": {
           "wins_one": "{{count}} Sieg",
@@ -1591,6 +1592,37 @@
           "won": "{{name}} gewinnt mit den wenigsten Punkten",
           "holeOver": "Loch {{hole}} beendet",
           "nextHole": "Nächstes Loch"
+        },
+        "cabo": {
+          "total": "{{points}} Pkt.",
+          "called": "Cabo!",
+          "peek": "{{name}} schaut sich die unteren zwei Karten an",
+          "seen": "Gemerkt",
+          "drawStock": "Vom Stapel ziehen",
+          "takeDiscard": "Ablage nehmen",
+          "call": "Cabo rufen",
+          "place": "{{name}} tauscht die gezogene Karte ein oder legt sie ab",
+          "discard": "Ablegen",
+          "discardFor": {
+            "peekOwn": "Ablegen – eigene Karte ansehen",
+            "peekOther": "Ablegen – fremde Karte ansehen",
+            "blindSwap": "Ablegen – blind tauschen"
+          },
+          "power": {
+            "peekOwn": "{{name}} schaut eine eigene Karte an",
+            "peekOther": "{{name}} schaut eine fremde Karte an",
+            "blindSwap": "{{name}} tauscht blind: erst eigene, dann fremde Karte"
+          },
+          "swapFrom": "Eigene Karte {{n}} gewählt",
+          "skip": "Auslassen",
+          "looking": "{{name}} schaut sich eine Karte an",
+          "endTurn": "Zug beenden",
+          "drawn": "Gezogen",
+          "drew": "Gezogen: {{card}}",
+          "lastLap": "{{name}} hat Cabo gerufen – letzte Runde",
+          "won": "{{name}} gewinnt mit den wenigsten Punkten",
+          "penalty": "{{name}} hat Cabo gerufen, war aber nicht allein vorn: +{{points}}",
+          "reset": "{{name}} hatte genau 100 – zurück auf {{points}}"
         }
       }
     },
