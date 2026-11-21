@@ -5,13 +5,13 @@ import { useTranslation } from 'react-i18next';
 import { gameRegistry } from '../../lib/gameRegistry';
 import { areaOfCategory, areasFor } from '../../lib/areas';
 import { PWAInstallBanner } from '../../components/pwa';
-import { DICE_GAMES } from '../../games/tabletop/logic/tableCatalog';
+import { DICE_GAMES, SCORE_TRACKERS } from '../../games/tabletop/logic/tableCatalog';
 import nexumiaBanner from '../../assets/nexumia-banner.svg';
 import nexumiaBannerInk from '../../assets/nexumia-banner-ink.svg';
 import { HubAreaFilter, type AreaFilter } from './HubAreaFilter';
 import { HubGameCard } from './HubGameCard';
 
-const TABLE_GAME_IDS = new Set(DICE_GAMES.map((g) => g.id));
+const TABLE_GAME_IDS = new Set([...DICE_GAMES, ...SCORE_TRACKERS].map((g) => g.id));
 
 export const Hub: React.FC = () => {
   const { t } = useTranslation();

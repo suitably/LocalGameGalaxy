@@ -36,7 +36,7 @@ Cabo, Mau-Mau, Golf and Schwarzer Peter were built as standalone pass-and-play h
 | Schwarzer Peter | done (`schwarzerPeter.ts`)      | Drawing blind from the neighbour's hand is a `slot` move on face-down slots (slice 0).                       |
 | Golf            | done (`golf.ts`)                | No: a 2×3 grid per seat, face down even for its owner, flips and slot swaps.                                 |
 | Cabo            | done (`cabo.ts`, `caboView.ts`) | No: four face-down slots, peeks of own/other slots, blind swaps, Cabo call.                                  |
-| cards tracker   | open                            | Not a script: no cards. Listed on the Spieltisch like `DICE_GAMES` (`kind: 'route'`), hub tile filtered out. |
+| cards tracker   | done (`SCORE_TRACKERS`)         | Not a script: no cards. Listed on the Spieltisch like `DICE_GAMES` (`kind: 'route'`), hub tile filtered out. |
 
 Port the house rules of the existing engines unchanged (header comments of `src/games/<id>/logic/engine.ts`); their tests are the checklist for the new script tests.
 

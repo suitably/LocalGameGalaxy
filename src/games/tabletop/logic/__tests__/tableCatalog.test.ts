@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { DICE_GAMES, TABLETOP_STARTERS, playModesOf, routeFor } from '../tableCatalog';
+import {
+  DICE_GAMES,
+  SCORE_TRACKERS,
+  TABLETOP_STARTERS,
+  playModesOf,
+  routeFor,
+} from '../tableCatalog';
 
 describe('table catalog', () => {
   it('maps tabletop modes to shared device / own devices', () => {
@@ -19,6 +25,12 @@ describe('table catalog', () => {
       '/games/kniffel',
       '/games/knister',
       '/games/qwixx',
+    ]);
+  });
+
+  it('lists the card score tracker on its own route, one device only', () => {
+    expect(SCORE_TRACKERS.map((g) => [routeFor(g, 'shared_device'), g.modes])).toEqual([
+      ['/games/cards', ['shared_device']],
     ]);
   });
 
