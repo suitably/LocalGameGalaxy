@@ -19,7 +19,17 @@ export type Text = string | Msg;
 export type ScriptMove =
   /** Hand cards, optionally onto a card on the table (swap with it, beat it). */
   | { kind: 'cards'; cards: CardId[]; target?: CardId }
-  | { kind: 'action'; id: string; arg?: string | number };
+  | { kind: 'action'; id: string; arg?: string | number }
+  /** A card lying in front of a seat, by position (flip, peek, swap in, draw blind). */
+  | { kind: 'slot'; seat: number; slot: number };
+
+/** A card at a fixed place in front of a seat: open, `null` face down for this viewer. */
+export type SlotCard = CardId | null;
+
+export interface SlotRef {
+  seat: number;
+  slot: number;
+}
 
 export interface SeatView {
   /** Cards in hand. */
@@ -29,6 +39,10 @@ export interface SeatView {
   chips: Text[];
   /** No longer in the match or round. */
   out?: boolean;
+  /** Cards lying in front of the seat (Golf grid, Cabo cards, a hand to draw from blind). */
+  slots?: SlotCard[];
+  /** Grid width of `slots`; one row when unset. */
+  slotColumns?: number;
 }
 
 export interface PileCard {
@@ -82,6 +96,8 @@ export interface ScriptView {
   select: 'none' | 'one' | 'many';
   /** Table cards the viewer may pick as the target of a move. */
   targets: CardId[];
+  /** Slots the viewer may tap (`{ kind: 'slot' }` moves). */
+  slotTargets: SlotRef[];
   actions: ActionView[];
   /** Label of the button that plays the picked cards. */
   playLabel?: Text;
@@ -94,6 +110,8 @@ export interface GameScript<G> {
   maxPlayers: number;
   /** Every rank the game can deal (all four suits), for exporting its deck. */
   ranks: readonly string[];
+  /** Cards of that deck the game leaves out. */
+  removed?: readonly CardId[];
   /** A new match with a first deal. */
   start(playerCount: number, rng: Rng): G;
   /** The state after `seat`'s move; the same object when the move is not allowed. */
@@ -125,6 +143,7 @@ export function emptyView(seatCount: number): ScriptView {
     hand: [],
     select: 'none',
     targets: [],
+    slotTargets: [],
     actions: [],
   };
 }

@@ -5,9 +5,10 @@ import React from 'react';
 import { alpha, Box, Chip, Stack, Typography } from '@mui/material';
 import { pieceColorForSlot } from '../../../../themeTokens';
 import { transitionOf } from '../../../../lib/motion';
-import type { ScriptView } from '../logic/scriptTypes';
+import type { ScriptView, SlotRef } from '../logic/scriptTypes';
 import type { ScriptTextFn } from '../hooks/useScriptText';
 import { PlayingCard } from './PlayingCard';
+import { SlotGrid } from './SlotGrid';
 
 interface SeatBadgesProps {
   view: ScriptView;
@@ -16,9 +17,18 @@ interface SeatBadgesProps {
   viewer: number | null;
   text: ScriptTextFn;
   large?: boolean;
+  /** Taps on another seat's slots; the viewer's own slots are shown below the table. */
+  onSlot?: (ref: SlotRef) => void;
 }
 
-export const SeatBadges: React.FC<SeatBadgesProps> = ({ view, names, viewer, text, large }) => (
+export const SeatBadges: React.FC<SeatBadgesProps> = ({
+  view,
+  names,
+  viewer,
+  text,
+  large,
+  onSlot,
+}) => (
   <Stack direction="row" gap={1} flexWrap="wrap" justifyContent="center">
     {view.seats.map((seat, index) => {
       const active = view.active.includes(index);
@@ -75,6 +85,19 @@ export const SeatBadges: React.FC<SeatBadgesProps> = ({ view, names, viewer, tex
                 <PlayingCard key={card} card={card} width={large ? 40 : 26} />
               ))}
             </Stack>
+          )}
+          {seat.slots && index !== viewer && (
+            <Box mt={0.75}>
+              <SlotGrid
+                seat={index}
+                slots={seat.slots}
+                columns={seat.slotColumns}
+                targets={view.slotTargets}
+                onTap={onSlot}
+                width={large ? 44 : 34}
+                text={text}
+              />
+            </Box>
           )}
         </Box>
       );

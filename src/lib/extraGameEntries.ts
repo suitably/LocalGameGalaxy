@@ -6,11 +6,5 @@ import type { GameDefinition } from '../lib/gameRegistry';
 import { caboDefinition } from '../games/cabo/definition';
 import { drawPotDefinition } from '../games/drawpot/definition';
 import { golfDefinition } from '../games/golf/definition';
-import { schwarzerPeterDefinition } from '../games/schwarzer-peter/definition';
 
-export const extraEntries: GameDefinition[] = [
-  drawPotDefinition,
-  caboDefinition,
-  golfDefinition,
-  schwarzerPeterDefinition,
-];
+export const extraEntries: GameDefinition[] = [drawPotDefinition, caboDefinition, golfDefinition];

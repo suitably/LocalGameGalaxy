@@ -79,7 +79,7 @@ export function scriptedGameDefinition(
   script: AnyGameScript,
   texts: ScriptExportTexts,
 ): TabletopGameDefinition {
-  const cards = makeDeck(script.ranks);
+  const cards = makeDeck(script.ranks).filter((c) => !script.removed?.includes(c));
   const [deckWidget, ...cardWidgets] = buildDeck({
     deckId: RULE_SCRIPT_DECK_ID,
     x: TABLE.width / 2 - CARD.width - 20,

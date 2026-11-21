@@ -150,7 +150,7 @@ function move(s: MauMauState, seat: number, m: ScriptMove, rng: Rng): MauMauStat
   if (s.phase === 'roundEnd') {
     return m.kind === 'action' && m.id === 'next' ? deal(s.wins, s.round + 1, rng) : s;
   }
-  if (seat !== s.turn) return s;
+  if (seat !== s.turn || m.kind === 'slot') return s;
   if (m.kind === 'action') return action(s, seat, m.id, m.arg, rng);
   if (s.phase === 'wish' || m.cards.length !== 1 || m.target) return s;
   return play(s, seat, m.cards[0]);

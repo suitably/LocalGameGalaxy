@@ -21,7 +21,7 @@ describe('scripted game export', () => {
         ruleText: texts.ruleText,
       });
       const deck = game.widgets[RULE_SCRIPT_DECK_ID] as DeckWidget;
-      expect(deck.cardIds).toHaveLength(script.ranks.length * 4);
+      expect(deck.cardIds).toHaveLength(script.ranks.length * 4 - (script.removed?.length ?? 0));
       const hands = Object.values(game.widgets).filter((w) => w.type === 'holder' && w.isHand);
       expect(hands).toHaveLength(script.maxPlayers);
     }
