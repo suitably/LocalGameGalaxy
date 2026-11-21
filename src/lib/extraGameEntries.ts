@@ -3,7 +3,6 @@
  * list so `gameRegistry.tsx` stays in budget [ID: REGISTRY-EXTRA-ENTRIES]
  */
 import type { GameDefinition } from '../lib/gameRegistry';
-import { caboDefinition } from '../games/cabo/definition';
 import { drawPotDefinition } from '../games/drawpot/definition';
 
-export const extraEntries: GameDefinition[] = [drawPotDefinition, caboDefinition];
+export const extraEntries: GameDefinition[] = [drawPotDefinition];

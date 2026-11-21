@@ -971,10 +971,6 @@
       "title": "Card Games",
       "description": "Digital companion for tabletop card games: Life tracking (Schwimmen) and trick predictor (Oh Hell)."
     },
-    "cabo": {
-      "title": "Cabo",
-      "description": "Card game for 2–6 players on one device: swap cards, use special powers and end the round with “Cabo”."
-    },
     "tabletop": {
       "title": "Game Table",
       "description": "Card, board and dice games: one device passed around or everyone on their own phone, with hidden hands.",
@@ -1442,6 +1438,10 @@
           "golf": {
             "title": "Golf",
             "desc": "Six cards in a grid, pairs in a column count zero. Nine holes, fewest points win – for 2 to 6 players."
+          },
+          "cabo": {
+            "title": "Cabo",
+            "desc": "Four face-down cards: remember, swap, peek – call Cabo when you have the fewest points. For 2 to 6 players."
           }
         },
         "turn": "{{name}}'s turn",
@@ -1543,7 +1543,8 @@
           "skat": "<p>Three players, 32 cards, ten each, two in the skat. Middlehand bids to forehand, then rearhand to the winner. The winner picks up the skat and discards two cards – or plays hand – and declares a suit, grand or null.</p><p>You must follow suit; the jacks are the highest trumps (not in null). The declarer needs 61 card points; in null they must not take a trick.</p><p><b>Value:</b> matadors + 1 (+ hand, schneider, schwarz) × base value (diamonds 9, hearts 10, spades 11, clubs 12, grand 24); null 23, hand 35, ouvert 46, ouvert hand 59. Lost games count double negative. If everyone passes, the next dealer deals. No Ramsch, no announced schneider/schwarz.</p>",
           "maumau": "<p>32 cards, five each. The face-up start card has no effect.</p><p><b>Your turn:</b> play a card of the same suit or rank as the top card. If you cannot or do not want to, draw one card; if it fits you may play only that card, otherwise you pass.</p><p><b>Special cards:</b> 7 – the next player draws two cards or answers with a 7 (then four, and so on). 8 – the next player is skipped. Jack – on anything but a jack; you wish a suit for the next card.</p><p>The first player without cards wins the round. Round wins are counted.</p>",
           "schwarzer-peter": "<p>52 cards without the jack of clubs; the jack of spades is the Schwarzer Peter (Old Maid). All cards are dealt, pairs (same rank, same colour: red or black) go down at once.</p><p><b>Your turn:</b> draw one face-down card from the next player clockwise who still holds cards. Their cards are shuffled first. If it matches one of yours, the pair goes down.</p><p>A player without cards is done. Whoever holds the Schwarzer Peter at the end loses the round.</p>",
-          "golf": "<p>52 cards and two jokers, two decks from five players. Everyone has six face-down cards in two rows of three and flips two at the start. Nobody knows a face-down card, not even its owner.</p><p><b>Your turn:</b> draw from the stock or take the top discard. Swap it for one of your cards (the old one goes face up onto the discard) or – only when drawn from the stock – discard it and flip a face-down card.</p><p>Once someone has all six cards face up, everyone else plays once more.</p><p><b>Scoring:</b> ace 1, 2–10 face value, jack and queen 10, king 0, joker −2. Two equal ranks in one column count 0 (jokers never). After nine holes the lowest total wins.</p>"
+          "golf": "<p>52 cards and two jokers, two decks from five players. Everyone has six face-down cards in two rows of three and flips two at the start. Nobody knows a face-down card, not even its owner.</p><p><b>Your turn:</b> draw from the stock or take the top discard. Swap it for one of your cards (the old one goes face up onto the discard) or – only when drawn from the stock – discard it and flip a face-down card.</p><p>Once someone has all six cards face up, everyone else plays once more.</p><p><b>Scoring:</b> ace 1, 2–10 face value, jack and queen 10, king 0, joker −2. Two equal ranks in one column count 0 (jokers never). After nine holes the lowest total wins.</p>",
+          "cabo": "<p>52 cards and two jokers. Everyone has four face-down cards and looks at the bottom two at the start of each round – after that you have to remember them.</p><p><b>Your turn:</b> draw from the stock or take the top discard – or call <b>Cabo</b>. Swap the drawn card for one of yours (the old one goes onto the discard) or discard it if it came from the stock.</p><p><b>Discarded special cards (stock only):</b> 7/8 – look at one of your cards. 9/10 – look at another player's card. Jack/queen – blind-swap one of your cards with another player's. You may skip the power.</p><p>After Cabo everyone else plays once more. <b>Points:</b> ace 1, 2–10 face value, jack 11, queen 12, red king 0, black king 13, joker 0. Whoever calls Cabo without the strictly lowest hand gets 10 more. Exactly 100 falls back to 50. Above 100 the game ends, the lowest total wins.</p>"
         },
         "maumau": {
           "wins_one": "{{count}} win",
@@ -1591,6 +1592,37 @@
           "won": "{{name}} wins with the fewest points",
           "holeOver": "Hole {{hole}} finished",
           "nextHole": "Next hole"
+        },
+        "cabo": {
+          "total": "{{points}} pts",
+          "called": "Cabo!",
+          "peek": "{{name}} looks at the bottom two cards",
+          "seen": "Got it",
+          "drawStock": "Draw from stock",
+          "takeDiscard": "Take discard",
+          "call": "Call Cabo",
+          "place": "{{name}} swaps the drawn card in or discards it",
+          "discard": "Discard",
+          "discardFor": {
+            "peekOwn": "Discard – look at own card",
+            "peekOther": "Discard – look at another card",
+            "blindSwap": "Discard – blind swap"
+          },
+          "power": {
+            "peekOwn": "{{name}} looks at an own card",
+            "peekOther": "{{name}} looks at another player's card",
+            "blindSwap": "{{name}} swaps blind: own card first, then another"
+          },
+          "swapFrom": "Own card {{n}} picked",
+          "skip": "Skip",
+          "looking": "{{name}} looks at a card",
+          "endTurn": "End turn",
+          "drawn": "Drawn",
+          "drew": "Drawn: {{card}}",
+          "lastLap": "{{name}} called Cabo – last lap",
+          "won": "{{name}} wins with the fewest points",
+          "penalty": "{{name}} called Cabo but was not strictly lowest: +{{points}}",
+          "reset": "{{name}} had exactly 100 – back to {{points}}"
         }
       }
     },

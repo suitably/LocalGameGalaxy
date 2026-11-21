@@ -1,0 +1,1 @@
+- **Cabo is now played on the Spieltisch**: four face-down cards per player on the shared card table, with peeks and blind swaps by tapping cards, on one device or with everyone on their own phone. The separate hub tile is gone; the optional memory aid of the old version is not available.
