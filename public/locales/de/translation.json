@@ -1629,7 +1629,10 @@
             "memoryAidHint": "Karten, die du schon gesehen hast, bleiben für dich offen – leichter, weniger Merken."
           }
         }
-      }
+      },
+      "showOnTv": "Auf dem TV anzeigen",
+      "playAlong": "Mitspielen (Tisch auf dem TV)",
+      "showTableOnly": "Nur Tisch anzeigen"
     },
     "drawpot": {
       "title": "Lostopf",
