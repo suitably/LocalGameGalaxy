@@ -2870,5 +2870,14 @@
   "playingCards": {
     "faceDown": "Face-down card",
     "joker": "Joker"
+  },
+  "secondScreen": {
+    "title": "Show on TV",
+    "openOnTv": "Open this address in the TV browser (smart TV, laptop on HDMI or another device) or scan the code. The TV shows only the shared table; your cards stay on this phone.",
+    "androidHint": "Chrome on Android and the app cannot cast a single page to a Chromecast. Open the link on the TV instead. Screen mirroring would also show your cards.",
+    "castFailed": "No cast screen found. Open the link on the TV instead.",
+    "cast": "Cast",
+    "copyLink": "Copy link",
+    "copied": "Copied"
   }
 }
