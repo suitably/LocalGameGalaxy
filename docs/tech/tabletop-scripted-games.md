@@ -1,15 +1,15 @@
 ---
 type: Reference
-title: 'Tabletop: scripted card games (Schwimmen, Durak, Arschloch, Skat)'
+title: 'Tabletop: scripted card games (Schwimmen, Durak, Arschloch, Skat, Mau-Mau)'
 description: 'Card games with enforced rules on the Spieltisch: the rule-script contract, the session reducer, the TV table and phone views, sync and storage, and the house rules of each game.'
 resource: src/games/tabletop/scripted/
-tags: [tabletop, cards, scripted, skat, durak, schwimmen, arschloch, sync]
+tags: [tabletop, cards, scripted, skat, durak, schwimmen, arschloch, maumau, sync]
 status: stable
 generated:
   at: 2026-11-16T16:00:00+01:00
   by: claude-code
 verified:
-  at: 2026-11-17
+  at: 2026-11-21
   method: 'Wrote and read src/games/tabletop/scripted/**, TabletopEntry.tsx, logic/tableCatalog.ts; ran the Vitest suites in scripted/logic/__tests__; played Skat, Durak, Schwimmen and Arschloch locally and a Durak room (host table + two player tabs) in headless Chromium.'
 sources:
   - 'src/games/tabletop/scripted/logic/scriptTypes.ts'
@@ -68,6 +68,7 @@ The owner of the state keeps the running game in `STORAGE_PREFIXES.TABLETOP_SCRI
 - **Schwimmen** (`schwimmen.ts`, 2–9): 32 cards; the dealer keeps the first hand or takes the second, the other goes to the middle. Swap one, swap all, pass, knock (then everyone else once more). Everyone passed → three new middle cards, or showdown when the stock is short. 31 or three aces (33) end the round at once and everyone else loses a life; three of a kind 30.5. Lowest hand loses a life, ties lose together, a tie of everyone costs nothing. Three lives, then swimming, then out.
 - **Durak** (`durak.ts`, 2–6): 36 cards, podkidnoy. Lowest trump attacks first, later the player before the durak. Attack with cards of one rank; throw-ins of ranks on the table, asked in turn after each full defence (attackers who cannot add are skipped); at most six attack cards and never more than the defender held. Taking picks up at once (no throw-in after taking) and skips the defender. No passing on (perevodnoy).
 - **Arschloch** (`arschloch.ts`, 3–8): 32 cards up to four players, 52 above, ace high. Same count of a higher rank or pass; a pass lasts for the trick. Points per round: players − 1 for the president down to 0. Exchange before the next round: Arschloch → president two best cards (one with three players), vices one from four players; the winners choose what to return. The Arschloch leads.
+- **Mau-Mau** (`maumau.ts`, 2–5): 32 cards, five each; the start card has no effect. Suit or rank on the top card. 7: the next seat draws two or answers with a 7 (stacking +2). 8: the next seat is skipped. Jack: on anything but a jack, wishes a suit for the next card (action `wish` with the suit as `arg`). Drawing one card leaves only that card playable, otherwise pass; an empty stock reshuffles the discard pile under its top card. First empty hand wins the round; round wins are counted, the round starter rotates. Replaced the pass-and-play game `src/games/maumau` (2026-11-21, [migration plan](../tasks/CARD-GAMES-TO-SPIELTISCH.md)).
 - **Skat** (`skat.ts`, `skatRules.ts`, exactly 3): bidding middlehand → forehand, rearhand → winner, forehand alone at 18 when nobody bid; all pass → next dealer. Pick up and discard two, or hand. Suit, grand, null, null ouvert (also as hand). Values per the International Skat Order including matadors, hand, schneider, schwarz, overbidding (lost at the next multiple of the base value) and lost games counted double. Not implemented: announced schneider/schwarz, ouvert suit/grand games, Ramsch, Kontra/Re, a fourth player sitting out.
 
 ## 6. Existing scripts that were checked
