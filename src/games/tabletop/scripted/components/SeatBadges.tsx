@@ -60,12 +60,14 @@ export const SeatBadges: React.FC<SeatBadgesProps> = ({
               {names[index]}
               {index === viewer ? ' ★' : ''}
             </Typography>
-            <Stack direction="row" alignItems="center" gap={0.4} ml="auto">
-              <PlayingCard width={large ? 16 : 12} />
-              <Typography variant="caption" fontWeight={700}>
-                {seat.cards}
-              </Typography>
-            </Stack>
+            {(seat.cards > 0 || !seat.slots) && (
+              <Stack direction="row" alignItems="center" gap={0.4} ml="auto">
+                <PlayingCard width={large ? 16 : 12} />
+                <Typography variant="caption" fontWeight={700}>
+                  {seat.cards}
+                </Typography>
+              </Stack>
+            )}
           </Stack>
           {seat.chips.length > 0 && (
             <Stack direction="row" gap={0.5} flexWrap="wrap" mt={0.5}>

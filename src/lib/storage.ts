@@ -144,7 +144,6 @@ export const STORAGE_KEYS = {
   // Cards
   CARDS_LOBBY_PLAYERS: 'cards_lobby_players',
   CABO_LOBBY_PLAYERS: 'cabo_lobby_players',
-  GOLF_LOBBY_PLAYERS: 'golf_lobby_players',
   /** Player names for scripted card games on one device (Spieltisch). */
   TABLETOP_CARD_PLAYERS: 'tabletop_card_players',
 

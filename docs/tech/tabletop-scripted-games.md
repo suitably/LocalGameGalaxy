@@ -1,6 +1,6 @@
 ---
 type: Reference
-title: 'Tabletop: scripted card games (Schwimmen, Durak, Arschloch, Skat, Mau-Mau, Schwarzer Peter)'
+title: 'Tabletop: scripted card games (Schwimmen, Durak, Arschloch, Skat, Mau-Mau, Schwarzer Peter, Golf)'
 description: 'Card games with enforced rules on the Spieltisch: the rule-script contract, the session reducer, the TV table and phone views, sync and storage, and the house rules of each game.'
 resource: src/games/tabletop/scripted/
 tags: [tabletop, cards, scripted, skat, durak, schwimmen, arschloch, maumau, sync]
@@ -46,7 +46,7 @@ A `GameScript<G>` is a pure state machine:
 
 Texts are `Text`: a plain string or `{ key, params, seat }`, resolved under `games.tabletop.scripted.*` in `public/locales` with the seat's name as `{{name}}` (`hooks/useScriptText.ts`). The UI holds no rules: whether the picked cards can be played is asked from the script (`moveAllowed` in `logic/session.ts` tries the move). Every seat acts in turn; `active` has one seat or none.
 
-`ranks` lists every rank the game can deal (all four suits), `removed` the cards of that deck it leaves out; the export builds its deck from them.
+`ranks` lists every rank the game can deal (all four suits), `removed` the cards of that deck it leaves out, `jokers` how many jokers it adds; the export builds its deck from them.
 
 **Slots.** Because the script decides per viewer, a slot can be open for everyone, known only to one seat or face down for all, and sealing stays correct (Golf grids, Cabo cards, a hand to draw from blind). `SlotGrid` draws them: other seats' slots small in their `SeatBadges`, the viewer's own slots large above the hand; slots in `slotTargets` are highlighted and send `{ kind: 'slot' }` on tap. Slot moves are tried optimistically on a device and checked on the host like buttons.
 
@@ -81,6 +81,7 @@ Imported again (import dialog "Upload file", a device or server game), the game 
 - **Arschloch** (`arschloch.ts`, 3–8): 32 cards up to four players, 52 above, ace high. Same count of a higher rank or pass; a pass lasts for the trick. Points per round: players − 1 for the president down to 0. Exchange before the next round: Arschloch → president two best cards (one with three players), vices one from four players; the winners choose what to return. The Arschloch leads.
 - **Mau-Mau** (`maumau.ts`, 2–5): 32 cards, five each; the start card has no effect. Suit or rank on the top card. 7: the next seat draws two or answers with a 7 (stacking +2). 8: the next seat is skipped. Jack: on anything but a jack, wishes a suit for the next card (action `wish` with the suit as `arg`). Drawing one card leaves only that card playable, otherwise pass; an empty stock reshuffles the discard pile under its top card. First empty hand wins the round; round wins are counted, the round starter rotates. Replaced the pass-and-play game `src/games/maumau` (2026-11-21, [migration plan](../tasks/CARD-GAMES-TO-SPIELTISCH.md)).
 - **Schwarzer Peter** (`schwarzerPeter.ts`, id `schwarzer-peter`, 2–6): 52 cards without J♣, J♠ is the Peter. All dealt, pairs (same rank and colour) go down at once. The drawer takes one card blind from the next seat clockwise that still holds cards: that hand is shuffled when the turn starts and shown to everyone else as face-down slots; a pair goes down. After a draw the drawer sees the card and ends the turn with `done`. Seats without cards are out; the Peter holder loses the round (losses counted, the starter rotates). Replaced the pass-and-play game `src/games/schwarzer-peter` (2026-11-21).
+- **Golf** (`golf.ts`, 2–6): 52 cards + 2 jokers (`X1`, `X2`), a second deck (`~2` ids, `secondDeck`) from five players. Six slots per seat (`slotColumns` 3), all face down for everyone including the owner; each seat flips two at the start (slot taps, one seat after another). Turn: `drawStock` or `takeDiscard`, then tap an own slot to swap (old card face up onto the discard) or — only from the stock — `discard` and tap a face-down slot to flip it (phase `flipAfter`; skipped when none is left). An empty stock reshuffles the discard under its top card. All six up → everyone else once more, then the hole is scored: A 1, 2–10, J/Q 10, K 0, joker −2, equal ranks in a column 0 (jokers never). Nine holes, lowest total wins (ties share). Replaced `src/games/golf` (2026-11-21).
 - **Skat** (`skat.ts`, `skatRules.ts`, exactly 3): bidding middlehand → forehand, rearhand → winner, forehand alone at 18 when nobody bid; all pass → next dealer. Pick up and discard two, or hand. Suit, grand, null, null ouvert (also as hand). Values per the International Skat Order including matadors, hand, schneider, schwarz, overbidding (lost at the next multiple of the base value) and lost games counted double. Not implemented: announced schneider/schwarz, ouvert suit/grand games, Ramsch, Kontra/Re, a fourth player sitting out.
 
 ## 6. Existing scripts that were checked
