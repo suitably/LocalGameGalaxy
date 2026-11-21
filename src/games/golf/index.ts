@@ -1,1 +1,0 @@
-export { GolfGame } from './GolfGame';

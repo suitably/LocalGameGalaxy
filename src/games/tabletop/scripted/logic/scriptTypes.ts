@@ -112,6 +112,8 @@ export interface GameScript<G> {
   ranks: readonly string[];
   /** Cards of that deck the game leaves out. */
   removed?: readonly CardId[];
+  /** Jokers in the deck. */
+  jokers?: number;
   /** A new match with a first deal. */
   start(playerCount: number, rng: Rng): G;
   /** The state after `seat`'s move; the same object when the move is not allowed. */

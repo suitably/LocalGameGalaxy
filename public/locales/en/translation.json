@@ -1438,6 +1438,10 @@
           "schwarzer-peter": {
             "title": "Schwarzer Peter",
             "desc": "Discard pairs and draw blind in turn – whoever holds the jack of spades at the end loses. For 2 to 6 players."
+          },
+          "golf": {
+            "title": "Golf",
+            "desc": "Six cards in a grid, pairs in a column count zero. Nine holes, fewest points win – for 2 to 6 players."
           }
         },
         "turn": "{{name}}'s turn",
@@ -1538,7 +1542,8 @@
           "arschloch": "<p>All cards are dealt (32 up to four players, 52 above). The leader plays one or more cards of one rank. The others play as many cards of a higher rank or pass – a pass lasts until the trick ends. Whoever played last leads again.</p><p>First out is the president, last the scum. Before the next round the scum hands their best cards to the president (two from four players, otherwise one), who returns cards of their choice; from four players the vices swap one card too. The scum leads.</p>",
           "skat": "<p>Three players, 32 cards, ten each, two in the skat. Middlehand bids to forehand, then rearhand to the winner. The winner picks up the skat and discards two cards – or plays hand – and declares a suit, grand or null.</p><p>You must follow suit; the jacks are the highest trumps (not in null). The declarer needs 61 card points; in null they must not take a trick.</p><p><b>Value:</b> matadors + 1 (+ hand, schneider, schwarz) × base value (diamonds 9, hearts 10, spades 11, clubs 12, grand 24); null 23, hand 35, ouvert 46, ouvert hand 59. Lost games count double negative. If everyone passes, the next dealer deals. No Ramsch, no announced schneider/schwarz.</p>",
           "maumau": "<p>32 cards, five each. The face-up start card has no effect.</p><p><b>Your turn:</b> play a card of the same suit or rank as the top card. If you cannot or do not want to, draw one card; if it fits you may play only that card, otherwise you pass.</p><p><b>Special cards:</b> 7 – the next player draws two cards or answers with a 7 (then four, and so on). 8 – the next player is skipped. Jack – on anything but a jack; you wish a suit for the next card.</p><p>The first player without cards wins the round. Round wins are counted.</p>",
-          "schwarzer-peter": "<p>52 cards without the jack of clubs; the jack of spades is the Schwarzer Peter (Old Maid). All cards are dealt, pairs (same rank, same colour: red or black) go down at once.</p><p><b>Your turn:</b> draw one face-down card from the next player clockwise who still holds cards. Their cards are shuffled first. If it matches one of yours, the pair goes down.</p><p>A player without cards is done. Whoever holds the Schwarzer Peter at the end loses the round.</p>"
+          "schwarzer-peter": "<p>52 cards without the jack of clubs; the jack of spades is the Schwarzer Peter (Old Maid). All cards are dealt, pairs (same rank, same colour: red or black) go down at once.</p><p><b>Your turn:</b> draw one face-down card from the next player clockwise who still holds cards. Their cards are shuffled first. If it matches one of yours, the pair goes down.</p><p>A player without cards is done. Whoever holds the Schwarzer Peter at the end loses the round.</p>",
+          "golf": "<p>52 cards and two jokers, two decks from five players. Everyone has six face-down cards in two rows of three and flips two at the start. Nobody knows a face-down card, not even its owner.</p><p><b>Your turn:</b> draw from the stock or take the top discard. Swap it for one of your cards (the old one goes face up onto the discard) or – only when drawn from the stock – discard it and flip a face-down card.</p><p>Once someone has all six cards face up, everyone else plays once more.</p><p><b>Scoring:</b> ace 1, 2–10 face value, jack and queen 10, king 0, joker −2. Two equal ranks in one column count 0 (jokers never). After nine holes the lowest total wins.</p>"
         },
         "maumau": {
           "wins_one": "{{count}} win",
@@ -1571,16 +1576,27 @@
           "continue": "Continue",
           "lost": "{{name}} is the Schwarzer Peter!"
         },
-        "slot": "Card {{n}} of {{name}}"
+        "slot": "Card {{n}} of {{name}}",
+        "golf": {
+          "total": "{{points}} pts",
+          "hole": "Hole {{hole}}/{{holes}}",
+          "lastLap": "{{name}} is done – last lap",
+          "flipStart": "{{name}} flips {{count}} card(s)",
+          "drawStock": "Draw from stock",
+          "takeDiscard": "Take discard",
+          "place": "{{name}}: swap {{card}} for a card",
+          "discard": "Discard",
+          "flipOne": "{{name}} flips a card",
+          "drawn": "Drawn",
+          "won": "{{name}} wins with the fewest points",
+          "holeOver": "Hole {{hole}} finished",
+          "nextHole": "Next hole"
+        }
       }
     },
     "drawpot": {
       "title": "Draw Pot",
       "description": "Draw names, teams or secret santa partners via a shared link"
-    },
-    "golf": {
-      "title": "Golf",
-      "description": "Classic card game for 2–6 players: six cards in a grid, pairs in a column score zero. Nine holes, lowest score wins."
     }
   },
   "lobby": {

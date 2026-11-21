@@ -16,7 +16,7 @@ import type {
   TabletopGameDefinition,
   TabletopWidget,
 } from '../../logic/types';
-import { SUIT_SYMBOL, makeDeck, rankOf, suitOf, type Suit } from './cardDeck';
+import { SUIT_SYMBOL, cardText, isJoker, makeDeck, rankOf, suitOf, type Suit } from './cardDeck';
 import { getScript } from './scriptRegistry';
 import type { AnyGameScript } from './scriptTypes';
 
@@ -41,6 +41,7 @@ export interface ScriptExportTexts {
 }
 
 const face = (card: string): CardContent => {
+  if (isJoker(card)) return { type: 'text', value: cardText(card), color: RED };
   const suit = suitOf(card);
   return {
     type: 'text',
@@ -79,7 +80,7 @@ export function scriptedGameDefinition(
   script: AnyGameScript,
   texts: ScriptExportTexts,
 ): TabletopGameDefinition {
-  const cards = makeDeck(script.ranks).filter((c) => !script.removed?.includes(c));
+  const cards = makeDeck(script.ranks, script.jokers).filter((c) => !script.removed?.includes(c));
   const [deckWidget, ...cardWidgets] = buildDeck({
     deckId: RULE_SCRIPT_DECK_ID,
     x: TABLE.width / 2 - CARD.width - 20,
@@ -88,11 +89,15 @@ export function scriptedGameDefinition(
     ...CARD,
     faces: cards.map(face),
   });
-  const labelled = (cardWidgets as CardWidget[]).map((w, i) => ({
-    ...w,
-    labelKey: 'games.tabletop.labels.card',
-    labelParams: { rank: rankOf(cards[i]), suit: SUIT_NAME[suitOf(cards[i])] },
-  }));
+  const labelled = (cardWidgets as CardWidget[]).map((w, i) =>
+    isJoker(cards[i])
+      ? { ...w, label: 'Joker' }
+      : {
+          ...w,
+          labelKey: 'games.tabletop.labels.card',
+          labelParams: { rank: rankOf(cards[i]), suit: SUIT_NAME[suitOf(cards[i])] },
+        },
+  );
   const discard: HolderWidget = {
     id: 'discard',
     type: 'holder',

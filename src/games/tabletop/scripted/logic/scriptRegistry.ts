@@ -3,6 +3,7 @@
  */
 import { arschloch } from './arschloch';
 import { durak } from './durak';
+import { golf } from './golf';
 import { maumau } from './maumau';
 import { schwarzerPeter } from './schwarzerPeter';
 import { schwimmen } from './schwimmen';
@@ -16,6 +17,7 @@ const SCRIPTS: Record<string, AnyGameScript> = {
   skat: eraseScript(skat),
   maumau: eraseScript(maumau),
   'schwarzer-peter': eraseScript(schwarzerPeter),
+  golf: eraseScript(golf),
 };
 
 export const SCRIPTED_GAME_IDS: readonly string[] = Object.keys(SCRIPTS);

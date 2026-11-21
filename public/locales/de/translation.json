@@ -1438,6 +1438,10 @@
           "schwarzer-peter": {
             "title": "Schwarzer Peter",
             "desc": "Paare ablegen, reihum blind ziehen – wer am Ende den Pik-Buben hält, verliert. Für 2 bis 6 Spieler."
+          },
+          "golf": {
+            "title": "Golf",
+            "desc": "Sechs Karten im Raster, Paare in einer Spalte zählen null. Neun Löcher, wenigste Punkte gewinnt – für 2 bis 6 Spieler."
           }
         },
         "turn": "{{name}} ist dran",
@@ -1538,7 +1542,8 @@
           "arschloch": "<p>Alle Karten werden verteilt (32 bis vier Spieler, sonst 52). Wer ausspielt, legt eine oder mehrere Karten gleichen Werts. Die anderen legen gleich viele höhere Karten oder passen – wer passt, setzt bis zum Ende des Stichs aus. Wer zuletzt gelegt hat, spielt neu aus.</p><p>Wer zuerst keine Karten mehr hat, ist Präsident, der Letzte das Arschloch. Vor der nächsten Runde gibt das Arschloch seine besten Karten an den Präsidenten (zwei ab vier Spielern, sonst eine), der beliebige zurückgibt; ab vier Spielern tauschen auch die Vizes eine Karte. Das Arschloch spielt aus.</p>",
           "skat": "<p>Drei Spieler, 32 Karten, je zehn auf der Hand, zwei im Skat. Mittelhand reizt Vorhand, danach Hinterhand den Gewinner. Wer das Reizen gewinnt, nimmt den Skat auf und drückt zwei Karten – oder spielt Hand – und sagt Farbe, Grand oder Null an.</p><p>Farbe bedienen ist Pflicht; die Buben sind die höchsten Trümpfe (außer bei Null). Der Alleinspieler braucht 61 Augen, bei Null darf er keinen Stich machen.</p><p><b>Wert:</b> Spitzen + 1 (+ Hand, Schneider, Schwarz) × Grundwert (Karo 9, Herz 10, Pik 11, Kreuz 12, Grand 24); Null 23, Hand 35, Ouvert 46, Ouvert Hand 59. Verlorene Spiele zählen doppelt minus. Passen alle, gibt der Nächste. Ohne Ramsch und ohne Schneider-/Schwarz-Ansage.</p>",
           "maumau": "<p>32 Karten, jeder bekommt fünf. Die aufgedeckte Startkarte hat keine Wirkung.</p><p><b>Dein Zug:</b> lege eine Karte mit gleicher Farbe oder gleichem Wert wie die oberste Karte. Kannst oder willst du nicht, ziehst du eine Karte; passt sie, darfst du nur sie legen, sonst passt du.</p><p><b>Sonderkarten:</b> 7 – der Nächste zieht zwei Karten oder antwortet mit einer 7 (dann vier usw.). 8 – der Nächste setzt aus. Bube – auf alles außer einen Buben, du wünschst dir eine Farbe für die nächste Karte.</p><p>Wer zuerst keine Karte mehr hat, gewinnt die Runde. Gezählt werden die gewonnenen Runden.</p>",
-          "schwarzer-peter": "<p>52 Karten ohne den Kreuz-Buben; der Pik-Bube ist der Schwarze Peter. Alle Karten werden verteilt, Paare (gleicher Wert, gleiche Farbe: rot oder schwarz) werden sofort abgelegt.</p><p><b>Dein Zug:</b> ziehe verdeckt eine Karte vom nächsten Spieler im Uhrzeigersinn, der noch Karten hat. Seine Karten werden vorher gemischt. Passt sie zu einer deiner Karten, legst du das Paar ab.</p><p>Wer keine Karten mehr hat, ist fertig. Wer am Ende den Schwarzen Peter hält, verliert die Runde.</p>"
+          "schwarzer-peter": "<p>52 Karten ohne den Kreuz-Buben; der Pik-Bube ist der Schwarze Peter. Alle Karten werden verteilt, Paare (gleicher Wert, gleiche Farbe: rot oder schwarz) werden sofort abgelegt.</p><p><b>Dein Zug:</b> ziehe verdeckt eine Karte vom nächsten Spieler im Uhrzeigersinn, der noch Karten hat. Seine Karten werden vorher gemischt. Passt sie zu einer deiner Karten, legst du das Paar ab.</p><p>Wer keine Karten mehr hat, ist fertig. Wer am Ende den Schwarzen Peter hält, verliert die Runde.</p>",
+          "golf": "<p>52 Karten und zwei Joker, ab fünf Spielern zwei Decks. Jeder hat sechs verdeckte Karten in zwei Reihen zu drei und deckt zu Beginn zwei davon auf. Verdeckte Karten kennt auch ihr Besitzer nicht.</p><p><b>Dein Zug:</b> ziehe vom Stapel oder nimm die oberste Karte der Ablage. Tausche sie gegen eine deiner Karten (die alte kommt offen auf die Ablage) oder – nur wenn vom Stapel gezogen – lege sie ab und decke eine verdeckte Karte auf.</p><p>Hat jemand alle sechs Karten offen, ist jeder andere noch einmal dran.</p><p><b>Wertung:</b> Ass 1, 2–10 Augenzahl, Bube und Dame 10, König 0, Joker −2. Zwei gleiche Werte in einer Spalte zählen 0 (Joker nie). Nach neun Löchern gewinnt die niedrigste Summe.</p>"
         },
         "maumau": {
           "wins_one": "{{count}} Sieg",
@@ -1571,16 +1576,27 @@
           "continue": "Weiter",
           "lost": "{{name}} ist der Schwarze Peter!"
         },
-        "slot": "Karte {{n}} von {{name}}"
+        "slot": "Karte {{n}} von {{name}}",
+        "golf": {
+          "total": "{{points}} Pkt.",
+          "hole": "Loch {{hole}}/{{holes}}",
+          "lastLap": "{{name}} ist fertig – letzte Runde",
+          "flipStart": "{{name}} deckt {{count}} Karte(n) auf",
+          "drawStock": "Vom Stapel ziehen",
+          "takeDiscard": "Ablage nehmen",
+          "place": "{{name}}: {{card}} gegen eine Karte tauschen",
+          "discard": "Ablegen",
+          "flipOne": "{{name}} deckt eine Karte auf",
+          "drawn": "Gezogen",
+          "won": "{{name}} gewinnt mit den wenigsten Punkten",
+          "holeOver": "Loch {{hole}} beendet",
+          "nextHole": "Nächstes Loch"
+        }
       }
     },
     "drawpot": {
       "title": "Lostopf",
       "description": "Namen, Teams oder Wichtelpartner per Link auslosen"
-    },
-    "golf": {
-      "title": "Golf",
-      "description": "Kartenklassiker für 2–6 Spieler: sechs Karten im Raster, Paare in einer Spalte zählen null. Neun Löcher, wenigste Punkte gewinnt."
     }
   },
   "lobby": {
