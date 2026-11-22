@@ -74,19 +74,20 @@ Melodiq follows a strict separation of concerns, divided into domains:
 - Tapping a mic sends `{ type: 'trackSelect', trackIndex }` through `sendClientData` of `PhoneClientEngine.tsx`. On the host, `usePeerSessionMessages.ts` unhides a hidden player the host list allows and calls `switchTrack`; `useHostPhoneJoin.ts` adds a phone that is not on the host's singer list (`addJoiningPhone` in `logic/sessionRoster.ts`, same entry as the participant dialog), so `useSessionOverrideSync` creates its singer. The phone asks for its part again until `songInfo` reports it (`pendingTrackRequest`), and re-sends it after a reconnect.
 - The host's own P1 / P2 switch (`HostPartToggle.tsx`) is shown only for local-mic singers; phone singers pick their own part.
 
-### 2.7 Remote host settings (phone to host RPC)
+### 2.7 Remote host settings (phone to host, room events)
 
-Admin phones adjust a few host settings without mounting the desktop `<Settings>` and without touching the phone's own storage. All messages travel over the existing WebRTC data channel and are typed in `types.ts`:
+Admin phones adjust a few host settings without mounting the desktop `<Settings>` and without touching the phone's own storage. The requests are room events on the Melodiq room transport (#816, step 3 of #813; wiring in §2.8), typed in `logic/hostSettingsRpc.ts`:
 
-| Direction     | Message                                                         | Meaning                                               |
-| ------------- | --------------------------------------------------------------- | ----------------------------------------------------- |
-| phone to host | `HostSettingsRpc` `{ type: 'host.settings.get' }`               | ask for the current values                            |
-| phone to host | `HostSettingsRpc` `{ type: 'host.settings.set', patch }`        | change values (`Partial<HostSettings>`)               |
-| host to phone | `HostSettingsReply` `{ type: 'host.settings.state', settings }` | host's current `HostSettings` (answer to get and set) |
+| Direction     | Event                                            | Meaning                                                            |
+| ------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
+| phone to host | `{ type: 'settings.get', from }`                 | ask for the current values                                         |
+| phone to host | `{ type: 'settings.set', from, patch }`          | change values (`Partial<HostSettings>`)                            |
+| host to phone | `{ type: 'settings.state', from, to, settings }` | host's current `HostSettings` to the requester (`to` = its `from`) |
 
-- `HostSettings` is a fixed subset of `SettingsState` (volumes, playback mode, lyrics options, note labels, scoreboard QR). `logic/hostSettingsRpc.ts` validates and clamps every patch and drops unknown keys, so helper URL or token can never be set this way.
-- Host: `HostSettingsRpcBridge.tsx` (mounted next to `PhoneQueueBridge`) accepts the messages only from devices whose stored role is `admin` (`getRoleForDevice`), applies the patch through `updateSetting` (host storage) and replies to the sender.
-- Phone: `usePhoneClientMessages.ts` keeps the reported `hostSettings`; `RemoteHostSettingsModal.tsx` (opened from the header action "Host settings", shown only for `clientRole === 'admin'`) sends the requests via `sendClientData`.
+- `HostSettings` (`types.ts`) is a fixed subset of `SettingsState` (volumes, playback mode, lyrics options, note labels, scoreboard QR). The patch guard `sanitizeHostSettingsPatch` keeps only those keys with values of the right type (and clamps ranges); unknown keys and wrong types are dropped, so helper URL or token can never be set this way.
+- Authorization: the host transport stamps `from` with the sender's device id; `handleHostSettingsEvent` looks up the role with `getRoleForDevice(from)` only, never a payload value. Non-admins get no reply and nothing is applied (`console.warn`); a request without `from` is dropped.
+- Host: `HostSettingsRpcBridge.tsx` (mounted next to `PhoneQueueBridge`) runs `hooks/useHostSettingsRpc.ts`, which applies a `set` through `updateSetting` (host storage) and replies with the merged state.
+- Phone: `RemoteHostSettingsModal.tsx` (opened from the header action "Host settings", rendered by `PhoneClientEngine` only for `clientRole === 'admin'`, gets the engine's room transport as `room`) uses `hooks/useRemoteHostSettings.ts`: `settings.get` on open and after a reconnect while open, `settings.set` per change; it keeps the last valid `settings.state` addressed to this phone.
 
 ### 2.8 Feedback via host (phone to host, room events)
 
