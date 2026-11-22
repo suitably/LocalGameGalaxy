@@ -6,7 +6,7 @@
 import PersonSearchIcon from '@mui/icons-material/PersonSearchRounded';
 import { defineGame, lazyNamed } from '../../lib/catalog/defineGame';
 
-const Page = lazyNamed(() => import('./index'), 'ImposterGame');
+const Page = lazyNamed(() => import('./index'), 'ImposterEntry');
 
 export const definition = defineGame({
   id: 'imposter',
@@ -15,7 +15,8 @@ export const definition = defineGame({
   title: 'Imposter',
   kind: 'game',
   area: 'party',
-  modes: ['pass_and_play'],
+  modes: ['pass_and_play', 'party_room'],
+  party: { gameType: 'imposter', descKey: 'party.imposter_desc' },
   listing: 'hub',
   icon: <PersonSearchIcon sx={{ fontSize: 72, mb: 2 }} />,
   component: <Page />,

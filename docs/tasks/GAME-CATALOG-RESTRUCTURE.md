@@ -153,8 +153,10 @@ Snapshot tests must still pass unchanged at the end of phase 2.
 
 ## 7. Progress
 
-| Step                       | Status                                                                                                                 |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| 0.1, 0.2, 1.1–1.3, 2.1–2.5 | done: ADR-0011, `src/lib/catalog/`, `catalog.test.ts`, rule 11 (one PR, behaviour-neutral)                             |
-| 3.1–3.6                    | done: party-room entry, all games by area, own-phones filter, tools section, Gartic tile, Spieltisch as place (one PR) |
-| 4.1–7.1                    | open                                                                                                                   |
+| Step                       | Status                                                                                                                                                   |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0.1, 0.2, 1.1–1.3, 2.1–2.5 | done: ADR-0011, `src/lib/catalog/`, `catalog.test.ts`, rule 11 (one PR, behaviour-neutral)                                                               |
+| 3.1–3.6                    | done: party-room entry, all games by area, own-phones filter, tools section, Gartic tile, Spieltisch as place (one PR)                                   |
+| 4.2                        | done: Imposter party room on the shared `SealedRoomPeer` (moved from the tabletop to `src/modules/room-game/sealed/`, used through `useSealedPartyGame`) |
+| 4.1                        | open: Werewolf party room; build on `useSealedPartyGame` like Imposter (roles and night actions per seat)                                                |
+| 5.1–7.1                    | open                                                                                                                                                     |

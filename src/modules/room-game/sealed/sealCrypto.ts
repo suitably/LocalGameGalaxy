@@ -1,5 +1,5 @@
 /**
- * Per-seat encryption for private card faces [ID: LOGIC-TABLETOP-SEAL-CRYPTO]
+ * Per-seat encryption for private game data (hands, roles) [ID: MODULE-ROOM-SEAL-CRYPTO]
  *
  * ECDH (P-256) between the host and each seat's device gives a shared AES-GCM key; the public
  * keys travel over the normal sync channel, the derived key never does. This keeps hands

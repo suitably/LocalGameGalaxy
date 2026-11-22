@@ -99,6 +99,7 @@ export function getGameRoute({
     return `/games/melodiq?role=client&party=${roomId}${extra}`;
   }
   if (gameType === 'storyteller') return `/games/storyteller?room=${roomId}`;
+  if (gameType === 'imposter') return `/games/imposter?room=${roomId}`;
   if (isRoomDiceGame(gameType)) return `/games/${gameType}?room=${roomId}`;
   return '/games/guessart';
 }

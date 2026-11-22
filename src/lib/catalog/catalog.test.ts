@@ -57,6 +57,7 @@ describe('game catalogue', { timeout: 30000 }, () => {
       'melodiq-notes': true,
       melodiq: true,
       tabletop: true,
+      imposter: true,
       knister: true,
       kniffel: true,
       qwixx: true,
@@ -137,6 +138,7 @@ describe('game catalogue', { timeout: 30000 }, () => {
       'storyteller',
       'melodiq',
       'melodiq-notes',
+      'imposter',
     ]);
     expect(partyPickerEntries('table').map((e) => e.id)).toEqual([
       'standard-cards',
