@@ -168,6 +168,14 @@ The host's `useQueue.ts` (`QueueProvider`, host storage) stays the source of tru
 - Events on the Melodiq room events channel (`useRoomEvents`, `gameKey: 'melodiq'`): `{ type: 'library.search', from, reqId, query, filters }` phone to host; `{ type: 'library.results', from, to, reqId, results }` host to the requester only (`to` = the request's `from`; other phones ignore it). The old direct `library.search` / `library.results` data-channel messages are gone.
 - Host: `hooks/useHostLibrarySearch.ts` (mounted by `PhoneQueueBridge`). Phone: `hooks/usePhoneLibrarySearch.ts` (`search()`, `results` of the latest `reqId` only; stale replies are dropped). **Unverified:** no phone UI calls it yet (the old message had no sender in the code either).
 
+### 2.15 Phone remote commands (room events)
+
+- Pure logic `logic/remoteCommands.ts` [ID: GAME-MELODIQ-REMOTE-COMMANDS]: `parseRemoteCommand` accepts `{ type: 'remote.command', from, command, value?, to? }` with `command` one of `REMOTE_COMMANDS` (`play`, `pause`, `toggle`, `next`, `restart`, `exit`, `UPDATE_PROFILE`, `session.join_mode`, `CALIBRATE_PLAY_BEEP`, `CALIBRATE_BEEP`, `PING`, `PONG`); unknown commands and a missing `from` are rejected. Extra fields travel in `value` (`{ latency }`, `{ mode }`); `profileLatencyOf` / `joinModeOf` read them.
+- Phone: `hooks/usePhoneRemoteCommands.ts` (used by `sendClientCommand` of `PhoneClientEngine.tsx`, which ignores names outside the list) publishes on the room events channel (`gameKey: 'melodiq'`). It goes to the host only.
+- Host: `hooks/useHostRemoteCommands.ts` (mounted by `useMelodiqGlobalEvents`) runs `handleRemoteCommandEvent`: `PING` is answered with a `PONG` whose `to` is the pinging phone; `CALIBRATE_BEEP` plays the beep; everything else goes to the TV window via `sendRemoteCommand`, or to `melodiq_host_command` without a TV (`useHostPlaybackCommands`). `usePeerSessionMessages.ts` subscribes to the same events during a session for `UPDATE_PROFILE`, `restart`, `next`, `exit` and `session.join_mode`; it finds the phone's player by `from` (`deviceId`, else peer id). Both handlers run on the host only (`manager` is null on a phone).
+- No role check: every phone could send every command before, and still can (`exit` and `restart` included). **Unverified:** whether any phone UI should be limited by `getRoleForDevice`.
+- Dead ends kept as they were: no phone sends `PING` or consumes `PONG` today, and `CALIBRATE_PLAY_BEEP` (sent by `RemoteLatencyCalibrator`) is forwarded to the TV, which has no handler for it. The connection-layer ping (`pongFor` in `useWebRTCClient`) is unrelated and unchanged.
+
 ## 3. Known Technical Debt & Refactoring Goals
 
 To ensure Melodiq aligns perfectly with the SOLID principles outlined in the main architecture doc, the following areas are targeted for future refactoring:

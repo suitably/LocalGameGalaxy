@@ -4,6 +4,8 @@ import { useWebRTCClient } from '../../lib/webrtc';
 import { storage, sessionStorageSafe, STORAGE_KEYS } from '../../lib/storage';
 import { usePhoneClientMessages } from './hooks/usePhoneClientMessages';
 import { RemoteHostSettingsModal } from './components/RemoteHostSettingsModal';
+import { usePhoneRemoteCommands } from './hooks/usePhoneRemoteCommands';
+import { isRemoteCommandName } from './logic/remoteCommands';
 import { useFeedbackRelay } from './hooks/useFeedbackRelay';
 import { PhoneRoomTransportProvider, usePhoneRoomTransport } from './hooks/useMelodiqRoomTransport';
 import { usePhoneMicStreaming } from './hooks/usePhoneMicStreaming';
@@ -197,8 +199,9 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
   // A locked screen suspends the browser and with it the microphone and the connection.
   useWakeLock(isConnected && isSessionPlaying && isSinging);
 
+  const sendRoomCommand = usePhoneRemoteCommands(roomTransport);
   const sendClientCommand = (command: string, data: Record<string, unknown> = {}) => {
-    sendData({ type: 'remote.command', command, ...data });
+    if (isRemoteCommandName(command)) sendRoomCommand(command, data);
   };
 
   // Re-send identity if profile changes while connected

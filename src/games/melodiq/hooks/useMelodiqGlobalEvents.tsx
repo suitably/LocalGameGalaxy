@@ -6,7 +6,7 @@ import { type TVEvent } from './useTVMode';
 import { useClientSessionSync } from './useClientSessionSync';
 import { useRemoteConfigListener } from './useRemoteConfigListener';
 import { useHostPhoneJoin } from './useHostPhoneJoin';
-import { playCalibrationBeep } from '../../../modules/audio/latency';
+import { useHostRemoteCommands } from './useHostRemoteCommands';
 
 interface UseMelodiqGlobalEventsProps {
   lastEvent: TVEvent | null;
@@ -136,38 +136,12 @@ export const useMelodiqGlobalEvents = ({
     return () => window.removeEventListener('melodiq_remote_select_song', handleRemoteSelect);
   }, [songs]);
 
-  // 3. Forward Phone Commands to TV & Handle Global Commands
+  // 3. Host API requests (remote.command now runs over room events, see useHostRemoteCommands)
   useEffect(() => {
     if (!manager) return;
 
     const handleRemoteCommand = async (peerId: string, data: any) => {
-      if (data.type === 'remote.command') {
-        if (data.command === 'PING') {
-          manager.sendToPeer(peerId, {
-            type: 'remote.command',
-            command: 'PONG',
-            value: Date.now(),
-          });
-          return;
-        }
-
-        if (data.command === 'CALIBRATE_BEEP') {
-          playCalibrationBeep();
-          return;
-        }
-
-        if (isTVConnected) {
-          console.log('Forwarding remote command to TV:', data.command);
-          sendRemoteCommand(data.command, data.value);
-        } else {
-          console.log('Handling remote command locally:', data.command);
-          window.dispatchEvent(
-            new CustomEvent('melodiq_host_command', {
-              detail: { command: data.command, value: data.value },
-            }),
-          );
-        }
-      } else if (data.type === 'api_request') {
+      if (data.type === 'api_request') {
         handleHostApiRequest({
           manager,
           peerId,
@@ -182,8 +156,9 @@ export const useMelodiqGlobalEvents = ({
     return () => {
       manager.off('message', handleRemoteCommand);
     };
-  }, [manager, isTVConnected, sendRemoteCommand]);
+  }, [manager]);
 
+  useHostRemoteCommands({ enabled: !!manager && !isClient, isTVConnected, sendRemoteCommand });
   useRemoteConfigListener(manager, currentView, setFeedbackMessage);
   useHostPhoneJoin({ manager, isClient, activeParticipants, setActiveParticipants });
 
