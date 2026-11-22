@@ -7,7 +7,7 @@
  * pass-and-play views read roles from the table.
  */
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import DarkModeIcon from '@mui/icons-material/DarkModeRounded';
 import VisibilityIcon from '@mui/icons-material/VisibilityRounded';
 import { useTranslation } from 'react-i18next';
@@ -22,7 +22,33 @@ interface Props {
   view: WerewolfRoomView;
   onAction: (action: NightAction) => void;
   onSkip: () => void;
+  /** Host only: ends a pack vote the wolves cannot settle. */
+  onEndPackVote?: () => void;
 }
+
+/** Every wolf's pick so far; the kill happens once they all match. */
+const PackPicks: React.FC<{ turn: RoomTurn; meId: string }> = ({ turn, meId }) => {
+  const { t } = useTranslation();
+  const name = (id: string) => turn.players.find((p) => p.id === id)?.name ?? '';
+  const wolves = turn.players.filter((p) => p.id === meId || turn.partners.includes(p.id));
+  const target = (id: string) => {
+    const pick = turn.picks[id];
+    if (pick === undefined) return t('games.werewolf.room.pack_choosing');
+    return pick === null ? t('games.werewolf.room.pack_nobody') : name(pick);
+  };
+  return (
+    <Box>
+      <Typography variant="body2" color="text.secondary" gutterBottom>
+        {t('games.werewolf.room.pack_agree')}
+      </Typography>
+      {wolves.map((w) => (
+        <Typography key={w.id} fontWeight="bold">
+          {t('games.werewolf.room.pack_pick', { name: w.name, target: target(w.id) })}
+        </Typography>
+      ))}
+    </Box>
+  );
+};
 
 const TurnView: React.FC<Props & { turn: RoomTurn }> = ({ view, turn, onAction, onSkip }) => {
   const { t } = useTranslation();
@@ -32,19 +58,26 @@ const TurnView: React.FC<Props & { turn: RoomTurn }> = ({ view, turn, onAction, 
   switch (turn.role) {
     case 'WEREWOLF': {
       const pack = new Set([...turn.partners, me?.id]);
-      const names = turn.players.filter((p) => pack.has(p.id)).map((p) => p.name);
       return (
         <PlayerSelectionView
           icon={<DarkModeIcon sx={{ fontSize: 60, color: 'secondary.main' }} />}
           title={t('games.werewolf.roles.WEREWOLF')}
-          subtitle={t('games.werewolf.room.pack_decides')}
+          subtitle={
+            me && me.id in turn.picks
+              ? t('games.werewolf.room.your_vote', {
+                  name:
+                    turn.players.find((p) => p.id === turn.picks[me.id])?.name ??
+                    t('games.werewolf.room.pack_nobody'),
+                })
+              : undefined
+          }
           instruction={t('games.werewolf.narrator.select_victim')}
           players={alive.filter((p) => !pack.has(p.id))}
           onSelect={(id) => onAction({ type: 'KILL', targetId: id })}
           onSkip={onSkip}
           skipLabel={t('common.skip')}
           buttonColor="error"
-          extraContent={<Typography fontWeight="bold">{names.join(', ')}</Typography>}
+          extraContent={<PackPicks turn={turn} meId={me?.id ?? ''} />}
         />
       );
     }
@@ -76,7 +109,20 @@ export const RoomNight: React.FC<Props> = (props) => {
   const { t } = useTranslation();
   const { view } = props;
   const me = view.me;
-  if (me?.turn) return <TurnView {...props} turn={me.turn} />;
+  const endPack = props.onEndPackVote && view.calling === 'WEREWOLF' && (
+    <Box textAlign="center" mt={3}>
+      <Button variant="text" onClick={props.onEndPackVote}>
+        {t('games.werewolf.room.end_pack_vote')}
+      </Button>
+    </Box>
+  );
+  if (me?.turn)
+    return (
+      <>
+        <TurnView {...props} turn={me.turn} />
+        {endPack}
+      </>
+    );
   const finding = me?.insights.find((i) => i.round === view.round);
   const name = (id: string) => view.players.find((p) => p.id === id)?.name ?? '';
   return (
@@ -103,6 +149,7 @@ export const RoomNight: React.FC<Props> = (props) => {
           })}
         </Typography>
       )}
+      {endPack}
     </Box>
   );
 };

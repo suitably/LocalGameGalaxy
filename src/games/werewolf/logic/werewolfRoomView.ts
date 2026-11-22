@@ -30,6 +30,8 @@ export interface RoomTurn {
   players: Player[];
   /** Other players acting with this device (the rest of the pack). */
   partners: string[];
+  /** Pack vote so far, wolves only: wolf id → victim id (`null`: nobody). */
+  picks: Record<string, string | null>;
 }
 
 export interface WerewolfRoomView {
@@ -85,6 +87,7 @@ function turnFor(state: WerewolfRoomState, player: Player): RoomTurn | null {
     role,
     players: state.game.players.map((p) => tablePlayer(p, role === 'WITCH')),
     partners: actors.filter((id) => id !== player.id),
+    picks: role === 'WEREWOLF' ? state.packPicks : {},
   };
 }
 

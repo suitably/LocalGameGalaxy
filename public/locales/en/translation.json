@@ -330,7 +330,6 @@
         "seen": "Got it",
         "seen_waiting": "{{count}} of {{total}} have read their role.",
         "pack": "Your pack: {{names}}",
-        "pack_decides": "Agree silently – the first choice counts.",
         "lovers": "You are in love with {{names}}.",
         "insight": "{{name}} is: {{role}}",
         "night_title": "Night {{round}}",
@@ -347,7 +346,12 @@
         "your_vote": "Your vote: {{name}}",
         "voted_waiting": "{{count}} of {{total}} have voted.",
         "roles_title": "All roles",
-        "table_hint": "This device shows the table"
+        "table_hint": "This device shows the table",
+        "pack_agree": "The kill happens once all wolves pick the same player. You can change your pick.",
+        "pack_pick": "{{name}}: {{target}}",
+        "pack_choosing": "still choosing …",
+        "pack_nobody": "nobody",
+        "end_pack_vote": "End the wolves’ turn"
       }
     },
     "imposter": {

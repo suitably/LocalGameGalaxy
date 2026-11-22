@@ -57,7 +57,14 @@ export const WerewolfRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
           </>
         );
       case 'NIGHT':
-        return <RoomNight view={view} onAction={nightAction} onSkip={nightSkip} />;
+        return (
+          <RoomNight
+            view={view}
+            onAction={nightAction}
+            onSkip={nightSkip}
+            onEndPackVote={isHost ? () => dispatch({ type: 'END_PACK_VOTE' }) : undefined}
+          />
+        );
       case 'DAY':
       case 'VOTING':
       case 'HUNTER_SHOT':

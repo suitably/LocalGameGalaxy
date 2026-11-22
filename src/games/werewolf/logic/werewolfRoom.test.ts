@@ -183,6 +183,48 @@ describe('werewolf room', () => {
     expect(over.game.winner).toBe('WEREWOLVES');
   });
 
+  describe('pack vote', () => {
+    const night = () =>
+      seeAll(started(['WEREWOLF', 'WEREWOLF', 'VILLAGER', 'VILLAGER', 'VILLAGER']));
+    const pick = (playerId: string, targetId: string): WerewolfRoomAction => ({
+      type: 'NIGHT_ACTION',
+      playerId,
+      action: { type: 'KILL', targetId },
+    });
+
+    it('kills once every wolf picks the same victim; picks may change', () => {
+      let state = run(night(), pick('host', 'c'), pick('b', 'd'));
+      expect(state.game.phase).toBe('NIGHT');
+      expect(werewolfRoomView(state, 1).me?.turn?.picks).toEqual({ host: 'c', b: 'd' });
+      expect(werewolfRoomView(state, 2).me?.turn).toBeNull();
+      expect(JSON.stringify(werewolfRoomView(state, null))).not.toContain('picks');
+      state = run(state, pick('b', 'c'));
+      // Two wolves against two villagers: the dawn ends the game.
+      expect(state.game.winner).toBe('WEREWOLVES');
+      expect(roleOf(state, 'c')?.isAlive).toBe(false);
+    });
+
+    it('kills nobody when every wolf skips', () => {
+      const state = run(
+        night(),
+        { type: 'NIGHT_SKIP', playerId: 'host' },
+        { type: 'NIGHT_SKIP', playerId: 'b' },
+      );
+      expect(state.game.phase).toBe('DAY');
+      expect(state.game.players.every((p) => p.isAlive)).toBe(true);
+    });
+
+    it('lets the host end a split vote: a tie kills nobody', () => {
+      const split = run(night(), pick('host', 'c'), pick('b', 'd'));
+      const ended = run(split, { type: 'END_PACK_VOTE' });
+      expect(ended.game.phase).toBe('DAY');
+      expect(ended.game.players.every((p) => p.isAlive)).toBe(true);
+      const one = run(night(), pick('b', 'd'), { type: 'END_PACK_VOTE' });
+      expect(roleOf(one, 'd')?.isAlive).toBe(false);
+      expect(werewolfRoomAllows(split, { type: 'END_PACK_VOTE' }, 'b', 'host')).toBe(false);
+    });
+  });
+
   it('lets players act only for themselves and only the host steer', () => {
     const state = INITIAL_WEREWOLF_ROOM;
     expect(werewolfRoomAllows(state, { type: 'SEEN', playerId: 'b' }, 'b', 'host')).toBe(true);

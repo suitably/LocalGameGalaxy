@@ -5,7 +5,7 @@
  * receives its own view (`werewolfRoomView`). Roles, night resolution, the hunter and the win
  * check stay in the pass-and-play engine (`gameReducer`); this layer adds what a room needs:
  * every player confirms their role card, the night calls one role after the other and only that
- * role's phones act, everyone votes on their phone. The host device narrates; with `narrator`
+ * role's phones act (the wolves vote as a pack), everyone votes on their phone. The host device narrates; with `narrator`
  * it has no role at all (a TV or a game master).
  */
 import { DEFAULT_ROLES } from './defaultRoles';
@@ -73,6 +73,8 @@ export interface WerewolfRoomState {
   votes: Record<string, string>;
   /** By player id. */
   insights: Record<string, RoomInsight[]>;
+  /** Pack vote this night: wolf id → victim id (`null`: nobody). */
+  packPicks: Record<string, string | null>;
 }
 
 export type WerewolfRoomAction =
@@ -81,6 +83,7 @@ export type WerewolfRoomAction =
   | { type: 'SEEN'; playerId: string }
   | { type: 'NIGHT_ACTION'; playerId: string; action: NightAction }
   | { type: 'NIGHT_SKIP'; playerId: string }
+  | { type: 'END_PACK_VOTE' }
   | { type: 'START_VOTE' }
   | { type: 'VOTE'; playerId: string; target: string }
   | { type: 'HUNTER_SHOT'; playerId: string; targetId: string }
@@ -96,6 +99,7 @@ export const INITIAL_WEREWOLF_ROOM: WerewolfRoomState = {
   nightStep: 0,
   votes: {},
   insights: {},
+  packPicks: {},
 };
 
 const sameSeats = (a: RoomSeat[], b: RoomSeat[]) =>
@@ -183,7 +187,7 @@ function settle(state: WerewolfRoomState, before: GamePhase): WerewolfRoomState 
       return { ...state, votes: {} };
     case 'NIGHT': {
       const nightOrder = roomNightOrder(game);
-      const next = { ...state, votes: {}, nightOrder, nightStep: 0 };
+      const next = { ...state, votes: {}, nightOrder, nightStep: 0, packPicks: {} };
       return nightOrder.length > 0 ? next : dawn(next);
     }
     default:
@@ -231,6 +235,30 @@ function applyNight(state: WerewolfRoomState, playerId: string, action: NightAct
     next = { ...next, game: { ...next.game, players } };
   }
   return nextNightRole(next);
+}
+
+/** Ends the pack vote: kills `target`, or nobody. */
+function endPack(state: WerewolfRoomState, target: string | null): WerewolfRoomState {
+  const next = { ...state, packPicks: {} };
+  return target ? applyNight(next, '', { type: 'KILL', targetId: target }) : nextNightRole(next);
+}
+
+/** One wolf's pick; the kill happens once every living wolf picks the same. */
+function packPick(state: WerewolfRoomState, playerId: string, target: string | null) {
+  const packPicks = { ...state.packPicks, [playerId]: target };
+  const picks = nightActorIds(state.game, 'WEREWOLF').map((id) => packPicks[id]);
+  const next = { ...state, packPicks };
+  if (picks.some((p) => p === undefined) || new Set(picks).size > 1) return next;
+  return endPack(next, picks[0] ?? null);
+}
+
+/** The host ends the pack vote: most picks wins; a tie or no pick kills nobody. */
+function closePackVote(state: WerewolfRoomState): WerewolfRoomState {
+  if (currentNightRole(state) !== 'WEREWOLF') return state;
+  const votes = Object.fromEntries(
+    Object.entries(state.packPicks).map(([wolf, target]) => [wolf, target ?? '']),
+  );
+  return endPack(state, lynchedBy(votes) || null);
 }
 
 function startGame(state: WerewolfRoomState, roles: Role[], narrator: boolean) {
@@ -281,15 +309,20 @@ export function werewolfRoomReducer(
       // Everyone has read their card: the first night falls.
       return next.seen.length >= game.players.length ? step(next, { type: 'NEXT_PHASE' }) : next;
     }
-    case 'NIGHT_ACTION':
-      return nightMoveValid(state, action.playerId, action.action)
-        ? applyNight(state, action.playerId, action.action)
-        : state;
+    case 'NIGHT_ACTION': {
+      const move = action.action;
+      if (!nightMoveValid(state, action.playerId, move)) return state;
+      if (currentNightRole(state) === 'WEREWOLF' && move.type === 'KILL')
+        return packPick(state, action.playerId, move.targetId);
+      return applyNight(state, action.playerId, move);
+    }
     case 'NIGHT_SKIP': {
       const role = currentNightRole(state);
       if (!role || !nightActorIds(game, role).includes(action.playerId)) return state;
-      return nextNightRole(state);
+      return role === 'WEREWOLF' ? packPick(state, action.playerId, null) : nextNightRole(state);
     }
+    case 'END_PACK_VOTE':
+      return closePackVote(state);
     case 'START_VOTE':
       return game.phase === 'DAY' ? step(state, { type: 'NEXT_PHASE' }) : state;
     case 'VOTE': {

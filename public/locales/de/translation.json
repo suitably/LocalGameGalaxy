@@ -330,7 +330,6 @@
         "seen": "Verstanden",
         "seen_waiting": "{{count}} von {{total}} haben ihre Rolle gelesen.",
         "pack": "Dein Rudel: {{names}}",
-        "pack_decides": "Einigt euch lautlos – die erste Wahl zählt.",
         "lovers": "Du bist verliebt in {{names}}.",
         "insight": "{{name}} ist: {{role}}",
         "night_title": "Nacht {{round}}",
@@ -347,7 +346,12 @@
         "your_vote": "Deine Stimme: {{name}}",
         "voted_waiting": "{{count}} von {{total}} haben abgestimmt.",
         "roles_title": "Alle Rollen",
-        "table_hint": "Dieses Gerät zeigt den Tisch"
+        "table_hint": "Dieses Gerät zeigt den Tisch",
+        "pack_agree": "Getötet wird, sobald alle Wölfe dieselbe Person wählen. Du kannst deine Wahl ändern.",
+        "pack_pick": "{{name}}: {{target}}",
+        "pack_choosing": "wählt noch …",
+        "pack_nobody": "niemand",
+        "end_pack_vote": "Zug der Wölfe beenden"
       }
     },
     "imposter": {
