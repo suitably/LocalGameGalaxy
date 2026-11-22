@@ -1,0 +1,28 @@
+{
+  "games": {
+    "darts": {
+      "game_setup": "Game setup",
+      "mode": "Game Mode",
+      "count_up": "Count Up",
+      "double_out": "Double Out Required",
+      "players": "Players",
+      "add_player": "Add Player",
+      "player": "Player",
+      "single": "Single",
+      "double": "Double",
+      "triple": "Triple",
+      "miss": "Miss",
+      "busted": "Busted!",
+      "last_score": "Score: {{score}}",
+      "restart_title": "Restart Game?",
+      "remove_player": "Remove player",
+      "multiplier": "Throw multiplier",
+      "bullseye": "BULLSEYE (50)",
+      "bull": "BULL (25)",
+      "setup_reset_title": "Reset game?",
+      "setup_reset_desc": "This change restarts the running game. All throws so far will be lost.",
+      "setup_reset_confirm": "Reset",
+      "restart_desc": "Are you sure you want to restart? All current scores and throws will be lost."
+    }
+  }
+}

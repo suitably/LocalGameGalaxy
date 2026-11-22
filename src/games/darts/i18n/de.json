@@ -1,0 +1,28 @@
+{
+  "games": {
+    "darts": {
+      "game_setup": "Spiel einrichten",
+      "mode": "Spielmodus",
+      "count_up": "Aufzählen",
+      "double_out": "Double Out (Doppel-Aus)",
+      "players": "Spieler",
+      "add_player": "Spieler hinzufügen",
+      "player": "Spieler",
+      "single": "Einfach",
+      "double": "Doppel",
+      "triple": "Dreifach",
+      "miss": "Vorbei",
+      "busted": "Überworfen!",
+      "last_score": "Wurf: {{score}}",
+      "restart_title": "Spiel neustarten?",
+      "remove_player": "Spieler entfernen",
+      "multiplier": "Wurf-Multiplikator",
+      "bullseye": "BULLSEYE (50)",
+      "bull": "BULL (25)",
+      "setup_reset_title": "Spiel zurücksetzen?",
+      "setup_reset_desc": "Diese Änderung startet das laufende Spiel neu. Alle bisherigen Würfe gehen verloren.",
+      "setup_reset_confirm": "Zurücksetzen",
+      "restart_desc": "Bist du sicher? Der aktuelle Spielstand geht verloren."
+    }
+  }
+}

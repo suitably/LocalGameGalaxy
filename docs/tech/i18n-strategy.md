@@ -47,7 +47,7 @@ sources:
 | `public/locales/{en,de}/translation.json` | app shell, hub, settings, party, connection, notifications, shared modules, every game's `games.<id>.title`/`.description` | HTTP backend at start-up                                                                                                                                                                                                    |
 | `src/games/<id>/i18n/{de,en}.json`        | everything else of that game, under the same key paths `t()` uses                                                          | `src/games/<id>/i18n/index.ts` exports `init<Game>I18n()`, which calls `registerGameBundle` (`src/lib/i18n/gameBundle.ts`: deep merge into `translation` once i18next is initialised); called from the game's entry modules |
 
-Games on per-game bundles so far: cards, kniffel, knister, melodiq, qwixx, sudoku, wordle (migration status: [GAME-CATALOG-RESTRUCTURE §7](../tasks/GAME-CATALOG-RESTRUCTURE.md#7-progress)). Games not yet migrated keep their strings in `public/locales`; add a string where its game keeps its strings today.
+Games on per-game bundles so far: cards, darts, kniffel, knister, melodiq, qwixx, sudoku, wordle (migration status: [GAME-CATALOG-RESTRUCTURE §7](../tasks/GAME-CATALOG-RESTRUCTURE.md#7-progress)). Games not yet migrated keep their strings in `public/locales`; add a string where its game keeps its strings today.
 
 `init<Game>I18n()` must run before the game renders: call it at module level in the game's barrel (`index.ts`, which the catalogue's `lazy()` page loads) or in the page components it exports, and in any module outside the game folder that imports the game's components directly.
 
