@@ -34,7 +34,7 @@ export const WerewolfCountStepper: React.FC<Props> = ({
         <RoleIcon icon="WEREWOLF" fontSize="1.25rem" /> {t('games.werewolf.ui.num_werewolves')}:
         <IconButton
           size="small"
-          aria-label={t('games.werewolf.ui.role_info', 'Role info')}
+          aria-label={t('games.werewolf.ui.role_info')}
           onClick={() => onShowInfo(DEFAULT_ROLES.find((r) => r.id === 'WEREWOLF') || null)}
           sx={{ ml: 0.5, p: 0.5, color: 'text.secondary', opacity: 0.5 }}
         >
@@ -52,7 +52,7 @@ export const WerewolfCountStepper: React.FC<Props> = ({
       >
         <IconButton
           size="small"
-          aria-label={t('common.a11y.decrease', 'Decrease')}
+          aria-label={t('common.a11y.decrease')}
           onClick={() => onChange((prev) => Math.max(1, prev - 1))}
           disabled={value <= 1}
         >
@@ -70,7 +70,7 @@ export const WerewolfCountStepper: React.FC<Props> = ({
         </Typography>
         <IconButton
           size="small"
-          aria-label={t('common.a11y.increase', 'Increase')}
+          aria-label={t('common.a11y.increase')}
           onClick={() => onChange((prev) => prev + 1)}
           disabled={value >= playerCount - 1 && playerCount > 0}
         >

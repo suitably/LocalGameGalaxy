@@ -92,13 +92,13 @@ export const RoleEditDialog: React.FC<RoleEditDialogProps> = ({
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
         {currentRole.name
-          ? t('games.werewolf.ui.editor.edit_role', 'Edit Role')
-          : t('games.werewolf.ui.editor.new_role', 'New Role')}
+          ? t('games.werewolf.ui.editor.edit_role')
+          : t('games.werewolf.ui.editor.new_role')}
       </DialogTitle>
       <DialogContent>
         <Box display="flex" flexDirection="column" gap={2} mt={1}>
           <TextField
-            label={t('games.werewolf.ui.editor.role_name', 'Role Name')}
+            label={t('games.werewolf.ui.editor.role_name')}
             value={currentRole.name || ''}
             onChange={(e) =>
               setCurrentRole((prev) => (prev ? { ...prev, name: e.target.value } : null))
@@ -106,10 +106,10 @@ export const RoleEditDialog: React.FC<RoleEditDialogProps> = ({
             fullWidth
           />
           <FormControl fullWidth>
-            <InputLabel>{t('games.werewolf.ui.editor.inherits_from', 'Inherits From')}</InputLabel>
+            <InputLabel>{t('games.werewolf.ui.editor.inherits_from')}</InputLabel>
             <Select
               value={currentRole.inheritsFrom || ''}
-              label={t('games.werewolf.ui.editor.inherits_from', 'Inherits From')}
+              label={t('games.werewolf.ui.editor.inherits_from')}
               onChange={(e) =>
                 setCurrentRole((prev) =>
                   prev ? { ...prev, inheritsFrom: e.target.value || undefined } : null,
@@ -117,7 +117,7 @@ export const RoleEditDialog: React.FC<RoleEditDialogProps> = ({
               }
             >
               <MenuItem value="">
-                <em>{t('games.werewolf.ui.editor.inherits_from_none', 'None')}</em>
+                <em>{t('games.werewolf.ui.editor.inherits_from_none')}</em>
               </MenuItem>
               {roles
                 .filter((r) => r.id !== currentRole.id)
@@ -130,7 +130,7 @@ export const RoleEditDialog: React.FC<RoleEditDialogProps> = ({
             </Select>
           </FormControl>
           <TextField
-            label={t('games.werewolf.ui.editor.description', 'Description')}
+            label={t('games.werewolf.ui.editor.description')}
             value={currentRole.description || ''}
             onChange={(e) =>
               setCurrentRole((prev) => (prev ? { ...prev, description: e.target.value } : null))
@@ -140,7 +140,7 @@ export const RoleEditDialog: React.FC<RoleEditDialogProps> = ({
             fullWidth
           />
           <TextField
-            label={t('games.werewolf.ui.editor.narrator_text', 'Night Narration')}
+            label={t('games.werewolf.ui.editor.narrator_text')}
             value={currentRole.narratorText || ''}
             onChange={(e) =>
               setCurrentRole((prev) => (prev ? { ...prev, narratorText: e.target.value } : null))
@@ -148,16 +148,13 @@ export const RoleEditDialog: React.FC<RoleEditDialogProps> = ({
             multiline
             rows={2}
             fullWidth
-            helperText={t(
-              'games.werewolf.ui.editor.narrator_text_hint',
-              'Text read by narrator at night. Leave empty to use default.',
-            )}
+            helperText={t('games.werewolf.ui.editor.narrator_text_hint')}
           />
           <FormControl fullWidth>
-            <InputLabel>{t('games.werewolf.ui.editor.alignment', 'Alignment')}</InputLabel>
+            <InputLabel>{t('games.werewolf.ui.editor.alignment')}</InputLabel>
             <Select
               value={currentRole.alignment || 'VILLAGER'}
-              label={t('games.werewolf.ui.editor.alignment', 'Alignment')}
+              label={t('games.werewolf.ui.editor.alignment')}
               onChange={(e) =>
                 setCurrentRole((prev) =>
                   prev ? { ...prev, alignment: e.target.value as RoleAlignment } : null,
@@ -165,13 +162,13 @@ export const RoleEditDialog: React.FC<RoleEditDialogProps> = ({
               }
             >
               <MenuItem value="VILLAGER">
-                {t('games.werewolf.ui.editor.alignments.villager', 'Villager')}
+                {t('games.werewolf.ui.editor.alignments.villager')}
               </MenuItem>
               <MenuItem value="WEREWOLF">
-                {t('games.werewolf.ui.editor.alignments.werewolf', 'Werewolf')}
+                {t('games.werewolf.ui.editor.alignments.werewolf')}
               </MenuItem>
               <MenuItem value="NEUTRAL">
-                {t('games.werewolf.ui.editor.alignments.neutral', 'Neutral')}
+                {t('games.werewolf.ui.editor.alignments.neutral')}
               </MenuItem>
             </Select>
           </FormControl>
@@ -179,11 +176,9 @@ export const RoleEditDialog: React.FC<RoleEditDialogProps> = ({
           <Divider sx={{ my: 1 }} />
 
           <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Typography variant="subtitle1">
-              {t('games.werewolf.ui.editor.abilities', 'Abilities')}
-            </Typography>
+            <Typography variant="subtitle1">{t('games.werewolf.ui.editor.abilities')}</Typography>
             <Button size="small" startIcon={<AddIcon />} onClick={handleAddAbility}>
-              {t('games.werewolf.ui.editor.add_ability', 'Add Ability')}
+              {t('games.werewolf.ui.editor.add_ability')}
             </Button>
           </Box>
 

@@ -60,7 +60,7 @@ export const RoleSelectionGrid: React.FC<RoleSelectionGridProps> = ({
                 <Typography variant="body2">{name}</Typography>
                 <IconButton
                   size="small"
-                  aria-label={t('games.werewolf.ui.role_info', 'Role info')}
+                  aria-label={t('games.werewolf.ui.role_info')}
                   onClick={(e) => {
                     e.preventDefault();
                     onShowInfo(def);

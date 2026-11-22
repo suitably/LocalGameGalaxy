@@ -138,7 +138,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
               </Typography>
               {isModified && (
                 <Chip
-                  label={t('common.modified', 'Modified')}
+                  label={t('common.modified')}
                   size="small"
                   color="primary"
                   variant="outlined"
@@ -177,10 +177,10 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
           <CloseIcon />
         </IconButton>
         <Typography variant="h5" component="h2" sx={{ flexGrow: 1 }}>
-          {t('games.werewolf.ui.editor.title', 'Role Editor')}
+          {t('games.werewolf.ui.editor.title')}
         </Typography>
         <Button variant="contained" startIcon={<AddIcon />} onClick={handleAddRole}>
-          {t('games.werewolf.ui.editor.add_role', 'Add Role')}
+          {t('games.werewolf.ui.editor.add_role')}
         </Button>
       </Box>
 
@@ -214,7 +214,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = ({
           startIcon={<SaveIcon />}
           onClick={handleSaveAll}
         >
-          {t('common.save_all', 'Save All')}
+          {t('common.save_all')}
         </Button>
       </Box>
 

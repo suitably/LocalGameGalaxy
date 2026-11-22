@@ -62,19 +62,16 @@ export const GameSetup: React.FC<GameSetupProps> = ({
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
           <Typography variant="h6">{t('games.werewolf.role_reveal')}</Typography>
           <Button startIcon={<SettingsIcon />} size="small" onClick={() => setIsEditorOpen(true)}>
-            {t('games.werewolf.editor.title', 'Editor')}
+            {t('games.werewolf.ui.editor.title')}
           </Button>
         </Box>
         <Typography variant="body2" sx={{ mb: 2 }}>
-          {t('games.werewolf.ui.select_roles_hint', 'Select roles to include:')}
+          {t('games.werewolf.ui.select_roles_hint')}
         </Typography>
 
         {tooManyRoles && (
           <Alert severity="warning" sx={{ mb: 2 }}>
-            {t(
-              'games.werewolf.ui.too_many_roles',
-              'Too many roles selected for the number of players!',
-            )}
+            {t('games.werewolf.ui.too_many_roles')}
           </Alert>
         )}
 

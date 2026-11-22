@@ -135,7 +135,7 @@ export const NightPhase: React.FC<NightPhaseProps> = ({
           onClick={() => setTtsEnabled(!ttsEnabled)}
           color={ttsEnabled ? 'primary' : 'default'}
           size="small"
-          aria-label={t('games.werewolf.ui.toggle_narrator', 'Narrator voice')}
+          aria-label={t('games.werewolf.ui.toggle_narrator')}
         >
           {ttsEnabled ? <VolumeUpIcon /> : <VolumeOffIcon />}
         </IconButton>
@@ -143,7 +143,7 @@ export const NightPhase: React.FC<NightPhaseProps> = ({
           onClick={() => setIsInfoOpen(true)}
           color="info"
           size="small"
-          aria-label={t('games.werewolf.ui.role_info', 'Role info')}
+          aria-label={t('games.werewolf.ui.role_info')}
         >
           <InfoIcon />
         </IconButton>

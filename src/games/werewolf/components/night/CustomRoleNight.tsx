@@ -57,7 +57,7 @@ export const CustomRoleNight: React.FC<CustomRoleNightProps> = ({
             {t('games.werewolf.narrator.finished_acting', { name: role.name })}
           </Typography>
           <Button variant="contained" color="primary" onClick={onNext}>
-            {t('common.finish_turn', 'Finish Turn')}
+            {t('common.finish_turn')}
           </Button>
         </Box>
       );
@@ -80,7 +80,7 @@ export const CustomRoleNight: React.FC<CustomRoleNightProps> = ({
           sx={{ p: 4, mt: 3, display: 'flex', flexDirection: 'column', gap: 2 }}
         >
           <Typography variant="h6" gutterBottom>
-            {t('games.werewolf.narrator.choose_ability', 'Choose an ability to execute:')}
+            {t('games.werewolf.narrator.choose_ability')}
           </Typography>
           {activeAbilities.map((ability, idx) => {
             const isUsed = completedAbilities.includes(idx);
@@ -102,7 +102,7 @@ export const CustomRoleNight: React.FC<CustomRoleNightProps> = ({
           })}
         </Paper>
         <Button variant="outlined" color="secondary" onClick={onNext} sx={{ mt: 3 }} fullWidth>
-          {t('common.skip')} / {t('common.done', 'Done')}
+          {t('common.skip')} / {t('common.done')}
         </Button>
       </Box>
     );
@@ -117,7 +117,7 @@ export const CustomRoleNight: React.FC<CustomRoleNightProps> = ({
       count: targetCount,
     }) +
       (targetCount > 1
-        ? ` (${t('common.target', 'Target')} ${selectedTargets.length + 1}/${targetCount})`
+        ? ` (${t('common.target')} ${selectedTargets.length + 1}/${targetCount})`
         : '');
 
   const handleSelect = (id: string) => {

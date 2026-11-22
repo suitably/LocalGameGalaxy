@@ -68,7 +68,8 @@
         "finished_acting": "{{name}} has finished acting.",
         "night_label": "Night {{round}}",
         "day_label": "Day {{round}}",
-        "night_summary_label": "Night Summary (Narrator only)"
+        "night_summary_label": "Night Summary (Narrator only)",
+        "choose_ability": "Choose an ability to execute:"
       },
       "night_summary": {
         "kill": "{{role}} decided to kill {{target}}.",

@@ -46,15 +46,15 @@ export const AbilityEditor: React.FC<AbilityEditorProps> = ({
   onRemove,
 }) => {
   const { t } = useTranslation();
-  const typeLabel = t('games.werewolf.ui.editor.ability_type', 'Action');
-  const timingLabel = t('games.werewolf.ui.editor.timing', 'Timing');
+  const typeLabel = t('games.werewolf.ui.editor.ability_type');
+  const timingLabel = t('games.werewolf.ui.editor.timing');
 
   return (
     <Paper variant="outlined" sx={{ p: 2, bgcolor: 'background.default' }}>
       <Box display="flex" flexDirection="column" gap={2}>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="caption">#{index + 1}</Typography>
-          <IconButton size="small" onClick={onRemove} aria-label={t('common.delete', 'Delete')}>
+          <IconButton size="small" onClick={onRemove} aria-label={t('common.delete')}>
             <DeleteIcon fontSize="small" />
           </IconButton>
         </Box>
@@ -88,7 +88,7 @@ export const AbilityEditor: React.FC<AbilityEditorProps> = ({
             </Select>
           </FormControl>
           <TextField
-            label={t('games.werewolf.editor.targets', 'Targets')}
+            label={t('games.werewolf.ui.editor.targets')}
             type="number"
             size="small"
             value={ability.targetCount}

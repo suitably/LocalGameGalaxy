@@ -68,7 +68,8 @@
         "finished_acting": "{{name}} hat seinen Zug beendet.",
         "night_label": "Nacht {{round}}",
         "day_label": "Tag {{round}}",
-        "night_summary_label": "Nacht-Zusammenfassung (Nur für Erzähler)"
+        "night_summary_label": "Nacht-Zusammenfassung (Nur für Erzähler)",
+        "choose_ability": "Wähle eine Fähigkeit:"
       },
       "night_summary": {
         "kill": "{{role}} hat sich entschieden, {{target}} zu eliminieren.",
