@@ -1,0 +1,118 @@
+/**
+ * Kniffel in a party room: shared dice and score sheet on every device [ID: GAME-KNIFFEL-ROOM-VIEW]
+ *
+ * The party host runs `kniffelRoomReducer`; the player whose turn it is rolls and scores on their
+ * own device, everyone else watches the same dice and sheet. A device without a seat is the table
+ * screen (read-only).
+ */
+import React from 'react';
+import { Box, Button, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '../../context/TitleContext';
+import { GameLayout } from '../../components/Layout/GameLayout';
+import { usePartyRoomGame } from '../../features/party/hooks/usePartyRoomGame';
+import type { RoomPlayer } from '../../features/party/hooks/usePartyRoomPlayers';
+import {
+  PartyRoomConnecting,
+  PartyRoomScoreboard,
+} from '../../features/party/components/PartyRoomScoreboard';
+import { initKniffelI18n } from './i18n';
+import {
+  INITIAL_KNIFFEL_ROOM,
+  kniffelRoomAllows,
+  kniffelRoomReducer,
+  type KniffelRoomAction,
+  type KniffelRoomState,
+} from './logic/kniffelRoom';
+import { evaluatePossibleScores, getTotalScore } from './logic/kniffelScoring';
+import { KniffelBoard } from './components/KniffelBoard';
+import { KniffelDiceRoller } from './components/KniffelDiceRoller';
+
+initKniffelI18n();
+
+const start = (hostId: string, players: RoomPlayer[]): KniffelRoomAction => ({
+  type: 'START',
+  hostId,
+  players,
+});
+const needsStart = (state: KniffelRoomState) => state.players.length === 0;
+const noop = () => {};
+
+export const KniffelRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
+  const { t } = useTranslation();
+  usePageTitle(t('games.kniffel.title', 'Kniffel'));
+  const { room, state, dispatch, synced } = usePartyRoomGame({
+    gameKey: 'kniffel',
+    roomId,
+    reducer: kniffelRoomReducer,
+    authorize: kniffelRoomAllows,
+    initialState: INITIAL_KNIFFEL_ROOM,
+    needsStart,
+    start,
+  });
+
+  if (!synced || state.players.length === 0)
+    return (
+      <GameLayout maxWidth="md">
+        <PartyRoomConnecting label={t('games.kniffel.room_connecting')} />
+      </GameLayout>
+    );
+
+  const active = state.players[state.activePlayerIndex];
+  const myTurn = active?.id === room.myId && !state.isGameOver;
+  const status = state.isGameOver
+    ? t('games.kniffel.game_over', 'Spiel beendet!')
+    : myTurn
+      ? t('games.kniffel.room_your_turn')
+      : t('games.kniffel.room_turn_of', { name: active?.name ?? '' });
+
+  return (
+    <GameLayout maxWidth="md">
+      <PartyRoomScoreboard
+        myId={room.myId}
+        entries={state.players.map((p) => ({
+          id: p.id,
+          name: p.name,
+          score: getTotalScore({ ...p.scores }),
+          pending: p.id === active?.id && !state.isGameOver,
+        }))}
+      />
+      <Typography textAlign="center" fontWeight={700} color="primary.text" mb={1}>
+        {status}
+      </Typography>
+
+      <KniffelDiceRoller
+        dice={state.dice}
+        heldDice={state.heldDice}
+        rollCount={state.rollCount}
+        onRoll={(dice) => dispatch({ type: 'ROLL', dice })}
+        onToggleHold={(index) => dispatch({ type: 'HOLD', index })}
+        disabled={!myTurn}
+      />
+
+      <KniffelBoard
+        players={state.players}
+        activePlayerIndex={state.activePlayerIndex}
+        possibleScores={evaluatePossibleScores(state.dice)}
+        rollCount={state.rollCount}
+        onScoreCategory={(category, score) => dispatch({ type: 'SCORE', category, score })}
+        onSwitchPlayer={noop}
+        disabled={!myTurn}
+        showDice
+      />
+
+      {state.isGameOver && room.isHost && (
+        <Box sx={{ mt: 3, textAlign: 'center' }}>
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={() => dispatch({ type: 'NEW_GAME' })}
+            sx={{ minHeight: 44 }}
+          >
+            {t('games.kniffel.play_again', 'Nochmal spielen')}
+          </Button>
+        </Box>
+      )}
+    </GameLayout>
+  );
+};

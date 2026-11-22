@@ -20,10 +20,10 @@ const HIGHLIGHT_MS = 5000;
 
 type Highlights = Partial<Record<RowColor, number[]>> | null;
 
-/** State, persistence and handlers of the Qwixx sheet screen. */
-export const useQwixxState = () => {
+/** State, persistence and handlers of the Qwixx sheet screen (`sheetKey`: where the sheet is kept). */
+export const useQwixxState = (sheetKey: string = STORAGE_KEYS.QWIXX_MY_SHEET) => {
   const [state, dispatch] = useReducer(qwixxReducer, INITIAL_STATE, (initial) => {
-    const savedSheet = storage.getJson<PlayerSheet | null>(STORAGE_KEYS.QWIXX_MY_SHEET, null);
+    const savedSheet = storage.getJson<PlayerSheet | null>(sheetKey, null);
     let mySheet = initial.mySheet;
     if (savedSheet && savedSheet.red && savedSheet.yellow && savedSheet.green && savedSheet.blue) {
       mySheet = {
@@ -46,8 +46,8 @@ export const useQwixxState = () => {
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    storage.setJson(STORAGE_KEYS.QWIXX_MY_SHEET, state.mySheet);
-  }, [state.mySheet]);
+    storage.setJson(sheetKey, state.mySheet);
+  }, [sheetKey, state.mySheet]);
 
   useEffect(() => {
     storage.set(STORAGE_KEYS.QWIXX_SHOW_DICE, String(showDice));

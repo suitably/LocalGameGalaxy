@@ -207,6 +207,8 @@ export const STORAGE_PREFIXES = {
   GAME_RELAY: 'galaxy_game_relay_',
   /** Running scripted card game per game id (local table or the room this device hosts). */
   TABLETOP_SCRIPTED: 'tabletop_scripted_',
+  /** This device's own Qwixx sheet in a party room, per room id (#467). */
+  QWIXX_ROOM_SHEET: 'qwixx_room_sheet_',
   GUESSART_GAME_ALIAS: 'guessart_game_alias_',
   GUESSART_LOCAL_PLAYERS: 'guessart_local_players_',
   GUESSART_TEMP_LOCAL_PLAYERS: 'guessart_temp_local_players_',

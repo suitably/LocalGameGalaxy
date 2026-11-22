@@ -5,7 +5,7 @@ import { parseGameUrlParams } from '../../../modules/sharing';
 import { roomKeyParam } from '../../../modules/sync/roomKeys';
 import type { PartyGameType, RoomDiceGame } from './universalPartyManager';
 
-const ROOM_DICE_GAMES: readonly RoomDiceGame[] = ['knister'];
+const ROOM_DICE_GAMES: readonly RoomDiceGame[] = ['knister', 'kniffel', 'qwixx'];
 
 /** Dice games that run in the party room with a sheet on every device. */
 export const isRoomDiceGame = (id: string | null | undefined): id is RoomDiceGame =>

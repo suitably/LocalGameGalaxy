@@ -34,7 +34,16 @@ const TRACKER = process.env.TRACKER_URL || 'ws://localhost:8000';
 const MQTT_RELAY = process.env.MQTT_RELAY || '';
 const GAMES = process.env.GAMES
   ? process.env.GAMES.split(',').filter(Boolean)
-  : ['garticphone', 'guessart', 'storyteller', 'knister', 'melodiq-notes', 'melodiq'];
+  : [
+      'garticphone',
+      'guessart',
+      'storyteller',
+      'knister',
+      'kniffel',
+      'qwixx',
+      'melodiq-notes',
+      'melodiq',
+    ];
 const results = [];
 const children = [];
 

@@ -136,6 +136,13 @@ describe('resolvePendingLaunch (Spieltisch → party lobby)', () => {
     expect(getGameRoute({ gameType: 'knister', roomId: 'R1', isHost: true, seat: 0 })).toBe(
       '/games/knister?room=R1',
     );
+    // Kniffel and Qwixx too (#467 slice 5)
+    for (const gameType of ['kniffel', 'qwixx'] as const) {
+      expect(resolvePendingLaunch(new URLSearchParams(`launch=${gameType}`))).toEqual({ gameType });
+      expect(getGameRoute({ gameType, roomId: 'R1', isHost: false, seat: 1 })).toBe(
+        `/games/${gameType}?room=R1`,
+      );
+    }
   });
 });
 

@@ -4,16 +4,17 @@
  * The party host runs `knisterRoomReducer`; everyone rolls the shared dice and places the same
  * sum on their own sheet (`modules/room-game`).
  */
-import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import React, { useMemo, useState } from 'react';
+import { Box, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../../context/TitleContext';
-import { useHeaderLayout } from '../../context/HeaderLayoutContext';
-import { useWakeLock } from '../../hooks/useWakeLock';
 import { GameLayout } from '../../components/Layout/GameLayout';
-import { useRoomReducer } from '../../modules/room-game';
-import { usePartyRoomPlayers } from '../../features/party/hooks/usePartyRoomPlayers';
+import { usePartyRoomGame } from '../../features/party/hooks/usePartyRoomGame';
+import type { RoomPlayer } from '../../features/party/hooks/usePartyRoomPlayers';
+import {
+  PartyRoomConnecting,
+  PartyRoomScoreboard,
+} from '../../features/party/components/PartyRoomScoreboard';
 import { initKnisterI18n } from './i18n';
 import {
   INITIAL_KNISTER_ROOM,
@@ -27,34 +28,29 @@ import { KnisterBoard } from './components/KnisterBoard';
 import { KnisterDiceRoller } from './components/KnisterDiceRoller';
 import { KnisterGameOverModal } from './components/KnisterGameOverModal';
 import { KnisterSpectatorView } from './components/KnisterSpectatorView';
-import { useFollowPartyLobby } from '../../features/party/hooks/useFollowPartyLobby';
 
 initKnisterI18n();
 
+const start = (hostId: string, players: RoomPlayer[]): KnisterRoomAction => ({
+  type: 'START',
+  hostId,
+  players,
+});
+const needsStart = (state: KnisterRoomState) => state.players.length === 0;
+
 export const KnisterRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  useFollowPartyLobby(roomId);
   usePageTitle(t('games.knister.title', 'Knister'));
-  useWakeLock(true);
-  const room = usePartyRoomPlayers(roomId);
-  const { state, dispatch, synced } = useRoomReducer<KnisterRoomState, KnisterRoomAction>({
+  const { room, state, dispatch, synced } = usePartyRoomGame({
     gameKey: 'knister',
     roomId,
-    playerId: room.myId,
-    isHost: room.isHost,
     reducer: knisterRoomReducer,
     authorize: knisterRoomAllows,
     initialState: INITIAL_KNISTER_ROOM,
+    needsStart,
+    start,
   });
   const [overClosed, setOverClosed] = useState(false);
-
-  // The host deals the sheets once the room's players are known.
-  const roster = room.players;
-  useEffect(() => {
-    if (room.isHost && state.players.length === 0 && roster.length > 0)
-      dispatch({ type: 'START', hostId: room.myId, players: roster });
-  }, [room.isHost, room.myId, roster, state.players.length, dispatch]);
 
   const me = state.players.find((p) => p.id === room.myId);
   const roll = state.currentRoll;
@@ -64,13 +60,6 @@ export const KnisterRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
     [state.players, state.placed],
   );
 
-  // Header back arrow = party lobby; the game goes on while this device visits it (#657).
-  const { setHomeAction } = useHeaderLayout();
-  useEffect(() => {
-    setHomeAction(() => navigate(`/party?room=${roomId}`));
-    return () => setHomeAction(null);
-  }, [navigate, roomId, setHomeAction]);
-
   let status = '';
   if (roll && !iPlaced) status = t('games.knister.room_place', { sum: roll.sum });
   else if (roll) status = t('games.knister.room_waiting', { names: waitingFor.join(', ') });
@@ -79,25 +68,20 @@ export const KnisterRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
   return (
     <GameLayout maxWidth="sm">
       {!synced || (!me && state.players.length === 0) ? (
-        <Stack alignItems="center" gap={2} py={6}>
-          <CircularProgress />
-          <Typography color="text.secondary">{t('games.knister.room_connecting')}</Typography>
-        </Stack>
+        <PartyRoomConnecting label={t('games.knister.room_connecting')} />
       ) : !me ? (
         <KnisterSpectatorView state={state} />
       ) : (
         <>
-          <Stack direction="row" gap={0.75} flexWrap="wrap" justifyContent="center" mb={1}>
-            {state.players.map((p) => (
-              <Chip
-                key={p.id}
-                size="small"
-                variant={p.id === room.myId ? 'filled' : 'outlined'}
-                color={roll && !state.placed.includes(p.id) ? 'warning' : 'default'}
-                label={`${p.name} · ${calculateBoardScores(p.grid).totalScore}`}
-              />
-            ))}
-          </Stack>
+          <PartyRoomScoreboard
+            myId={room.myId}
+            entries={state.players.map((p) => ({
+              id: p.id,
+              name: p.name,
+              score: calculateBoardScores(p.grid).totalScore,
+              pending: Boolean(roll) && !state.placed.includes(p.id),
+            }))}
+          />
 
           <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1 }}>
             <KnisterDiceRoller
