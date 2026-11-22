@@ -1,0 +1,197 @@
+{
+  "games": {
+    "qwixx": {
+      "roll": "Würfeln",
+      "rolling": "Würfelt...",
+      "white_sum": "Weiße Summe (Alle)",
+      "red": "Rot",
+      "yellow": "Gelb",
+      "green": "Grün",
+      "blue": "Blau",
+      "misses": "Fehlwürfe",
+      "misses_label": "Fehlwürfe (-5):",
+      "total": "GESAMT",
+      "stairs": "Treppe",
+      "bonus_red_yellow": "Bonusreihe Rot-Gelb (zählt für beide Reihen)",
+      "bonus_green_blue": "Bonusreihe Grün-Blau (zählt für beide Reihen)",
+      "select_sheet_title": "Wertungsblock auswählen",
+      "select_sheet_subtitle": "Entdecke offizielle Editionen, alternative Layouts und den Zufallsgenerator",
+      "select_preset": "Block-Layout:",
+      "reroll_layout": "Neues Layout würfeln",
+      "random_block_button": "Zufälliger Block",
+      "random_pick_title": "Zufälligen Block spielen",
+      "random_pick_subtitle": "Lass das Schicksal entscheiden und starte direkt mit einer zufälligen Edition und Anordnung!",
+      "pick_random_block": "Zufälligen Block spielen",
+      "random_block_in_mode": "Zufall",
+      "active_badge": "Aktiv",
+      "apply_sheet": "Block wählen",
+      "random_mode": "Zufalls-Modus",
+      "preview_title": "VORSCHAU DES WERTUNGSBLOCKS",
+      "rules_crossing_title": "Ankreuz- & Würfelregeln",
+      "rules_scoring_title": "Wertung & Besonderheiten",
+      "rules_tips_title": "Taktik-Tipp",
+      "view_rules": "Regeln lesen",
+      "play_this_sheet": "Diesen Block spielen",
+      "opponents": "Mitspieler",
+      "tap_to_view": "Tippen für Details",
+      "sheet": "Qwixx-Zettel",
+      "new_game": "Neues Spiel",
+      "room_connecting": "Verbinde mit dem Host …",
+      "room_your_roll": "Du würfelst",
+      "room_roll_of": "{{name}} würfelt",
+      "room_cross": "Kreuze an, was du willst, dann tippe auf Fertig",
+      "room_waiting": "Warte auf: {{names}}",
+      "room_done": "Fertig",
+      "room_game_over": "Spiel vorbei",
+      "reset_confirm": "Möchtest du deinen Zettel wirklich zurücksetzen?",
+      "reset_action": "Zettel zurücksetzen",
+      "solo_mode": "Digitaler Block (Solo)",
+      "multiplayer_mode": "Mehrspieler-Raum",
+      "room_code": "Raum-Code",
+      "share_room": "Raum teilen",
+      "join_room": "Raum beitreten",
+      "create_room": "Raum erstellen",
+      "player_name": "Spielername",
+      "dice_roller": "Würfelbecher",
+      "show_dice": "Würfel anzeigen",
+      "hide_dice": "Würfel verbergen",
+      "close_row_by_other": "Reihe schließen (von anderem Spieler geschlossen, kein Punkt)",
+      "tap_die_hint": "Tippe auf einen Würfel, um ankreuzbare Zahlen hervorzuheben",
+      "bonus_legend_title": "Bonus-Symbole & Effekte",
+      "active_shields": "Aktive Schutzschilde",
+      "bonus_shield_title": "Schutzschild",
+      "bonus_shield_desc": "Fängt den nächsten Fehlwurf automatisch ab (-5 Pkt vermieden).",
+      "bonus_self_title": "Sofort-Kreuz",
+      "bonus_self_desc": "Setzt sofort das nächste freie Kreuz in dieser Reihe.",
+      "bonus_partner_title": "Partner-Kreuz",
+      "bonus_partner_desc": "Setzt sofort das nächste freie Kreuz in der angegebenen Partner-Reihe.",
+      "double_banner_title": "Doppelzahlen-Modus:",
+      "double_banner_desc": "Die golden umrandeten 2×-Felder zählen beim Ankreuzen sofort als 2 Kreuze (XX) für die Reihe!",
+      "longo_title": "Qwixx Longo (D8-Würfel 1–8, Zahlen 2–16):",
+      "longo_desc": "Ab 6 Kreuzen sperrbar (+1 Bonus). Weiße Würfelsumme = Glückszahl ➔ Freies Kreuz in der Reihe mit den wenigsten Kreuzen!",
+      "longo_short_desc": "Weiße Summe = Glückszahl ➔ Freies Kreuz in Reihe mit wenigsten Kreuzen",
+      "lucky_numbers": "Glückszahlen",
+      "chains_title": "Ketten-Modus:",
+      "chains_desc": "Verbundene Ketten (🔗1 bis 🔗6) kreuzen beim Markieren sofort das Partnerfeld in der anderen Reihe mit an!",
+      "rules": {
+        "default": {
+          "crossing": "Kreuze von links nach rechts setzen. Die Summe der weißen Würfel darf überall genutzt werden, der Farbwürfel nur in der passenden Zeile.",
+          "scoring": "Punkte steigen exponentiell mit der Anzahl der Kreuze: 1=1, 2=3, 3=6, ..., 12=78 Punkte. Fehlwürfe geben je -5 Punkte.",
+          "tip": "Konzentriere dich auf 2 Reihen und versuche mind. 5 Kreuze vorzubereiten."
+        },
+        "classic": {
+          "crossing": "Klassisches Ankreuzen von links nach rechts. Weiße Würfelsumme gilt für alle Zeilen, Farbwürfel + Weiß nur für die jeweilige Farbe.",
+          "scoring": "Punkte je Reihe: 1=1, 2=3, 3=6, 4=10, 5=15, 6=21, 7=28, 8=36, 9=45, 10=55, 11=66, 12=78. Schloss gibt +1 Kreuz und entfernt den Würfel.",
+          "tip": "Überspringe in deinen starken Farben am Anfang nicht zu viele Zahlen."
+        },
+        "gemixxt_a": {
+          "crossing": "Zahlen bleiben sortiert (2–12 / 12–2), aber die Farben wechseln in Segmenten! Farbwürfel dürfen nur auf Feldern ihrer eigenen Farbe genutzt werden.",
+          "scoring": "Jede Zeile wird regulär gewertet. Beim Schließen einer Reihe wird der Farbwürfel der Abschlussfarbe entfernt.",
+          "tip": "Achte genau auf die Farbwechsel, um Farbwürfel für verschiedene Zeilen taktisch einzusetzen."
+        },
+        "gemixxt_b": {
+          "crossing": "Reihenfarben sind einheitlich, aber die Zahlen sind wild gewürfelt! Es muss streng von links nach rechts angekreuzt werden.",
+          "scoring": "Reihen werden mit ihrer letzten rechten Zahl und mind. 5 Kreuzen abgeschlossen.",
+          "tip": "Prüfe vor jedem Kreuz, welche Zahlen rechts noch kommen, um nicht versehentlich wertvolle Zahlen abzuschneiden."
+        },
+        "big_points": {
+          "crossing": "Bonusreihen dürfen angekreuzt werden, wenn in derselben Spalte mindestens ein Feld der angrenzenden Farbreihen markiert ist.",
+          "scoring": "Jedes Kreuz in einer Bonusreihe zählt für BEIDE Nachbarfarben (z. B. Rot-Gelb zählt für Rot UND Gelb, bis zu 120 Punkte pro Reihe!).",
+          "tip": "Schließe erst Zahlen in den Farbreihen ab, um die doppelt zählenden Bonusfelder freizuschalten."
+        },
+        "connected_stairs": {
+          "crossing": "11 Treppenfelder bilden eine Diagonale quer über alle Reihen. Werden wie normale Felder von links nach rechts bespielt.",
+          "scoring": "Alle angekreuzten Treppenfelder werden als 5. Wertungskategorie nach der Standard-Punktetabelle gewertet (bis zu +66 Bonuspunkte!).",
+          "tip": "Nimm Treppenfelder bevorzugt mit, um die zusätzliche 5. Wertung voll auszuschöpfen."
+        },
+        "connected_chains": {
+          "crossing": "Kreuzt du ein Kettenfeld an, MUSS sofort auch das verbundene Partnerfeld in der anderen Reihe markiert werden.",
+          "scoring": "Reguläre 4-Reihen-Wertung abzüglich Fehlwürfe.",
+          "tip": "Nutze Ketten, um ohne Würfelekombination kostenlose Kreuze in Partnerreihen zu setzen."
+        },
+        "double_sub": {
+          "crossing": "Jedes Zahlenfeld besitzt ein Unterkästchen. Ist die Hauptzahl markiert, darf bei erneutem Wurf das Unterkästchen angekreuzt werden.",
+          "scoring": "Zusatzkästchen zählen als vollwertige Extrakreuze für die jeweilige Reihe (bis zu 16+ Kreuze).",
+          "tip": "Nutze doppelt gewürfelte Zahlen, um zusätzliche Kreuze zu sammeln."
+        },
+        "double_numbers": {
+          "crossing": "Doppelzahlen-Felder zählen beim Ankreuzen sofort als 2 Kreuze für die Reihe.",
+          "scoring": "Standardwertung mit schnellerem Erreichen der 5 nötigen Kreuze.",
+          "tip": "Setze vorrangig auf Doppelzahlen, um die Reihe rasch zu sperren."
+        },
+        "bonus": {
+          "crossing": "Spezialsymbole auf den Zahlenfeldern gewähren Sofort-Boni: Sofort-Kreuze in derselben Reihe, Partner-Kreuze in anderen Farben oder Schutzschilde vor Fehlwürfen.",
+          "scoring": "Boni verbessern das Endergebnis oder schützen vor Punktabzügen.",
+          "tip": "Richte deine Züge strategisch an den Bonussymbolen aus."
+        },
+        "longo": {
+          "crossing": "Ankreuzen von links nach rechts (2–16 / 16–2). Bei Wurf einer deiner zwei Glückszahlen mit den weißen Würfeln darf das nächste freie Feld in der Reihe mit den wenigsten Kreuzen markiert werden!",
+          "scoring": "Punkte steigen bis zu 16 Kreuzen (bis zu 136 Pkt pro Reihe!). Das Sperren einer Reihe erfordert mindestens 6 Kreuze und eine der letzten beiden Zahlen (15/16 bzw. 3/2).",
+          "tip": "Nutze deine Glückszahlen geschickt, um Reihen aufzuholen, in denen du noch wenige Kreuze hast!"
+        },
+        "random_mix": {
+          "crossing": "Dynamisch generierte, ausgewogene Zufalls-Anordnung mit gemischten Zahlen je Farbreihe.",
+          "scoring": "Klassische Wertung und Schließen mit der ganz rechten Zahl.",
+          "tip": "Verschaffe dir vor dem ersten Wurf einen Überblick über die generierte Reihenfolge!"
+        }
+      },
+      "sheets": {
+        "classic": {
+          "name": "Qwixx Klassisch",
+          "badge": "Original",
+          "desc": "Klassischer Standard-Block mit 4 Farbreihen (Rot & Gelb aufsteigend 2–12, Grün & Blau absteigend 12–2)."
+        },
+        "gemixxt_a": {
+          "name": "Gemixxt — Mehrfarbig",
+          "badge": "Farbwechsel",
+          "desc": "Zahlen bleiben sortiert, aber die Farben wechseln in Segmenten. Wähle zwischen Block 1 und Block 2."
+        },
+        "gemixxt_b": {
+          "name": "Gemixxt — Gemischte Zahlen",
+          "badge": "Zahlenchaos",
+          "desc": "Reihenfarben bleiben einheitlich, aber die Zahlen sind wild gemischt. Wähle zwischen Block 1, Block 2 oder Block 3."
+        },
+        "big_points": {
+          "name": "Big Points",
+          "badge": "High Score",
+          "desc": "2 zweifarbige Bonusreihen. Kreuze in Bonusreihen zählen für BEIDE Nachbarfarben (bis zu 120 Pkt pro Reihe!)."
+        },
+        "connected_stairs": {
+          "name": "Connected — Treppe",
+          "badge": "5. Wertung",
+          "desc": "11 Treppenfelder bilden eine Diagonale über alle Reihen. Treppenkreuze zählen als 5. Kategorie (bis zu +66 Pkt)."
+        },
+        "connected_chains": {
+          "name": "Connected — Kette",
+          "badge": "Verkettet",
+          "desc": "Verbundene Zahlenpaare: Das Ankreuzen eines Kettenfeldes zwingt sofort zum Kreuz im Partnerfeld."
+        },
+        "double_sub": {
+          "name": "Double — Zusatzkästchen",
+          "badge": "Zweitwurf",
+          "desc": "Jedes Zahlenfeld hat ein Unterkästchen. Bei erneutem Würfeln derselben Zahl darf das Zusatzkästchen markiert werden."
+        },
+        "double_numbers": {
+          "name": "Double — Doppelzahlen",
+          "badge": "Turbo",
+          "desc": "Bestimmte Felder tragen Doppelzahlen und zählen beim Ankreuzen direkt als 2 Kreuze."
+        },
+        "bonus": {
+          "name": "Bonus-Symbole",
+          "badge": "Sondereffekte",
+          "desc": "Spezialsymbole gewähren Kettenreaktionen, Gratis-Kreuze oder Schutz vor Fehlwürfen."
+        },
+        "longo": {
+          "name": "Qwixx Longo",
+          "badge": "8-Seitig D8",
+          "desc": "Offizieller Longo-Block mit 15 Zahlen (2–16), 8-seitigen D8-Würfeln und 2 persönlichen Glückszahlen."
+        },
+        "random_mix": {
+          "name": "Randomizer (Eigene Mischung)",
+          "badge": "Dynamisch",
+          "desc": "Erzeugt per Knopfdruck eine neue, gültig gemischte Zahlenanordnung für alle vier Reihen."
+        }
+      }
+    }
+  }
+}

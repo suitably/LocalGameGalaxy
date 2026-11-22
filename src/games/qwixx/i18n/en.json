@@ -1,0 +1,197 @@
+{
+  "games": {
+    "qwixx": {
+      "roll": "Roll",
+      "rolling": "Rolling...",
+      "white_sum": "White Sum (All)",
+      "red": "Red",
+      "yellow": "Yellow",
+      "green": "Green",
+      "blue": "Blue",
+      "misses": "Misses",
+      "misses_label": "Misses (-5):",
+      "total": "TOTAL",
+      "stairs": "Stairs",
+      "bonus_red_yellow": "Bonus Row Red-Yellow (counts for both rows)",
+      "bonus_green_blue": "Bonus Row Green-Blue (counts for both rows)",
+      "select_sheet_title": "Choose Score Sheet",
+      "select_sheet_subtitle": "Discover official editions, alternative layouts, and randomizer modes",
+      "select_preset": "Sheet Layout:",
+      "reroll_layout": "Re-roll Layout",
+      "random_block_button": "Random Sheet",
+      "random_pick_title": "Pick a Random Sheet",
+      "random_pick_subtitle": "Let fate decide and jump right in with a random game mode and sheet layout!",
+      "pick_random_block": "Play Random Sheet",
+      "random_block_in_mode": "Random",
+      "active_badge": "Active",
+      "apply_sheet": "Select Sheet",
+      "random_mode": "Random Mode",
+      "preview_title": "SCORE SHEET PREVIEW",
+      "rules_crossing_title": "Crossing & Dice Rules",
+      "rules_scoring_title": "Scoring & Special Features",
+      "rules_tips_title": "Tactical Tip",
+      "view_rules": "Read Rules",
+      "play_this_sheet": "Play This Sheet",
+      "opponents": "Opponents",
+      "tap_to_view": "Tap to view full sheet",
+      "sheet": "Score Sheet",
+      "new_game": "New Game",
+      "room_connecting": "Connecting to the host …",
+      "room_your_roll": "Your roll",
+      "room_roll_of": "{{name}} rolls",
+      "room_cross": "Cross what you want, then tap Done",
+      "room_waiting": "Waiting for: {{names}}",
+      "room_done": "Done",
+      "room_game_over": "Game over",
+      "reset_confirm": "Are you sure you want to reset your score sheet?",
+      "reset_action": "Reset sheet",
+      "solo_mode": "Digital Sheet (Solo)",
+      "multiplayer_mode": "Multiplayer Room",
+      "room_code": "Room Code",
+      "share_room": "Share Room",
+      "join_room": "Join Room",
+      "create_room": "Create Room",
+      "player_name": "Player Name",
+      "dice_roller": "Dice Roller",
+      "show_dice": "Show Dice",
+      "hide_dice": "Hide Dice",
+      "close_row_by_other": "Close row (closed by another player, no point)",
+      "tap_die_hint": "Tap a die to highlight crossable numbers",
+      "bonus_legend_title": "Bonus Icons & Effects",
+      "active_shields": "Active Shields",
+      "bonus_shield_title": "Miss Shield",
+      "bonus_shield_desc": "Automatically absorbs the next penalty miss (avoids -5 pts).",
+      "bonus_self_title": "Instant Cross",
+      "bonus_self_desc": "Immediately places the next available cross in this row.",
+      "bonus_partner_title": "Partner Cross",
+      "bonus_partner_desc": "Immediately places the next available cross in the target partner row.",
+      "double_banner_title": "Double Numbers Mode:",
+      "double_banner_desc": "Golden-bordered 2× boxes count as 2 crosses (XX) immediately when crossed!",
+      "longo_title": "Qwixx Longo (D8 Dice 1–8, Numbers 2–16):",
+      "longo_desc": "Requires 6 crosses to lock (+1 bonus). White dice sum = Lucky Number ➔ Free cross in row with fewest crosses!",
+      "longo_short_desc": "White dice sum = Lucky Number ➔ Free cross in row with fewest crosses",
+      "lucky_numbers": "Lucky Numbers",
+      "chains_title": "Chains Mode:",
+      "chains_desc": "Connected chain links (🔗1 to 🔗5) immediately cross the linked partner field in the other row when marked!",
+      "rules": {
+        "default": {
+          "crossing": "Cross numbers from left to right. White sum can be used in any row, colored dice only in matching color.",
+          "scoring": "Row score increases with total crosses: 1=1, 2=3, 3=6, ..., 12=78 pts. Misses: -5 pts each.",
+          "tip": "Focus on 2 main rows and prepare 5 crosses to unlock the row lock."
+        },
+        "classic": {
+          "crossing": "Standard left-to-right crossing. White dice sum applies to any row; colored die plus white die applies to that color row only.",
+          "scoring": "Each row scores: 1=1, 2=3, 3=6, 4=10, 5=15, 6=21, 7=28, 8=36, 9=45, 10=55, 11=66, 12=78. Lock adds +1 cross and removes die.",
+          "tip": "Try not to skip too many numbers early in your strong rows."
+        },
+        "gemixxt_a": {
+          "crossing": "Numbers remain in order (2-12 / 12-2), but colors shift in segments! Colored dice can only be placed on cells of that exact color.",
+          "scoring": "Score rows individually. Locking a row removes the die matching the color of that row's lock box.",
+          "tip": "Keep an eye on the color transitions to plan your colored dice combinations."
+        },
+        "gemixxt_b": {
+          "crossing": "Row colors are uniform, but numbers are scrambled! Cross strictly from left to right according to the printed layout.",
+          "scoring": "Rows are locked with their rightmost number once at least 5 crosses are placed.",
+          "tip": "Check ahead carefully: numbers jump around unpredictably, so plan your jumps wisely."
+        },
+        "big_points": {
+          "crossing": "Bonus rows can be crossed if the corresponding number in at least one adjacent color row is already marked.",
+          "scoring": "Every cross in a bonus row adds to BOTH adjacent color row counts (e.g. Red-Yellow adds +1 to Red AND +1 to Yellow, up to 120 pts!).",
+          "tip": "Fill numbers in adjacent color rows first to unlock massive bonus crosses."
+        },
+        "connected_stairs": {
+          "crossing": "11 stair fields form a continuous diagonal across all rows with a golden border. Cross them normally left-to-right.",
+          "scoring": "Crossed stair fields score as an independent 5th bonus category using the standard point formula (up to +66 pts).",
+          "tip": "Target the diagonal stair cells whenever possible to earn huge 5th category bonus points."
+        },
+        "connected_chains": {
+          "crossing": "Crossing a linked chain cell immediately forces a free cross in the connected partner cell in the other row.",
+          "scoring": "Standard row scoring minus penalty misses.",
+          "tip": "Trigger chains to leap forward and earn extra marks in other rows without spending dice."
+        },
+        "double_sub": {
+          "crossing": "Every number has a secondary sub-box. If the main number is crossed and rolled again, you can check its sub-box.",
+          "scoring": "Sub-boxes add full extra crosses to that row's final count (up to 16+ crosses).",
+          "tip": "Use duplicate rolls to supercharge your completed numbers."
+        },
+        "double_numbers": {
+          "crossing": "Designated boxes contain double numbers that count as 2 crosses immediately when marked.",
+          "scoring": "Standard scoring with accelerated row count progression.",
+          "tip": "Prioritize double number boxes to quickly reach the 5 crosses needed to lock."
+        },
+        "bonus": {
+          "crossing": "Special bonus icons grant instant perks when crossed (extra crosses, shields against misses, or doubling).",
+          "scoring": "Bonus effects enhance your final score or mitigate penalties.",
+          "tip": "Align your roll choices with the bonus icons for tactical advantages."
+        },
+        "longo": {
+          "crossing": "Cross numbers from left to right (2–16 / 16–2). When the white dice roll your Lucky Number, cross the next free number in the row with the fewest crosses!",
+          "scoring": "Standard triangular scoring for up to 16 crosses (up to 136 pts per row). Locking requires 6 crosses and one of the last two numbers (15/16 or 3/2).",
+          "tip": "Watch the white dice rolls for your Lucky Numbers to gain valuable extra crosses in your lagging rows!"
+        },
+        "random_mix": {
+          "crossing": "Dynamically generated balanced random layout with shuffled numbers per row.",
+          "scoring": "Standard triangular scoring and rightmost lock rules.",
+          "tip": "Analyze the generated sequence carefully before your first roll!"
+        }
+      },
+      "sheets": {
+        "classic": {
+          "name": "Qwixx Classic",
+          "badge": "Original",
+          "desc": "Standard layout with 4 rows (Red & Yellow ascending 2-12, Green & Blue descending 12-2)."
+        },
+        "gemixxt_a": {
+          "name": "Gemixxt — Multi-Color",
+          "badge": "Color Shift",
+          "desc": "Numbers are sorted normally, but row colors change in segments. Choose between Block 1 & Block 2."
+        },
+        "gemixxt_b": {
+          "name": "Gemixxt — Mixed Numbers",
+          "badge": "Wild Order",
+          "desc": "Row colors are uniform, but numbers are scrambled. Choose between Block 1, Block 2, or Block 3."
+        },
+        "big_points": {
+          "name": "Big Points",
+          "badge": "High Score",
+          "desc": "Includes 2 two-colored bonus rows. Crosses in bonus rows count towards BOTH adjacent rows (up to 120 pts per row!)."
+        },
+        "connected_stairs": {
+          "name": "Connected — Stairs",
+          "badge": "5th Category",
+          "desc": "11 stair fields form a diagonal across all rows. Crossed stair fields score as a 5th bonus category (up to +66 pts)."
+        },
+        "connected_chains": {
+          "name": "Connected — Chains",
+          "badge": "Linked Pairs",
+          "desc": "Connected cells link pairs across rows: crossing one forces crossing the linked target cell immediately."
+        },
+        "double_sub": {
+          "name": "Double — Sub-Boxes",
+          "badge": "Re-roll Bonus",
+          "desc": "Each number has a sub-box. If already crossed and rolled again, you can check the sub-box for extra points."
+        },
+        "double_numbers": {
+          "name": "Double — Double Numbers",
+          "badge": "Fast Track",
+          "desc": "Designated fields contain double numbers that count as 2 crosses at once."
+        },
+        "bonus": {
+          "name": "Bonus Icons",
+          "badge": "Special Powers",
+          "desc": "Special icons trigger chain actions, instant free crosses, or shields against penalty misses."
+        },
+        "longo": {
+          "name": "Qwixx Longo",
+          "badge": "8-Sided D8",
+          "desc": "Official Longo block with 15 numbers (2–16), 8-sided D8 dice, and 2 individual Lucky Numbers."
+        },
+        "random_mix": {
+          "name": "Randomizer (Custom Mix)",
+          "badge": "Dynamic",
+          "desc": "Generates a fresh, balanced scrambled layout for all four rows with a single tap."
+        }
+      }
+    }
+  }
+}
