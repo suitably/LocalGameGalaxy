@@ -8,10 +8,10 @@
  * Remote `https://` images (TTS imports) stay remote: each device keeps its own copy in the
  * per-device cache (`assetCache.ts`, #693) instead of the companion redistributing them.
  * A copy of an imported third-party game is marked `companionPrivate` (TTS plan D4): the
- * companion keeps it private to that server and the app never publishes it.
+ * companion keeps it private to that server and the app never exports it as a file.
  */
 import type { TabletopGameDefinition } from './types';
-import { isThirdPartyImport } from './publishValidator';
+import { isThirdPartyImport } from './shareRules';
 
 export type AssetFetcher = (url: string) => Promise<Blob>;
 

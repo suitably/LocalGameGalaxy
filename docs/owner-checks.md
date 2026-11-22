@@ -39,3 +39,11 @@ Results model, stage leaderboard (#760), pult leaderboard and the palette are in
 - [ ] Play a song in perform mode with phones joined: at the end each phone shows the leaderboard with its own row marked; loading another song clears it; a phone joining between songs still sees it.
 - [ ] The judgement glyphs (★ ● ✓ ✕ ▲) render (no empty boxes) on Android WebView, a TV browser and iOS.
 - [ ] With the colour-blind palette on, check the colours on a TV (yellow "good" on the dark stage) and that the ✕ under missed notes does not collide with ledger lines or syllables.
+
+## #703 — sharing tabletop games without GitHub PRs
+
+The PR path is removed; sharing is the Share menu (export `.pcio` / `.json`, save to the companion). Round-trip tests cover the exporter. Third-party (`tts-workshop`) games cannot be exported (ADR-0005 D4); saving them to the companion stays allowed.
+
+- [ ] Export `.pcio` and `.json` from the Share menu on desktop and in the Android app (blob download in the WebView), then import both on a second device.
+- [ ] With a companion connected, Share → "Save to server" and see the game on another client.
+- [ ] On a Steam Workshop import, both exports are disabled with the blocked text, and saving to the server still works.

@@ -331,7 +331,7 @@ export type TabletopGameFormat = 'flat-json' | 'pcio-folder' | 'tts-workshop' | 
 
 export interface TabletopGameDefinition extends TabletopGameMetadata, RuleScriptRef {
   version: string;
-  /** Set by the TTS importer; such games never leave the device as published content. */
+  /** Set by the TTS importer; such games are never exported as a share file (`shareRules.ts`). */
   format?: TabletopGameFormat;
   /** Companion copy of an imported third-party game: private to that server (D4). */
   companionPrivate?: boolean;
