@@ -67,7 +67,7 @@ export const SudokuNumpad: React.FC<SudokuNumpadProps> = ({
     <Box sx={{ width: '100%', maxWidth: { xs: 360, sm: 440, md: 480 }, mx: 'auto', mt: 2 }}>
       {/* Action Toolbar */}
       <Stack direction="row" justifyContent="space-around" sx={{ mb: 1.5 }}>
-        <Tooltip title={t('sudoku.actions.undo', 'Rückgängig (Ctrl+Z)')}>
+        <Tooltip title={t('sudoku.actions.undo')}>
           <IconButton
             onClick={onUndo}
             disabled={disabled}
@@ -77,7 +77,7 @@ export const SudokuNumpad: React.FC<SudokuNumpadProps> = ({
           </IconButton>
         </Tooltip>
 
-        <Tooltip title={t('sudoku.actions.erase', 'Löschen (Entf)')}>
+        <Tooltip title={t('sudoku.actions.erase')}>
           <IconButton
             onClick={onErase}
             disabled={disabled}
@@ -87,7 +87,7 @@ export const SudokuNumpad: React.FC<SudokuNumpadProps> = ({
           </IconButton>
         </Tooltip>
 
-        <Tooltip title={t('sudoku.actions.notes', 'Notizen / Bleistift (N)')}>
+        <Tooltip title={t('sudoku.actions.notes')}>
           <Button
             variant={isPencilMode ? 'contained' : 'outlined'}
             color={isPencilMode ? 'primary' : 'inherit'}
@@ -97,11 +97,11 @@ export const SudokuNumpad: React.FC<SudokuNumpadProps> = ({
             size="small"
             sx={{ borderRadius: 2, fontWeight: 700 }}
           >
-            {isPencilMode ? t('sudoku.notes_on', 'Notizen AN') : t('sudoku.notes_off', 'Notizen')}
+            {isPencilMode ? t('sudoku.notes_on') : t('sudoku.notes_off')}
           </Button>
         </Tooltip>
 
-        <Tooltip title={t('sudoku.actions.hint', 'Hinweis (H)')}>
+        <Tooltip title={t('sudoku.actions.hint')}>
           <IconButton
             onClick={onHint}
             disabled={disabled}

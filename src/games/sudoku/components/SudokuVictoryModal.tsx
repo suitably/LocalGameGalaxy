@@ -71,7 +71,7 @@ export const SudokuVictoryModal: React.FC<SudokuVictoryModalProps> = ({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ textAlign: 'center', fontWeight: 800, pb: 1 }}>
-        {isWon ? t('sudoku.victory.title', 'Gelöst!') : t('sudoku.game_over.title', 'Game Over')}
+        {isWon ? t('sudoku.victory.title') : t('sudoku.game_over.title')}
       </DialogTitle>
 
       <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
@@ -88,7 +88,7 @@ export const SudokuVictoryModal: React.FC<SudokuVictoryModalProps> = ({
 
           {isNewBest && (
             <Alert severity="success" sx={{ mt: 2, py: 0.5 }}>
-              {t('sudoku.victory.new_record', 'Neue persönliche Bestzeit!')}
+              {t('sudoku.victory.new_record')}
             </Alert>
           )}
         </Box>
@@ -103,7 +103,7 @@ export const SudokuVictoryModal: React.FC<SudokuVictoryModalProps> = ({
         >
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             <Typography variant="body2" color="text.secondary">
-              {t('sudoku.mistakes', 'Fehler')}:
+              {t('sudoku.mistakes')}:
             </Typography>
             <Typography variant="body2" sx={{ fontWeight: 700 }}>
               {mistakes}
@@ -111,7 +111,7 @@ export const SudokuVictoryModal: React.FC<SudokuVictoryModalProps> = ({
           </Box>
           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             <Typography variant="body2" color="text.secondary">
-              {t('sudoku.hints', 'Hinweise')}:
+              {t('sudoku.hints')}:
             </Typography>
             <Typography variant="body2" sx={{ fontWeight: 700 }}>
               {hintsUsed}
@@ -120,7 +120,7 @@ export const SudokuVictoryModal: React.FC<SudokuVictoryModalProps> = ({
           {bestTime !== null && (
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography variant="body2" color="text.secondary">
-                {t('sudoku.best_time', 'Bestzeit')}:
+                {t('sudoku.best_time')}:
               </Typography>
               <Typography variant="body2" sx={{ fontWeight: 700, color: 'secondary.main' }}>
                 {formatTime(bestTime)}
@@ -131,7 +131,7 @@ export const SudokuVictoryModal: React.FC<SudokuVictoryModalProps> = ({
 
         {copied && (
           <Alert severity="success" sx={{ mt: 2, py: 0.5 }}>
-            {t('common.copied_to_clipboard', 'In die Zwischenablage kopiert!')}
+            {t('common.copied_to_clipboard')}
           </Alert>
         )}
       </DialogContent>
@@ -146,7 +146,7 @@ export const SudokuVictoryModal: React.FC<SudokuVictoryModalProps> = ({
             onNewGame();
           }}
         >
-          {t('sudoku.new_game', 'Neues Spiel')}
+          {t('sudoku.new_game')}
         </Button>
 
         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -156,10 +156,10 @@ export const SudokuVictoryModal: React.FC<SudokuVictoryModalProps> = ({
               startIcon={copied ? <CheckRoundedIcon /> : <ShareRoundedIcon />}
               onClick={handleShare}
             >
-              {copied ? t('common.copied', 'Kopiert!') : t('common.share', 'Teilen')}
+              {copied ? t('common.copied') : t('common.share')}
             </Button>
           )}
-          <Button onClick={onClose}>{t('common.close', 'Schließen')}</Button>
+          <Button onClick={onClose}>{t('common.close')}</Button>
         </Box>
       </DialogActions>
     </Dialog>

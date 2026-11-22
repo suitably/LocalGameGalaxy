@@ -28,7 +28,7 @@ import type { SudokuDifficulty } from './logic/types';
 
 export const SudokuGame: React.FC = () => {
   const { t } = useTranslation();
-  usePageTitle(t('games.sudoku.title', 'Sudoku'));
+  usePageTitle(t('games.sudoku.title'));
 
   const [helpOpen, setHelpOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
@@ -83,11 +83,11 @@ export const SudokuGame: React.FC = () => {
 
         <ConfirmDialog
           open={pendingDifficulty !== null}
-          title={t('sudoku.confirm_new.title', 'Neues Spiel starten?')}
+          title={t('sudoku.confirm_new.title')}
           message={t('sudoku.confirm_new.message', {
             difficulty: pendingDifficulty ? t(`sudoku.difficulty.${pendingDifficulty}`) : '',
           })}
-          confirmText={t('sudoku.confirm_new.confirm', 'Neues Spiel')}
+          confirmText={t('sudoku.confirm_new.confirm')}
           confirmColor="error"
           onConfirm={() => {
             if (pendingDifficulty) startNewGame(pendingDifficulty);
@@ -131,26 +131,24 @@ export const SudokuGame: React.FC = () => {
 
         {/* Stats Modal */}
         <Dialog open={statsOpen} onClose={() => setStatsOpen(false)} maxWidth="xs" fullWidth>
-          <DialogTitle sx={{ fontWeight: 800 }}>
-            {t('sudoku.stats.title', 'Sudoku Statistiken')}
-          </DialogTitle>
+          <DialogTitle sx={{ fontWeight: 800 }}>{t('sudoku.stats.title')}</DialogTitle>
           <DialogContent>
             <Stack spacing={1.5} sx={{ my: 1 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="body2">{t('sudoku.stats.played', 'Gespielt')}:</Typography>
+                <Typography variant="body2">{t('sudoku.stats.played')}:</Typography>
                 <Typography variant="body2" sx={{ fontWeight: 800 }}>
                   {stats.played}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="body2">{t('sudoku.stats.completed', 'Gelöst')}:</Typography>
+                <Typography variant="body2">{t('sudoku.stats.completed')}:</Typography>
                 <Typography variant="body2" sx={{ fontWeight: 800, color: 'success.main' }}>
                   {stats.completed}
                 </Typography>
               </Box>
 
               <Typography variant="subtitle2" sx={{ fontWeight: 700, mt: 2 }}>
-                {t('sudoku.stats.best_times', 'Bestzeiten')}
+                {t('sudoku.stats.best_times')}
               </Typography>
               {(['easy', 'medium', 'hard', 'expert'] as const).map((diff) => (
                 <Box key={diff} sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -167,34 +165,17 @@ export const SudokuGame: React.FC = () => {
             </Stack>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setStatsOpen(false)}>{t('common.close', 'Schließen')}</Button>
+            <Button onClick={() => setStatsOpen(false)}>{t('common.close')}</Button>
           </DialogActions>
         </Dialog>
 
         {/* Help Dialog */}
         <Dialog open={helpOpen} onClose={() => setHelpOpen(false)} maxWidth="xs">
-          <DialogTitle sx={{ fontWeight: 800 }}>
-            {t('sudoku.help.title', 'Sudoku Regeln')}
-          </DialogTitle>
+          <DialogTitle sx={{ fontWeight: 800 }}>{t('sudoku.help.title')}</DialogTitle>
           <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            <Typography variant="body2">
-              {t(
-                'sudoku.help.p1',
-                'Jede Zeile, Spalte und jeder 3x3-Block muss die Zahlen von 1 bis 9 genau einmal enthalten.',
-              )}
-            </Typography>
-            <Typography variant="body2">
-              {t(
-                'sudoku.help.p2',
-                'Nutze den Bleistift-Modus (Notizen), um mögliche Zahlenkandidaten in einer Zelle vorzumerken.',
-              )}
-            </Typography>
-            <Typography variant="body2">
-              {t(
-                'sudoku.help.p3',
-                'Bei 3 Fehlern ist die Runde verloren. Du kannst jederzeit Hinweise oder die Rückgängig-Funktion nutzen.',
-              )}
-            </Typography>
+            <Typography variant="body2">{t('sudoku.help.p1')}</Typography>
+            <Typography variant="body2">{t('sudoku.help.p2')}</Typography>
+            <Typography variant="body2">{t('sudoku.help.p3')}</Typography>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setHelpOpen(false)}>{t('common.close')}</Button>

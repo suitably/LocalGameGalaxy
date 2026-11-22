@@ -76,7 +76,7 @@ export const SudokuHeader: React.FC<SudokuHeaderProps> = ({
         }}
       >
         <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-          {t('sudoku.mistakes', 'Fehler')}:{' '}
+          {t('sudoku.mistakes')}:{' '}
           <Box
             component="span"
             sx={{ color: mistakes > 0 ? 'error.main' : 'text.primary', fontWeight: 800 }}
@@ -92,7 +92,7 @@ export const SudokuHeader: React.FC<SudokuHeaderProps> = ({
           <IconButton
             size="small"
             onClick={onTogglePause}
-            aria-label={isPaused ? t('common.a11y.play', 'Play') : t('common.a11y.pause', 'Pause')}
+            aria-label={isPaused ? t('common.a11y.play') : t('common.a11y.pause')}
           >
             {isPaused ? (
               <PlayCircleOutlineRoundedIcon color="primary" />

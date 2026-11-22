@@ -24,13 +24,13 @@ export const useSudokuHeaderActions = ({
   useEffect(() => {
     setMenuItems([
       {
-        label: t('sudoku.menu.stats', 'Statistiken'),
+        label: t('sudoku.menu.stats'),
         icon: <BarChartRoundedIcon />,
         action: () => handlers.current.onOpenStats(),
         showAlways: true,
       },
       {
-        label: t('sudoku.menu.help', 'Regeln'),
+        label: t('sudoku.menu.help'),
         icon: <HelpOutlineRoundedIcon />,
         action: () => handlers.current.onOpenHelp(),
       },
