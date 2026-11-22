@@ -32,10 +32,10 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
       <Box mb={3.5}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
           <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
-            {t('party.connectedPlayers', 'Verbundene Spieler')} ({players.length})
+            {t('party.connectedPlayers')} ({players.length})
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {t('party.stayConnectedHint', 'Alle Handys bleiben für jedes Spiel verbunden')}
+            {t('party.stayConnectedHint')}
           </Typography>
         </Box>
 
@@ -55,11 +55,11 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
                 label={
                   <Box component="span" display="inline-flex" alignItems="center" gap={0.6}>
                     <Typography variant="body2" fontWeight={isMe ? 800 : 600} component="span">
-                      {p.name} {isMe ? `(${t('common.you', 'Du')})` : ''}
+                      {p.name} {isMe ? `(${t('common.you')})` : ''}
                     </Typography>
                     {p.isHost && <StarsRoundedIcon sx={{ color: 'warning.main', fontSize: 18 }} />}
                     {p.spectator && (
-                      <Tooltip title={t('party.spectatorBadge', 'Zuschauer')}>
+                      <Tooltip title={t('party.spectatorBadge')}>
                         <VisibilityRoundedIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
                       </Tooltip>
                     )}
@@ -77,11 +77,11 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
                 }
                 deleteIcon={
                   isMe ? (
-                    <Tooltip title={t('party.editNameTooltip', 'Namen ändern')}>
+                    <Tooltip title={t('party.editNameTooltip')}>
                       <EditRoundedIcon fontSize="small" sx={{ color: 'primary.text' }} />
                     </Tooltip>
                   ) : amIHost ? (
-                    <Tooltip title={t('party.removePlayer', 'Aus der Party entfernen')}>
+                    <Tooltip title={t('party.removePlayer')}>
                       <PersonRemoveRoundedIcon fontSize="small" />
                     </Tooltip>
                   ) : undefined
@@ -118,9 +118,7 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
             );
           })}
 
-          {players.length === 0 && (
-            <EmptyState dense message={t('party.waitingForGuests', 'Warte auf Mitspieler...')} />
-          )}
+          {players.length === 0 && <EmptyState dense message={t('party.waitingForGuests')} />}
         </Box>
 
         {me && (
@@ -134,9 +132,9 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
             }
             label={
               <Typography variant="body2">
-                {t('party.watchOnly', 'Zuschauen')}
+                {t('party.watchOnly')}
                 <Typography variant="caption" color="text.secondary" component="span" ml={1}>
-                  {t('party.watchOnlyHint', 'Ohne Platz im Spiel, nur zusehen')}
+                  {t('party.watchOnlyHint')}
                 </Typography>
               </Typography>
             }

@@ -25,12 +25,12 @@ export const QrCodeDialog: React.FC<Props> = ({ open, onClose, dataUrl, keyName,
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{t('server.admin.qr_title', 'Connection QR Code')}</DialogTitle>
+      <DialogTitle>{t('server.admin.qr_title')}</DialogTitle>
       <DialogContent
         sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}
       >
         <Typography variant="body2" color="text.secondary" textAlign="center">
-          {t('server.admin.qr_desc', 'Scan this QR code to connect to the server as "{{name}}"', {
+          {t('server.admin.qr_desc', {
             name: keyName,
           })}
         </Typography>
@@ -38,7 +38,7 @@ export const QrCodeDialog: React.FC<Props> = ({ open, onClose, dataUrl, keyName,
           <Box sx={{ p: 2, bgcolor: 'white', borderRadius: 2, boxShadow: 0 }}>
             <img
               src={dataUrl}
-              alt={t('server.admin.qr_alt', 'QR Code')}
+              alt={t('server.admin.qr_alt')}
               style={{ display: 'block', width: 250, height: 250 }}
             />
           </Box>
@@ -59,13 +59,13 @@ export const QrCodeDialog: React.FC<Props> = ({ open, onClose, dataUrl, keyName,
               onClick={() => navigator.clipboard.writeText(fullLink)}
               sx={{ whiteSpace: 'nowrap' }}
             >
-              {t('common.copy', 'Copy')}
+              {t('common.copy')}
             </Button>
           </Box>
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('common.close', 'Close')}</Button>
+        <Button onClick={onClose}>{t('common.close')}</Button>
       </DialogActions>
     </Dialog>
   );

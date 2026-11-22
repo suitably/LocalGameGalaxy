@@ -38,7 +38,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
       </Typography>
       {onRetry && (
         <Button variant="outlined" size="small" onClick={onRetry}>
-          {retryLabel ?? t('common.retry', 'Retry')}
+          {retryLabel ?? t('common.retry')}
         </Button>
       )}
     </Box>

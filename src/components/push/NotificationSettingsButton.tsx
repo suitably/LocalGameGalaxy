@@ -24,7 +24,7 @@ export const NotificationSettingsButton: React.FC = () => {
         onClick={() => setOpen(true)}
         sx={{ textTransform: 'none', minHeight: 36, color: 'text.secondary' }}
       >
-        {t('settings.notify_open', 'Benachrichtigungen einrichten')}
+        {t('settings.notify_open')}
       </Button>
       <Dialog open={open} onClose={close} fullWidth maxWidth="xs">
         <DialogContent>

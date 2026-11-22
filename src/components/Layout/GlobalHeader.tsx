@@ -65,20 +65,12 @@ export const GlobalHeader: React.FC = () => {
       >
         <Toolbar sx={{ alignItems: 'center', minHeight: { xs: 48, sm: 56 }, px: { xs: 1, sm: 2 } }}>
           {(!hideHome || homeAction || isSettingsPage) && (
-            <Tooltip
-              title={
-                homeAction || isSettingsPage ? t('common.back', 'Zurück') : t('common.home', 'Home')
-              }
-            >
+            <Tooltip title={homeAction || isSettingsPage ? t('common.back') : t('common.home')}>
               <IconButton
                 size="medium"
                 edge="start"
                 color="inherit"
-                aria-label={
-                  homeAction || isSettingsPage
-                    ? t('common.back', 'Zurück')
-                    : t('common.home', 'Home')
-                }
+                aria-label={homeAction || isSettingsPage ? t('common.back') : t('common.home')}
                 sx={{ mr: { xs: 0.5, sm: 1.5 }, p: { xs: 0.75, sm: 1.25 } }}
                 onClick={handleHomeClick}
               >
@@ -115,12 +107,12 @@ export const GlobalHeader: React.FC = () => {
 
           {/* PWA Install Button when not in standalone mode */}
           {!isStandalone && isInstallable && (
-            <Tooltip title={t('app.install_pwa', 'Install App')}>
+            <Tooltip title={t('app.install_pwa')}>
               <IconButton
                 color="primary"
                 onClick={installApp}
                 sx={{ ml: 0.5, p: 1.25 }}
-                aria-label={t('app.install_pwa', 'Install App')}
+                aria-label={t('app.install_pwa')}
               >
                 <InstallMobileIcon fontSize={isSmallScreen ? 'small' : 'medium'} />
               </IconButton>
@@ -129,10 +121,10 @@ export const GlobalHeader: React.FC = () => {
 
           {/* One settings gear: game sheet on games with settings, app settings elsewhere; hidden on /settings */}
           {!isSettingsPage && (
-            <Tooltip title={t('settings.title', 'Settings')}>
+            <Tooltip title={t('settings.title')}>
               <IconButton
                 color="inherit"
-                aria-label={t('settings.title', 'Settings')}
+                aria-label={t('settings.title')}
                 onClick={() =>
                   activeGame?.settings
                     ? openGameSettings()
@@ -148,7 +140,7 @@ export const GlobalHeader: React.FC = () => {
           )}
 
           {/* Feedback Icon - always visible */}
-          <Tooltip title={t('settings.feedback_title', 'Feedback & Bug Report')}>
+          <Tooltip title={t('settings.feedback_title')}>
             <IconButton
               id="feedback-button"
               color="inherit"

@@ -74,11 +74,8 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
 
   const handleTestNotification = useCallback(async () => {
     await localNotificationPresenter.showNotification({
-      title: t('guessart.notificationTitle', 'LocalGameGalaxy: Du bist dran!'),
-      body: t(
-        'guessart.pushTestBody',
-        '🎉 Test erfolgreich! Push-Benachrichtigungen funktionieren einwandfrei.',
-      ),
+      title: t('guessart.notificationTitle'),
+      body: t('guessart.pushTestBody'),
       icon: '/pwa/icon_full.png',
     });
   }, [t]);
@@ -98,14 +95,11 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
             onClick={handleTestNotification}
             sx={{ textTransform: 'none', fontWeight: 600, whiteSpace: 'nowrap' }}
           >
-            {t('guessart.pushTestButton', 'Test-Push senden')}
+            {t('guessart.pushTestButton')}
           </Button>
         }
       >
-        {t(
-          'guessart.pushEnabled',
-          'Browser-Push aktiv – du wirst benachrichtigt, wenn du dran bist!',
-        )}
+        {t('guessart.pushEnabled')}
       </Alert>
     );
   }
@@ -123,11 +117,11 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
             onClick={() => setDismissed(false)}
             sx={{ textTransform: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}
           >
-            {t('settings.notify_set_up', 'Einrichten')}
+            {t('settings.notify_set_up')}
           </Button>
         }
       >
-        {t('settings.notify_off', 'Benachrichtigungen sind aus.')}
+        {t('settings.notify_off')}
       </Alert>
     );
   }

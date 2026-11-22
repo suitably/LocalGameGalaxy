@@ -12,5 +12,5 @@ export function partyGameTitle(
 ): string {
   const entry = partyEntry(gameType, gameId);
   if (entry) return t(entry.titleKey, entry.title);
-  return gameType === 'tabletop' ? t('games.tabletop.title', 'Spieltisch') : (gameType ?? '');
+  return gameType === 'tabletop' ? t('games.tabletop.title') : (gameType ?? '');
 }

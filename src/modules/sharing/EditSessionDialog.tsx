@@ -78,9 +78,9 @@ export const EditSessionDialog: React.FC<EditSessionDialogProps> = ({
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Typography variant="h6" fontWeight={700}>
-          {title || t('common.editSession', 'Sitzung bearbeiten')}
+          {title || t('common.editSession')}
         </Typography>
-        <IconButton size="small" onClick={onClose} aria-label={t('common.close', 'Schließen')}>
+        <IconButton size="small" onClick={onClose} aria-label={t('common.close')}>
           <CloseRoundedIcon fontSize="small" />
         </IconButton>
       </DialogTitle>
@@ -89,7 +89,7 @@ export const EditSessionDialog: React.FC<EditSessionDialogProps> = ({
         <Stack spacing={2.5}>
           {isHost && (
             <TextField
-              label={nameLabel || t('common.title', 'Titel')}
+              label={nameLabel || t('common.title')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               fullWidth
@@ -100,14 +100,14 @@ export const EditSessionDialog: React.FC<EditSessionDialogProps> = ({
           {extraContent}
 
           <Typography variant="subtitle2" fontWeight={700} color="text.secondary">
-            {t('common.playerNames', 'Spielernamen')}
+            {t('common.playerNames')}
           </Typography>
 
           <Stack spacing={1.5}>
             {players.map((p, idx) => (
               <TextField
                 key={p.id}
-                label={`${t('common.player', 'Spieler')} ${idx + 1}`}
+                label={`${t('common.player')} ${idx + 1}`}
                 value={p.name}
                 onChange={(e) => handlePlayerNameChange(p.id, e.target.value)}
                 size="small"
@@ -121,7 +121,7 @@ export const EditSessionDialog: React.FC<EditSessionDialogProps> = ({
 
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose} color="inherit">
-          {t('common.cancel', 'Abbrechen')}
+          {t('common.cancel')}
         </Button>
         <Button
           onClick={handleSave}
@@ -131,7 +131,7 @@ export const EditSessionDialog: React.FC<EditSessionDialogProps> = ({
           disabled={saving}
           sx={{ fontWeight: 700 }}
         >
-          {t('common.save', 'Speichern')}
+          {t('common.save')}
         </Button>
       </DialogActions>
     </Dialog>

@@ -84,7 +84,7 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{t('party.select_game_title', 'Spiel für die Party wählen')}</DialogTitle>
+      <DialogTitle>{t('party.select_game_title')}</DialogTitle>
       <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}>
         <Tabs
           value={tabIndex}
@@ -95,9 +95,9 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
           variant="scrollable"
           scrollButtons="auto"
         >
-          <Tab label={t('party.tab_party', 'Party-Spiele')} />
-          <Tab label={t('party.tab_tabletop', 'Karten, Brett & Würfel')} />
-          <Tab label={t('party.tab_custom', 'Eigene Spiele')} />
+          <Tab label={t('party.tab_party')} />
+          <Tab label={t('party.tab_tabletop')} />
+          <Tab label={t('party.tab_custom')} />
         </Tabs>
       </Box>
 
@@ -111,10 +111,7 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
           ) : customGames.length === 0 ? (
             <EmptyState
               icon={<FolderOpenIcon sx={{ fontSize: 48 }} />}
-              message={t(
-                'party.no_custom_tabletop',
-                'Noch keine eigenen Party-fähigen Tabletop-Spiele importiert.',
-              )}
+              message={t('party.no_custom_tabletop')}
             />
           ) : (
             grid(
@@ -122,12 +119,12 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
                 <PartyPickerCard
                   icon={<StyleIcon sx={{ fontSize: 36, color: 'piece.green' }} />}
                   title={g.name}
-                  desc={t('party.custom_game_info', '{{min}}-{{max}} Spieler • {{cards}} Karten', {
+                  desc={t('party.custom_game_info', {
                     min: g.minPlayers,
                     max: g.maxPlayers,
                     cards: g.cardCount,
                   })}
-                  chip={t('party.party_ready', 'Party bereit')}
+                  chip={t('party.party_ready')}
                   onClick={pick('tabletop', g.id)}
                 />
               )),
@@ -136,7 +133,7 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>{t('common.cancel', 'Abbrechen')}</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
       </DialogActions>
     </Dialog>
   );

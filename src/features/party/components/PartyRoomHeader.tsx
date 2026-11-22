@@ -13,7 +13,7 @@ import type { PartyLobbyController } from '../hooks/usePartyLobbyController';
 export const PartyRoomHeader: React.FC<{ lobby: PartyLobbyController }> = ({ lobby }) => {
   const { t } = useTranslation();
   // The page title lives in the global header, not in the content (DESIGN.md §6).
-  usePageTitle(t('party.lobbyTitle', 'Party-Lobby'));
+  usePageTitle(t('party.lobbyTitle'));
   const { roomId, setShowQr, setEditRoomOpen, setCustomRoomInput, amIHost, leaveParty } = lobby;
   return (
     <>
@@ -28,15 +28,15 @@ export const PartyRoomHeader: React.FC<{ lobby: PartyLobbyController }> = ({ lob
       >
         <Box display="flex" alignItems="center" gap={0.8} flexWrap="wrap">
           <Chip
-            label={`${t('party.room', 'Raum')}: ${roomId}`}
+            label={`${t('party.room')}: ${roomId}`}
             color="primary"
             variant="filled"
             sx={{ fontWeight: 'bold', fontSize: '0.95rem' }}
           />
           {amIHost && (
-            <Tooltip title={t('party.editRoomCode', 'Eigenen Raum-Code festlegen')}>
+            <Tooltip title={t('party.editRoomCode')}>
               <IconButton
-                aria-label={t('party.editRoomCode', 'Eigenen Raum-Code festlegen')}
+                aria-label={t('party.editRoomCode')}
                 sx={{ width: 44, height: 44 }}
                 onClick={() => {
                   setCustomRoomInput(roomId);
@@ -47,7 +47,7 @@ export const PartyRoomHeader: React.FC<{ lobby: PartyLobbyController }> = ({ lob
               </IconButton>
             </Tooltip>
           )}
-          <Tooltip title={t('party.shareLobbyTooltip', 'Lobby teilen / QR-Code anzeigen')}>
+          <Tooltip title={t('party.shareLobbyTooltip')}>
             <Button
               size="small"
               variant="outlined"
@@ -56,15 +56,15 @@ export const PartyRoomHeader: React.FC<{ lobby: PartyLobbyController }> = ({ lob
               onClick={() => setShowQr(true)}
               sx={{ fontWeight: 700, borderRadius: 2, minHeight: 44 }}
             >
-              {t('party.shareLobby', 'Lobby teilen')}
+              {t('party.shareLobby')}
             </Button>
           </Tooltip>
           {!amIHost && (
-            <Tooltip title={t('party.leave', 'Party verlassen')}>
+            <Tooltip title={t('party.leave')}>
               <IconButton
                 color="error"
                 onClick={leaveParty}
-                aria-label={t('party.leave', 'Party verlassen')}
+                aria-label={t('party.leave')}
                 sx={{ width: 44, height: 44 }}
               >
                 <LogoutRoundedIcon fontSize="small" />

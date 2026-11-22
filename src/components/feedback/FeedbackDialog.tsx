@@ -60,19 +60,16 @@ export const FeedbackDialog: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-              {t('settings.feedback_title', 'Feedback & Bug Report')}
+              {t('settings.feedback_title')}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-              {t(
-                'settings.feedback_desc',
-                'Creates a GitHub issue via your configured connection.',
-              )}
+              {t('settings.feedback_desc')}
             </Typography>
           </Box>
           <IconButton
             onClick={handleClose}
             size="small"
-            aria-label={t('common.close', 'Close')}
+            aria-label={t('common.close')}
             sx={{ color: 'text.secondary', '&:hover': { color: 'text.primary' } }}
           >
             <CloseIcon />
@@ -92,16 +89,13 @@ export const FeedbackDialog: React.FC = () => {
             }}
           >
             <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-              {t('settings.github_missing_title', 'GitHub-Verbindung erforderlich')}
+              {t('settings.github_missing_title')}
             </Typography>
             <Typography
               variant="caption"
               sx={{ display: 'block', mb: 1.5, color: 'text.secondary' }}
             >
-              {t(
-                'settings.github_missing_desc',
-                'Um Feedback oder Fehlermeldungen direkt als Issue zu senden, hinterlege bitte zuerst ein Personal Access Token (PAT) in den Einstellungen.',
-              )}
+              {t('settings.github_missing_desc')}
             </Typography>
             <Button
               variant="contained"
@@ -114,7 +108,7 @@ export const FeedbackDialog: React.FC = () => {
               }}
               sx={{ textTransform: 'none', fontWeight: 600 }}
             >
-              {t('settings.open_settings', 'Zu den Einstellungen')}
+              {t('settings.open_settings')}
             </Button>
           </Alert>
         )}

@@ -52,24 +52,21 @@ export const ServerConnection: React.FC = () => {
   return (
     <Paper sx={settingsCardSx}>
       <Typography variant="h6" gutterBottom>
-        {t('server.title', 'Nexumia Companion Server Verbindung')}
+        {t('server.title')}
       </Typography>
       <Typography variant="body2" color="text.secondary" paragraph>
-        {t(
-          'server.desc',
-          'Verbinde dich mit dem Nexumia Companion Server, um auf deine Song-Bibliothek zuzugreifen, Audio zu streamen, Songs herunterzuladen und KI-Gesangstrennung zu nutzen.',
-        )}
+        {t('server.desc')}
       </Typography>
 
       <FormControlLabel
         control={<Switch checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />}
-        label={t('server.enable', 'Server-Verbindung aktivieren')}
+        label={t('server.enable')}
       />
 
       {enabled && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
           <TextField
-            label={t('server.url', 'Server URL')}
+            label={t('server.url')}
             variant="outlined"
             fullWidth
             value={url}
@@ -78,12 +75,12 @@ export const ServerConnection: React.FC = () => {
             size="small"
           />
           <TextField
-            label={t('server.token', 'Security Token')}
+            label={t('server.token')}
             variant="outlined"
             fullWidth
             value={token}
             onChange={(e) => setToken(e.target.value)}
-            placeholder={t('server.token_placeholder', 'Copy from Server Console/Screen')}
+            placeholder={t('server.token_placeholder')}
             size="small"
             type={showToken ? 'text' : 'password'}
             slotProps={{
@@ -95,9 +92,7 @@ export const ServerConnection: React.FC = () => {
                       edge="end"
                       size="small"
                       aria-label={
-                        showToken
-                          ? t('common.a11y.hide_password', 'Hide')
-                          : t('common.a11y.show_password', 'Show')
+                        showToken ? t('common.a11y.hide_password') : t('common.a11y.show_password')
                       }
                     >
                       {showToken ? (
@@ -126,7 +121,7 @@ export const ServerConnection: React.FC = () => {
               disabled={status === 'checking'}
               sx={{ borderRadius: 999, px: 3, py: 1 }}
             >
-              {t('server.test', 'Test Connection')}
+              {t('server.test')}
             </Button>
 
             <Button
@@ -136,7 +131,7 @@ export const ServerConnection: React.FC = () => {
               onClick={() => setSetupDialogOpen(true)}
               sx={{ borderRadius: 999, px: 2.5 }}
             >
-              {t('server.setup_button', 'Server einrichten oder anpassen')}
+              {t('server.setup_button')}
             </Button>
 
             {token && (
@@ -147,7 +142,7 @@ export const ServerConnection: React.FC = () => {
                 onClick={copyConnectionUrl}
                 sx={{ borderRadius: 999 }}
               >
-                {t('server.copy_link', 'Copy Connection Link')}
+                {t('server.copy_link')}
               </Button>
             )}
 

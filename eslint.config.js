@@ -34,6 +34,22 @@ export default defineConfig([
       'react-hooks/purity': 'warn',
       'react-hooks/refs': 'warn',
       'no-alert': 'error',
+      // Strings live in the locale files, not as t() defaults (ADR-0011 §7, phase 6.2).
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "CallExpression[callee.name='t'][arguments.0.type='Literal'][arguments.1.type='Literal'], CallExpression[callee.name='t'][arguments.0.type='Literal'][arguments.1.type='TemplateLiteral']",
+          message:
+            'No default text in t(): add the key to both de and en (public/locales or the game bundle src/games/<id>/i18n).',
+        },
+        {
+          selector:
+            "CallExpression[callee.name='t'][arguments.0.type='Literal'] > ObjectExpression > Property[key.name='defaultValue']",
+          message:
+            'No defaultValue in t(): add the key to both de and en (public/locales or the game bundle src/games/<id>/i18n).',
+        },
+      ],
       'no-restricted-globals': [
         'error',
         {

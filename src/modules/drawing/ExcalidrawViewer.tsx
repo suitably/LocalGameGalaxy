@@ -173,7 +173,7 @@ export const ExcalidrawViewer: React.FC<ExcalidrawViewerProps> = ({
             '&:hover': { bgcolor: 'rgba(0,0,0,0.8)' },
           }}
         >
-          {t('guessart.skipAnimation', 'Animation überspringen')}
+          {t('guessart.skipAnimation')}
         </Button>
       )}
 

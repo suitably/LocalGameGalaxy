@@ -260,7 +260,26 @@
     "qrLinkTooLong": "This link is too long for a QR code. Please copy or share it instead.",
     "playHereInsteadShort": "Play on this device",
     "hostDeviceBadge": "Your device",
-    "shareMessage": "Hi {{name}}! Here is your player link: {{link}}"
+    "shareMessage": "Hi {{name}}! Here is your player link: {{link}}",
+    "active": "Active",
+    "inactive": "Inactive",
+    "send": "Send",
+    "submit": "Submit",
+    "info": "Info",
+    "edit": "Edit",
+    "added": "added",
+    "deleted": "deleted",
+    "copied_to_clipboard": "Copied to clipboard!",
+    "play": "Play",
+    "finish_turn": "Finish turn",
+    "done": "Done",
+    "target": "Target",
+    "editSession": "Edit session",
+    "title": "Title",
+    "playerNames": "Player names",
+    "player": "Player",
+    "localPlayer": "This device",
+    "remotePlayer": "Remote device"
   },
   "settings": {
     "game_sheet_title": "{{game}} · Settings",
@@ -630,6 +649,13 @@
       "unreachable": "The server at {{url}} cannot be reached. Make sure it is running.",
       "https_hint": "If it still fails, open the server URL once in a new tab (accept the certificate warning if it uses a self-signed certificate), then try again.",
       "mixed_content": "This https page cannot reach an http server on your network (mixed content). Use the server's https link (Cloudflare tunnel) or open the app via http."
+    },
+    "error_unauthorized": "Unauthorized: Invalid or missing token.",
+    "error_timeout": "Connection timed out (5s).",
+    "error_failed": "Connection failed. Check URL or CORS.",
+    "setup_dialog_title": "Set up & customise server",
+    "connection": {
+      "status_disconnected": "Not connected"
     }
   },
   "connection": {

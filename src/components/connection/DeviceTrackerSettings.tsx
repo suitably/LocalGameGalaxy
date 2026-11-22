@@ -37,7 +37,7 @@ export const DeviceTrackerSettings: React.FC<DeviceTrackerSettingsProps> = ({
       if (item.type === 'backend') {
         return {
           ...item,
-          chipLabel: t('signaling.type_backend', 'Self-Hosted'),
+          chipLabel: t('signaling.type_backend'),
           chipColor: 'success' as const,
           switchColor: 'success' as const,
           removable: false,
@@ -46,7 +46,7 @@ export const DeviceTrackerSettings: React.FC<DeviceTrackerSettingsProps> = ({
       if (item.type === 'public') {
         return {
           ...item,
-          chipLabel: t('signaling.type_public', 'Free / Public'),
+          chipLabel: t('signaling.type_public'),
           chipColor: 'info' as const,
           switchColor: 'primary' as const,
           removable: false,
@@ -54,7 +54,7 @@ export const DeviceTrackerSettings: React.FC<DeviceTrackerSettingsProps> = ({
       }
       return {
         ...item,
-        chipLabel: t('signaling.type_custom', 'Custom'),
+        chipLabel: t('signaling.type_custom'),
         chipColor: 'secondary' as const,
         switchColor: 'secondary' as const,
         removable: true,
@@ -67,17 +67,14 @@ export const DeviceTrackerSettings: React.FC<DeviceTrackerSettingsProps> = ({
       items={items}
       showEmptyWarning={activeTrackerUrls.length === 0}
       labels={{
-        title: t('signaling.title', 'Signaling Servers (Trackers)'),
-        restoreDefaults: t('signaling.restore_defaults', 'Restore Defaults'),
-        enable: t('signaling.toggle_enable', 'Enable server'),
-        disable: t('signaling.toggle_disable', 'Disable server'),
-        remove: t('signaling.remove_tooltip', 'Remove tracker'),
-        placeholder: t('signaling.placeholder', 'wss://tracker.example.com'),
-        add: t('signaling.add_button', 'Add'),
-        emptyWarning: t(
-          'signaling.no_trackers_warning',
-          'No active signaling servers configured. Connection to mobile devices will not be possible. Please enable at least one server.',
-        ),
+        title: t('signaling.title'),
+        restoreDefaults: t('signaling.restore_defaults'),
+        enable: t('signaling.toggle_enable'),
+        disable: t('signaling.toggle_disable'),
+        remove: t('signaling.remove_tooltip'),
+        placeholder: t('signaling.placeholder'),
+        add: t('signaling.add_button'),
+        emptyWarning: t('signaling.no_trackers_warning'),
       }}
       onToggle={(item) => {
         if (toggleTrackerActive) toggleTrackerActive(item.url, !item.enabled);

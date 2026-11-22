@@ -55,8 +55,8 @@ export const ServerDirectoryManager: React.FC = () => {
   return (
     <Paper sx={settingsCardSx}>
       <SettingsCardHeader
-        title={t('server.directories.title', 'Library Directories')}
-        description={t('server.directories.desc', 'Manage scanned server directories for songs.')}
+        title={t('server.directories.title')}
+        description={t('server.directories.desc')}
         action={
           <Button
             variant="contained"
@@ -64,7 +64,7 @@ export const ServerDirectoryManager: React.FC = () => {
             startIcon={<AddIcon />}
             onClick={() => setBrowserMode('library')}
           >
-            {t('server.directories.add_btn', 'Add Directory')}
+            {t('server.directories.add_btn')}
           </Button>
         }
       />
@@ -81,9 +81,7 @@ export const ServerDirectoryManager: React.FC = () => {
         <List dense sx={{ bgcolor: 'action.hover', borderRadius: 2, p: 0.5, mb: 3 }}>
           {directories.length === 0 ? (
             <ListItem>
-              <ListItemText
-                secondary={t('server.directories.empty', 'No library directories configured yet.')}
-              />
+              <ListItemText secondary={t('server.directories.empty')} />
             </ListItem>
           ) : (
             directories.map((dir) => (
@@ -94,7 +92,7 @@ export const ServerDirectoryManager: React.FC = () => {
                   primaryTypographyProps={{ fontFamily: 'monospace', fontSize: '0.875rem' }}
                 />
                 <ListItemSecondaryAction>
-                  <Tooltip title={t('server.directories.remove', 'Remove')}>
+                  <Tooltip title={t('server.directories.remove')}>
                     <IconButton
                       edge="end"
                       size="small"
@@ -127,17 +125,17 @@ export const ServerDirectoryManager: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <DownloadIcon color="action" fontSize="small" />
             <Typography variant="subtitle2">
-              {t('server.directories.download_dir_title', 'Download Directory')}
+              {t('server.directories.download_dir_title')}
             </Typography>
           </Box>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-            {t('server.directories.download_dir_desc', 'Folder for downloaded songs and stems.')}
+            {t('server.directories.download_dir_desc')}
           </Typography>
           <Typography
             variant="body2"
             sx={{ fontFamily: 'monospace', bgcolor: 'action.hover', p: 1, borderRadius: 2 }}
           >
-            {downloadDir || t('server.directories.empty', 'Not configured')}
+            {downloadDir || t('server.directories.empty')}
           </Typography>
         </Box>
         <Button
@@ -146,7 +144,7 @@ export const ServerDirectoryManager: React.FC = () => {
           startIcon={<EditIcon />}
           onClick={() => setBrowserMode('download')}
         >
-          {t('server.directories.change_download_dir', 'Change')}
+          {t('server.directories.change_download_dir')}
         </Button>
       </Box>
 
@@ -155,8 +153,8 @@ export const ServerDirectoryManager: React.FC = () => {
         initialPath={browserMode === 'download' ? downloadDir || undefined : undefined}
         title={
           browserMode === 'download'
-            ? t('server.directories.download_dir_title', 'Download Directory')
-            : t('server.directories.add_btn', 'Add Directory')
+            ? t('server.directories.download_dir_title')
+            : t('server.directories.add_btn')
         }
         onClose={() => setBrowserMode(null)}
         onSelect={(selectedPath) => {
@@ -170,10 +168,9 @@ export const ServerDirectoryManager: React.FC = () => {
 
       <ConfirmDialog
         open={Boolean(dirToDelete)}
-        title={t('server.directories.confirm_remove_title', 'Remove Directory')}
+        title={t('server.directories.confirm_remove_title')}
         message={t('server.directories.confirm_remove_message', {
           path: dirToDelete || '',
-          defaultValue: `Remove directory ${dirToDelete}?`,
         })}
         confirmColor="error"
         onConfirm={handleConfirmDelete}

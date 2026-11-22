@@ -34,13 +34,10 @@ export const SignalingSettingsCard: React.FC = () => {
           <HubIcon color="primary" sx={{ fontSize: 30 }} />
           <Box>
             <Typography variant="subtitle1" fontWeight={700}>
-              {t('settings.signaling_title', 'WebRTC Signaling Service (Plattform-Infrastruktur)')}
+              {t('settings.signaling_title')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {t(
-                'settings.signaling_desc',
-                'Koordiniert P2P-Verbindungen, TV-Modus und Smartphone-Mikrofone für alle Party-Spiele (Port 8000).',
-              )}
+              {t('settings.signaling_desc')}
             </Typography>
           </Box>
         </Box>
@@ -50,14 +47,11 @@ export const SignalingSettingsCard: React.FC = () => {
           <TextField
             size="small"
             fullWidth
-            label={t('settings.signaling_url_label', 'Signaling Server WebSocket URL')}
+            label={t('settings.signaling_url_label')}
             placeholder="ws://localhost:8000"
             value={customSignalingUrl}
             onChange={(e) => handleSignalingUrlChange(e.target.value)}
-            helperText={t(
-              'settings.signaling_url_hint',
-              'Leer lassen für automatische Port-8000-Ermittlung vom verbundenen Host.',
-            )}
+            helperText={t('settings.signaling_url_hint')}
           />
 
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
@@ -69,7 +63,7 @@ export const SignalingSettingsCard: React.FC = () => {
               startIcon={<SyncRoundedIcon />}
               sx={{ textTransform: 'none', fontWeight: 600 }}
             >
-              {t('settings.signaling_test', 'Status prüfen')}
+              {t('settings.signaling_test')}
             </Button>
 
             {healthStatus === 'online' && (

@@ -140,21 +140,15 @@ export const AudioInputSettings: React.FC = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
         <Button variant="outlined" size="small" onClick={loadDevices}>
-          {t('settings.audio.refresh', 'Refresh devices')}
+          {t('settings.audio.refresh')}
         </Button>
       </Box>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-        {t(
-          'settings.audio.hint_enable',
-          'Enable the real microphones that may be used for singing. Keep webcams and unused inputs disabled.',
-        )}
+        {t('settings.audio.hint_enable')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        {t(
-          'settings.audio.hint_order',
-          'The first enabled microphone is assigned to player 1, the second to player 2, and so on.',
-        )}
+        {t('settings.audio.hint_order')}
       </Typography>
 
       <List sx={{ bgcolor: 'background.paper', borderRadius: 2 }}>
@@ -163,14 +157,11 @@ export const AudioInputSettings: React.FC = () => {
           const orderIndex = enabledMics.indexOf(d.deviceId);
           const isEditing = editingId === d.deviceId;
           const displayName =
-            customNames[d.deviceId] ||
-            d.label ||
-            t('settings.audio.unknown_device', 'Unknown audio device');
+            customNames[d.deviceId] || d.label || t('settings.audio.unknown_device');
 
-          let subtext = t('settings.audio.disabled', 'Disabled');
+          let subtext = t('settings.audio.disabled');
           if (isEnabled) {
             subtext = t('settings.audio.active', {
-              defaultValue: 'Active (assigned to local player {{n}})',
               n: orderIndex + 1,
             });
           }
@@ -189,10 +180,7 @@ export const AudioInputSettings: React.FC = () => {
                     }}
                     autoFocus
                   />
-                  <IconButton
-                    onClick={() => saveName(d.deviceId)}
-                    aria-label={t('common.save', 'Save')}
-                  >
+                  <IconButton onClick={() => saveName(d.deviceId)} aria-label={t('common.save')}>
                     <CheckIcon />
                   </IconButton>
                 </Box>
@@ -205,7 +193,7 @@ export const AudioInputSettings: React.FC = () => {
                   />
                   <IconButton
                     size="small"
-                    aria-label={t('settings.audio.rename_device', 'Rename device')}
+                    aria-label={t('settings.audio.rename_device')}
                     onClick={() => {
                       setEditingId(d.deviceId);
                       setEditValue(displayName);

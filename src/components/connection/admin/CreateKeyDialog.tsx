@@ -48,25 +48,25 @@ export const CreateKeyDialog: React.FC<Props> = ({ open, onClose, onCreate }) =>
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>{t('server.admin.create_title', 'Create API Key')}</DialogTitle>
+      <DialogTitle>{t('server.admin.create_title')}</DialogTitle>
       <DialogContent>
         <TextField
           autoFocus
           fullWidth
-          label={t('server.admin.key_name_label', "Key Name (e.g. friend's name)")}
+          label={t('server.admin.key_name_label')}
           value={name}
           onChange={(e) => setName(e.target.value)}
           sx={{ mt: 1, mb: 2 }}
         />
         <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
-          {t('server.admin.key_permissions', 'Permissions')}
+          {t('server.admin.key_permissions')}
         </Typography>
         <PermissionSwitches value={permissions} onChange={setPermissions} />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('common.cancel', 'Cancel')}</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
         <Button onClick={handleCreate} variant="contained" disabled={creating || !name.trim()}>
-          {t('server.admin.create', 'Create Key')}
+          {t('server.admin.create')}
         </Button>
       </DialogActions>
     </Dialog>

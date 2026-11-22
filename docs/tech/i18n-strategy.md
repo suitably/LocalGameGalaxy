@@ -74,7 +74,7 @@ function MyComponent() {
 
 1. Find where the surrounding component's strings live (§3).
 2. Add the key to **both** `en` and `de` in that place (`public/locales/*/translation.json`, or the game's `i18n/de.json` and `i18n/en.json`).
-3. Use it via `t('namespace.key')`. A default value as second argument (`t('connection.party_id', 'Party ID')`) is used in a few places as fallback; it does not replace the entries.
+3. Use it via `t('namespace.key')`. No default text: `t('key', 'text')` and `defaultValue` fail ESLint (`no-restricted-syntax`); component tests that need real strings use `localeT(lang)` (`src/lib/i18n/localeT.ts`).
 4. Run `npm run check:hygiene` for the parity check.
 
 New game: the hub renders `games.<id>.title` / `.description` before any game bundle is initialised, so these two keys always go into `public/locales/*/translation.json`, never into the game's bundle.

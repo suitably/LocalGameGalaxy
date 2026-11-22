@@ -1,7 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { beforeAll, describe, it, expect, vi } from 'vitest';
+import i18n from '../../i18n';
+import { localeT } from '../i18n/localeT';
 import { buildGameDeepLink, buildTurnNotificationMessage } from './notificationMessageBuilder';
 
 describe('notificationMessageBuilder', () => {
+  beforeAll(() => {
+    vi.spyOn(i18n, 't').mockImplementation(localeT('de') as unknown as typeof i18n.t);
+  });
+
   describe('buildGameDeepLink', () => {
     it('generates a clean hash link with gameId, player and relay', () => {
       const link = buildGameDeepLink({
@@ -12,7 +18,9 @@ describe('notificationMessageBuilder', () => {
         origin: 'https://app.localgamegalaxy.com',
       });
 
-      expect(link).toBe('https://app.localgamegalaxy.com#/games/guessart?gameId=game-123&player=player-abc&gameRelay=https%3A%2F%2Frelay.example.com');
+      expect(link).toBe(
+        'https://app.localgamegalaxy.com#/games/guessart?gameId=game-123&player=player-abc&gameRelay=https%3A%2F%2Frelay.example.com',
+      );
     });
 
     it('generates minimal link when only gameId is provided', () => {
@@ -111,7 +119,9 @@ describe('notificationMessageBuilder', () => {
       expect(msg.title).toBe('Geschichtenschreiber: Du bist dran!');
       expect(msg.body).toBe('Charlie hat den Abschnitt beendet. Du bist jetzt am Zug!');
       expect(msg.tag).toBe('storyteller-story-123');
-      expect(msg.url).toBe('https://example.com#/games/storyteller?gameId=story-123&player=player-dave');
+      expect(msg.url).toBe(
+        'https://example.com#/games/storyteller?gameId=story-123&player=player-dave',
+      );
       expect(msg.action).toBe('turn');
     });
 

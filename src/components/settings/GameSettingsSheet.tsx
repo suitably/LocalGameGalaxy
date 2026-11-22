@@ -61,7 +61,7 @@ export const GameSettingsSheet: React.FC<GameSettingsSheetProps> = ({
         <Typography variant="h6" component="h2" noWrap sx={{ flexGrow: 1, fontWeight: 700 }}>
           {t('settings.game_sheet_title', { game: t(titleKey) })}
         </Typography>
-        <IconButton aria-label={t('common.close', 'Close')} onClick={onClose} edge="end">
+        <IconButton aria-label={t('common.close')} onClick={onClose} edge="end">
           <CloseIcon />
         </IconButton>
       </Box>
@@ -70,7 +70,7 @@ export const GameSettingsSheet: React.FC<GameSettingsSheetProps> = ({
       </Box>
       <Box sx={{ borderTop: 1, borderColor: 'divider', p: 1.5 }}>
         <Button onClick={openAppSettings} fullWidth>
-          {t('settings.app_settings_link', 'App settings')}
+          {t('settings.app_settings_link')}
         </Button>
       </Box>
     </Box>

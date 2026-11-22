@@ -63,13 +63,10 @@ export const PWAInstallBanner: React.FC = () => {
           </Box>
           <Box>
             <Typography variant="subtitle1" fontWeight="bold" sx={{ lineHeight: 1.2 }}>
-              {t('app.install_pwa', 'Install App')}
+              {t('app.install_pwa')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              {t(
-                'app.install_pwa_hub_banner',
-                'Install the app on your smartphone for a native, full-screen gaming experience without the browser search bar!',
-              )}
+              {t('app.install_pwa_hub_banner')}
             </Typography>
           </Box>
         </Box>
@@ -96,13 +93,13 @@ export const PWAInstallBanner: React.FC = () => {
               px: 2.5,
             }}
           >
-            {t('app.install_pwa_short', 'Install')}
+            {t('app.install_pwa_short')}
           </Button>
 
           <IconButton
             size="small"
             onClick={handleDismiss}
-            aria-label={t('common.close', 'Close')}
+            aria-label={t('common.close')}
             sx={{
               position: { xs: 'absolute', sm: 'static' },
               top: { xs: 8, sm: 'auto' },

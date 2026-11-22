@@ -10,11 +10,8 @@ export const AudioSettings: React.FC = () => {
   return (
     <SettingsSection
       id="audio-input"
-      title={t('settings.audio.title', 'Audio input')}
-      description={t(
-        'settings.audio.desc',
-        'Microphones that games may use, for example for singing.',
-      )}
+      title={t('settings.audio.title')}
+      description={t('settings.audio.desc')}
       icon={<MicIcon color="primary" />}
     >
       <AudioInputSettings />

@@ -54,7 +54,7 @@ export const PartyActiveGameBanner: React.FC<{ lobby: PartyLobbyController }> = 
             <Box>
               <Box display="flex" alignItems="center" gap={1}>
                 <Chip
-                  label={t('party.liveGameActive', 'Live Spiel läuft')}
+                  label={t('party.liveGameActive')}
                   color="error"
                   size="small"
                   sx={{ fontWeight: 800, height: 22 }}
@@ -64,10 +64,7 @@ export const PartyActiveGameBanner: React.FC<{ lobby: PartyLobbyController }> = 
                 </Typography>
               </Box>
               <Typography variant="body2" color="text.secondary">
-                {t(
-                  'party.rejoinGameDesc',
-                  'Das Spiel läuft weiter, während du in der Lobby bist. Name und Zuschauen gelten ab dem nächsten Spiel.',
-                )}
+                {t('party.rejoinGameDesc')}
               </Typography>
             </Box>
           </Box>
@@ -80,7 +77,7 @@ export const PartyActiveGameBanner: React.FC<{ lobby: PartyLobbyController }> = 
                 onClick={handleReturnToLobby}
                 sx={{ fontWeight: 700, borderRadius: 2 }}
               >
-                {t('party.endGameForEveryone', 'Spiel beenden')}
+                {t('party.endGameForEveryone')}
               </Button>
             )}
             <Button
@@ -102,7 +99,7 @@ export const PartyActiveGameBanner: React.FC<{ lobby: PartyLobbyController }> = 
                 minHeight: CONTROLLER_TARGET,
               }}
             >
-              {t('party.rejoinGame', 'Spiel beitreten / fortsetzen')}
+              {t('party.rejoinGame')}
             </Button>
           </Box>
         </Card>

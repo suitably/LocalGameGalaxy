@@ -25,13 +25,10 @@ export const CompanionPluginsSection: React.FC<CompanionPluginsSectionProps> = (
         <ExtensionIcon color="primary" sx={{ fontSize: 30 }} />
         <Box>
           <Typography variant="subtitle1" fontWeight={700}>
-            {t('settings.companion_plugins_title', 'Game Companion Services (Plugins)')}
+            {t('settings.companion_plugins_title')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {t(
-              'settings.companion_plugins_desc',
-              'Optionale Server-Container für spieleigene Features wie KI-Audio, Asset-Streaming und Playlists.',
-            )}
+            {t('settings.companion_plugins_desc')}
           </Typography>
         </Box>
       </Box>
@@ -68,7 +65,7 @@ export const CompanionPluginsSection: React.FC<CompanionPluginsSectionProps> = (
                 <span>{plugin.name}</span>
                 {plugin.status === 'planned' && (
                   <Chip
-                    label={t('common.planned', 'Geplant')}
+                    label={t('common.planned')}
                     size="small"
                     sx={{ height: 20, fontSize: '0.75rem' }}
                   />

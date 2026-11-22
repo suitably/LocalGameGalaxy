@@ -59,26 +59,23 @@ export const NtfySettingsSection: React.FC = () => {
 
   const handleTestNtfy = useCallback(async () => {
     setTestStatus('testing');
-    setTestMsg(t('settings.ntfy_testing', 'Sende Test-Push via ntfy...'));
+    setTestMsg(t('settings.ntfy_testing'));
 
     const effectiveTopic = userTopic.trim() || storage.getUserNtfyTopic();
     const success = await pushClient.sendDirectNtfyNotification({
       gameId: 'test',
       ntfyTopic: effectiveTopic,
-      title: t('settings.ntfy_test_title', 'LocalGameGalaxy: ntfy Test!'),
-      body: t(
-        'settings.ntfy_test_body',
-        '🎉 Test erfolgreich! 100% Google-freie Benachrichtigungen funktionieren.',
-      ),
+      title: t('settings.ntfy_test_title'),
+      body: t('settings.ntfy_test_body'),
       url: window.location.href,
     });
 
     if (success) {
       setTestStatus('success');
-      setTestMsg(t('settings.ntfy_test_success', 'Gesendet! Prüfe deine ntfy-App.'));
+      setTestMsg(t('settings.ntfy_test_success'));
     } else {
       setTestStatus('error');
-      setTestMsg(t('settings.ntfy_test_error', 'Fehler beim Senden an ntfy. Server prüfen.'));
+      setTestMsg(t('settings.ntfy_test_error'));
     }
   }, [t, userTopic]);
 
@@ -89,12 +86,12 @@ export const NtfySettingsSection: React.FC = () => {
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <ShieldRoundedIcon color="success" fontSize="small" />
         <Typography variant="subtitle2" fontWeight={700}>
-          {t('settings.ntfy_title', 'Google-freie Benachrichtigungen (ntfy)')}
+          {t('settings.ntfy_title')}
         </Typography>
       </Box>
 
       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-        {t('settings.ntfy_desc', '100% Open-Source Push ohne Google Play Services oder FCM.')}
+        {t('settings.ntfy_desc')}
       </Typography>
 
       <TextField
@@ -103,7 +100,7 @@ export const NtfySettingsSection: React.FC = () => {
         value={serverUrl}
         onChange={handleServerChange}
         placeholder="https://ntfy.sh"
-        label={t('settings.ntfy_server_label', 'ntfy Server URL')}
+        label={t('settings.ntfy_server_label')}
       />
 
       <TextField
@@ -112,15 +109,12 @@ export const NtfySettingsSection: React.FC = () => {
         value={userTopic}
         onChange={handleTopicChange}
         placeholder="lgg-user-..."
-        label={t('settings.ntfy_topic_label', 'Persönliches ntfy Topic (für dieses Gerät)')}
-        helperText={t(
-          'settings.ntfy_topic_helper',
-          'Einmaliges, unerratbares Topic für dieses Gerät. Alle deine Spiele senden Züge automatisch an dieses Topic.',
-        )}
+        label={t('settings.ntfy_topic_label')}
+        helperText={t('settings.ntfy_topic_helper')}
         InputProps={{
           endAdornment: (
             <InputAdornment position="end">
-              <Tooltip title={t('settings.ntfy_regenerate_topic', 'Neues Topic generieren')}>
+              <Tooltip title={t('settings.ntfy_regenerate_topic')}>
                 <IconButton
                   size="small"
                   onClick={handleRegenerateTopic}
@@ -131,11 +125,7 @@ export const NtfySettingsSection: React.FC = () => {
                 </IconButton>
               </Tooltip>
               <Tooltip
-                title={
-                  copied
-                    ? t('settings.ntfy_topic_copied', 'Topic kopiert!')
-                    : t('settings.ntfy_copy_topic', 'Topic kopieren')
-                }
+                title={copied ? t('settings.ntfy_topic_copied') : t('settings.ntfy_copy_topic')}
               >
                 <IconButton size="small" onClick={handleCopyTopic} edge="end">
                   {copied ? (
@@ -159,7 +149,7 @@ export const NtfySettingsSection: React.FC = () => {
           startIcon={<SendRoundedIcon />}
           sx={{ textTransform: 'none', fontWeight: 600 }}
         >
-          {t('settings.ntfy_test_btn', 'Test an ntfy senden')}
+          {t('settings.ntfy_test_btn')}
         </Button>
 
         <Button
@@ -173,7 +163,7 @@ export const NtfySettingsSection: React.FC = () => {
           startIcon={<OpenInNewRoundedIcon />}
           sx={{ textTransform: 'none', fontWeight: 600 }}
         >
-          {t('settings.ntfy_subscribe_btn', 'In ntfy abonnieren')}
+          {t('settings.ntfy_subscribe_btn')}
         </Button>
 
         {testStatus === 'success' && (

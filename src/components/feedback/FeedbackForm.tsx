@@ -37,7 +37,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
       if (result.success) {
         setStatus({
           type: 'success',
-          message: t('settings.submit_success', 'Feedback successfully submitted!'),
+          message: t('settings.submit_success'),
           url: result.issueUrl,
         });
         setFeedbackTitle('');
@@ -45,7 +45,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
       } else {
         setStatus({
           type: 'error',
-          message: t('settings.submit_error', 'Failed to submit feedback: {{error}}', {
+          message: t('settings.submit_error', {
             error: result.error,
           }),
         });
@@ -54,7 +54,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
       const message = err instanceof Error ? err.message : 'Unknown error';
       setStatus({
         type: 'error',
-        message: t('settings.submit_error', 'Failed to submit feedback: {{error}}', {
+        message: t('settings.submit_error', {
           error: message,
         }),
       });
@@ -69,7 +69,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
     <form onSubmit={handleSubmit}>
       <TextField
         fullWidth
-        label={t('settings.issue_title', 'Title')}
+        label={t('settings.issue_title')}
         value={feedbackTitle}
         onChange={(e) => setFeedbackTitle(e.target.value)}
         disabled={disabled || submitting}
@@ -80,7 +80,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
       />
       <TextField
         fullWidth
-        label={t('settings.issue_body', 'Description')}
+        label={t('settings.issue_body')}
         value={feedbackBody}
         onChange={(e) => setFeedbackBody(e.target.value)}
         disabled={disabled || submitting}
@@ -121,7 +121,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
                   '&:hover': { borderColor: 'text.primary' },
                 }}
               >
-                {t('settings.view_issue', 'View on GitHub')}
+                {t('settings.view_issue')}
               </Button>
             )}
           </Box>
@@ -139,7 +139,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
               color: 'text.secondary',
             }}
           >
-            {t('common.close', 'Close')}
+            {t('common.close')}
           </Button>
         )}
         <Button
@@ -150,7 +150,7 @@ export const FeedbackForm: React.FC<FeedbackFormProps> = ({
           disabled={isSubmitDisabled}
           startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : null}
         >
-          {submitting ? t('settings.submitting', 'Submitting...') : t('settings.submit', 'Submit')}
+          {submitting ? t('settings.submitting') : t('settings.submit')}
         </Button>
       </Box>
     </form>

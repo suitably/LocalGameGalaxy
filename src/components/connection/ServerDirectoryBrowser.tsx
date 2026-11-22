@@ -59,10 +59,7 @@ export const ServerDirectoryBrowser: React.FC<ServerDirectoryBrowserProps> = ({
         setCurrentPath(data.current || targetPath || '');
         setDirs(Array.isArray(data.dirs) ? data.dirs : []);
       } catch (err: unknown) {
-        const msg =
-          err instanceof Error
-            ? err.message
-            : t('server.browser.error', 'Could not load directory contents.');
+        const msg = err instanceof Error ? err.message : t('server.browser.error');
         setError(msg);
       } finally {
         setLoading(false);
@@ -95,15 +92,9 @@ export const ServerDirectoryBrowser: React.FC<ServerDirectoryBrowserProps> = ({
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <FolderOpenIcon color="primary" />
-          <Typography variant="h6">
-            {title || t('server.browser.title', 'Select Server Directory')}
-          </Typography>
+          <Typography variant="h6">{title || t('server.browser.title')}</Typography>
         </Box>
-        <IconButton
-          size="small"
-          onClick={onClose}
-          aria-label={t('server.browser.cancel', 'Cancel')}
-        >
+        <IconButton size="small" onClick={onClose} aria-label={t('server.browser.cancel')}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -121,7 +112,7 @@ export const ServerDirectoryBrowser: React.FC<ServerDirectoryBrowserProps> = ({
           }}
         >
           <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'text.secondary' }}>
-            {t('server.browser.current_path', 'Current Path')}:
+            {t('server.browser.current_path')}:
           </Typography>
           <Typography
             variant="body2"
@@ -144,7 +135,7 @@ export const ServerDirectoryBrowser: React.FC<ServerDirectoryBrowserProps> = ({
                   <ListItemIcon sx={{ minWidth: 36 }}>
                     <ArrowUpwardIcon color="secondary" fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText primary={t('server.browser.up', 'Parent Directory')} />
+                  <ListItemText primary={t('server.browser.up')} />
                 </ListItemButton>
               ))}
             {dirs
@@ -163,7 +154,7 @@ export const ServerDirectoryBrowser: React.FC<ServerDirectoryBrowserProps> = ({
                 color="text.secondary"
                 sx={{ py: 3, textAlign: 'center' }}
               >
-                {t('server.browser.empty_folder', 'No subdirectories found in this folder.')}
+                {t('server.browser.empty_folder')}
               </Typography>
             )}
           </List>
@@ -172,10 +163,10 @@ export const ServerDirectoryBrowser: React.FC<ServerDirectoryBrowserProps> = ({
 
       <DialogActions sx={{ px: 3, py: 2, justifyContent: 'space-between' }}>
         <Button onClick={onClose} color="inherit">
-          {t('server.browser.cancel', 'Cancel')}
+          {t('server.browser.cancel')}
         </Button>
         <Button onClick={handleConfirm} variant="contained" disabled={!currentPath || loading}>
-          {t('server.browser.select_current', 'Select This Directory')}
+          {t('server.browser.select_current')}
         </Button>
       </DialogActions>
     </Dialog>

@@ -59,7 +59,7 @@ export const SharePlayerRow: React.FC<SharePlayerRowProps> = ({
               size="small"
               variant="outlined"
               color="success"
-              label={t('common.hostDeviceBadge', 'Dein Gerät')}
+              label={t('common.hostDeviceBadge')}
               sx={{ height: 20, fontSize: '0.75rem', fontWeight: 700 }}
             />
           ) : (
@@ -91,23 +91,18 @@ export const SharePlayerRow: React.FC<SharePlayerRowProps> = ({
                   style={{ maxWidth: '100%', height: 'auto' }}
                   title={t('common.scanQrToPlayAs', {
                     name: player.name,
-                    defaultValue: `Scanne diesen Code, um als ${player.name} mitzuspielen!`,
                   })}
                 />
               </Paper>
               <Typography variant="caption" color="text.secondary" textAlign="center">
                 {t('common.scanQrToPlayAs', {
                   name: player.name,
-                  defaultValue: `Scanne diesen Code, um als ${player.name} mitzuspielen!`,
                 })}
               </Typography>
             </Box>
           ) : (
             <Alert severity="warning" variant="outlined">
-              {t(
-                'common.qrLinkTooLong',
-                'Dieser Link ist zu lang für einen QR-Code. Bitte kopiere oder teile ihn.',
-              )}
+              {t('common.qrLinkTooLong')}
             </Alert>
           )}
         </Collapse>
@@ -127,7 +122,7 @@ export const SharePlayerRow: React.FC<SharePlayerRowProps> = ({
             color: 'text.secondary',
           }}
         >
-          {t('common.playHereInsteadShort', 'Auf diesem Gerät spielen')}
+          {t('common.playHereInsteadShort')}
         </Button>
       )}
     </Paper>

@@ -26,7 +26,7 @@ export const InvitePlayersButton: React.FC<InvitePlayersButtonProps> = ({
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const label = t('party.invite_players', 'Mitspieler einladen');
+  const label = t('party.invite_players');
   const open = () =>
     navigate(
       buildInviteRoute(game, { gameId, roomId: universalPartyManager.getRoomState()?.roomId }),

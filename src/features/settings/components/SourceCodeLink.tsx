@@ -13,11 +13,8 @@ export const SourceCodeLink: React.FC = () => {
   return (
     <SettingsSection
       id="source-code"
-      title={t('settings.source_title', 'Source code')}
-      description={t(
-        'settings.source_desc',
-        'Nexumia is free software under the GNU AGPL v3.0 or later. Get the source code on GitHub.',
-      )}
+      title={t('settings.source_title')}
+      description={t('settings.source_desc')}
       icon={<CodeRoundedIcon color="primary" />}
     >
       <Button
@@ -27,7 +24,7 @@ export const SourceCodeLink: React.FC = () => {
         target="_blank"
         rel="noopener"
       >
-        {t('settings.source_open', 'Source code')}
+        {t('settings.source_open')}
       </Button>
     </SettingsSection>
   );

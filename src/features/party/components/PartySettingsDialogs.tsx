@@ -59,9 +59,9 @@ const SingleFieldDialog: React.FC<SingleFieldDialogProps> = ({
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('common.cancel', 'Abbrechen')}</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
         <Button onClick={onSave} variant="contained" disabled={!value.trim()}>
-          {t('common.save', 'Speichern')}
+          {t('common.save')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -74,12 +74,9 @@ export const EditPlayerNameDialog: React.FC<EditPlayerNameDialogProps> = (props)
   return (
     <SingleFieldDialog
       {...props}
-      title={t('party.editNameTitle', 'Deinen Namen ändern')}
-      description={t(
-        'party.editNameDesc',
-        'Passe deinen Spielernamen für die Party-Lobby und alle Minispiele an.',
-      )}
-      label={t('party.nameInputLabel', 'Dein Name')}
+      title={t('party.editNameTitle')}
+      description={t('party.editNameDesc')}
+      label={t('party.nameInputLabel')}
       maxLength={20}
     />
   );
@@ -93,12 +90,9 @@ export const EditRoomCodeDialog: React.FC<EditRoomCodeDialogProps> = (props) => 
   return (
     <SingleFieldDialog
       {...props}
-      title={t('party.customRoomTitle', 'Raum-Code anpassen')}
-      description={t(
-        'party.customRoomDesc',
-        'Verwende einen leicht merkbaren Code (z.B. SPIELABEND oder ALEX), damit deine Freunde immer denselben Link nutzen können.',
-      )}
-      label={t('party.roomCodeLabel', 'Raum-Code')}
+      title={t('party.customRoomTitle')}
+      description={t('party.customRoomDesc')}
+      label={t('party.roomCodeLabel')}
       maxLength={16}
       transform={(v) => v.toUpperCase()}
     />

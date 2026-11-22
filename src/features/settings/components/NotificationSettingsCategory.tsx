@@ -15,13 +15,10 @@ export const NotificationSettingsCategory: React.FC = () => {
         <NotificationsActiveIcon color="primary" sx={{ fontSize: 32 }} />
         <Box>
           <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-            {t('settings.notifications_title', 'Benachrichtigungen & Push-Relay')}
+            {t('settings.notifications_title')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {t(
-              'settings.notifications_desc',
-              'Globale Push-Benachrichtigungen bei Rundenwechseln, Spielzügen und Multiplayer-Lobbys über Web Push oder ntfy.',
-            )}
+            {t('settings.notifications_desc')}
           </Typography>
         </Box>
       </Box>

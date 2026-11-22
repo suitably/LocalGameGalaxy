@@ -55,19 +55,13 @@ npx wrangler deploy`;
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CloudQueueRoundedIcon color="primary" fontSize="small" />
             <Typography variant="body2" fontWeight={600}>
-              {t(
-                'settings.relay_worker_guide_title',
-                'Eigenen Cloudflare Worker aufsetzen (24/7 kostenlos)',
-              )}
+              {t('settings.relay_worker_guide_title')}
             </Typography>
           </Box>
         </AccordionSummary>
         <AccordionDetails sx={{ pt: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            {t(
-              'settings.relay_worker_guide_desc',
-              'Der Cloudflare Worker läuft rund um die Uhr kostenlos in der Cloud und unterstützt sowohl Web-Push als auch Google-freies ntfy.',
-            )}
+            {t('settings.relay_worker_guide_desc')}
           </Typography>
 
           <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -81,25 +75,19 @@ npx wrangler deploy`;
               startIcon={<LaunchRoundedIcon />}
               sx={{ textTransform: 'none', fontWeight: 700 }}
             >
-              {t('settings.relay_1click_deploy', '1-Klick Deploy auf Cloudflare')}
+              {t('settings.relay_1click_deploy')}
             </Button>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              {t(
-                'settings.relay_1click_deploy_note',
-                'Erfordert ein Cloudflare- und ein GitHub-Konto (Cloudflare forkt das Repository in dein GitHub-Profil).',
-              )}
+              {t('settings.relay_1click_deploy_note')}
             </Typography>
           </Box>
 
           <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
-            {t(
-              'settings.relay_dashboard_note',
-              "Ohne GitHub: Du kannst auf dash.cloudflare.com einfach einen Worker erstellen ('Create Worker' ➔ 'Quick Edit') und den Code aus server/cloudflare-push-relay hineinkopieren. Kein Git nötig.",
-            )}
+            {t('settings.relay_dashboard_note')}
           </Typography>
 
           <Typography variant="caption" sx={{ color: 'text.secondary', mt: 1 }}>
-            {t('settings.relay_manual_title', 'Alternative: Manuelles CLI-Deployment im Terminal:')}
+            {t('settings.relay_manual_title')}
           </Typography>
           <Box
             component="pre"
@@ -122,9 +110,7 @@ npx wrangler deploy`;
             onClick={handleCopyCommands}
             sx={{ textTransform: 'none', alignSelf: 'flex-start' }}
           >
-            {copiedCommands
-              ? t('settings.relay_worker_copied', 'Befehle kopiert!')
-              : t('settings.relay_worker_copy', 'Befehle kopieren')}
+            {copiedCommands ? t('settings.relay_worker_copied') : t('settings.relay_worker_copy')}
           </Button>
         </AccordionDetails>
       </Accordion>

@@ -80,10 +80,7 @@ export const ServerPreferences: React.FC = () => {
       setSavedNotice(true);
       setTimeout(() => setSavedNotice(false), 3000);
     } catch (err: unknown) {
-      const msg =
-        err instanceof Error
-          ? err.message
-          : t('server.preferences.error_save', 'Failed to save preferences');
+      const msg = err instanceof Error ? err.message : t('server.preferences.error_save');
       setError(msg);
     } finally {
       setSaving(false);
@@ -107,17 +104,14 @@ export const ServerPreferences: React.FC = () => {
   return (
     <Paper sx={settingsCardSx}>
       <SettingsCardHeader
-        title={t('server.preferences.title', 'Server Preferences')}
-        description={t(
-          'server.preferences.desc',
-          'Configure download behaviors and audio processing options.',
-        )}
+        title={t('server.preferences.title')}
+        description={t('server.preferences.desc')}
         action={
           savedNotice && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, color: 'success.main' }}>
               <CheckCircleIcon fontSize="small" />
               <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
-                {t('server.preferences.saved', 'Saved')}
+                {t('server.preferences.saved')}
               </Typography>
             </Box>
           )
@@ -140,30 +134,19 @@ export const ServerPreferences: React.FC = () => {
           <Box>
             <FormControl fullWidth size="small" disabled={saving}>
               <InputLabel id="download-mode-label">
-                {t('server.preferences.download_mode', 'Video Download Mode')}
+                {t('server.preferences.download_mode')}
               </InputLabel>
               <Select
                 labelId="download-mode-label"
                 value={downloadMode}
-                label={t('server.preferences.download_mode', 'Video Download Mode')}
+                label={t('server.preferences.download_mode')}
                 onChange={(e) => handleModeChange(e.target.value as DownloadMode)}
               >
-                <MenuItem value="stream">
-                  {t('server.preferences.mode_stream', 'Stream video (Recommended)')}
-                </MenuItem>
-                <MenuItem value="mp4">
-                  {t('server.preferences.mode_mp4', 'Download video (MP4)')}
-                </MenuItem>
-                <MenuItem value="none">
-                  {t('server.preferences.mode_none', 'Audio only (No video)')}
-                </MenuItem>
+                <MenuItem value="stream">{t('server.preferences.mode_stream')}</MenuItem>
+                <MenuItem value="mp4">{t('server.preferences.mode_mp4')}</MenuItem>
+                <MenuItem value="none">{t('server.preferences.mode_none')}</MenuItem>
               </Select>
-              <FormHelperText>
-                {t(
-                  'server.preferences.download_mode_desc',
-                  'Determines whether videos are downloaded or streamed.',
-                )}
-              </FormHelperText>
+              <FormHelperText>{t('server.preferences.download_mode_desc')}</FormHelperText>
             </FormControl>
           </Box>
 
@@ -180,15 +163,12 @@ export const ServerPreferences: React.FC = () => {
               }
               label={
                 <Typography variant="subtitle2">
-                  {t('server.preferences.auto_separation', 'Automatic AI Vocal Separation')}
+                  {t('server.preferences.auto_separation')}
                 </Typography>
               }
             />
             <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mt: 0.5 }}>
-              {t(
-                'server.preferences.auto_separation_desc',
-                'Automatically isolate vocals and instrumental stems when downloading new songs.',
-              )}
+              {t('server.preferences.auto_separation_desc')}
             </Typography>
           </Box>
         </Box>

@@ -20,10 +20,10 @@ export const ServerSetupDialog: React.FC<ServerSetupDialogProps> = ({ open, onCl
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <AutoFixHighIcon color="primary" />
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            {t('server.setup.dialog_title', 'Server einrichten & anpassen')}
+            {t('server.setup_dialog_title')}
           </Typography>
         </Box>
-        <IconButton onClick={onClose} size="small" aria-label={t('common.close', 'Close')}>
+        <IconButton onClick={onClose} size="small" aria-label={t('common.close')}>
           <CloseIcon fontSize="small" />
         </IconButton>
       </DialogTitle>

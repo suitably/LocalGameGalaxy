@@ -49,7 +49,7 @@ export const SetupBinaryTab: React.FC<SetupBinaryTabProps> = ({ os, downloadConf
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
         <Typography variant="body2" color="text.secondary">
-          {t('server.setup.detected_os', { os: osName, defaultValue: `Detected OS: ${osName}` })}
+          {t('server.setup.detected_os', { os: osName })}
         </Typography>
         <Chip label={osName} color="primary" size="small" variant="outlined" />
       </Box>
@@ -63,13 +63,10 @@ export const SetupBinaryTab: React.FC<SetupBinaryTabProps> = ({ os, downloadConf
           sx={{ fontWeight: 'bold', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}
         >
           <DownloadIcon fontSize="small" color="primary" />
-          {t('server.setup.step_1_title', '1. Download Package & Config')}
+          {t('server.setup.step_1_title')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {t(
-            'server.setup.step_1_desc',
-            'Download the server archive for your OS and extract it. Save the downloaded config.json into the same folder.',
-          )}
+          {t('server.setup.step_1_desc')}
         </Typography>
         <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
           <Button
@@ -86,7 +83,6 @@ export const SetupBinaryTab: React.FC<SetupBinaryTabProps> = ({ os, downloadConf
           >
             {t('server.setup.download_binary', {
               os: osName,
-              defaultValue: `Download Server Package (${osName})`,
             })}
           </Button>
           {arm64Archive && (
@@ -111,7 +107,7 @@ export const SetupBinaryTab: React.FC<SetupBinaryTabProps> = ({ os, downloadConf
             onClick={downloadConfigFile}
             sx={{ borderRadius: 999, px: 2.5, textTransform: 'none' }}
           >
-            {t('server.setup.download_config', 'Download Pre-configured config.json')}
+            {t('server.setup.download_config')}
           </Button>
         </Box>
       </Paper>
@@ -125,10 +121,10 @@ export const SetupBinaryTab: React.FC<SetupBinaryTabProps> = ({ os, downloadConf
           sx={{ fontWeight: 'bold', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}
         >
           <PlayArrowIcon fontSize="small" color="success" />
-          {t('server.setup.step_2_title', '2. Run Launcher Script')}
+          {t('server.setup.step_2_title')}
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          {t('server.setup.step_2_desc', 'Double-click the startup launcher script:')}
+          {t('server.setup.step_2_desc')}
         </Typography>
         <Paper
           sx={{
@@ -149,13 +145,10 @@ export const SetupBinaryTab: React.FC<SetupBinaryTabProps> = ({ os, downloadConf
         sx={{ p: 2, bgcolor: (theme) => alpha(theme.palette.text.primary, 0.03), borderRadius: 2 }}
       >
         <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-          {t('server.setup.step_3_title', '3. Auto-Connect')}
+          {t('server.setup.step_3_title')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {t(
-            'server.setup.step_3_desc',
-            'Once the server console window opens, the app will automatically connect to localhost:3000.',
-          )}
+          {t('server.setup.step_3_desc')}
         </Typography>
       </Paper>
     </Box>

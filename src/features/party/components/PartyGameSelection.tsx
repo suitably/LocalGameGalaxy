@@ -16,15 +16,10 @@ export const PartyGameSelection: React.FC<{ lobby: PartyLobbyController }> = ({ 
       <Box>
         <Box mb={2}>
           <Typography variant="h6" fontWeight={800} color="primary.main">
-            {t('party.categoryAvailableGames', 'Verfügbare Spielmodi')}
+            {t('party.categoryAvailableGames')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {amIHost
-              ? t(
-                  'party.hostSelectPrompt',
-                  'Starte das nächste Spiel für alle verbundenen Smartphones:',
-                )
-              : t('party.guestWaitingPrompt', 'Der Host startet gleich das nächste Spiel...')}
+            {amIHost ? t('party.hostSelectPrompt') : t('party.guestWaitingPrompt')}
           </Typography>
         </Box>
 
@@ -58,20 +53,17 @@ export const PartyGameSelection: React.FC<{ lobby: PartyLobbyController }> = ({ 
             <Box>
               <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
                 <Typography variant="h6" fontWeight={800} color="primary.main">
-                  {t('party.gameSelectionTitle', 'Game selection')}
+                  {t('party.gameSelectionTitle')}
                 </Typography>
                 <Chip
-                  label={t('party.partyModeChip', 'Party mode')}
+                  label={t('party.partyModeChip')}
                   color="primary"
                   size="small"
                   sx={{ fontWeight: 'bold' }}
                 />
               </Box>
               <Typography variant="body2" color="text.secondary">
-                {t(
-                  'party.gameSelectionDesc',
-                  'Wähle zwischen Party-Klassikern (Gartic Phone, GuessArt), Würfelspielen und synchronisierten Tabletop-Karten- & Brettspielen.',
-                )}
+                {t('party.gameSelectionDesc')}
               </Typography>
             </Box>
 
@@ -89,14 +81,11 @@ export const PartyGameSelection: React.FC<{ lobby: PartyLobbyController }> = ({ 
                   boxShadow: (theme) => `0 4px 14px ${alpha(theme.palette.secondary.main, 0.35)}`,
                 }}
               >
-                {t('party.chooseAndStart', 'Spiel wählen & starten')}
+                {t('party.chooseAndStart')}
               </Button>
             ) : (
               <Chip
-                label={t(
-                  'party.guestWaitingPrompt',
-                  'Der Host wählt gerade das nächste Spiel aus...',
-                )}
+                label={t('party.guestWaitingPrompt')}
                 variant="outlined"
                 color="primary"
                 sx={{

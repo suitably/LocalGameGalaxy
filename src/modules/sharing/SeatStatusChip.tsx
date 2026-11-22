@@ -14,12 +14,12 @@ export const SeatStatusChip: React.FC<{ player: SeatedPlayer; isLocal: boolean }
   const status = isLocal ? 'local' : playerSeatStatus(player);
   const [label, color] =
     status === 'local'
-      ? [t('common.localPlayer', 'Dieses Gerät'), 'default' as const]
+      ? [t('common.localPlayer'), 'default' as const]
       : status === 'invited'
-        ? [t('common.seatInvited', 'Eingeladen – Link noch nicht geöffnet'), 'warning' as const]
+        ? [t('common.seatInvited'), 'warning' as const]
         : status === 'remote'
-          ? [t('common.seatJoined', 'Beigetreten'), 'success' as const]
-          : [t('common.remotePlayer', 'Remote Gerät'), 'primary' as const];
+          ? [t('common.seatJoined'), 'success' as const]
+          : [t('common.remotePlayer'), 'primary' as const];
   return (
     <Chip
       size="small"

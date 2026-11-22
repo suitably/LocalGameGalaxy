@@ -112,38 +112,23 @@ export const NotificationChannelChooser: React.FC<NotificationChannelChooserProp
     if (recommended === 'device') return deviceSelectable ? 'device' : null;
     return showNtfy ? 'ntfy' : null;
   });
-  const recommendedLabel = t('settings.notify_recommended', 'Empfohlen');
+  const recommendedLabel = t('settings.notify_recommended');
 
   const deviceText: Record<Exclude<DeviceChannelStatus, 'active'>, string> = {
-    available: t(
-      'settings.notify_device_desc',
-      'Nutzt die Benachrichtigungen deines Geräts (Apple, Google oder dein Browser). Dein Gerät fragt danach nach der Erlaubnis.',
-    ),
-    'install-first': t(
-      'guessart.pushIosInstall',
-      'Auf dem iPhone kommen Benachrichtigungen nur in der installierten App: Teilen-Symbol → „Zum Home-Bildschirm“, dann von dort öffnen und hier aktivieren.',
-    ),
-    blocked: t(
-      'settings.notify_device_blocked',
-      'Benachrichtigungen sind für diese Seite blockiert. Erlaube sie in den Website-Einstellungen deines Browsers und komm zurück.',
-    ),
-    unsupported: t(
-      'settings.notify_device_unsupported',
-      'Dieser Browser kann keine Benachrichtigungen anzeigen.',
-    ),
+    available: t('settings.notify_device_desc'),
+    'install-first': t('guessart.pushIosInstall'),
+    blocked: t('settings.notify_device_blocked'),
+    unsupported: t('settings.notify_device_unsupported'),
   };
 
   return (
     <Stack spacing={2} sx={{ width: '100%' }}>
       <Box>
         <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-          {t('settings.notify_choice_title', 'Wie möchtest du benachrichtigt werden?')}
+          {t('settings.notify_choice_title')}
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          {t(
-            'settings.notify_choice_hint',
-            'Du erfährst, wenn du dran bist – auch bei geschlossener App.',
-          )}
+          {t('settings.notify_choice_hint')}
         </Typography>
       </Box>
 
@@ -151,7 +136,7 @@ export const NotificationChannelChooser: React.FC<NotificationChannelChooserProp
         <List role="radiogroup" disablePadding>
           <OptionRow
             icon={<NotificationsActiveRoundedIcon color="primary" />}
-            title={t('settings.notify_device_title', 'Auf diesem Gerät')}
+            title={t('settings.notify_device_title')}
             badge={recommended === 'device' ? recommendedLabel : undefined}
             text={deviceText[status === 'active' ? 'available' : status]}
             selected={selected === 'device'}
@@ -163,12 +148,9 @@ export const NotificationChannelChooser: React.FC<NotificationChannelChooserProp
               <Divider component="li" />
               <OptionRow
                 icon={<ShieldRoundedIcon color="info" />}
-                title={t('settings.notify_ntfy_title', 'Über die ntfy-App')}
+                title={t('settings.notify_ntfy_title')}
                 badge={recommended === 'ntfy' ? recommendedLabel : undefined}
-                text={t(
-                  'settings.notify_ntfy_desc',
-                  'Funktioniert ohne Apple- oder Google-Dienste: kostenlose ntfy-App installieren und dein persönliches Topic abonnieren.',
-                )}
+                text={t('settings.notify_ntfy_desc')}
                 selected={selected === 'ntfy'}
                 selectable
                 onSelect={() => setSelected('ntfy')}
@@ -192,7 +174,7 @@ export const NotificationChannelChooser: React.FC<NotificationChannelChooserProp
             onClick={onChooseNtfy}
             sx={buttonSx}
           >
-            {t('settings.ntfy_subscribe_btn', 'In ntfy abonnieren')}
+            {t('settings.ntfy_subscribe_btn')}
           </Button>
         ) : (
           <Button
@@ -203,11 +185,11 @@ export const NotificationChannelChooser: React.FC<NotificationChannelChooserProp
             onClick={onEnableDevice}
             sx={buttonSx}
           >
-            {t('settings.notify_continue', 'Weiter')}
+            {t('settings.notify_continue')}
           </Button>
         )}
         <Button fullWidth color="inherit" onClick={onDismiss} sx={buttonSx}>
-          {t('settings.notify_not_now', 'Nicht jetzt')}
+          {t('settings.notify_not_now')}
         </Button>
       </Stack>
     </Stack>

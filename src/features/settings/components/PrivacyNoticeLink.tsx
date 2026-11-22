@@ -11,11 +11,8 @@ export const PrivacyNoticeLink: React.FC = () => {
   return (
     <SettingsSection
       id="privacy"
-      title={t('settings.privacy_title', 'Privacy')}
-      description={t(
-        'settings.privacy_desc',
-        'Which data the games use, which services they contact and your rights.',
-      )}
+      title={t('settings.privacy_title')}
+      description={t('settings.privacy_desc')}
       icon={<PrivacyTipRoundedIcon color="primary" />}
     >
       <Button
@@ -25,7 +22,7 @@ export const PrivacyNoticeLink: React.FC = () => {
         target="_blank"
         rel="noopener"
       >
-        {t('settings.privacy_open', 'Privacy Notice')}
+        {t('settings.privacy_open')}
       </Button>
     </SettingsSection>
   );

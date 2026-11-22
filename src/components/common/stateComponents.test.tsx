@@ -4,8 +4,10 @@ import { EmptyState } from './EmptyState';
 import { ErrorState } from './ErrorState';
 import { ListSkeleton } from './ListSkeleton';
 
+import { localeT } from '../../lib/i18n/localeT';
+
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (_key: string, def?: string) => def ?? _key }),
+  useTranslation: () => ({ t: localeT('en') }),
 }));
 
 describe('EmptyState', () => {

@@ -48,18 +48,15 @@ export const ServerUsdbConfig: React.FC<ServerUsdbConfigProps> = ({
   return (
     <Paper sx={settingsCardSx}>
       <SettingsCardHeader
-        title={t('server.usdb.title', 'UltraStar DB Credentials')}
-        description={t(
-          'server.usdb.desc',
-          'Credentials for USDB (usdb.animux.de) for automated song downloading.',
-        )}
+        title={t('server.usdb.title')}
+        description={t('server.usdb.desc')}
         titleAdornment={
           <Chip
             icon={isConfigured ? <CheckCircleOutlineIcon /> : <HelpOutlineIcon />}
             label={
               isConfigured
-                ? t('server.usdb.status_configured', 'Configured')
-                : t('server.usdb.status_not_configured', 'Not Configured')
+                ? t('server.usdb.status_configured')
+                : t('server.usdb.status_not_configured')
             }
             size="small"
             color={isConfigured ? 'success' : 'default'}
@@ -74,7 +71,7 @@ export const ServerUsdbConfig: React.FC<ServerUsdbConfigProps> = ({
           variant="body2"
           sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}
         >
-          {t('server.usdb.open_site', 'Open UltraStar DB')}
+          {t('server.usdb.open_site')}
           <OpenInNewIcon sx={{ fontSize: 14 }} />
         </Link>
       </SettingsCardHeader>
@@ -91,7 +88,7 @@ export const ServerUsdbConfig: React.FC<ServerUsdbConfigProps> = ({
             size="small"
             fullWidth
             inputRef={usernameInputRef}
-            label={t('server.usdb.username', 'USDB Username')}
+            label={t('server.usdb.username')}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="john_doe"
@@ -120,7 +117,7 @@ export const ServerUsdbConfig: React.FC<ServerUsdbConfigProps> = ({
           >
             {onBackToGame && (
               <Button variant="outlined" onClick={onBackToGame} startIcon={<ArrowBackIcon />}>
-                {t('server.usdb.back_to_game', 'Zurück zum Spiel')}
+                {t('server.usdb.back_to_game')}
               </Button>
             )}
             <Button
@@ -129,9 +126,7 @@ export const ServerUsdbConfig: React.FC<ServerUsdbConfigProps> = ({
               disabled={!username.trim() || testing}
               startIcon={testing ? <CircularProgress size={16} color="inherit" /> : undefined}
             >
-              {testing
-                ? t('server.usdb.testing', 'Verifying credentials with USDB...')
-                : t('server.usdb.save_and_test', 'Save & Test Connection')}
+              {testing ? t('server.usdb.testing') : t('server.usdb.save_and_test')}
             </Button>
           </Box>
         </Box>

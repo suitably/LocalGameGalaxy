@@ -29,10 +29,10 @@ export const SpectatorPlayerPicker: React.FC<SpectatorPlayerPickerProps> = ({
       <Stack direction="row" alignItems="center" gap={1}>
         <VisibilityRoundedIcon fontSize="small" color="action" />
         <Typography variant="subtitle2" fontWeight={700}>
-          {t('party.spectatorWatching', 'Du schaust zu')}
+          {t('party.spectatorWatching')}
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          {t('party.spectatorPickHint', 'Wähle, wessen Sicht du sehen willst')}
+          {t('party.spectatorPickHint')}
         </Typography>
       </Stack>
       <Stack
@@ -40,7 +40,7 @@ export const SpectatorPlayerPicker: React.FC<SpectatorPlayerPickerProps> = ({
         gap={0.75}
         flexWrap="wrap"
         role="tablist"
-        aria-label={t('party.spectatorWatching', 'Du schaust zu')}
+        aria-label={t('party.spectatorWatching')}
       >
         {players.map((p) => (
           <Chip

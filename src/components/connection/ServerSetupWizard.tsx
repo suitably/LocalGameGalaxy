@@ -63,10 +63,7 @@ export const ServerSetupWizard: React.FC<ServerSetupWizardProps> = ({ isDialog =
       {/* Header (the dialog brings its own title, so a second one would look like a second popup) */}
       {isDialog ? (
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {t(
-            'server.setup.subtitle',
-            'Wähle deine bevorzugte Methode, um deinen Nexumia Companion Server in Sekundenschnelle zu starten und zu verbinden.',
-          )}
+          {t('server.setup.subtitle')}
         </Typography>
       ) : (
         <Box
@@ -76,13 +73,10 @@ export const ServerSetupWizard: React.FC<ServerSetupWizardProps> = ({ isDialog =
             <AutoFixHighIcon color="primary" sx={{ fontSize: 32 }} />
             <Box>
               <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                {t('server.setup.title', 'Automatic Server Setup')}
+                {t('server.setup.title')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {t(
-                  'server.setup.subtitle',
-                  'Wähle deine bevorzugte Methode, um deinen Nexumia Companion Server in Sekundenschnelle zu starten und zu verbinden.',
-                )}
+                {t('server.setup.subtitle')}
               </Typography>
             </Box>
           </Box>
@@ -92,9 +86,7 @@ export const ServerSetupWizard: React.FC<ServerSetupWizardProps> = ({ isDialog =
             sx={{ color: 'text.secondary' }}
             aria-expanded={expanded}
             aria-label={
-              expanded
-                ? t('server.setup.collapse_hide', 'Hide Setup Assistant')
-                : t('server.setup.collapse_show', 'Show Server Setup Assistant')
+              expanded ? t('server.setup.collapse_hide') : t('server.setup.collapse_show')
             }
           >
             {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -126,7 +118,7 @@ export const ServerSetupWizard: React.FC<ServerSetupWizardProps> = ({ isDialog =
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
             <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
-              {t('server.setup.token_notice', 'Your Master Security Token:')}
+              {t('server.setup.token_notice')}
             </Typography>
             <Typography
               variant="caption"
@@ -135,7 +127,7 @@ export const ServerSetupWizard: React.FC<ServerSetupWizardProps> = ({ isDialog =
               {token}
             </Typography>
           </Box>
-          <Tooltip title={t('server.setup.token_regenerate', 'Generate New Token')}>
+          <Tooltip title={t('server.setup.token_regenerate')}>
             <IconButton size="small" onClick={regenerateToken} sx={{ color: 'text.secondary' }}>
               <RefreshIcon fontSize="small" />
             </IconButton>
@@ -160,25 +152,25 @@ export const ServerSetupWizard: React.FC<ServerSetupWizardProps> = ({ isDialog =
           <Tab
             icon={<DesktopWindowsIcon fontSize="small" />}
             iconPosition="start"
-            label={t('server.setup.tabs.binary', 'Desktop App / Binary')}
+            label={t('server.setup.tabs.binary')}
             value="binary"
           />
           <Tab
             icon={<StorageIcon fontSize="small" />}
             iconPosition="start"
-            label={t('server.setup.tabs.docker', 'Docker Compose')}
+            label={t('server.setup.tabs.docker')}
             value="docker"
           />
           <Tab
             icon={<CloudQueueIcon fontSize="small" />}
             iconPosition="start"
-            label={t('server.setup.tabs.cloudflare', 'Cloudflare 24/7')}
+            label={t('server.setup.tabs.cloudflare')}
             value="cloudflare"
           />
           <Tab
             icon={<TerminalIcon fontSize="small" />}
             iconPosition="start"
-            label={t('server.setup.tabs.terminal', '1-Line Terminal')}
+            label={t('server.setup.tabs.terminal')}
             value="terminal"
           />
         </Tabs>

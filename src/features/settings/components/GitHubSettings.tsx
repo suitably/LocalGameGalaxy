@@ -64,7 +64,7 @@ export const GitHubSettings: React.FC<GitHubSettingsProps> = ({ autoFocusPat, on
     handleSave();
     if (!token) {
       setTestStatus('error');
-      setTestMsg(t('github.no_token', 'Please enter a GitHub token.'));
+      setTestMsg(t('github.no_token'));
       return;
     }
 
@@ -77,7 +77,6 @@ export const GitHubSettings: React.FC<GitHubSettingsProps> = ({ autoFocusPat, on
       setTestMsg(
         t('github.test_success', {
           repo: result.repoName,
-          defaultValue: `Connected to ${result.repoName}`,
         }),
       );
     } else {
@@ -102,13 +101,10 @@ export const GitHubSettings: React.FC<GitHubSettingsProps> = ({ autoFocusPat, on
     <Paper id="settings-section-pat" tabIndex={-1} sx={settingsCardSx}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
         <GitHubIcon />
-        <Typography variant="h6">{t('github.title', 'GitHub Integration')}</Typography>
+        <Typography variant="h6">{t('github.title')}</Typography>
       </Box>
       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1.5 }}>
-        {t(
-          'github.desc',
-          'Connect directly to GitHub for feedback and content publishing. Create a Personal Access Token (PAT) with "repo" scope on GitHub.',
-        )}
+        {t('github.desc')}
       </Typography>
       <Box sx={{ mb: 2.5 }}>
         <Button
@@ -121,7 +117,7 @@ export const GitHubSettings: React.FC<GitHubSettingsProps> = ({ autoFocusPat, on
           rel="noopener noreferrer"
           sx={{ textTransform: 'none', borderRadius: 2 }}
         >
-          {t('github.create_token_button', 'Create PAT on GitHub (github.com/settings/tokens)')}
+          {t('github.create_token_button')}
         </Button>
       </Box>
 
@@ -129,7 +125,7 @@ export const GitHubSettings: React.FC<GitHubSettingsProps> = ({ autoFocusPat, on
         <TextField
           id="github-pat-input"
           inputRef={inputRef}
-          label={t('github.token_label', 'Personal Access Token (PAT)')}
+          label={t('github.token_label')}
           variant="outlined"
           fullWidth
           value={token}
@@ -147,9 +143,7 @@ export const GitHubSettings: React.FC<GitHubSettingsProps> = ({ autoFocusPat, on
                     edge="end"
                     size="small"
                     aria-label={
-                      showToken
-                        ? t('common.a11y.hide_password', 'Hide')
-                        : t('common.a11y.show_password', 'Show')
+                      showToken ? t('common.a11y.hide_password') : t('common.a11y.show_password')
                     }
                   >
                     {showToken ? (
@@ -166,7 +160,7 @@ export const GitHubSettings: React.FC<GitHubSettingsProps> = ({ autoFocusPat, on
 
         <Box sx={{ display: 'flex', gap: 2 }}>
           <TextField
-            label={t('github.owner', 'Repository Owner')}
+            label={t('github.owner')}
             variant="outlined"
             value={owner}
             onChange={(e) => setOwner(e.target.value)}
@@ -174,7 +168,7 @@ export const GitHubSettings: React.FC<GitHubSettingsProps> = ({ autoFocusPat, on
             sx={{ flex: 1 }}
           />
           <TextField
-            label={t('github.repo', 'Repository Name')}
+            label={t('github.repo')}
             variant="outlined"
             value={repo}
             onChange={(e) => setRepo(e.target.value)}
@@ -224,7 +218,7 @@ export const GitHubSettings: React.FC<GitHubSettingsProps> = ({ autoFocusPat, on
             }
             sx={{ borderRadius: 2 }}
           >
-            {t('github.test', 'Test & Save')}
+            {t('github.test')}
           </Button>
           {token && (
             <Button
@@ -233,7 +227,7 @@ export const GitHubSettings: React.FC<GitHubSettingsProps> = ({ autoFocusPat, on
               onClick={handleClear}
               sx={{ borderRadius: 2 }}
             >
-              {t('github.clear', 'Clear')}
+              {t('github.clear')}
             </Button>
           )}
         </Box>

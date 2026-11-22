@@ -22,10 +22,7 @@ export const SetupScanBanner: React.FC<SetupScanBannerProps> = ({
 }) => {
   const { t } = useTranslation();
   const online = scanStatus === 'found' || scanStatus === 'connected';
-  const notFound = t(
-    'server.setup.autodetect.status_not_found',
-    'No local server found. Start the server and click Connect.',
-  );
+  const notFound = t('server.setup.autodetect.status_not_found');
 
   return (
     <Paper
@@ -48,13 +45,9 @@ export const SetupScanBanner: React.FC<SetupScanBannerProps> = ({
         {scanStatus === 'checking' && <CircularProgress size={20} />}
         {online && <CheckCircleIcon color="success" />}
         <Typography variant="body2" sx={{ fontWeight: scanStatus === 'found' ? 'bold' : 'normal' }}>
-          {scanStatus === 'checking' &&
-            t(
-              'server.setup.autodetect.status_checking',
-              'Scanning for local server (localhost:3000)...',
-            )}
+          {scanStatus === 'checking' && t('server.setup.autodetect.status_checking')}
           {online &&
-            `${t('server.setup.autodetect.status_found', 'Local Server online & ready!')}${songCount !== null && songCount > 0 ? ` (${songCount} Songs)` : ''}`}
+            `${t('server.setup.autodetect.status_found')}${songCount !== null && songCount > 0 ? ` (${songCount} Songs)` : ''}`}
           {(scanStatus === 'not_found' || scanStatus === 'idle') && notFound}
         </Typography>
       </Box>
@@ -68,7 +61,7 @@ export const SetupScanBanner: React.FC<SetupScanBannerProps> = ({
           disabled={scanStatus === 'checking'}
           sx={{ borderRadius: 999, textTransform: 'none' }}
         >
-          {t('server.setup.autodetect.rescan', 'Scan Again')}
+          {t('server.setup.autodetect.rescan')}
         </Button>
 
         {online && (
@@ -80,8 +73,8 @@ export const SetupScanBanner: React.FC<SetupScanBannerProps> = ({
             sx={{ borderRadius: 999, textTransform: 'none', px: 2 }}
           >
             {scanStatus === 'connected'
-              ? t('server.setup.autodetect.connected_btn', 'Successfully Connected')
-              : t('server.setup.autodetect.connect_btn', 'Connect to Local Server Now')}
+              ? t('server.setup.autodetect.connected_btn')
+              : t('server.setup.autodetect.connect_btn')}
           </Button>
         )}
       </Box>

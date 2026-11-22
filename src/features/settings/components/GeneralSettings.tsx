@@ -20,24 +20,20 @@ export const GeneralSettings: React.FC = () => {
       <Paper id="settings-section-language" tabIndex={-1} sx={settingsCardSx}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2 }}>
           <LanguageIcon color="primary" />
-          <Typography variant="h6">
-            {t('settings.language_preferences', 'Language Preferences')}
-          </Typography>
+          <Typography variant="h6">{t('settings.language_preferences')}</Typography>
         </Box>
 
         <FormControl fullWidth sx={{ mt: 1 }}>
-          <InputLabel id="language-select-label">
-            {t('settings.ui_language', 'UI Language')}
-          </InputLabel>
+          <InputLabel id="language-select-label">{t('settings.ui_language')}</InputLabel>
           <Select
             labelId="language-select-label"
             id="language-select"
             value={i18n.language.startsWith('de') ? 'de' : 'en'}
-            label={t('settings.ui_language', 'UI Language')}
+            label={t('settings.ui_language')}
             onChange={handleLanguageChange}
           >
-            <MenuItem value="en">{t('settings.english', 'English')}</MenuItem>
-            <MenuItem value="de">{t('settings.german', 'Deutsch')}</MenuItem>
+            <MenuItem value="en">{t('settings.english')}</MenuItem>
+            <MenuItem value="de">{t('settings.german')}</MenuItem>
           </Select>
         </FormControl>
       </Paper>

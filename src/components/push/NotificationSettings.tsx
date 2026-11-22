@@ -47,12 +47,12 @@ export const NotificationSettings: React.FC = () => {
     const cleanUrl = relayUrl.trim().replace(/\/$/, '');
     if (!cleanUrl) {
       setRelayStatus('error');
-      setRelayStatusMsg(t('settings.relay_empty', 'Bitte eine Relay-URL eingeben.'));
+      setRelayStatusMsg(t('settings.relay_empty'));
       return;
     }
 
     setRelayStatus('checking');
-    setRelayStatusMsg(t('settings.relay_checking', 'Verbinde...'));
+    setRelayStatusMsg(t('settings.relay_checking'));
 
     try {
       const controller = new AbortController();
@@ -74,65 +74,48 @@ export const NotificationSettings: React.FC = () => {
         const data = await res.json();
         if (data.publicKey) {
           setRelayStatus('connected');
-          setRelayStatusMsg(t('settings.relay_connected', 'Verbunden! Push-Relay aktiv.'));
+          setRelayStatusMsg(t('settings.relay_connected'));
           storage.setPushRelayUrl(cleanUrl);
         } else {
           setRelayStatus('error');
-          setRelayStatusMsg(
-            t('settings.relay_no_vapid', 'Server erreichbar, aber kein VAPID-Key konfiguriert.'),
-          );
+          setRelayStatusMsg(t('settings.relay_no_vapid'));
         }
       } else if (res?.status === 503) {
         // relay without VAPID secrets and without KV: Web Push is off there
         setRelayStatus('error');
-        setRelayStatusMsg(
-          t('settings.relay_no_vapid', 'Server erreichbar, aber kein VAPID-Key konfiguriert.'),
-        );
+        setRelayStatusMsg(t('settings.relay_no_vapid'));
       } else if (res) {
         setRelayStatus('error');
-        setRelayStatusMsg(
-          t('settings.relay_http_error', 'HTTP-Fehler: {{status}}', { status: res.status }),
-        );
+        setRelayStatusMsg(t('settings.relay_http_error', { status: res.status }));
       } else {
         setRelayStatus('error');
-        setRelayStatusMsg(t('settings.relay_failed', 'Verbindung fehlgeschlagen. URL prüfen.'));
+        setRelayStatusMsg(t('settings.relay_failed'));
       }
     } catch {
       setRelayStatus('error');
-      setRelayStatusMsg(t('settings.relay_failed', 'Verbindung fehlgeschlagen. URL prüfen.'));
+      setRelayStatusMsg(t('settings.relay_failed'));
     }
   }, [relayUrl, t]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-        {t(
-          'settings.notifications_desc',
-          'Push-Benachrichtigungen informieren dich, wenn du in einem Spiel (z.B. GuessArt, Geschichtenschreiber) an der Reihe bist.',
-        )}
+        {t('settings.notifications_desc')}
       </Typography>
 
       {/* Notification Method Selector */}
       <FormControl size="small" fullWidth>
-        <InputLabel id="notif-method-label">
-          {t('settings.method_label', 'Bevorzugter Benachrichtigungs-Kanal')}
-        </InputLabel>
+        <InputLabel id="notif-method-label">{t('settings.method_label')}</InputLabel>
         <Select
           labelId="notif-method-label"
           value={method}
-          label={t('settings.method_label', 'Bevorzugter Benachrichtigungs-Kanal')}
+          label={t('settings.method_label')}
           onChange={handleMethodChange}
         >
-          <MenuItem value="auto">
-            {t('settings.method_auto', 'Automatisch (Web-Push mit ntfy Fallback)')}
-          </MenuItem>
-          <MenuItem value="ntfy">{t('settings.method_ntfy', 'Google-frei via ntfy')}</MenuItem>
-          <MenuItem value="webpush">
-            {t('settings.method_webpush', 'Nur Browser-Push (Chrome / Firefox / Safari)')}
-          </MenuItem>
-          <MenuItem value="both">
-            {t('settings.method_both', 'Beide Kanäle parallel (Maximale Zuverlässigkeit)')}
-          </MenuItem>
+          <MenuItem value="auto">{t('settings.method_auto')}</MenuItem>
+          <MenuItem value="ntfy">{t('settings.method_ntfy')}</MenuItem>
+          <MenuItem value="webpush">{t('settings.method_webpush')}</MenuItem>
+          <MenuItem value="both">{t('settings.method_both')}</MenuItem>
         </Select>
       </FormControl>
 
@@ -154,14 +137,11 @@ export const NotificationSettings: React.FC = () => {
           }}
         >
           <Typography variant="subtitle2" fontWeight={700}>
-            {t('settings.relay_title', 'Push-Relay Server (Cloudflare Worker)')}
+            {t('settings.relay_title')}
           </Typography>
         </Box>
         <Typography variant="body2" sx={{ color: 'text.disabled' }}>
-          {t(
-            'settings.relay_desc',
-            'URL deines Cloudflare Workers, der Benachrichtigungen an Mitspieler weiterleitet. Unterstützt automatisch Web-Push und ntfy.',
-          )}
+          {t('settings.relay_desc')}
         </Typography>
         <TextField
           size="small"
@@ -169,7 +149,7 @@ export const NotificationSettings: React.FC = () => {
           value={relayUrl}
           onChange={handleRelayUrlChange}
           placeholder="https://galaxy-push-relay.dein-name.workers.dev"
-          label={t('settings.relay_url_label', 'Push-Relay URL')}
+          label={t('settings.relay_url_label')}
         />
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
           <Button
@@ -180,7 +160,7 @@ export const NotificationSettings: React.FC = () => {
             startIcon={<SyncRoundedIcon />}
             sx={{ textTransform: 'none', fontWeight: 600 }}
           >
-            {t('settings.relay_test', 'Verbindung testen')}
+            {t('settings.relay_test')}
           </Button>
           {relayStatus === 'connected' && (
             <Chip

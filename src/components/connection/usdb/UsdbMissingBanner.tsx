@@ -12,14 +12,9 @@ export const UsdbMissingBanner: React.FC = () => {
       sx={{ mb: 2, borderRadius: 2 }}
     >
       <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
-        {t('server.usdb.missing_title', 'USDB-Zugangsdaten erforderlich')}
+        {t('server.usdb.missing_title')}
       </Typography>
-      <Typography variant="body2">
-        {t(
-          'server.usdb.missing_desc',
-          'Für die Online-Suche und das Herunterladen von Songs aus der UltraStar DB müssen Benutzername und Passwort hinterlegt werden.',
-        )}
-      </Typography>
+      <Typography variant="body2">{t('server.usdb.missing_desc')}</Typography>
     </Alert>
   );
 };

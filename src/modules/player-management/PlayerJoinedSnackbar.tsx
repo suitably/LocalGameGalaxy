@@ -18,7 +18,7 @@ export const PlayerJoinedSnackbar: React.FC<{ names: string[]; onClose: () => vo
       anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
     >
       <Alert onClose={onClose} severity="success" variant="filled" sx={{ width: '100%' }}>
-        {t('common.playerJoined', '{{names}} ist beigetreten', { names: names.join(', ') })}
+        {t('common.playerJoined', { names: names.join(', ') })}
       </Alert>
     </Snackbar>
   );

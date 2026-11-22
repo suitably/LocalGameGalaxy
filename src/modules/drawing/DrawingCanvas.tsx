@@ -90,7 +90,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     if (cleanElements.length === 0) {
       setFeedback({
         type: 'warning',
-        text: t('guessart.canvasEmptyWarning', 'Please draw something before submitting!'),
+        text: t('guessart.canvasEmptyWarning'),
       });
       return;
     }
@@ -117,7 +117,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
     } catch (err) {
       setFeedback({
         type: 'error',
-        text: err instanceof Error ? err.message : t('guessart.genericError', 'An error occurred'),
+        text: err instanceof Error ? err.message : t('guessart.genericError'),
       });
     }
   };
@@ -216,7 +216,7 @@ export const DrawingCanvas: React.FC<DrawingCanvasProps> = ({
           {loading ? (
             <CircularProgress size={20} color="inherit" />
           ) : (
-            (submitButtonLabel ?? t('guessart.submitDrawing', 'Fertig gezeichnet'))
+            (submitButtonLabel ?? t('guessart.submitDrawing'))
           )}
         </Button>
       </Box>

@@ -32,14 +32,13 @@ export const PlayerManagerCard: React.FC<PlayerManagerCardProps> = ({
   const [newPlayerName, setNewPlayerName] = useState('');
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  const displayTitle = title ?? t('lobby.playersTitle', 'Mitspieler');
+  const displayTitle = title ?? t('lobby.playersTitle');
   const displayDescription =
     description ??
     t('lobby.playersSetupDesc', {
       min: minPlayers,
-      defaultValue: `Füge mindestens ${minPlayers} Spieler hinzu. Gespielt werden kann flexibel an einem Gerät oder mit eigenen Einladungslinks.`,
     });
-  const displayPlaceholder = placeholder ?? t('lobby.playerNamePlaceholder', 'Name eingeben...');
+  const displayPlaceholder = placeholder ?? t('lobby.playerNamePlaceholder');
 
   const handleAdd = () => {
     const trimmed = newPlayerName.trim();
@@ -51,7 +50,6 @@ export const PlayerManagerCard: React.FC<PlayerManagerCardProps> = ({
       setFeedback(
         t('lobby.maxPlayers', {
           max: maxPlayers,
-          defaultValue: `Maximale Anzahl von ${maxPlayers} Spielern erreicht!`,
         }),
       );
       return;
@@ -62,7 +60,7 @@ export const PlayerManagerCard: React.FC<PlayerManagerCardProps> = ({
       setNewPlayerName('');
       setFeedback(null);
     } else {
-      setFeedback(t('lobby.duplicatePlayer', 'Spieler existiert bereits!'));
+      setFeedback(t('lobby.duplicatePlayer'));
     }
   };
 
@@ -111,7 +109,7 @@ export const PlayerManagerCard: React.FC<PlayerManagerCardProps> = ({
             onClick={handleAdd}
             sx={{ minWidth: 130, fontWeight: 700 }}
           >
-            {t('common.add', 'Hinzufügen')}
+            {t('common.add')}
           </Button>
         </Stack>
 
@@ -135,7 +133,7 @@ export const PlayerManagerCard: React.FC<PlayerManagerCardProps> = ({
           ))}
           {players.length === 0 && (
             <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', py: 1 }}>
-              {t('lobby.noPlayersYet', 'Noch keine Spieler hinzugefügt.')}
+              {t('lobby.noPlayersYet')}
             </Typography>
           )}
         </Stack>

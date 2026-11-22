@@ -24,17 +24,17 @@ export const AppearanceSettings: React.FC = () => {
     <Paper id="settings-section-appearance" tabIndex={-1} sx={settingsCardSx}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
         <ContrastIcon color="primary" />
-        <Typography variant="h6">{t('settings.appearance_title', 'Appearance')}</Typography>
+        <Typography variant="h6">{t('settings.appearance_title')}</Typography>
       </Box>
       <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-        {t('settings.appearance_desc', 'Colour mode of the app. TV mode is always dark.')}
+        {t('settings.appearance_desc')}
       </Typography>
       <ToggleButtonGroup
         exclusive
         fullWidth
         value={preference}
         onChange={(_, next: ColorModePreference | null) => next && setPreference(next)}
-        aria-label={t('settings.appearance_title', 'Appearance')}
+        aria-label={t('settings.appearance_title')}
       >
         {COLOR_MODE_PREFERENCES.map((mode) => (
           <ToggleButton key={mode} value={mode} sx={{ gap: 1 }}>

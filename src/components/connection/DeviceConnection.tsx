@@ -27,12 +27,7 @@ export const DeviceConnection = <T extends RemotePeerBase = RemotePeerBase>({
   helperTokenKey,
 }: DeviceConnectionProps<T>): React.ReactElement => {
   const { t } = useTranslation();
-  const displayDescription =
-    description ??
-    t(
-      'connection.default_description',
-      'Connect your phone to use as a controller. Scan the QR code below.',
-    );
+  const displayDescription = description ?? t('connection.default_description');
 
   const {
     peers,
@@ -74,19 +69,16 @@ export const DeviceConnection = <T extends RemotePeerBase = RemotePeerBase>({
 
         <Box>
           <Typography variant="h6" gutterBottom>
-            {t('connection.details_title', 'Connection Details')}
+            {t('connection.details_title')}
           </Typography>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <Box>
               <Typography variant="subtitle2" gutterBottom>
-                {t('connection.host_base_url', 'Host Base URL')}
+                {t('connection.host_base_url')}
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                {t(
-                  'connection.host_base_url_desc',
-                  'Change this if your phone cannot reach the default address (e.g. use your LAN IP).',
-                )}
+                {t('connection.host_base_url_desc')}
               </Typography>
               <TextField
                 value={baseUrl}
@@ -100,7 +92,7 @@ export const DeviceConnection = <T extends RemotePeerBase = RemotePeerBase>({
 
             <Box>
               <Typography variant="subtitle2" gutterBottom>
-                {t('connection.party_id', 'Party ID')}
+                {t('connection.party_id')}
               </Typography>
               <Box sx={{ display: 'flex', gap: 2 }}>
                 <TextField
@@ -112,14 +104,14 @@ export const DeviceConnection = <T extends RemotePeerBase = RemotePeerBase>({
                   sx={{ fontFamily: 'monospace' }}
                 />
                 <Button variant="outlined" onClick={regeneratePartyId} sx={{ borderRadius: 999 }}>
-                  {t('connection.regenerate', 'Regenerate')}
+                  {t('connection.regenerate')}
                 </Button>
               </Box>
             </Box>
 
             <Box>
               <Typography variant="subtitle2" gutterBottom>
-                {t('connection.manual_url', 'Manual URL')}
+                {t('connection.manual_url')}
               </Typography>
               <TextField
                 value={connectionUrl}
@@ -133,7 +125,7 @@ export const DeviceConnection = <T extends RemotePeerBase = RemotePeerBase>({
                   navigator.clipboard.writeText(input.value);
                 }}
                 sx={{ cursor: 'pointer', fontFamily: 'monospace', fontSize: '0.85rem' }}
-                helperText={t('connection.click_to_copy', 'Click to copy URL to send manually')}
+                helperText={t('connection.click_to_copy')}
               />
             </Box>
 

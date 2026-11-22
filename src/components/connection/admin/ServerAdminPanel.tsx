@@ -74,13 +74,10 @@ export const ServerAdminPanel: React.FC = () => {
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
         <Box>
           <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-            {t('server.admin.title', 'API Key Management')}
+            {t('server.admin.title')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {t(
-              'server.admin.desc',
-              'Create API keys for friends so they can connect to your server. Share a connection link or QR code.',
-            )}
+            {t('server.admin.desc')}
           </Typography>
         </Box>
         {loadStatus === 'loaded' && (
@@ -90,7 +87,7 @@ export const ServerAdminPanel: React.FC = () => {
             onClick={() => setCreateOpen(true)}
             sx={{ borderRadius: 999, px: 3 }}
           >
-            {t('server.admin.create', 'Create Key')}
+            {t('server.admin.create')}
           </Button>
         )}
       </Box>
@@ -104,12 +101,7 @@ export const ServerAdminPanel: React.FC = () => {
             border: (theme) => `1px solid ${alpha(theme.palette.secondary.main, 0.3)}`,
           }}
         >
-          <Typography variant="body2">
-            {t(
-              'server.admin.need_token',
-              'Enter your Master Security Token above and test the connection to manage API keys for friends.',
-            )}
-          </Typography>
+          <Typography variant="body2">{t('server.admin.need_token')}</Typography>
         </Alert>
       )}
 
@@ -122,12 +114,7 @@ export const ServerAdminPanel: React.FC = () => {
             border: (theme) => `1px solid ${alpha(theme.palette.warning.main, 0.3)}`,
           }}
         >
-          <Typography variant="body2">
-            {t(
-              'server.admin.forbidden',
-              'You are connected with a standard API key. API key management is only available with the Master Security Token.',
-            )}
-          </Typography>
+          <Typography variant="body2">{t('server.admin.forbidden')}</Typography>
         </Alert>
       )}
 
@@ -152,7 +139,7 @@ export const ServerAdminPanel: React.FC = () => {
               startIcon={<RefreshIcon />}
               onClick={() => fetchApiKeys(true)}
             >
-              {t('server.admin.retry', 'Retry')}
+              {t('server.admin.retry')}
             </Button>
           }
         >
@@ -172,13 +159,10 @@ export const ServerAdminPanel: React.FC = () => {
             }}
           >
             <Typography variant="subtitle2" gutterBottom>
-              {t('server.admin.webapp_url', 'Web App Base URL')}
+              {t('server.admin.webapp_url')}
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-              {t(
-                'server.admin.webapp_url_desc',
-                'The web application address that friends will open. Links and QR codes will point here and automatically configure the server.',
-              )}
+              {t('server.admin.webapp_url_desc')}
             </Typography>
             <TextField
               value={webAppUrl}
@@ -192,10 +176,7 @@ export const ServerAdminPanel: React.FC = () => {
 
           {apiKeys.length === 0 ? (
             <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
-              {t(
-                'server.admin.no_keys',
-                'No API keys yet. Create one to share access with friends.',
-              )}
+              {t('server.admin.no_keys')}
             </Typography>
           ) : (
             <ApiKeyTable

@@ -40,14 +40,11 @@ export const PWAInstallDialog: React.FC<PWAInstallDialogProps> = ({ open, onClos
       }}
     >
       <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center', pb: 1 }}>
-        {t('app.ios_install_title', 'Install on iOS (iPhone / iPad)')}
+        {t('app.ios_install_title')}
       </DialogTitle>
       <DialogContent sx={{ pt: 1 }}>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2, textAlign: 'center' }}>
-          {t(
-            'app.install_pwa_desc',
-            'Install LocalGameGalaxy on your smartphone for a full-screen experience without the browser search bar.',
-          )}
+          {t('app.install_pwa_desc')}
         </Typography>
 
         <List disablePadding>
@@ -56,10 +53,7 @@ export const PWAInstallDialog: React.FC<PWAInstallDialogProps> = ({ open, onClos
               <IosShareIcon />
             </ListItemIcon>
             <ListItemText
-              primary={t(
-                'app.ios_install_step1',
-                '1. Tap the Share button in Safari (at the bottom or top of your screen).',
-              )}
+              primary={t('app.ios_install_step1')}
               primaryTypographyProps={{ variant: 'body2' }}
             />
           </ListItem>
@@ -69,7 +63,7 @@ export const PWAInstallDialog: React.FC<PWAInstallDialogProps> = ({ open, onClos
               <AddBoxOutlinedIcon />
             </ListItemIcon>
             <ListItemText
-              primary={t('app.ios_install_step2', '2. Scroll down and tap "Add to Home Screen".')}
+              primary={t('app.ios_install_step2')}
               primaryTypographyProps={{ variant: 'body2' }}
             />
           </ListItem>
@@ -79,10 +73,7 @@ export const PWAInstallDialog: React.FC<PWAInstallDialogProps> = ({ open, onClos
               <CheckCircleOutlineIcon />
             </ListItemIcon>
             <ListItemText
-              primary={t(
-                'app.ios_install_step3',
-                '3. Tap "Add" in the top right corner. The app will open in fullscreen mode without the address bar!',
-              )}
+              primary={t('app.ios_install_step3')}
               primaryTypographyProps={{ variant: 'body2' }}
             />
           </ListItem>
@@ -95,7 +86,7 @@ export const PWAInstallDialog: React.FC<PWAInstallDialogProps> = ({ open, onClos
           color="primary"
           sx={{ px: 4, borderRadius: 2 }}
         >
-          {t('common.close', 'Close')}
+          {t('common.close')}
         </Button>
       </DialogActions>
     </Dialog>

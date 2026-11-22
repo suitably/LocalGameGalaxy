@@ -260,7 +260,26 @@
     "qrLinkTooLong": "Dieser Link ist zu lang für einen QR-Code. Bitte kopiere oder teile ihn.",
     "playHereInsteadShort": "Auf diesem Gerät spielen",
     "hostDeviceBadge": "Dein Gerät",
-    "shareMessage": "Hallo {{name}}! Hier ist dein Mitspieler-Link: {{link}}"
+    "shareMessage": "Hallo {{name}}! Hier ist dein Mitspieler-Link: {{link}}",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "send": "Senden",
+    "submit": "Absenden",
+    "info": "Info",
+    "edit": "Bearbeiten",
+    "added": "hinzugefügt",
+    "deleted": "gelöscht",
+    "copied_to_clipboard": "In die Zwischenablage kopiert!",
+    "play": "Spielen",
+    "finish_turn": "Zug beenden",
+    "done": "Fertig",
+    "target": "Ziel",
+    "editSession": "Sitzung bearbeiten",
+    "title": "Titel",
+    "playerNames": "Spielernamen",
+    "player": "Spieler",
+    "localPlayer": "Dieses Gerät",
+    "remotePlayer": "Remote-Gerät"
   },
   "settings": {
     "game_sheet_title": "{{game}} · Einstellungen",
@@ -630,6 +649,13 @@
       "unreachable": "Der Server unter {{url}} ist nicht erreichbar. Prüfe, ob er läuft.",
       "https_hint": "Klappt es weiterhin nicht, öffne die Server-URL einmal in einem neuen Tab (bei einem selbstsignierten Zertifikat die Warnung bestätigen) und versuche es dann erneut.",
       "mixed_content": "Diese https-Seite kann keinen http-Server in deinem Netzwerk erreichen (Mixed Content). Nutze den https-Link des Servers (Cloudflare-Tunnel) oder öffne die App über http."
+    },
+    "error_unauthorized": "Nicht autorisiert: Token ungültig oder fehlt.",
+    "error_timeout": "Zeitüberschreitung der Verbindung (5 s).",
+    "error_failed": "Verbindung fehlgeschlagen. URL oder CORS prüfen.",
+    "setup_dialog_title": "Server einrichten & anpassen",
+    "connection": {
+      "status_disconnected": "Nicht verbunden"
     }
   },
   "connection": {

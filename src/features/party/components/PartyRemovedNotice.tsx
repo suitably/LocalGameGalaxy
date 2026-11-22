@@ -12,13 +12,13 @@ export const PartyRemovedNotice: React.FC<{ lobby: PartyLobbyController }> = ({ 
   const navigate = useNavigate();
   return (
     <Alert severity="info" sx={{ borderRadius: 2 }}>
-      {t('party.removedByHost', 'Der Host hat dich aus der Party entfernt.')}
+      {t('party.removedByHost')}
       <Box display="flex" gap={1} mt={1.5} flexWrap="wrap">
         <Button variant="contained" size="small" onClick={lobby.rejoin}>
-          {t('party.rejoin', 'Wieder beitreten')}
+          {t('party.rejoin')}
         </Button>
         <Button size="small" onClick={() => navigate('/')}>
-          {t('party.backToHub', 'Zur Übersicht')}
+          {t('party.backToHub')}
         </Button>
       </Box>
     </Alert>

@@ -48,7 +48,7 @@ export const Settings: React.FC = () => {
   }, [showDetail, isWide, go, setHomeAction]);
 
   const entry = [...nav.top, ...nav.games, ...nav.bottom].find((e) => isEntryActive(e, shown));
-  usePageTitle(showDetail && !isWide && entry ? entry.label : t('settings.title', 'Settings'));
+  usePageTitle(showDetail && !isWide && entry ? entry.label : t('settings.title'));
 
   const gameFocus = shown.kind === 'game' ? (shown.highlight ?? shown.section) : undefined;
   const detail =

@@ -63,16 +63,14 @@ export const TabletopCompanionConfig: React.FC = () => {
           <CasinoIcon sx={{ color: 'piece.red', fontSize: 28 }} />
           <Box sx={{ flexGrow: 1 }}>
             <Typography variant="subtitle1" fontWeight={700}>
-              {t('settings.companion_tabletop_url_title', 'Tabletop Server Connection')}
+              {t('settings.companion_tabletop_url_title')}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {isServerActive
-                ? serverUrl
-                : t('server.connection.status_disconnected', 'Nicht verbunden')}
+              {isServerActive ? serverUrl : t('server.connection.status_disconnected')}
             </Typography>
           </Box>
           <Chip
-            label={isServerActive ? t('common.active', 'Aktiv') : t('common.inactive', 'Inaktiv')}
+            label={isServerActive ? t('common.active') : t('common.inactive')}
             color={isServerActive ? 'success' : 'default'}
             size="small"
           />
@@ -93,7 +91,7 @@ export const TabletopCompanionConfig: React.FC = () => {
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
             <Chip
-              label={t('settings.companion_tabletop_status_games', '{{count}} games available', {
+              label={t('settings.companion_tabletop_status_games', {
                 count: gamesCount,
               })}
               color="primary"
@@ -102,7 +100,7 @@ export const TabletopCompanionConfig: React.FC = () => {
             {scanning && (
               <Chip
                 icon={<CircularProgress size={14} color="inherit" />}
-                label={t('settings.companion_tabletop_status_scanning', 'Scanning...')}
+                label={t('settings.companion_tabletop_status_scanning')}
                 color="warning"
                 size="small"
               />
@@ -113,11 +111,8 @@ export const TabletopCompanionConfig: React.FC = () => {
               }
               label={
                 tunnelActive
-                  ? t('settings.companion_tabletop_tunnel_active', 'Public tunnel active')
-                  : t(
-                      'settings.companion_tabletop_tunnel_inactive',
-                      'No tunnel — only available on local network',
-                    )
+                  ? t('settings.companion_tabletop_tunnel_active')
+                  : t('settings.companion_tabletop_tunnel_inactive')
               }
               color={tunnelActive ? 'info' : 'default'}
               size="small"
@@ -135,7 +130,7 @@ export const TabletopCompanionConfig: React.FC = () => {
             disabled={actionLoading || !isServerActive}
             sx={{ textTransform: 'none' }}
           >
-            {t('settings.companion_tabletop_rescan', 'Rescan')}
+            {t('settings.companion_tabletop_rescan')}
           </Button>
         </Box>
       </Paper>
@@ -143,7 +138,7 @@ export const TabletopCompanionConfig: React.FC = () => {
       {/* 3. Directory Manager */}
       <Paper sx={settingsCardSx}>
         <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
-          {t('settings.companion_tabletop_dir_title', 'Game Directories')}
+          {t('settings.companion_tabletop_dir_title')}
         </Typography>
 
         <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
@@ -164,7 +159,7 @@ export const TabletopCompanionConfig: React.FC = () => {
             disabled={!newDir.trim() || actionLoading || !isServerActive}
             sx={{ textTransform: 'none', px: 2, whiteSpace: 'nowrap' }}
           >
-            {t('settings.companion_tabletop_dir_add', 'Add directory')}
+            {t('settings.companion_tabletop_dir_add')}
           </Button>
         </Box>
 
@@ -195,7 +190,7 @@ export const TabletopCompanionConfig: React.FC = () => {
                     size="small"
                     onClick={() => setDirToDelete(dir)}
                     disabled={actionLoading}
-                    aria-label={t('settings.companion_tabletop_dir_remove', 'Remove')}
+                    aria-label={t('settings.companion_tabletop_dir_remove')}
                   >
                     <DeleteIcon fontSize="small" />
                   </IconButton>
@@ -208,7 +203,7 @@ export const TabletopCompanionConfig: React.FC = () => {
 
       <ConfirmDialog
         open={Boolean(dirToDelete)}
-        title={t('settings.companion_tabletop_dir_remove', 'Remove')}
+        title={t('settings.companion_tabletop_dir_remove')}
         message={dirToDelete || ''}
         confirmColor="error"
         onConfirm={() => {

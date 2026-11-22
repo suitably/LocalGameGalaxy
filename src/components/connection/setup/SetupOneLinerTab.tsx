@@ -27,10 +27,7 @@ export const SetupOneLinerTab: React.FC<SetupOneLinerTabProps> = ({ token }) => 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Typography variant="body2" color="text.secondary">
-        {t(
-          'server.setup.terminal.desc',
-          'Run this 1-line command in your terminal to automatically download, configure, and start the server:',
-        )}
+        {t('server.setup.terminal.desc')}
       </Typography>
 
       <Paper
@@ -54,19 +51,17 @@ export const SetupOneLinerTab: React.FC<SetupOneLinerTabProps> = ({ token }) => 
             sx={{ minHeight: 36 }}
           >
             <Tab
-              label={t('server.setup.terminal.bash_tab', 'Linux / macOS (Bash)')}
+              label={t('server.setup.terminal.bash_tab')}
               value="bash"
               sx={{ minHeight: 36, py: 0.5, textTransform: 'none', fontSize: '0.85rem' }}
             />
             <Tab
-              label={t('server.setup.terminal.ps_tab', 'Windows (PowerShell)')}
+              label={t('server.setup.terminal.ps_tab')}
               value="powershell"
               sx={{ minHeight: 36, py: 0.5, textTransform: 'none', fontSize: '0.85rem' }}
             />
           </Tabs>
-          <Tooltip
-            title={copied ? t('server.setup.copied', 'Copied!') : t('server.setup.copy', 'Copy')}
-          >
+          <Tooltip title={copied ? t('server.setup.copied') : t('server.setup.copy')}>
             <IconButton size="small" onClick={handleCopy} color={copied ? 'success' : 'default'}>
               {copied ? <CheckIcon fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
             </IconButton>

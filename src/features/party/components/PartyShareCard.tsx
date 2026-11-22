@@ -30,16 +30,10 @@ export const PartyShareCard: React.FC<{ lobby: PartyLobbyController }> = ({ lobb
       >
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Typography variant="body2" color="text.secondary" fontWeight={600}>
-            {t('party.invitePrompt', 'Freunde einladen: 1× scannen für den ganzen Abend!')}
+            {t('party.invitePrompt')}
           </Typography>
           <Box display="flex" gap={1}>
-            <Tooltip
-              title={
-                showQr
-                  ? t('common.hideQrCode', 'Hide QR code')
-                  : t('common.showQrCode', 'Show QR code')
-              }
-            >
+            <Tooltip title={showQr ? t('common.hideQrCode') : t('common.showQrCode')}>
               <IconButton
                 size="small"
                 onClick={() => setShowQr(!showQr)}
@@ -56,7 +50,7 @@ export const PartyShareCard: React.FC<{ lobby: PartyLobbyController }> = ({ lobb
               color={copied ? 'success' : 'primary'}
               sx={{ fontWeight: 'bold', borderRadius: 2 }}
             >
-              {copied ? t('common.copied', 'Kopiert!') : t('common.copyLink', 'Link kopieren')}
+              {copied ? t('common.copied') : t('common.copyLink')}
             </Button>
           </Box>
         </Box>

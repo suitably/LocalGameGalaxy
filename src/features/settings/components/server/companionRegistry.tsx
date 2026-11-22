@@ -9,13 +9,10 @@ export function getCompanionPlugins(): CompanionPluginDefinition[] {
   return [
     {
       id: 'melodiq',
-      name: i18n.t('settings.companion_melodiq_name', 'MelodiQ Media & AI Companion'),
+      name: i18n.t('settings.companion_melodiq_name'),
       gameId: 'melodiq',
       icon: <MicIcon color="primary" />,
-      description: i18n.t(
-        'settings.companion_melodiq_desc',
-        'Audio-Separation (UVR MDX-Net), Whisper-AI Textextraktion, Song-Streaming und USDB-Integration.',
-      ),
+      description: i18n.t('settings.companion_melodiq_desc'),
       defaultPort: 3000,
       status: 'available',
       renderConfig: ({ autoFocusUsdb, onBackToGame }) => (
@@ -24,13 +21,10 @@ export function getCompanionPlugins(): CompanionPluginDefinition[] {
     },
     {
       id: 'tabletop',
-      name: i18n.t('settings.companion_tabletop_name', 'Tabletop Asset & Sync Companion'),
+      name: i18n.t('settings.companion_tabletop_name'),
       gameId: 'tabletop',
       icon: <CasinoIcon sx={{ color: 'piece.red' }} />,
-      description: i18n.t(
-        'settings.companion_tabletop_desc',
-        'Asset-Caching, TTS/PCIO Deck-Konvertierung und Physics-Sync für Tabletop-Simulationen.',
-      ),
+      description: i18n.t('settings.companion_tabletop_desc'),
       defaultPort: 3002,
       status: 'available',
       renderConfig: () => <TabletopCompanionConfig />,

@@ -27,19 +27,14 @@ export const DeviceQRCodeCard: React.FC<DeviceQRCodeCardProps> = ({
         <Box sx={{ p: 2, bgcolor: 'text.primary', borderRadius: 2, boxShadow: 0 }}>
           <img
             src={qrCodeDataUrl}
-            alt={t('common.qrCode', 'QR code')}
+            alt={t('common.qrCode')}
             style={{ display: 'block', width: 250, height: 250 }}
           />
         </Box>
       )}
 
       {/* Scan to Join Button */}
-      <Tooltip
-        title={t(
-          'connection.scan_tooltip',
-          "Open camera to scan another host's QR code and join as a client",
-        )}
-      >
+      <Tooltip title={t('connection.scan_tooltip')}>
         <Button
           variant="outlined"
           startIcon={<QrCodeScannerIcon />}
@@ -56,7 +51,7 @@ export const DeviceQRCodeCard: React.FC<DeviceQRCodeCardProps> = ({
             },
           }}
         >
-          {t('connection.scan_to_join', 'Scan QR to Join another Host')}
+          {t('connection.scan_to_join')}
         </Button>
       </Tooltip>
 

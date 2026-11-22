@@ -26,13 +26,10 @@ export const IntegrationsSettings: React.FC<{ highlightPat?: boolean }> = ({ hig
           }}
         >
           <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5 }}>
-            {t('settings.github_missing_title', 'GitHub-Verbindung erforderlich')}
+            {t('settings.github_missing_title')}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            {t(
-              'settings.pat_hint_feedback',
-              'Bitte hinterlege zuerst ein GitHub Personal Access Token (PAT) unten, um Feedback oder Bug-Reports als Issue zu erstellen.',
-            )}
+            {t('settings.pat_hint_feedback')}
           </Typography>
         </Alert>
       )}

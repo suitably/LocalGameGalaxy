@@ -22,11 +22,8 @@ export const AboutSettings: React.FC = () => {
       <SourceCodeLink />
       <SettingsSection
         id="feedback"
-        title={t('settings.feedback_title', 'Feedback & Bug Report')}
-        description={t(
-          'settings.feedback_desc',
-          'Fehler gefunden oder einen Verbesserungsvorschlag? Reiche hier direkt Feedback ein oder erstelle ein Issue auf GitHub.',
-        )}
+        title={t('settings.feedback_title')}
+        description={t('settings.feedback_desc')}
         icon={<FeedbackIcon color="primary" />}
       >
         {hasConfig ? (
@@ -35,7 +32,7 @@ export const AboutSettings: React.FC = () => {
             startIcon={<FeedbackIcon />}
             onClick={() => window.dispatchEvent(new Event('feedback:open'))}
           >
-            {t('settings.submit', 'Submit Feedback')}
+            {t('settings.submit')}
           </Button>
         ) : (
           <Button
@@ -47,7 +44,7 @@ export const AboutSettings: React.FC = () => {
             }
             sx={{ textTransform: 'none', fontWeight: 600 }}
           >
-            {t('settings.pat_focus_button', 'PAT-Token hinterlegen')}
+            {t('settings.pat_focus_button')}
           </Button>
         )}
       </SettingsSection>

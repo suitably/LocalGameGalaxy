@@ -40,12 +40,10 @@ export const PartyServerInfoCard: React.FC<{ lobby: PartyLobbyController }> = ({
             />
             <Box minWidth={0}>
               <Typography variant="caption" color="text.secondary" display="block">
-                {t('party.backendUrlLabel', 'Host Backend-Verbindung:')}
+                {t('party.backendUrlLabel')}
               </Typography>
               <Typography variant="body2" fontWeight={700} noWrap>
-                {isServerActive && serverUrl
-                  ? serverUrl
-                  : t('party.defaultCloudRelay', 'Öffentliches Cloud Relay (Standard)')}
+                {isServerActive && serverUrl ? serverUrl : t('party.defaultCloudRelay')}
               </Typography>
             </Box>
           </Box>
@@ -56,7 +54,7 @@ export const PartyServerInfoCard: React.FC<{ lobby: PartyLobbyController }> = ({
             onClick={() => navigate(settingsPath({ kind: 'app', section: 'connectivity' }))}
             sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}
           >
-            {t('party.manageBackend', 'Server verwalten')}
+            {t('party.manageBackend')}
           </Button>
         </Card>
       )}

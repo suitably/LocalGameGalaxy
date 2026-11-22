@@ -38,11 +38,8 @@ const LocalPlayersForm: React.FC<Omit<LocalPlayersDialogProps, 'open'>> = ({
           minPlayers={1}
           maxPlayers={maxPlayers}
           cardVariant="outlined"
-          title={t('common.passAndPlay.playersTitle', 'Spieler an diesem Gerät')}
-          description={t(
-            'common.passAndPlay.playersHint',
-            'Das Gerät wird reihum weitergegeben. Übernehmen startet ein neues Spiel.',
-          )}
+          title={t('common.passAndPlay.playersTitle')}
+          description={t('common.passAndPlay.playersHint')}
           onAddPlayer={(name) => {
             const result = addPlayerToLobby(players, name, { maxPlayers });
             if (result.success) setPlayers(result.players);
@@ -55,7 +52,7 @@ const LocalPlayersForm: React.FC<Omit<LocalPlayersDialogProps, 'open'>> = ({
       </DialogContent>
       <DialogActions sx={{ px: 2, pb: 2 }}>
         <Button onClick={onClose} sx={{ minHeight: 44 }}>
-          {t('common.cancel', 'Abbrechen')}
+          {t('common.cancel')}
         </Button>
         <Button
           variant="contained"
@@ -63,7 +60,7 @@ const LocalPlayersForm: React.FC<Omit<LocalPlayersDialogProps, 'open'>> = ({
           onClick={() => onApply(players.map((p) => p.name))}
           sx={{ minHeight: 44, fontWeight: 800 }}
         >
-          {t('common.passAndPlay.playersApply', 'Übernehmen & neu starten')}
+          {t('common.passAndPlay.playersApply')}
         </Button>
       </DialogActions>
     </>
@@ -84,7 +81,7 @@ export const LocalPlayersButton: React.FC<{ onClick: () => void }> = ({ onClick 
     <IconButton
       onClick={onClick}
       color="inherit"
-      aria-label={t('common.passAndPlay.players', 'Spieler')}
+      aria-label={t('common.passAndPlay.players')}
       sx={{ width: 44, height: 44 }}
     >
       <GroupRoundedIcon />

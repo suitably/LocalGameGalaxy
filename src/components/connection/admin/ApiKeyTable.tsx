@@ -42,10 +42,10 @@ export const ApiKeyTable: React.FC<Props> = ({
       <Table size="small">
         <TableHead>
           <TableRow>
-            <TableCell>{t('server.admin.key_name', 'Name')}</TableCell>
-            <TableCell>{t('server.admin.key_permissions', 'Permissions')}</TableCell>
-            <TableCell>{t('server.admin.key_created', 'Created')}</TableCell>
-            <TableCell align="right">{t('server.admin.key_actions', 'Actions')}</TableCell>
+            <TableCell>{t('server.admin.key_name')}</TableCell>
+            <TableCell>{t('server.admin.key_permissions')}</TableCell>
+            <TableCell>{t('server.admin.key_created')}</TableCell>
+            <TableCell align="right">{t('server.admin.key_actions')}</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -71,13 +71,13 @@ export const ApiKeyTable: React.FC<Props> = ({
                   )}
                   {!PERMISSION_FLAGS.some(({ flag }) => key[flag] === true) && (
                     <Chip
-                      label={t('server.admin.perm_readonly', 'Read Only')}
+                      label={t('server.admin.perm_readonly')}
                       size="small"
                       color="success"
                       variant="outlined"
                     />
                   )}
-                  <Tooltip title={t('server.admin.edit_permissions', 'Edit Permissions')}>
+                  <Tooltip title={t('server.admin.edit_permissions')}>
                     <IconButton size="small" onClick={() => onEdit(key)}>
                       <EditIcon
                         fontSize="small"
@@ -94,17 +94,17 @@ export const ApiKeyTable: React.FC<Props> = ({
               </TableCell>
               <TableCell align="right">
                 <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-                  <Tooltip title={t('server.admin.copy_link', 'Copy Connection Link')}>
+                  <Tooltip title={t('server.admin.copy_link')}>
                     <IconButton size="small" onClick={() => onCopyLink(key)}>
                       <ContentCopyIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title={t('server.admin.show_qr', 'Show QR Code')}>
+                  <Tooltip title={t('server.admin.show_qr')}>
                     <IconButton size="small" onClick={() => onShowQR(key)}>
                       <QrCode2Icon fontSize="small" />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title={t('server.admin.delete_key', 'Delete Key')}>
+                  <Tooltip title={t('server.admin.delete_key')}>
                     <IconButton size="small" color="error" onClick={() => onDelete(key.id)}>
                       <DeleteIcon fontSize="small" />
                     </IconButton>

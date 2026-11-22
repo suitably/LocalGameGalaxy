@@ -19,13 +19,13 @@ export const SwitchPlayerButton: React.FC<{
       variant="extended"
       color="primary"
       onClick={onClick}
-      aria-label={t('common.passAndPlay.switch', 'Spieler wechseln')}
+      aria-label={t('common.passAndPlay.switch')}
       sx={{ minHeight: 48, fontWeight: 800, textTransform: 'none', ...sx }}
     >
       <SwapHorizRoundedIcon sx={{ mr: 1 }} />
       {currentName
-        ? t('common.passAndPlay.switchFrom', '{{name}} fertig', { name: currentName })
-        : t('common.passAndPlay.switch', 'Spieler wechseln')}
+        ? t('common.passAndPlay.switchFrom', { name: currentName })
+        : t('common.passAndPlay.switch')}
     </Fab>
   );
 };

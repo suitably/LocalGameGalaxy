@@ -39,15 +39,15 @@ export const EditKeyDialog: React.FC<Props> = ({ keyData, onClose, onSave }) => 
   return (
     <Dialog open={!!keyData} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle>
-        {t('server.admin.edit_permissions', 'Edit Permissions')} – {keyData?.name}
+        {t('server.admin.edit_permissions')} – {keyData?.name}
       </DialogTitle>
       <DialogContent>
         <PermissionSwitches value={permissions} onChange={setPermissions} />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('common.cancel', 'Cancel')}</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
         <Button onClick={handleSave} variant="contained" disabled={saving}>
-          {t('server.admin.save', 'Save Changes')}
+          {t('server.admin.save')}
         </Button>
       </DialogActions>
     </Dialog>

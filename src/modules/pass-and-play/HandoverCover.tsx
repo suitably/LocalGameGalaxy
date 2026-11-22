@@ -52,7 +52,7 @@ export const HandoverCover: React.FC<HandoverCoverProps> = ({
       {onCancel && (
         <IconButton
           onClick={onCancel}
-          aria-label={t('common.cancel', 'Abbrechen')}
+          aria-label={t('common.cancel')}
           sx={{ position: 'absolute', top: 'max(8px, env(safe-area-inset-top))', right: 8 }}
         >
           <CloseRoundedIcon />
@@ -71,7 +71,7 @@ export const HandoverCover: React.FC<HandoverCoverProps> = ({
         }}
       />
       <Typography variant="h4" component="p" fontWeight={800} sx={{ wordBreak: 'break-word' }}>
-        {t('common.passAndPlay.coverTitle', 'Gib das Gerät an {{name}}', { name: player.name })}
+        {t('common.passAndPlay.coverTitle', { name: player.name })}
       </Typography>
 
       <Button
@@ -80,13 +80,13 @@ export const HandoverCover: React.FC<HandoverCoverProps> = ({
         onClick={onReveal}
         sx={{ minHeight: 56, minWidth: 240, borderRadius: 3, fontSize: '1.1rem', fontWeight: 800 }}
       >
-        {t('common.passAndPlay.reveal', 'Ich bin {{name}} – aufdecken', { name: player.name })}
+        {t('common.passAndPlay.reveal', { name: player.name })}
       </Button>
 
       {onRetarget && players.length > 2 && (
         <Stack spacing={1} alignItems="center">
           <Typography variant="body2" color="text.secondary">
-            {t('common.passAndPlay.otherPlayer', 'Jemand anderes ist dran?')}
+            {t('common.passAndPlay.otherPlayer')}
           </Typography>
           <Stack direction="row" flexWrap="wrap" justifyContent="center" gap={1}>
             {players

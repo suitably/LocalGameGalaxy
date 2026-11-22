@@ -68,13 +68,13 @@ export function useUsdbCredentials(showMissingBanner: boolean) {
       setPassword('');
       setFeedback({
         type: 'success',
-        text: t('server.usdb.success', 'USDB credentials successfully verified and saved!'),
+        text: t('server.usdb.success'),
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Login failed';
       setFeedback({
         type: 'error',
-        text: t('server.usdb.error', { error: msg, defaultValue: `USDB login failed: ${msg}` }),
+        text: t('server.usdb.error', { error: msg }),
       });
     } finally {
       setTesting(false);

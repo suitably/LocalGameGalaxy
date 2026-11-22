@@ -17,7 +17,7 @@ export const ConnectedPeersList = <T extends RemotePeerBase = RemotePeerBase>({
   if (peers.length === 0) {
     return (
       <Typography variant="body2" color="text.disabled">
-        {t('connection.waiting_for_connections', 'Waiting for connections...')}
+        {t('connection.waiting_for_connections')}
       </Typography>
     );
   }
@@ -37,7 +37,7 @@ export const ConnectedPeersList = <T extends RemotePeerBase = RemotePeerBase>({
         variant="subtitle1"
         sx={{ color: 'success.main', display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}
       >
-        {t('connection.devices_connected', '{{count}} Device(s) Connected', {
+        {t('connection.devices_connected', {
           count: peers.length,
         })}
       </Typography>

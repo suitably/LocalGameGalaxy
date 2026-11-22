@@ -31,13 +31,10 @@ export const SetupCloudflareTab: React.FC = () => {
           sx={{ fontWeight: 'bold', mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}
         >
           <CloudQueueIcon color="warning" />
-          {t('server.setup.cloudflare.title', 'Free 24/7 Cloud Server')}
+          {t('server.setup.cloudflare.title')}
         </Typography>
         <Typography variant="body2" color="text.secondary" paragraph>
-          {t(
-            'server.setup.cloudflare.desc',
-            'Host your own relay server for free on Cloudflare Workers. Perfect for remote games with friends without keeping a PC running.',
-          )}
+          {t('server.setup.cloudflare.desc')}
         </Typography>
 
         <Button
@@ -54,7 +51,7 @@ export const SetupCloudflareTab: React.FC = () => {
             fontWeight: 'bold',
           }}
         >
-          {t('server.setup.cloudflare.deploy_button', 'Deploy to Cloudflare Workers')}
+          {t('server.setup.cloudflare.deploy_button')}
         </Button>
       </Paper>
 
@@ -68,14 +65,9 @@ export const SetupCloudflareTab: React.FC = () => {
             sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}
           >
             <TerminalIcon fontSize="small" color="primary" />
-            {t(
-              'server.setup.cloudflare.cli_title',
-              'Or deploy via Wrangler CLI from the server/ directory:',
-            )}
+            {t('server.setup.cloudflare.cli_title')}
           </Typography>
-          <Tooltip
-            title={copiedCli ? t('server.setup.copied', 'Copied!') : t('server.setup.copy', 'Copy')}
-          >
+          <Tooltip title={copiedCli ? t('server.setup.copied') : t('server.setup.copy')}>
             <IconButton
               size="small"
               onClick={handleCopyCli}

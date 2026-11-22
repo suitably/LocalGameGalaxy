@@ -25,7 +25,7 @@ export const PartyPendingGame: React.FC<{ lobby: PartyLobbyController }> = ({ lo
       sx={{ p: 2, mb: 2, borderRadius: 3, borderColor: 'primary.main', bgcolor: 'action.hover' }}
     >
       <Typography variant="overline" color="text.secondary">
-        {t('party.pending_game_label', 'Gewähltes Spiel')}
+        {t('party.pending_game_label')}
       </Typography>
       <Typography
         variant="h6"
@@ -44,11 +44,8 @@ export const PartyPendingGame: React.FC<{ lobby: PartyLobbyController }> = ({ lo
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
         {others === 0
-          ? t(
-              'party.pending_game_waiting',
-              'Warte auf Mitspieler – sie treten über den QR-Code unten bei.',
-            )
-          : t('party.pending_game_ready', '{{count}} Mitspieler bereit.', { count: others })}
+          ? t('party.pending_game_waiting')
+          : t('party.pending_game_ready', { count: others })}
       </Typography>
       <Box display="flex" gap={1} flexWrap="wrap">
         <Button
@@ -58,10 +55,10 @@ export const PartyPendingGame: React.FC<{ lobby: PartyLobbyController }> = ({ lo
           onClick={startPendingGame}
           sx={{ minHeight: 48, fontWeight: 800 }}
         >
-          {t('party.pending_game_start', 'Jetzt starten')}
+          {t('party.pending_game_start')}
         </Button>
         <Button onClick={clearPendingLaunch} sx={{ minHeight: 48 }}>
-          {t('party.pending_game_other', 'Anderes Spiel')}
+          {t('party.pending_game_other')}
         </Button>
       </Box>
     </Card>

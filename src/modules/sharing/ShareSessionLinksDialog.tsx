@@ -101,7 +101,6 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
       : t('common.shareMessage', {
           name: player.name,
           link,
-          defaultValue: `Hallo ${player.name}! Hier ist dein Mitspieler-Link: ${link}`,
         });
 
     if (navigator.share) {
@@ -138,18 +137,14 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
         <Typography variant="h6" fontWeight={800} component="span" sx={{ flex: 1, minWidth: 0 }}>
           {sessionTitle}
         </Typography>
-        <IconButton edge="end" onClick={onClose} aria-label={t('common.close', 'Schließen')}>
+        <IconButton edge="end" onClick={onClose} aria-label={t('common.close')}>
           <CloseRoundedIcon />
         </IconButton>
       </DialogTitle>
 
       <DialogContent dividers sx={{ px: { xs: 2, sm: 3 } }}>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {descriptionText ||
-            t(
-              'common.shareLinksDesc',
-              'Mitspieler können per QR-Code oder Link auf ihrem eigenen Gerät mitspielen.',
-            )}
+          {descriptionText || t('common.shareLinksDesc')}
         </Typography>
 
         <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0, display: 'grid', gap: 1.5 }}>
@@ -183,7 +178,7 @@ export const ShareSessionLinksDialog: React.FC<ShareSessionLinksDialogProps> = (
       {!phone && (
         <DialogActions sx={{ p: 2 }}>
           <Button onClick={onClose} variant="contained" sx={{ fontWeight: 700 }}>
-            {t('common.close', 'Schließen')}
+            {t('common.close')}
           </Button>
         </DialogActions>
       )}

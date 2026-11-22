@@ -22,7 +22,7 @@ export const HeaderOverflowMenu: React.FC<HeaderOverflowMenuProps> = ({ items, i
       <IconButton
         size="medium"
         edge="end"
-        aria-label={t('common.a11y.menu', 'Menu')}
+        aria-label={t('common.a11y.menu')}
         aria-controls="menu-appbar"
         aria-haspopup="true"
         onClick={(e) => setAnchorEl(e.currentTarget)}

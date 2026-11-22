@@ -76,7 +76,7 @@ export function useServerConnectionState() {
   const checkConnection = async () => {
     if (!enabled) return;
     setStatus('checking');
-    setStatusMsg(t('server.connecting', 'Connecting...'));
+    setStatusMsg(t('server.connecting'));
 
     try {
       const cleanUrl = url.replace(/\/$/, '');
@@ -95,25 +95,24 @@ export function useServerConnectionState() {
         setStatusMsg(
           t('server.connected', {
             count: data.count || 0,
-            defaultValue: `Connected! Found ${data.count || 0} songs.`,
           }),
         );
         window.dispatchEvent(new Event('server_connection_updated'));
       } else {
         setStatus('error');
         if (res.status === 401) {
-          setStatusMsg(t('server.error_unauthorized', 'Unauthorized: Invalid or missing token.'));
+          setStatusMsg(t('server.error_unauthorized'));
         } else {
-          setStatusMsg(t('server.error_generic', `Server returned status ${res.status}.`));
+          setStatusMsg(t('server.error_status', { status: res.status }));
         }
       }
     } catch (err: unknown) {
       setStatus('error');
       const isAbortError = err instanceof Error && err.name === 'AbortError';
       if (isAbortError) {
-        setStatusMsg(t('server.error_timeout', 'Connection timed out (5s).'));
+        setStatusMsg(t('server.error_timeout'));
       } else {
-        setStatusMsg(t('server.error_failed', 'Connection failed. Check URL or CORS.'));
+        setStatusMsg(t('server.error_failed'));
       }
     }
   };

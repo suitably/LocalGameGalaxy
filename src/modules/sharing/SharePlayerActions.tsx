@@ -42,22 +42,18 @@ export const SharePlayerActions: React.FC<{
         variant={showQr ? 'contained' : 'outlined'}
         onClick={onToggleQr}
         aria-expanded={showQr}
-        aria-label={
-          showQr
-            ? t('common.hideQrCode', 'QR-Code ausblenden')
-            : t('common.showQrCode', 'QR-Code anzeigen')
-        }
+        aria-label={showQr ? t('common.hideQrCode') : t('common.showQrCode')}
         startIcon={<QrCodeRoundedIcon fontSize="small" />}
         sx={buttonSx}
       >
-        {t('common.qrCode', 'QR-Code')}
+        {t('common.qrCode')}
       </Button>
       <Button
         size="small"
         variant="outlined"
         color={isCopied ? 'success' : 'primary'}
         onClick={onCopy}
-        aria-label={t('common.copyLink', 'Link kopieren')}
+        aria-label={t('common.copyLink')}
         startIcon={
           isCopied ? (
             <CheckRoundedIcon fontSize="small" />
@@ -67,9 +63,7 @@ export const SharePlayerActions: React.FC<{
         }
         sx={buttonSx}
       >
-        <span aria-live="polite">
-          {isCopied ? t('common.copied', 'Kopiert!') : t('common.copy', 'Kopieren')}
-        </span>
+        <span aria-live="polite">{isCopied ? t('common.copied') : t('common.copy')}</span>
       </Button>
       {canShare && (
         <Button
@@ -79,7 +73,7 @@ export const SharePlayerActions: React.FC<{
           startIcon={<ShareRoundedIcon fontSize="small" />}
           sx={buttonSx}
         >
-          {t('common.share', 'Teilen')}
+          {t('common.share')}
         </Button>
       )}
     </Box>

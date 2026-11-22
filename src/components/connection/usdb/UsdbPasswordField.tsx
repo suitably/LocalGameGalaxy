@@ -25,14 +25,14 @@ export const UsdbPasswordField: React.FC<UsdbPasswordFieldProps> = ({
       size="small"
       fullWidth
       inputRef={inputRef}
-      label={t('server.usdb.password', 'Password')}
+      label={t('server.usdb.password')}
       type={show ? 'text' : 'password'}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={
         hasPassword
-          ? t('server.usdb.password_saved_placeholder', '•••••••• (Saved)')
-          : t('server.usdb.password_placeholder', 'Enter password')
+          ? t('server.usdb.password_saved_placeholder')
+          : t('server.usdb.password_placeholder')
       }
       slotProps={{
         input: {
@@ -42,11 +42,7 @@ export const UsdbPasswordField: React.FC<UsdbPasswordFieldProps> = ({
                 size="small"
                 onClick={() => setShow(!show)}
                 edge="end"
-                aria-label={
-                  show
-                    ? t('common.a11y.hide_password', 'Hide')
-                    : t('common.a11y.show_password', 'Show')
-                }
+                aria-label={show ? t('common.a11y.hide_password') : t('common.a11y.show_password')}
               >
                 {show ? (
                   <VisibilityOffIcon fontSize="small" />
