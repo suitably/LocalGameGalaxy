@@ -5,3 +5,4 @@
 - `docs/tasks/GAME-CATALOG-RESTRUCTURE.md` §7: 6.2 and 7.1 done; 6.1 audit and the open Melodiq RPC question.
 - Code outside `docs/` changed (dead translation keys, `scripts/scaffold-game.mjs`, `scripts/check-docs-sync.mjs`).
 - `docs/open-questions.md`: Q26 (Melodiq phone RPC transport).
+- `docs/open-questions.md` Q26 and the task doc: maintainer chose the WebRTC room transport; tracked in #813.
