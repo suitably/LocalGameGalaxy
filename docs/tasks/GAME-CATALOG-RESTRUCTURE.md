@@ -126,7 +126,7 @@ Snapshot tests must still pass unchanged at the end of phase 2.
 
 ### Phase 6 — One sync path and one i18n path (one PR per game)
 
-6.1 Live games on `useRoomReducer`/`useRoomEvents`; Melodiq's direct `BroadcastChannel` moves behind `useMultiChannelSync`. WebRTC stays only where media needs it (record in ADR).
+6.1 **Done (2026-11-22, #813).** Live games on `useRoomReducer`/`useRoomEvents`; Melodiq's direct `BroadcastChannel` moves behind `useMultiChannelSync`. WebRTC stays only where media needs it (recorded in ADR-0011 item 7; Melodiq's phone protocol runs as room events over WebRTC, Q26).
 6.2 Per-game i18n bundles move to one scheme (either all per game via `addResourceBundle` or all global — decide in ADR-0011); no German fallbacks in components.
 
 ### Phase 7 — Clean up

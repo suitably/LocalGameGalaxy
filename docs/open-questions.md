@@ -8,6 +8,10 @@ Found by the [2026-10-18 docs-vs-code audit](reports/2026-10-18-docs-vs-code-aud
 
 - Q25 **[user]** copyright holder wording for own files (#594). `REUSE.toml` names `LocalGameGalaxy` as holder of everything that is not third-party, because the repository has no copyright line anywhere (LICENSE is the bare AGPL text, `package.json` files have no `author`, README §8 names no holder) and `LocalGameGalaxy` is the only author wording in use (`public/games/tabletop/manifest.json`). A project name is not a legal person. Resolve: the maintainer picks the holder line (e.g. their name, or "<name> and LocalGameGalaxy contributors") and confirms that the brand and icon images (`design/`, `public/pwa/`, `public/og-image.png`, Android launcher/splash PNGs) are own work; then update the default annotation in `REUSE.toml`. [dependencies](tech/dependencies.md)
 
+## Resolved 2026-11-22
+
+- Q26 Melodiq live sync (GAME-CATALOG-RESTRUCTURE 6.1) → maintainer decision (2026-11-22, option 2): a `RoomTransport` over Melodiq's WebRTC connection, not MQTT. Standalone Melodiq has no party room key (ADR-0009) and must work offline over the local tracker. Done in #813 (steps 1-7): [melodiq-architecture §2.16](tech/melodiq-architecture.md#216-room-protocol-at-a-glance-813), [ADR-0011 item 7](adr/0011-one-game-catalogue.md).
+
 ## Resolved 2026-11-20
 
 - Q23 Wordle's unregistered `i18n` bundle → maintainer decision (2026-11-20): deleted, like Sudoku's. `src/games/wordle/i18n/index.ts` and its re-export are gone; ten keys the code calls via `t()` but `public/locales` lacked (`not_in_dictionary`, `settings.dictionary_only` and `_hint`, `key_enter`, `key_delete`, `letter_state.*`) were added to both locale files (before, they fell back to the inline defaults or showed the key). [i18n-strategy](tech/i18n-strategy.md)
