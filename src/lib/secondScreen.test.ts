@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { buildScreenUrl, canTryPresentation, screenOrigin } from './secondScreen';
+import { buildScreenUrl, canTryPresentation, screenOptions, screenOrigin } from './secondScreen';
 import { PUBLIC_APP_URL } from './publicAppUrl';
 
 const web = {
   native: false,
   android: false,
+  mobile: false,
   hasPresentationApi: true,
   origin: 'http://192.168.1.5:5173',
 };
@@ -29,5 +30,19 @@ describe('secondScreen', () => {
     expect(canTryPresentation({ ...web, android: true })).toBe(false);
     expect(canTryPresentation({ ...web, native: true })).toBe(false);
     expect(canTryPresentation({ ...web, hasPresentationApi: false })).toBe(false);
+  });
+
+  it('offers cast and a separate window on desktop, share and mirroring on phones', () => {
+    const opts = { canShare: true, mirrorSafe: true };
+    expect(screenOptions(web, opts)).toEqual(['cast', 'window']);
+    expect(screenOptions({ ...web, hasPresentationApi: false }, opts)).toEqual(['window']);
+    const phone = { ...web, android: true, mobile: true };
+    expect(screenOptions(phone, opts)).toEqual(['share', 'mirror']);
+    expect(screenOptions({ ...phone, native: true }, opts)).toEqual(['share', 'mirror']);
+  });
+
+  it('never offers mirroring when this screen shows private cards', () => {
+    const phone = { ...web, android: true, mobile: true };
+    expect(screenOptions(phone, { canShare: false, mirrorSafe: false })).toEqual([]);
   });
 });

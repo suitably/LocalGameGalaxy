@@ -3020,11 +3020,19 @@
   },
   "secondScreen": {
     "title": "Show on TV",
-    "openOnTv": "Open this address in the TV browser (smart TV, laptop on HDMI or another device) or scan the code. The TV shows only the shared table; your cards stay on this phone.",
-    "androidHint": "Chrome on Android and the app cannot cast a single page to a Chromecast. Open the link on the TV instead. Screen mirroring would also show your cards.",
+    "androidHint": "Android cannot cast a single page to a Chromecast. Send the link to the TV instead; screen mirroring would also show your cards.",
     "castFailed": "No cast screen found. Open the link on the TV instead.",
-    "cast": "Cast",
+    "cast": "Cast to TV",
     "copyLink": "Copy link",
-    "copied": "Copied"
+    "copied": "Copied",
+    "castDesc": "Chromecast or a TV with Cast in the same Wi-Fi.",
+    "window": "Open in a separate window",
+    "windowDesc": "For a laptop or PC on the TV: drag the window onto the TV and press F11 for full screen.",
+    "windowBlocked": "The browser blocked the window. Allow pop-ups for this page.",
+    "share": "Send link to the TV",
+    "shareDesc": "Share the link to the TV or another device and open it there.",
+    "mirror": "Mirror this screen",
+    "mirrorDesc": "This device shows only the table, so mirroring is safe: Android Quick Settings → \"Cast\" / \"Smart View\", iPhone → AirPlay \"Screen Mirroring\".",
+    "otherDevice": "Or open this address in the TV browser or scan the code. The TV shows only the shared table; your cards stay on this phone."
   }
 }

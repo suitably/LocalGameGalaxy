@@ -75,6 +75,7 @@ export const TabletopHostView: React.FC<TabletopHostViewProps> = ({
         open={tvOpen}
         onClose={() => setTvOpen(false)}
         screenRoute={buildScreenRoute(roomId, gameId)}
+        mirrorSafe={seat === null}
       />
     </>
   );
