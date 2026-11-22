@@ -12,6 +12,9 @@ import { QwixxSheetSelector } from './components/QwixxSheetSelector';
 import { QwixxSheetChips } from './components/QwixxSheetChips';
 import { useQwixxState } from './useQwixxState';
 import { useQwixxHeaderActions } from './useQwixxHeaderActions';
+import { useQwixxLocalTable } from './useQwixxLocalTable';
+import { QwixxTableBar } from './components/QwixxTableBar';
+import { LocalPlayersDialog } from '../../modules/pass-and-play';
 
 // Initialize i18n bundles at module load time to prevent setState side-effects during render
 initQwixxI18n();
@@ -27,14 +30,19 @@ export const QwixxGame: React.FC = () => {
   const [sheetSelectorOpen, setSheetSelectorOpen] = useState(false);
   const currentSheetDef = getSheetDefinition(state.mySheet.sheetType || 'classic');
   const { showDice, setShowDice } = game;
+  // One device for everyone: a sheet per player, passed on with "<name> fertig".
+  const table = useQwixxLocalTable(state.mySheet, game.loadSheet);
+  const [playersOpen, setPlayersOpen] = useState(false);
   useQwixxHeaderActions({
     showDice,
     onToggleDice: useCallback(() => setShowDice(!showDice), [setShowDice, showDice]),
     onNewGame: useCallback(() => setResetDialogOpen(true), []),
+    onPlayers: useCallback(() => setPlayersOpen(true), [setPlayersOpen]),
   });
 
   return (
     <GameLayout maxWidth="md">
+      <QwixxTableBar table={table} />
       {game.showDice && (
         <QwixxDiceRoller
           dice={state.dice}
@@ -72,9 +80,19 @@ export const QwixxGame: React.FC = () => {
         confirmColor="error"
         onCancel={() => setResetDialogOpen(false)}
         onConfirm={() => {
-          game.resetGame();
+          if (!table.newGame()) game.resetGame();
           setResetDialogOpen(false);
         }}
+      />
+
+      <LocalPlayersDialog
+        open={playersOpen}
+        names={table.names}
+        onApply={(names) => {
+          setPlayersOpen(false);
+          table.setPlayers(names);
+        }}
+        onClose={() => setPlayersOpen(false)}
       />
 
       <QwixxSheetSelector

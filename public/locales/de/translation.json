@@ -1763,7 +1763,11 @@
       "switchFrom": "{{name}} fertig",
       "coverTitle": "Gib das Gerät an {{name}}",
       "reveal": "Ich bin {{name}} – aufdecken",
-      "otherPlayer": "Jemand anderes ist dran?"
+      "otherPlayer": "Jemand anderes ist dran?",
+      "players": "Spieler",
+      "playersTitle": "Spieler an diesem Gerät",
+      "playersHint": "Das Gerät wird reihum weitergegeben. Übernehmen startet ein neues Spiel.",
+      "playersApply": "Übernehmen & neu starten"
     },
     "seatInvited": "Eingeladen – Link noch nicht geöffnet",
     "seatJoined": "Beigetreten",

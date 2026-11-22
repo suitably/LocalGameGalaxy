@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useState } from 'react';
+import React, { useCallback, useReducer, useEffect, useState } from 'react';
 import { alpha, Box, Typography, Button, IconButton, Tooltip } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/ReplayRounded';
 import CasinoIcon from '@mui/icons-material/CasinoRounded';
@@ -8,6 +8,7 @@ import { storage, STORAGE_KEYS } from '../../lib/storage';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import UndoIcon from '@mui/icons-material/UndoRounded';
+import { LocalPlayersButton, usePassAndPlayTurns } from '../../modules/pass-and-play';
 
 import { kniffelReducer, INITIAL_KNIFFEL_STATE } from './logic/kniffelReducer';
 import { evaluatePossibleScores } from './logic/kniffelScoring';
@@ -57,6 +58,14 @@ export const KniffelGame: React.FC = () => {
 
   const possibleScores = evaluatePossibleScores(state.dice);
 
+  // One device for everyone: the turn moves on after scoring, the cover asks for the next player.
+  const turns = usePassAndPlayTurns({
+    players: state.players,
+    activeIndex: state.activePlayerIndex,
+    onSwitch: useCallback((index: number) => dispatch({ type: 'SWITCH_PLAYER', index }), []),
+    onSetPlayers: useCallback((names: string[]) => dispatch({ type: 'SET_PLAYERS', names }), []),
+  });
+
   return (
     <GameLayout maxWidth="md">
       {/* Header controls */}
@@ -71,6 +80,7 @@ export const KniffelGame: React.FC = () => {
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <LocalPlayersButton onClick={turns.openPlayers} />
           <Tooltip title={t('games.kniffel.show_dice_tooltip', 'Virtuelle Würfel ein-/ausblenden')}>
             <Button
               variant={showDice ? 'contained' : 'outlined'}
@@ -135,7 +145,7 @@ export const KniffelGame: React.FC = () => {
         possibleScores={possibleScores}
         rollCount={state.rollCount}
         onScoreCategory={handleScoreCategory}
-        onSwitchPlayer={(idx) => dispatch({ type: 'SWITCH_PLAYER', index: idx })}
+        onSwitchPlayer={turns.switchTo}
         disabled={state.isGameOver}
         showDice={showDice}
       />
@@ -156,6 +166,8 @@ export const KniffelGame: React.FC = () => {
           </Button>
         </Box>
       )}
+
+      {turns.overlay}
 
       {/* Reset confirmation modal */}
       <ConfirmDialog

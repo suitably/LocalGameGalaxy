@@ -1763,7 +1763,11 @@
       "switchFrom": "{{name}} done",
       "coverTitle": "Hand the device to {{name}}",
       "reveal": "I'm {{name}} – reveal",
-      "otherPlayer": "Someone else's turn?"
+      "otherPlayer": "Someone else's turn?",
+      "players": "Players",
+      "playersTitle": "Players on this device",
+      "playersHint": "The device is passed around. Applying starts a new game.",
+      "playersApply": "Apply & restart"
     },
     "seatInvited": "Invited – link not opened yet",
     "seatJoined": "Joined",

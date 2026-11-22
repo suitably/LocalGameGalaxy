@@ -5,6 +5,7 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutlineRounded';
 import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import UndoIcon from '@mui/icons-material/UndoRounded';
 import { useTranslation } from 'react-i18next';
+import { LocalPlayersButton } from '../../../modules/pass-and-play';
 
 interface KnisterToolbarProps {
   showDice: boolean;
@@ -13,6 +14,7 @@ interface KnisterToolbarProps {
   onUndo: () => void;
   onOpenLegend: () => void;
   onReset: () => void;
+  onPlayers: () => void;
 }
 
 export const KnisterToolbar: React.FC<KnisterToolbarProps> = ({
@@ -22,6 +24,7 @@ export const KnisterToolbar: React.FC<KnisterToolbarProps> = ({
   onUndo,
   onOpenLegend,
   onReset,
+  onPlayers,
 }) => {
   const { t } = useTranslation();
   return (
@@ -35,6 +38,7 @@ export const KnisterToolbar: React.FC<KnisterToolbarProps> = ({
         flexWrap: 'wrap',
       }}
     >
+      <LocalPlayersButton onClick={onPlayers} />
       <Tooltip title={t('games.knister.show_dice_tooltip', 'Virtuelle Würfel ein-/ausblenden')}>
         <Button
           variant={showDice ? 'contained' : 'outlined'}

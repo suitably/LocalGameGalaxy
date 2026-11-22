@@ -22,6 +22,8 @@ export function nextPlayerId(players: HandoverPlayer[], currentId?: string | nul
 
 export type HandoverAction =
   | { type: 'START'; players: HandoverPlayer[]; currentId?: string | null }
+  /** The game already moved the turn on (e.g. Kniffel after scoring): cover for that player. */
+  | { type: 'COVER'; playerId: string }
   | { type: 'RETARGET'; playerId: string }
   | { type: 'REVEAL' }
   | { type: 'CANCEL' };
@@ -32,6 +34,8 @@ export function handoverReducer(state: HandoverState, action: HandoverAction): H
       const playerId = nextPlayerId(action.players, action.currentId);
       return playerId ? { phase: 'covered', playerId } : state;
     }
+    case 'COVER':
+      return { phase: 'covered', playerId: action.playerId };
     case 'RETARGET':
       return state.phase === 'covered' ? { phase: 'covered', playerId: action.playerId } : state;
     case 'REVEAL':

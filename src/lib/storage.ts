@@ -157,6 +157,8 @@ export const STORAGE_KEYS = {
   KNISTER_HIGHSCORE: 'knister_highscore',
   QWIXX_MY_SHEET: 'qwixx_my_sheet',
   QWIXX_SHOW_DICE: 'qwixx_show_dice',
+  /** Qwixx on one device for several players: every sheet + whose sheet is open (#467). */
+  QWIXX_LOCAL_TABLE: 'qwixx_local_table',
 
   // Kniffel
   KNIFFEL_CURRENT_GAME: 'kniffel_current_game',

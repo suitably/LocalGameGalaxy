@@ -123,6 +123,10 @@ export const useQwixxState = () => {
 
   const removedDice = useMemo(() => getRemovedDieColors(state.mySheet), [state.mySheet]);
 
+  const loadSheet = useCallback((sheet: PlayerSheet) => {
+    dispatch({ type: 'LOAD_SHEET', sheet });
+  }, []);
+
   const resetGame = useCallback(() => {
     dispatch({ type: 'RESET_GAME' });
     clearHighlights();
@@ -145,5 +149,6 @@ export const useQwixxState = () => {
     roll,
     clickDie,
     resetGame,
+    loadSheet,
   };
 };
