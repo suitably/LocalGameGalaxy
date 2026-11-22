@@ -42,7 +42,7 @@ export function seatRemotes(e: StageEngine, members: PultMember[]) {
   e.seats = next;
   e.players = next.flatMap((seat, i) => {
     const old = kept.get(seat);
-    const p = old ?? createPlayers(song, [seat], e.sections.length, e.startBeat)[0];
+    const p = old ?? createPlayers(song, [seat], e.sections.length, e.startBeat, e.drumOptions)[0];
     if (!p) return [];
     if (!old) p.missIdx = lowerBound(p.notes, e.beat);
     p.no = i + 1;

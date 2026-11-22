@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StageEngine } from './engine/StageEngine';
+import { loadDrumOptions } from './drumSettings';
 import { BrowserStageSound } from './engine/browserSound';
 import type { StageTexts } from './render/common';
 
@@ -17,7 +18,7 @@ const PROGRESS_REFRESH_MS = 250;
  * every frame. A pult passes its own engine (`create`), which follows the stage's clock instead.
  */
 export function useStage<E extends StageEngine = StageEngine>(
-  create: () => E = () => new StageEngine() as E,
+  create: () => E = () => loadDrumOptions(new StageEngine()) as E,
 ) {
   const [engine] = useState(create);
   const soundRef = useRef<BrowserStageSound | null>(null);

@@ -107,6 +107,8 @@ export const STORAGE_KEYS = {
   MELODIQ_NOTES_RESULTS: 'melodiq_notes_results',
   /** Colours of the judgements on the stage ('standard' | 'colorblind', #699). */
   MELODIQ_NOTES_JUDGEMENT_PALETTE: 'melodiq_notes_judgement_palette',
+  /** Whether the drum percussion lane is judged ('1'); default display-only (#571). */
+  MELODIQ_NOTES_JUDGE_PERCUSSION: 'melodiq_notes_judge_percussion',
 
   // Werewolf game state
   WEREWOLF_STATE: 'werewolf-game-state',

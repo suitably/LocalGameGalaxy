@@ -1,7 +1,15 @@
-import { drumLaneOf, type InstrumentKind, type ScoreSong } from '../../../../modules/music-score';
+import {
+  DRUM_PERCUSSION_LANE,
+  drumLaneOf,
+  drumLaneOfVoice,
+  type InstrumentKind,
+  type ScoreSong,
+} from '../../../../modules/music-score';
 import { buildChart, pitchRange } from '../logic/charts';
+import { drumKitOf, type DrumKitOptions } from '../logic/drumLanes';
 import { STAGE_INSTRUMENTS } from '../logic/instruments';
 import { newStats } from '../logic/judging';
+import type { StageEngine } from './StageEngine';
 import type { BandEvent, BandMode, PlayerSeat, StagePlayer } from './types';
 
 export const MAX_PLAYERS = 4;
@@ -44,16 +52,27 @@ export function nextSeat(song: ScoreSong, seats: PlayerSeat[]): PlayerSeat | nul
   return free[0] ? { partId: free[0].id, inst: free[0].guess } : null;
 }
 
+/** Drum options of this screen; a pult seat always has one tom pad and no percussion pad. */
+export const DEFAULT_DRUM_OPTIONS: DrumKitOptions = { judgePercussion: false, mergeToms: false };
+
+const seatDrumOptions = (seat: PlayerSeat, drums: DrumKitOptions): DrumKitOptions =>
+  seat.remoteId || drums.mergeToms ? { judgePercussion: false, mergeToms: true } : drums;
+
 export function createPlayers(
   song: ScoreSong,
   seats: PlayerSeat[],
   sectionCount: number,
   fromBeat = 0,
+  drums: DrumKitOptions = DEFAULT_DRUM_OPTIONS,
 ): StagePlayer[] {
   return seats.slice(0, MAX_PLAYERS).flatMap((seat, i) => {
     const part = song.parts.find((p) => p.id === seat.partId);
     if (!part) return [];
-    const notes = buildChart(part, seat.inst).filter((n) => n.t >= fromBeat);
+    const chart = buildChart(part, seat.inst).filter((n) => n.t >= fromBeat);
+    const instrument = STAGE_INSTRUMENTS[seat.inst];
+    const kit =
+      instrument.view === 'drums' ? drumKitOf(chart, seatDrumOptions(seat, drums)) : undefined;
+    const notes = kit ? kit.notes : chart;
     const range = pitchRange(notes);
     return [
       {
@@ -61,7 +80,7 @@ export function createPlayers(
         remoteId: seat.remoteId,
         name: seat.name,
         part,
-        instrument: STAGE_INSTRUMENTS[seat.inst],
+        instrument,
         notes,
         range,
         octaveBase: 12 * Math.floor(range.median / 12),
@@ -73,29 +92,46 @@ export function createPlayers(
         pressed: new Set<number>(),
         history: [],
         voice: { pitch: range.median, singing: false },
+        ...(kit && { drumKit: { pads: kit.pads, mergeToms: kit.mergeToms, shown: kit.shown } }),
       },
     ];
   });
 }
 
-/** Count-in clicks before `fromBeat` plus the notes from there on the synth plays for the band mode. */
+/** The engine's players for `song`: its seats from its start beat, with its drum options. */
+export const playersFor = (e: StageEngine, song: ScoreSong) =>
+  createPlayers(song, e.seats, e.sections.length, e.startBeat, e.drumOptions);
+
+/**
+ * Count-in clicks before `fromBeat` plus the notes from there on the synth plays for the band mode.
+ * A drummer's display-only percussion still sounds with the band ('others' too), since nobody plays it.
+ */
 export function buildBandEvents(
   song: ScoreSong,
   seats: PlayerSeat[],
   mode: BandMode,
   countIn: number,
   fromBeat = 0,
+  drums: DrumKitOptions = DEFAULT_DRUM_OPTIONS,
 ): BandEvent[] {
   const events: BandEvent[] = [];
   for (let q = -countIn; q < 0; q++)
     events.push({ t: fromBeat + q, kind: 'click', accent: q === -countIn });
   if (mode === 'none') return events;
   const played = new Set(seats.map((s) => s.partId));
+  const percussionOnly = new Set(
+    seats
+      .filter((s) => s.inst === 'drums' && !seatDrumOptions(s, drums).judgePercussion)
+      .map((s) => s.partId),
+  );
   for (const part of song.parts) {
-    if (mode === 'others' && played.has(part.id)) continue;
+    const onlyPercussion = mode === 'others' && played.has(part.id);
+    if (onlyPercussion && !(part.isDrum && percussionOnly.has(part.id))) continue;
     for (const n of part.notes) {
       if (n.t < fromBeat) continue;
-      if (part.isDrum) events.push({ t: n.t, kind: 'drum', lane: drumLaneOf(n.pitch) });
+      const lane = !part.isDrum ? -1 : n.drum ? drumLaneOfVoice(n.drum) : drumLaneOf(n.pitch);
+      if (onlyPercussion && lane !== DRUM_PERCUSSION_LANE) continue;
+      if (part.isDrum) events.push({ t: n.t, kind: 'drum', lane });
       else events.push({ t: n.t, kind: 'note', inst: part.guess, midi: n.pitch, dur: n.dur });
     }
   }

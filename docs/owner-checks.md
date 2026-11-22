@@ -47,3 +47,11 @@ The PR path is removed; sharing is the Share menu (export `.pcio` / `.json`, sav
 - [ ] Export `.pcio` and `.json` from the Share menu on desktop and in the Android app (blob download in the WebView), then import both on a second device.
 - [ ] With a companion connected, Share → "Save to server" and see the game on another client.
 - [ ] On a Steam Workshop import, both exports are disabled with the blocked text, and saving to the server still works.
+
+## #571 — Melodiq Notes drum lanes
+
+Lanes, keys, judging and the percussion setting are in code with tests ([ADR-0007](adr/0007-melodiq-notes-drum-lanes.md)).
+
+- [ ] On a real e-drum kit, toms land on the intended lanes (Roland sends 45 for tom 2, which maps to the tom 3 lane, and 39 for tom 4 rim, which maps to percussion; a per-kit mapping may be needed); hi-hat edge 22/26 and tom 3 rim 58 behave as expected.
+- [ ] With 7–8 lanes on a laptop/TV, lane width and the hollow (open) vs filled (closed) hi-hat are readable; tom colours on the phone pult's single tom pad are readable.
+- [ ] Synth tom pitches and the percussion sound are distinguishable; display-only percussion is audible in "others" band mode.

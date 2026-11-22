@@ -105,9 +105,10 @@ export function forVisibleNotes(
   from: number,
   to: number,
   fn: (n: StageNote) => void,
+  notes: StageNote[] = p.notes,
 ) {
-  for (let i = lowerBound(p.notes, from - p.maxDur); i < p.notes.length && p.notes[i].t <= to; i++)
-    fn(p.notes[i]);
+  for (let i = lowerBound(notes, from - p.maxDur); i < notes.length && notes[i].t <= to; i++)
+    fn(notes[i]);
 }
 
 export function drawPanelBackground(g: Ctx, color: string, w: number, h: number, pulse: number) {

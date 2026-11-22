@@ -6,6 +6,7 @@ import { TOUCH_TARGET } from '../../../../lib/touchTarget';
 import { NotesSheet } from '../../components/NotesSheet';
 import type { StageEngine } from '../engine/StageEngine';
 import type { StageInputSource } from '../useStageInput';
+import { DrumLaneOptions } from './DrumLaneOptions';
 import { InputMenu } from './InputMenu';
 import { PlayerList } from './PlayerList';
 import { ModeSwitch } from './ModeSwitch';
@@ -107,6 +108,7 @@ export function SessionBar(props: SessionBarProps) {
         }
       >
         <PlayerList engine={engine} onInvite={onInvite} onRemoveRemote={onRemoveRemote} />
+        <DrumLaneOptions engine={engine} />
       </NotesSheet>
     </Stack>
   );

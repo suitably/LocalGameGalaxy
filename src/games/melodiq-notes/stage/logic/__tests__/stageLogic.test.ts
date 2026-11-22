@@ -91,7 +91,7 @@ describe('buildChart', () => {
     );
     expect(chart.map((n) => [n.t, n.lane])).toEqual([
       [0, 1],
-      [0, 4],
+      [0, 8],
       [1, 2],
     ]);
   });
@@ -173,7 +173,7 @@ describe('judging', () => {
     expect(chart.map((n) => [n.lane, n.drum, n.hand])).toEqual([
       [1, 'hihatClosed', 'R'],
       [1, 'hihatOpen', undefined],
-      [3, 'tom2', undefined],
+      [4, 'tom2', undefined],
     ]);
   });
 });
@@ -219,7 +219,11 @@ describe('keyAction', () => {
     expect(keyAction('KeyY', 'keys', 60, 0, true)).toEqual({ kind: 'lane', lane: 68 });
     expect(keyAction('Digit5', 'strings', 0, 4, true)).toBeNull();
     expect(keyAction('Digit2', 'strings', 0, 6, true)).toEqual({ kind: 'lane', lane: 1 });
-    expect(keyAction('Space', 'drums', 0, 0, true)).toEqual({ kind: 'lane', lane: 4 });
+    expect(keyAction('Space', 'drums', 0, 0, true)).toEqual({ kind: 'lane', lane: 8 });
+    // the tom keys play the shown toms left to right
+    expect(keyAction('KeyK', 'drums', 0, 0, true, [2, 4, 6])).toEqual({ kind: 'lane', lane: 4 });
+    expect(keyAction('KeyL', 'drums', 0, 0, true, [2, 4, 6])).toEqual({ kind: 'lane', lane: 6 });
+    expect(keyAction('Semicolon', 'drums', 0, 0, true, [2, 4, 6])).toBeNull();
     expect(keyAction('Space', 'pitch', 0, 0, false)).toEqual({ kind: 'sing', on: false });
     expect(keyAction('KeyD', 'keys', 60, 0, false)).toBeNull();
   });
