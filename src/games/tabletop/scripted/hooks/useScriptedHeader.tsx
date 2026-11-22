@@ -20,6 +20,8 @@ interface ScriptedHeaderOptions {
   onRestart?: () => void;
   /** Games with table settings (`useTableSettings`). */
   onOpenSettings?: () => void;
+  /** Host only: puts the public table on a TV. */
+  onShowOnTv?: () => void;
 }
 
 /** Returns the rules dialog to render. */
@@ -29,6 +31,7 @@ export function useScriptedHeader({
   onBackToLobby,
   onRestart,
   onOpenSettings,
+  onShowOnTv,
 }: ScriptedHeaderOptions): ReactNode {
   const { t } = useTranslation();
   const [rulesOpen, setRulesOpen] = useState(false);
@@ -50,6 +53,7 @@ export function useScriptedHeader({
   useTabletopHeader({
     onBack,
     onBackToLobby,
+    onShowOnTv,
     onOpenRules: () => setRulesOpen(true),
     onOpenSettings,
     onRestart,

@@ -5,8 +5,7 @@
  * table, spectators) shows the public table, made for casting to the TV.
  */
 import React from 'react';
-import { Button, CircularProgress, Stack } from '@mui/material';
-import CastRoundedIcon from '@mui/icons-material/CastRounded';
+import { CircularProgress, Stack } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ShowOnTvDialog } from '../../../../components/common/ShowOnTvDialog';
@@ -15,6 +14,7 @@ import { TvThemeProvider } from '../../../../components/common/TvThemeProvider';
 import { useFollowPartyLobby } from '../../../../features/party/hooks/useFollowPartyLobby';
 import { usePartyLobbyReturn } from '../../hooks/usePartyLobbyReturn';
 import { newSeed } from '../../logic/rng';
+import { buildScreenRoute } from '../../logic/tabletopRoute';
 import { getScript } from '../logic/scriptRegistry';
 import { useRoomSession } from '../hooks/useRoomSession';
 import { useScriptedHeader } from '../hooks/useScriptedHeader';
@@ -57,37 +57,27 @@ export const RoomScriptedGame: React.FC<{ scriptId: string; roomId: string }> = 
     onBackToLobby: room.isHost ? returnToLobby : undefined,
     onRestart: room.isHost && running ? () => dispatch({ type: 'END' }) : undefined,
     onOpenSettings: settings.open,
+    onShowOnTv: room.isHost ? () => setTvOpen(true) : undefined,
   });
   const header = (
     <>
       {rules}
       {settings.dialog}
+      {room.isHost && (
+        <ShowOnTvDialog
+          open={tvOpen}
+          onClose={() => setTvOpen(false)}
+          screenRoute={buildScreenRoute(roomId, scriptId)}
+          mirrorSafe={seat === null}
+        />
+      )}
     </>
   );
-
-  const tvAction = room.isHost ? (
-    <>
-      <Button
-        size="small"
-        startIcon={<CastRoundedIcon />}
-        onClick={() => setTvOpen(true)}
-        sx={{ alignSelf: 'flex-end', m: 1 }}
-      >
-        {t('secondScreen.title')}
-      </Button>
-      <ShowOnTvDialog
-        open={tvOpen}
-        onClose={() => setTvOpen(false)}
-        screenRoute={`/games/tabletop?room=${encodeURIComponent(roomId)}&gameId=${encodeURIComponent(scriptId)}&role=screen`}
-      />
-    </>
-  ) : null;
 
   if (!synced) {
     return (
       <Stack alignItems="center" py={6}>
         {header}
-        {tvAction}
         <CircularProgress />
       </Stack>
     );
@@ -125,7 +115,6 @@ export const RoomScriptedGame: React.FC<{ scriptId: string; roomId: string }> = 
   return (
     <>
       {header}
-      {tvAction}
       {seat === null ? <TvThemeProvider>{table}</TvThemeProvider> : table}
     </>
   );

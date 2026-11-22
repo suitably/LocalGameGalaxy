@@ -3020,11 +3020,19 @@
   },
   "secondScreen": {
     "title": "Auf TV zeigen",
-    "openOnTv": "Öffne diese Adresse im Browser des Fernsehers (Smart-TV, Laptop am HDMI oder anderes Gerät) oder scanne den Code. Der TV zeigt nur den gemeinsamen Tisch, deine Karten bleiben auf diesem Handy.",
-    "androidHint": "Chrome auf Android und die App können keine einzelne Seite an einen Chromecast senden. Öffne den Link stattdessen am TV. Bildschirm-Spiegelung würde auch deine Karten zeigen.",
+    "androidHint": "Android kann keine einzelne Seite an einen Chromecast senden. Sende den Link stattdessen an den TV; Bildschirm-Spiegelung würde auch deine Karten zeigen.",
     "castFailed": "Kein Cast-Bildschirm gefunden. Öffne den Link stattdessen am TV.",
-    "cast": "Streamen",
+    "cast": "An TV streamen",
     "copyLink": "Link kopieren",
-    "copied": "Kopiert"
+    "copied": "Kopiert",
+    "castDesc": "Chromecast oder TV mit Cast im selben WLAN.",
+    "window": "In separatem Fenster öffnen",
+    "windowDesc": "Für einen Laptop oder PC am TV: Fenster auf den TV ziehen und F11 für Vollbild drücken.",
+    "windowBlocked": "Der Browser hat das Fenster blockiert. Erlaube Pop-ups für diese Seite.",
+    "share": "Link an den TV senden",
+    "shareDesc": "Teile den Link an den TV oder ein anderes Gerät und öffne ihn dort.",
+    "mirror": "Diesen Bildschirm spiegeln",
+    "mirrorDesc": "Dieses Gerät zeigt nur den Tisch, Spiegeln ist also unbedenklich: Android-Schnelleinstellungen → „Übertragen“ / „Smart View“, iPhone → AirPlay „Bildschirmsynchronisierung“.",
+    "otherDevice": "Oder öffne diese Adresse im Browser des Fernsehers oder scanne den Code. Der TV zeigt nur den gemeinsamen Tisch, deine Karten bleiben auf diesem Handy."
   }
 }

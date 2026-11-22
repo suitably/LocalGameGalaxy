@@ -34,7 +34,7 @@ Not viable: Remote Playback API (one `<video>`/`<audio>` element only), `getDisp
 ## 2. Chosen flow: the TV opens a URL and joins as a read-only client
 
 - `src/lib/secondScreen.ts`: `buildScreenUrl` (page origin; the hosted `PUBLIC_APP_URL` in the native app), `canTryPresentation` (Presentation API only on non-Android, non-native browsers), `presentOnScreen`.
-- `src/components/common/ShowOnTvDialog.tsx`: QR code + URL for the TV browser (smart TV, laptop on HDMI, any second device), Android hint, Cast button only where it can work, visible error when casting fails.
+- `src/components/common/ShowOnTvDialog.tsx`: option list from `screenOptions` (Cast where the Presentation API can work; "Open in a separate window" on desktop for a laptop/PC on the TV; "Send link" via the share sheet on phones; "Mirror this screen" only when the device shows nothing private, `mirrorSafe`), plus QR code + URL for the TV browser. Opened from the game's header menu, never from a button in the page body (update 2026-11-22).
 - Spieltisch: the TV opens `/games/tabletop?room=…&gameId=…&role=screen` and syncs like a seatless spectator, so it receives only public data. The host phone stays the state owner and can play its own seat (`role=tv&seat=N`). Details: [`docs/tech/tabletop-engine.md`](../tech/tabletop-engine.md).
 - Melodiq: the Cast option is hidden where it cannot work and failures are shown. Giving `/games/melodiq/tv` a network transport (so a TV browser can join) is open work.
 
