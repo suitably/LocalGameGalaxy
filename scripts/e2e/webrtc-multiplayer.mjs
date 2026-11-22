@@ -137,6 +137,15 @@ async function relayMqtt(ctx, net) {
   });
 }
 
+/**
+ * A guest's invite to the host's lobby room: the end-to-end key (session storage of the host,
+ * `galaxy_room_key_<room>`) rides in the fragment like in the real invite link (ADR 0009).
+ */
+const inviteUrl = async (hostPage, room) => {
+  const key = await hostPage.evaluate((r) => sessionStorage.getItem(`galaxy_room_key_${r}`), room);
+  return `${BASE}/party?room=${room}${key ? `#key=${key}` : ''}`;
+};
+
 /** The host's party code (`<gameId>_party_id`, stored by `WebRTCHostProvider`). */
 const hostPartyId = (page) => page.evaluate(() => localStorage.getItem('melodiq_party_id'));
 
@@ -218,7 +227,7 @@ async function lobbyScenario(open, game) {
   const guests = [];
   for (let i = 1; i < N; i++) {
     const g = await open();
-    await g.page.goto(`${BASE}/party?room=${room}`);
+    await g.page.goto(await inviteUrl(host.page, room));
     guests.push(g);
   }
   const joined = await until(async () => {
@@ -256,7 +265,7 @@ async function hostTakeoverScenario(open) {
   const guests = [];
   for (let i = 1; i < Math.max(N, 3); i++) {
     const g = await open();
-    await g.page.goto(`${BASE}/party?room=${room}`);
+    await g.page.goto(await inviteUrl(host.page, room));
     guests.push(g);
   }
   const hostOf = (x) =>
@@ -311,7 +320,7 @@ async function watchingHostScenario(open) {
   const guests = [];
   for (let i = 0; i < 2; i++) {
     const g = await open();
-    await g.page.goto(`${BASE}/party?room=${room}`);
+    await g.page.goto(await inviteUrl(host.page, room));
     guests.push(g);
   }
   const all = [host, ...guests];
@@ -405,7 +414,7 @@ async function silentGuestScenario(open) {
   const guests = [];
   for (let i = 1; i < Math.max(N, 3); i++) {
     const g = await open();
-    await g.page.goto(`${BASE}/party?room=${room}`);
+    await g.page.goto(await inviteUrl(host.page, room));
     guests.push(g);
   }
   const all = [host, ...guests];

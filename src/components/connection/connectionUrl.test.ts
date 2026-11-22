@@ -52,4 +52,20 @@ describe('buildDeviceConnectionUrl for a party lobby (#647)', () => {
     expect(hash.get('room')).toBe('ABC123');
     expect(hash.getAll('tracker')).toEqual(['wss://tracker.example.com', 'ws://192.168.1.50:8000']);
   });
+
+  it('puts the room key into the lobby link fragment (ADR 0009)', () => {
+    const url = new URL(
+      buildDeviceConnectionUrl({
+        baseUrl: 'https://nexumia.de',
+        clientPath: '/games/melodiq?role=client',
+        partyId: 'ABC123',
+        lobby: true,
+        roomKey: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk',
+      }),
+    );
+    expect(url.search).toBe('');
+    expect(new URLSearchParams(url.hash.slice(url.hash.indexOf('?') + 1)).get('key')).toBe(
+      'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk',
+    );
+  });
 });

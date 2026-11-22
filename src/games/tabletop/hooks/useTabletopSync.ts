@@ -90,6 +90,8 @@ export function useTabletopSync({
   }, []);
 
   const mailbox = useMemo(
+    // Channel = room code, so the party room's key encrypts it (ADR 0009). Nothing is
+    // retained: a joining seat asks the host for a snapshot.
     () => new MqttMailboxService<TabletopSyncEnvelope>({ topicPrefix: 'lgg/tabletop' }),
     [],
   );

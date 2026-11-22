@@ -196,6 +196,11 @@ export const STORAGE_KEYS = {
 export const STORAGE_PREFIXES = {
   PARTY_STATE: 'galaxy_party_state_',
   PARTY_HOST_ID: 'party_host_id_',
+  /**
+   * MQTT end-to-end key per party room (session storage) or per "play over days" game id
+   * (local storage), base64url AES-GCM 256 (`src/modules/sync/roomKeys.ts`, ADR 0009).
+   */
+  ROOM_KEY: 'galaxy_room_key_',
   GAME_RELAY: 'galaxy_game_relay_',
   /** Running scripted card game per game id (local table or the room this device hosts). */
   TABLETOP_SCRIPTED: 'tabletop_scripted_',

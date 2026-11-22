@@ -2490,6 +2490,7 @@
     "moreGamesSoonTitle": "More Party Games",
     "pending_game_label": "Chosen game",
     "pending_game_waiting": "Waiting for players – they join with the QR code below.",
+    "encrypted_room_hint": "This room is end-to-end encrypted. Open the host's invite link or scan their QR code – the room code alone is not enough.",
     "pending_game_ready": "{{count}} players ready.",
     "pending_game_start": "Start now",
     "pending_game_other": "Other game",

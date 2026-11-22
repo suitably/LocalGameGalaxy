@@ -86,6 +86,16 @@ describe('partyRoutes (#417)', () => {
       'https://nexumia.de/#/party?room=R1&gameRelay=https%3A%2F%2Fmy.host%3A3000',
     );
   });
+
+  it('share URL carries the room key in the fragment (ADR 0009)', () => {
+    const base = { origin: 'https://nexumia.de', pathname: '/', roomId: 'R1' };
+    expect(
+      buildPartyShareUrl({ ...base, roomKey: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk' }),
+    ).toBe('https://nexumia.de/#/party?room=R1&key=kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk');
+    expect(buildPartyShareUrl({ ...base, roomKey: 'not-a-key' })).toBe(
+      'https://nexumia.de/#/party?room=R1',
+    );
+  });
 });
 
 describe('resolvePendingLaunch (Spieltisch → party lobby)', () => {

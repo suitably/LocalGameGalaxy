@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-11-15
+  at: 2026-11-22
   method: 'read src/modules/sync/*.ts, src/lib/webrtc/*, src/games/melodiq/{PhoneClientEngine.tsx,hooks/usePhoneClientMessages.ts,hooks/usePhoneMicStreaming.ts,hooks/useTVMode.ts,hooks/useTVReceiver.ts,hooks/useMelodiqGlobalEvents.tsx}, public/sw-push.js, server/cloudflare-push-relay/worker.ts, cloudflare/webPushSend.ts, src/lib/push/siteWebPush.ts'
 sources:
   - 'src/modules/sync/MqttMailboxService.ts'
@@ -55,7 +55,7 @@ Topic = `<topicPrefix>/<channelId>`. Prefixes in use:
 | `lgg/party`          | `src/features/party/logic/partyMailbox.ts`      |
 | `lgg/room`           | `src/modules/room-game/roomTransport.ts`        |
 
-`channelId` is the game / room id chosen by the game. On `lgg/room`, `useRoomReducer` uses `<gameKey>_<roomId>` (host-run state) and `useRoomEvents` uses `<gameKey>_<roomId>_live` (fire-and-forget events, e.g. Melodiq Notes pult input and clock pings). MQTT publishes are retained, so a receiver of live events must ignore stale ones.
+`channelId` is the game / room id chosen by the game. On `lgg/room`, `useRoomReducer` uses `<gameKey>_<roomId>` (host-run state) and `useRoomEvents` uses `<gameKey>_<roomId>_live` (fire-and-forget events, e.g. Melodiq Notes pult input and clock pings). Only last-state messages are retained (see the `retain` table below); a receiver of live events must still ignore stale ones (a retained message from before #662 can linger on a topic).
 
 ### Envelope
 
@@ -70,13 +70,24 @@ export interface MqttEnvelope<T> {
 }
 ```
 
-- Published with `{ qos: 1, retain: true }` — the **last message per topic is retained by the broker** and delivered to late joiners.
+- Published with `qos: 1`; `retain` per mailbox option `retain(payload)` (default `false`). Only the last state a late joiner needs is retained (#662, [ADR 0009](../adr/0009-mqtt-end-to-end-encryption.md)):
+
+  | Mailbox              | Retained                               | Not retained                            |
+  | -------------------- | -------------------------------------- | --------------------------------------- |
+  | `lgg/party`          | room state (`PartyRoomState`)          | `PARTY_PRESENCE` pings                  |
+  | `lgg/room`           | `{kind: 'state'}`                      | `hello`, `action`, every `_live` event  |
+  | `lgg/ga`             | game snapshot (short QR links load it) | —                                       |
+  | `lgg/storyteller/v1` | `STORY_SYNC` / `STORY_FINISH` snapshot | —                                       |
+  | `lgg/tabletop`       | —                                      | everything (a seat asks for a snapshot) |
+
+- **End-to-end encryption (#662, [ADR 0009](../adr/0009-mqtt-end-to-end-encryption.md)).** A channel with a room key (option `keyFor(channelId)`, default `getRoomKey(channelId)` from `src/modules/sync/roomKeys.ts`) is sent as the JSON envelope `{"v":1,"iv":"<base64, 12 bytes>","ct":"<base64 AES-GCM-256 ciphertext + tag>"}` (`src/modules/sync/roomCrypto.ts`). The plaintext inside is exactly the unencrypted wire string (envelope JSON or `LZ:`…), so compression happens before encryption. Receive side: a keyed channel drops plaintext and anything that fails to decrypt; a channel without a key drops encrypted messages and fires `onLockedChannel(channelId)` (the party lobby shows `PartyEncryptedRoomNotice`). Publishes are encrypted in order (`sealQueue`). Keys per mailbox: `lgg/party` channel `party_<room>` → key of `<room>`; `lgg/room` → key of the room passed to `getRoomTransport(roomId)` (each channel used through it is bound to that room); `lgg/tabletop` channel = room code; `lgg/ga` and `lgg/storyteller/v1` channel = game id.
+- **Room keys** (`roomKeys.ts`): 256-bit, base64url (43 characters). The party host creates one in `createParty` (`ensureRoomKey(room, 'session')`, session storage); a "Play over days" GuessArt / Storyteller game gets one at creation or when it is shared (`ensureRoomKey(gameId, 'local')`, local storage, the game spans days). The key travels only in the link fragment as `key=`: lobby invite `#/party?room=<CODE>&key=<KEY>` (`buildPartyShareUrl`, Gartic Phone share dialog, `buildDeviceConnectionUrl` lobby links), player links `#<route>?gameId=…&player=…[&data=…][&gameRelay=…]&key=<KEY>` (`buildSessionLink`). `captureInviteKey()` stores it (lobby controller, `useGameJoinUrl`); it reads `key` only from the fragment (also a bare `#key=` after a path query, e.g. `/party?room=X#key=K`), never from the query string. Push / ntfy deep links (`buildGameDeepLink`) carry no key: the device already has it. A room whose link has no key (old link, old host) stays plaintext for one release; a device that types the room code of an encrypted room hears nothing and gets the hint to use the invite link or QR code.
 - **Player join links** (`src/modules/sharing/sessionLink.ts`, `useSessionSharing`): the copied / shared link is `#<route>?gameId=…&player=…&data=<LZ snapshot>[&gameRelay=…]` and works without a broker. The QR code uses the same link without `data` once it exceeds `QR_LINK_MAX_LENGTH` (a full snapshot does not fit a scannable QR code); pass it as `buildQrLink`. GuessArt then loads the game from the retained mailbox snapshot (`importFromMailbox` in `src/games/guessart/logic/joinFromMailbox.ts`, 15 s timeout, notice `JoinLinkNotice`). Storyteller does not pass `buildQrLink` yet: its QR code keeps the full link, and the dialog shows a hint instead of a QR code when the link exceeds the QR capacity.
 - With `useCompression` (default `true`) the JSON is sent as `LZ:` + `LZString.compressToUTF16(...)`.
 - Receive side drops: empty / `{}` messages, envelopes whose `channelId` does not match the topic, own echoes (`senderClientId === clientId`), and an exact repeat of the last processed payload per channel.
 - Listeners: per channel (`subscribe(channelId, fn)` returns an unsubscribe) and global.
 
-Public brokers: anyone who knows a topic can read and write it. Do not put secrets in payloads.
+Public brokers: anyone who knows a topic can read and write it. With a room key they see only ciphertext, topic names (room code / game id) and timing; legacy rooms without a key are still readable.
 
 ## 3. Multi-channel sync (`useMultiChannelSync<T>`)
 
@@ -165,5 +176,6 @@ Host-internal events (`PLAYBACK_STARTED`, `SONG_ENDED`, `TV_READY`) are also dis
 | `STORAGE_KEYS.PUSH_RELAY_URL`, `PUSH_SITE_SUBSCRIPTION`, `NOTIFICATION_METHOD`, `NTFY_SERVER_URL`, `NTFY_TOPIC`                   | notifications                          |
 | `STORAGE_PREFIXES.GAME_RELAY` (`galaxy_game_relay_`)                                                                              | per-game relay URL from a share link   |
 | `STORAGE_PREFIXES.PARTY_STATE`, `PARTY_HOST_ID`, `STORAGE_KEYS.PARTY_MY_PLAYER_ID`, `HOST_ROOM_CODE`                              | party room                             |
+| `STORAGE_PREFIXES.ROOM_KEY` (`galaxy_room_key_`)                                                                                  | MQTT end-to-end key (room / game id)   |
 
 All keys: [persistence.md](persistence.md).

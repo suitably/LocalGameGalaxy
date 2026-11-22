@@ -2490,6 +2490,7 @@
     "party_ready": "Party bereit",
     "pending_game_label": "Gewähltes Spiel",
     "pending_game_waiting": "Warte auf Mitspieler – sie treten über den QR-Code unten bei.",
+    "encrypted_room_hint": "Dieser Raum ist Ende-zu-Ende-verschlüsselt. Öffne den Einladungslink oder scanne den QR-Code des Hosts – der Raumcode allein reicht nicht.",
     "pending_game_ready": "{{count}} Mitspieler bereit.",
     "pending_game_start": "Jetzt starten",
     "pending_game_other": "Anderes Spiel",
