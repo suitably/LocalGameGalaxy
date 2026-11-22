@@ -33,12 +33,12 @@ export const GarticStatusChips: React.FC<GarticStatusChipsProps> = ({
   const isReveal = phase === 'reveal';
 
   const phaseLabel = isPrompt
-    ? t('gartic.phasePrompt', 'Satz schreiben')
+    ? t('gartic.phasePrompt')
     : isDrawing
-      ? t('gartic.phaseDrawing', 'Zeichnen')
+      ? t('gartic.phaseDrawing')
       : isGuessing
-        ? t('gartic.phaseGuessing', 'Zeichnung beschreiben')
-        : t('gartic.phaseReveal', 'Album-Show');
+        ? t('gartic.phaseGuessing')
+        : t('gartic.phaseReveal');
 
   const PhaseIcon = isPrompt
     ? CreateRoundedIcon
@@ -59,15 +59,10 @@ export const GarticStatusChips: React.FC<GarticStatusChipsProps> = ({
       flexWrap="wrap"
       sx={{ px: 1, py: 0.5, flexShrink: 0 }}
     >
-      <Chip
-        label={playerName || t('common.you', 'Du')}
-        color="secondary"
-        size="small"
-        sx={chipSx}
-      />
+      <Chip label={playerName || t('common.you')} color="secondary" size="small" sx={chipSx} />
       {isReveal ? (
         <Chip
-          label={`${t('gartic.albumHeader', 'Album')} ${revealBookIndex + 1}/${totalBooks}`}
+          label={`${t('gartic.albumHeader')} ${revealBookIndex + 1}/${totalBooks}`}
           size="small"
           color="secondary"
           variant="outlined"
@@ -75,7 +70,7 @@ export const GarticStatusChips: React.FC<GarticStatusChipsProps> = ({
         />
       ) : (
         <Chip
-          label={`${t('guessart.roundHeader', { round: roundIndex + 1, defaultValue: `Runde ${roundIndex + 1}` })} / ${totalRounds}`}
+          label={`${t('guessart.roundHeader', { round: roundIndex + 1 })} / ${totalRounds}`}
           size="small"
           variant="outlined"
           sx={chipSx}

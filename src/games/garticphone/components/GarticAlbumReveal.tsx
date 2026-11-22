@@ -68,7 +68,6 @@ export const GarticAlbumReveal: React.FC<GarticAlbumRevealProps> = ({
           <Typography variant="subtitle1" fontWeight={800}>
             {t('guessart.albumOf', {
               name: currentBook.ownerName,
-              defaultValue: `Album von ${currentBook.ownerName}`,
             })}
           </Typography>
         </Box>

@@ -55,7 +55,7 @@ export const GarticDrawingStep: React.FC<GarticDrawingStepProps> = ({
         <Box display="flex" alignItems="center" gap={0.8} sx={{ flex: 1, minWidth: 0 }}>
           <BrushRoundedIcon sx={{ fontSize: 18, flexShrink: 0 }} />
           <Typography variant="body2" fontWeight={700} sx={{ flexShrink: 0, fontSize: '0.85rem' }}>
-            {t('guessart.drawWordPrompt', 'Zeichne:')}
+            {t('guessart.drawWordPrompt')}
           </Typography>
           <Box
             sx={{
@@ -81,7 +81,7 @@ export const GarticDrawingStep: React.FC<GarticDrawingStepProps> = ({
         <Box display="flex" alignItems="center" gap={0.5} sx={{ opacity: 0.9, flexShrink: 0 }}>
           <LockRoundedIcon sx={{ fontSize: 14 }} />
           <Typography variant="caption" fontWeight={600} sx={{ fontSize: '0.75rem' }}>
-            {t('guessart.secretWordOnlyYou', 'Nur für dich')} ({authorName})
+            {t('guessart.secretWordOnlyYou')} ({authorName})
           </Typography>
         </Box>
       </Paper>

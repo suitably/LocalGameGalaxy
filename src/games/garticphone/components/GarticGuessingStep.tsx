@@ -75,10 +75,7 @@ export const GarticGuessingStep: React.FC<GarticGuessingStepProps> = ({
         <TextField
           size="small"
           fullWidth
-          placeholder={t(
-            'guessart.describeDrawingPlaceholder',
-            'Was stellt die Zeichnung dar? Beschreibe sie...',
-          )}
+          placeholder={t('guessart.describeDrawingPlaceholder')}
           value={guess}
           onChange={(e) => setGuess(e.target.value.slice(0, MAX_GUESS_LENGTH))}
           variant="outlined"
@@ -95,7 +92,7 @@ export const GarticGuessingStep: React.FC<GarticGuessingStepProps> = ({
           startIcon={<SendRoundedIcon />}
           sx={{ px: 2.5, fontWeight: 700, borderRadius: 2, minHeight: 44, whiteSpace: 'nowrap' }}
         >
-          {t('common.send', 'Senden')}
+          {t('common.send')}
         </Button>
       </Paper>
     </Box>

@@ -24,10 +24,10 @@ export const GarticSpectatorView: React.FC<{ state: GarticGameState }> = ({ stat
 
   const taskLabel =
     view?.task === 'prompt'
-      ? t('gartic.spectatorTaskPrompt', '{{name}} schreibt einen Satz', { name })
+      ? t('gartic.spectatorTaskPrompt', { name })
       : view?.task === 'drawing'
-        ? t('gartic.spectatorTaskDrawing', '{{name}} zeichnet', { name })
-        : t('gartic.spectatorTaskGuessing', '{{name}} beschreibt die Zeichnung', { name });
+        ? t('gartic.spectatorTaskDrawing', { name })
+        : t('gartic.spectatorTaskGuessing', { name });
 
   return (
     <Box sx={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
@@ -48,9 +48,7 @@ export const GarticSpectatorView: React.FC<{ state: GarticGameState }> = ({ stat
           {view.sent ? (
             <AlbumStepCard step={view.sent} isInitial={view.task === 'prompt'} />
           ) : (
-            <Typography color="text.secondary">
-              {t('gartic.spectatorWorking', 'Noch nicht abgeschickt …')}
-            </Typography>
+            <Typography color="text.secondary">{t('gartic.spectatorWorking')}</Typography>
           )}
         </Stack>
       )}

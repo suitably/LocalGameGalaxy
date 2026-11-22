@@ -33,7 +33,7 @@ export const AlbumRevealControls: React.FC<AlbumRevealControlsProps> = ({
   const { t } = useTranslation();
   const progress = (
     <Typography variant="body2" fontWeight={700} color="text.secondary">
-      {revealedStepsCount} / {totalSteps} {t('guessart.steps', 'Schritte')}
+      {revealedStepsCount} / {totalSteps} {t('guessart.steps')}
     </Typography>
   );
 
@@ -59,7 +59,7 @@ export const AlbumRevealControls: React.FC<AlbumRevealControlsProps> = ({
             onClick={onPrev}
             disabled={bookIndex === 0 && revealedStepsCount === 1}
           >
-            {t('common.back', 'Zurück')}
+            {t('common.back')}
           </Button>
 
           {progress}
@@ -71,7 +71,7 @@ export const AlbumRevealControls: React.FC<AlbumRevealControlsProps> = ({
               startIcon={<ReplayRoundedIcon />}
               onClick={onRestartGame}
             >
-              {t('guessart.newGarticGame', 'Neues Spiel')}
+              {t('guessart.newGarticGame')}
             </Button>
           ) : (
             <Button
@@ -81,9 +81,7 @@ export const AlbumRevealControls: React.FC<AlbumRevealControlsProps> = ({
               onClick={onNext}
               sx={{ fontWeight: 700 }}
             >
-              {isBookFullyRevealed
-                ? t('guessart.nextAlbum', 'Nächstes Album')
-                : t('guessart.revealNext', 'Weiter aufdecken')}
+              {isBookFullyRevealed ? t('guessart.nextAlbum') : t('guessart.revealNext')}
             </Button>
           )}
         </>
@@ -91,7 +89,7 @@ export const AlbumRevealControls: React.FC<AlbumRevealControlsProps> = ({
         <>
           <Chip
             icon={<SlideshowRoundedIcon />}
-            label={t('gartic.hostControlsShow', 'Der Host steuert die Album-Show')}
+            label={t('gartic.hostControlsShow')}
             color="secondary"
             variant="outlined"
             sx={{ fontWeight: 700 }}

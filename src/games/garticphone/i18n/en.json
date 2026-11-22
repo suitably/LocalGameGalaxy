@@ -21,6 +21,9 @@
     "spectatorTaskPrompt": "{{name}} is writing a sentence",
     "spectatorTaskDrawing": "{{name}} is drawing",
     "spectatorTaskGuessing": "{{name}} is describing the drawing",
-    "spectatorWorking": "Not sent yet …"
+    "spectatorWorking": "Not sent yet …",
+    "originalPrompt": "Original sentence",
+    "guess": "Guess",
+    "drawing": "Drawing"
   }
 }

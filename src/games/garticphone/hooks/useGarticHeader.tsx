@@ -23,7 +23,7 @@ interface GarticHeaderOptions {
 export function useGarticHeader(options: GarticHeaderOptions): React.ReactNode {
   const { roomId, isHost } = options;
   const { t } = useTranslation();
-  usePageTitle(t('games.garticphone.title', 'Gartic Phone'));
+  usePageTitle(t('games.garticphone.title'));
   const { setHomeAction, setMenuItems } = useHeaderLayout();
   const [shareOpen, setShareOpen] = useState(false);
   const [confirmEndOpen, setConfirmEndOpen] = useState(false);
@@ -45,7 +45,7 @@ export function useGarticHeader(options: GarticHeaderOptions): React.ReactNode {
   useEffect(() => {
     const items: MenuItem[] = [
       {
-        label: t('party.shareLobbyTooltip', 'Lobby teilen / Freunde einladen'),
+        label: t('party.shareLobbyTooltip'),
         icon: <ShareRoundedIcon />,
         action: () => setShareOpen(true),
         showAlways: true,
@@ -53,7 +53,7 @@ export function useGarticHeader(options: GarticHeaderOptions): React.ReactNode {
     ];
     if (isHost) {
       items.push({
-        label: t('party.endGameForEveryone', 'Spiel für alle beenden'),
+        label: t('party.endGameForEveryone'),
         icon: <StopCircleRoundedIcon color="error" />,
         action: () => setConfirmEndOpen(true),
       });
@@ -66,9 +66,9 @@ export function useGarticHeader(options: GarticHeaderOptions): React.ReactNode {
       <GarticShareDialog open={shareOpen} roomId={roomId} onClose={() => setShareOpen(false)} />
       <ConfirmDialog
         open={confirmEndOpen && isHost}
-        title={t('party.confirmEndTitle', 'Spiel wirklich beenden?')}
+        title={t('party.confirmEndTitle')}
         message={t('party.confirmEndDesc')}
-        confirmText={t('party.endGameBtn', 'Beenden')}
+        confirmText={t('party.endGameBtn')}
         confirmColor="error"
         onCancel={() => setConfirmEndOpen(false)}
         onConfirm={() => {

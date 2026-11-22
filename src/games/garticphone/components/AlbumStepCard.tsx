@@ -30,9 +30,9 @@ export const AlbumStepCard: React.FC<AlbumStepCardProps> = ({ step, isInitial })
           <Typography variant="caption" color="text.secondary">
             {step.type === 'prompt'
               ? isInitial
-                ? `• ${t('guessart.originalPrompt', 'Original-Satz')}`
-                : `• ${t('guessart.guess', 'Tipp')}`
-              : `• ${t('guessart.drawing', 'Zeichnung')}`}
+                ? `• ${t('gartic.originalPrompt')}`
+                : `• ${t('gartic.guess')}`
+              : `• ${t('gartic.drawing')}`}
           </Typography>
         </Box>
 

@@ -52,13 +52,10 @@ export const GarticPromptStep: React.FC<GarticPromptStepProps> = ({
         <Box>
           <Typography variant="h5" fontWeight={800}>
             {playerName ? `${playerName}: ` : ''}
-            {t('guessart.writeStartingPrompt', 'Schreibe einen geheimen Satz!')}
+            {t('guessart.writeStartingPrompt')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {t(
-              'guessart.promptStepHint',
-              'Dein Satz wird an den nächsten Spieler weitergegeben, der ihn zeichnen muss!',
-            )}
+            {t('guessart.promptStepHint')}
           </Typography>
         </Box>
 
@@ -66,10 +63,7 @@ export const GarticPromptStep: React.FC<GarticPromptStepProps> = ({
           fullWidth
           multiline
           rows={2}
-          placeholder={t(
-            'guessart.promptPlaceholder',
-            'z.B. Ein Pinguin der Fallschirm springt...',
-          )}
+          placeholder={t('guessart.promptPlaceholder')}
           value={promptText}
           onChange={(e) => setPromptText(e.target.value.slice(0, MAX_PROMPT_LENGTH))}
           variant="outlined"
@@ -98,7 +92,7 @@ export const GarticPromptStep: React.FC<GarticPromptStepProps> = ({
             endIcon={<SendRoundedIcon />}
             sx={{ borderRadius: 3, px: 3, fontWeight: 700 }}
           >
-            {t('common.submit', 'Absenden')}
+            {t('common.submit')}
           </Button>
         </Box>
       </Paper>

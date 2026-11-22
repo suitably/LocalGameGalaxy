@@ -21,6 +21,9 @@
     "spectatorTaskPrompt": "{{name}} schreibt einen Satz",
     "spectatorTaskDrawing": "{{name}} zeichnet",
     "spectatorTaskGuessing": "{{name}} beschreibt die Zeichnung",
-    "spectatorWorking": "Noch nicht abgeschickt …"
+    "spectatorWorking": "Noch nicht abgeschickt …",
+    "originalPrompt": "Original-Satz",
+    "guess": "Tipp",
+    "drawing": "Zeichnung"
   }
 }

@@ -43,16 +43,13 @@ export const GarticShareDialog: React.FC<GarticShareDialogProps> = ({ open, room
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ fontWeight: 800, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <ShareRoundedIcon color="primary" /> {t('party.shareLobby', 'Lobby teilen')}
+        <ShareRoundedIcon color="primary" /> {t('party.shareLobby')}
       </DialogTitle>
       <DialogContent
         sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, pt: 1 }}
       >
         <Typography variant="body2" color="text.secondary" textAlign="center">
-          {t(
-            'party.shareLobbyDesc',
-            'Teile diesen Link oder scanne den QR-Code, um weitere Freunde ins Spiel einzuladen:',
-          )}
+          {t('party.shareLobbyDesc')}
         </Typography>
 
         <Paper sx={{ p: 2, bgcolor: 'common.white', borderRadius: 2 }}>
@@ -60,7 +57,7 @@ export const GarticShareDialog: React.FC<GarticShareDialogProps> = ({ open, room
         </Paper>
 
         <Chip
-          label={`${t('party.room', 'Raum')}: ${roomId}`}
+          label={`${t('party.room')}: ${roomId}`}
           color="primary"
           variant="filled"
           sx={{ fontWeight: 800, fontSize: '1rem', px: 1, py: 2 }}
@@ -74,11 +71,11 @@ export const GarticShareDialog: React.FC<GarticShareDialogProps> = ({ open, room
           onClick={handleCopyLink}
           sx={{ fontWeight: 800, py: 1.2, borderRadius: 2 }}
         >
-          {copied ? t('common.copied', 'Link kopiert!') : t('common.copyLink', 'Link kopieren')}
+          {copied ? t('common.copied') : t('common.copyLink')}
         </Button>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('common.close', 'Schließen')}</Button>
+        <Button onClick={onClose}>{t('common.close')}</Button>
       </DialogActions>
     </Dialog>
   );

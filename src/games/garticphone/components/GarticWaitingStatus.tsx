@@ -68,13 +68,12 @@ export const GarticWaitingStatus: React.FC<GarticWaitingStatusProps> = ({ state,
           >
             <CircularProgress color="secondary" size={40} thickness={4.5} sx={{ mb: 1.5 }} />
             <Typography variant="h6" fontWeight={800} gutterBottom>
-              {t('gartic.waitingHeader', 'Warte auf die anderen Spieler...')}
+              {t('gartic.waitingHeader')}
             </Typography>
             <Chip
               label={t('gartic.waitingProgress', {
                 done: finishedCount,
                 total: totalCount,
-                defaultValue: `${finishedCount} von ${totalCount} Spielern fertig`,
               })}
               color="primary"
               variant="outlined"
@@ -110,7 +109,7 @@ export const GarticWaitingStatus: React.FC<GarticWaitingStatusProps> = ({ state,
                     isDone ? (
                       <Chip
                         icon={<CheckCircleRoundedIcon fontSize="small" />}
-                        label={t('gartic.playerDone', 'Fertig')}
+                        label={t('gartic.playerDone')}
                         color="success"
                         size="small"
                         sx={{ fontWeight: 800 }}
@@ -125,10 +124,10 @@ export const GarticWaitingStatus: React.FC<GarticWaitingStatusProps> = ({ state,
                         }
                         label={
                           state.roundIndex === 0
-                            ? t('gartic.playerWriting', 'Schreibt...')
+                            ? t('gartic.playerWriting')
                             : state.phase === 'drawing'
-                              ? t('gartic.playerDrawing', 'Zeichnet...')
-                              : t('gartic.playerGuessing', 'Rät...')
+                              ? t('gartic.playerDrawing')
+                              : t('gartic.playerGuessing')
                         }
                         color="default"
                         variant="outlined"
@@ -160,7 +159,7 @@ export const GarticWaitingStatus: React.FC<GarticWaitingStatusProps> = ({ state,
                         noWrap
                         sx={{ maxWidth: { xs: 130, sm: 190 } }}
                       >
-                        {player.name} {isMe && `(${t('common.you', 'Du')})`}
+                        {player.name} {isMe && `(${t('common.you')})`}
                       </Typography>
                     }
                   />
