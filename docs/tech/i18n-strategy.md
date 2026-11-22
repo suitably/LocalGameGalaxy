@@ -49,7 +49,7 @@ sources:
 
 Games on per-game bundles so far: cards, kniffel, knister, melodiq, qwixx (migration status: [GAME-CATALOG-RESTRUCTURE §7](../tasks/GAME-CATALOG-RESTRUCTURE.md#7-progress)). Games not yet migrated keep their strings in `public/locales`; add a string where its game keeps its strings today.
 
-`init<Game>I18n()` must run before the game renders: call it at module level in the game's barrel (`index.ts`, which the catalogue's `lazy()` page loads) and in any module outside the game folder that imports the game's components directly.
+`init<Game>I18n()` must run before the game renders: call it at module level in the game's barrel (`index.ts`, which the catalogue's `lazy()` page loads) or in the page components it exports, and in any module outside the game folder that imports the game's components directly.
 
 ## 4. Namespaces in `translation.json`
 
