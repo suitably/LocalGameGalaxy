@@ -8,6 +8,7 @@ export const HEADER_MENU_ENTRIES = [
   { key: 'onPlayAlong', labelKey: 'games.tabletop.playAlong' },
   { key: 'onShowTableOnly', labelKey: 'games.tabletop.showTableOnly' },
   { key: 'onOpenRules', labelKey: 'games.tabletop.rulesButton' },
+  { key: 'onOpenSettings', labelKey: 'games.tabletop.scripted.settings.title' },
   { key: 'onOpenSaves', labelKey: 'games.tabletop.saves.title' },
   { key: 'onOpenTableSettings', labelKey: 'games.tabletop.editor.table' },
   { key: 'onExportJson', labelKey: 'games.tabletop.export_json' },

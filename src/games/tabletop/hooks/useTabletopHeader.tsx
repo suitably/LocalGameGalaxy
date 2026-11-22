@@ -12,6 +12,7 @@ import GroupsIcon from '@mui/icons-material/GroupsRounded';
 import SaveIcon from '@mui/icons-material/SaveRounded';
 import ReplayIcon from '@mui/icons-material/ReplayRounded';
 import MenuBookIcon from '@mui/icons-material/MenuBookRounded';
+import TuneIcon from '@mui/icons-material/TuneRounded';
 import TableRestaurantIcon from '@mui/icons-material/TableRestaurantRounded';
 import CastIcon from '@mui/icons-material/CastRounded';
 import PersonIcon from '@mui/icons-material/PersonRounded';
@@ -34,6 +35,7 @@ const ICONS: Record<HeaderMenuKey, ReactNode> = {
   onPlayAlong: <PersonIcon />,
   onShowTableOnly: <TvIcon />,
   onOpenRules: <MenuBookIcon />,
+  onOpenSettings: <TuneIcon />,
   onOpenSaves: <SaveIcon />,
   onOpenTableSettings: <TableRestaurantIcon />,
   onExportJson: <DownloadIcon />,

@@ -104,16 +104,39 @@ export interface ScriptView {
   summary?: RoundSummary;
 }
 
-/** A switch the setup offers before a match (house rules, aids); off by default. */
+/**
+ * A table setting of a game (house rule, aid): a switch in the setup and in the settings dialog
+ * of a running game. Off unless `default` is set.
+ */
 export interface ScriptOption {
   id: string;
   /** i18n key under `games.tabletop.scripted`. */
   label: string;
   hint?: string;
+  default?: boolean;
 }
 
-/** Chosen options by id; a missing id is off. */
+/** Chosen options by id; a missing id takes the option's default. */
 export type ScriptOptions = Readonly<Record<string, boolean>>;
+
+/** Whether option `id` is on: the choice, else the declared default. */
+export function optionOn(
+  declared: readonly ScriptOption[] | undefined,
+  chosen: ScriptOptions | undefined,
+  id: string,
+): boolean {
+  const value = chosen?.[id];
+  if (typeof value === 'boolean') return value;
+  return declared?.find((o) => o.id === id)?.default === true;
+}
+
+/** Every declared option with its value (choice or default); unknown ids are dropped. */
+export function resolveOptions(
+  declared: readonly ScriptOption[] | undefined,
+  chosen?: ScriptOptions,
+): ScriptOptions {
+  return Object.fromEntries((declared ?? []).map((o) => [o.id, optionOn(declared, chosen, o.id)]));
+}
 
 export interface GameScript<G> {
   id: string;
@@ -126,6 +149,11 @@ export interface GameScript<G> {
   /** Jokers in the deck. */
   jokers?: number;
   options?: readonly ScriptOption[];
+  /**
+   * The running match with changed table settings (the host changed them mid-game); the new
+   * rules apply from the next move. Without it a change applies from the next match.
+   */
+  configure?(state: G, options: ScriptOptions): G;
   /** A new match with a first deal. */
   start(playerCount: number, rng: Rng, options?: ScriptOptions): G;
   /** The state after `seat`'s move; the same object when the move is not allowed. */

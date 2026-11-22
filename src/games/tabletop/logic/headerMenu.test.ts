@@ -10,10 +10,18 @@ describe('headerMenuKeys', () => {
         onRestart: fn,
         onOpenTableSettings: fn,
         onOpenSaves: fn,
+        onOpenSettings: fn,
         onOpenRules: fn,
         onBackToLobby: fn,
       }),
-    ).toEqual(['onBackToLobby', 'onOpenRules', 'onOpenSaves', 'onOpenTableSettings', 'onRestart']);
+    ).toEqual([
+      'onBackToLobby',
+      'onOpenRules',
+      'onOpenSettings',
+      'onOpenSaves',
+      'onOpenTableSettings',
+      'onRestart',
+    ]);
   });
 
   it('gives a phone or spectator only the rules', () => {

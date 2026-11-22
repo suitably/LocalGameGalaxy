@@ -18,6 +18,8 @@ import { newSeed } from '../../logic/rng';
 import { getScript } from '../logic/scriptRegistry';
 import { useRoomSession } from '../hooks/useRoomSession';
 import { useScriptedHeader } from '../hooks/useScriptedHeader';
+import { useTablePreset, useTableSettings } from '../hooks/useTableSettings';
+import type { ScriptOptions } from '../logic/scriptTypes';
 import { CardTable } from './CardTable';
 import { RoomSetup } from './RoomSetup';
 
@@ -35,13 +37,33 @@ export const RoomScriptedGame: React.FC<{ scriptId: string; roomId: string }> = 
   const view = packet?.view ?? null;
   const running = view !== null;
   const [tvOpen, setTvOpen] = React.useState(false);
+  const [preset, setPreset] = useTablePreset(script);
+  // The host's settings rule the table; a guest sees them read-only once a match runs.
+  const changeOptions = (next: ScriptOptions) => {
+    setPreset(next);
+    if (running) dispatch({ type: 'OPTIONS', options: next });
+  };
+  const settings = useTableSettings({
+    script,
+    value: room.isHost ? (running ? (packet?.options ?? preset) : preset) : packet?.options,
+    onChange: room.isHost ? changeOptions : undefined,
+    running,
+    shared: true,
+  });
   const rules = useScriptedHeader({
     scriptId,
     // Guests visit the lobby while the game goes on; the host ends it for everyone.
     onBack: room.isHost ? returnToLobby : () => navigate(`/party?room=${roomId}`),
     onBackToLobby: room.isHost ? returnToLobby : undefined,
     onRestart: room.isHost && running ? () => dispatch({ type: 'END' }) : undefined,
+    onOpenSettings: settings.open,
   });
+  const header = (
+    <>
+      {rules}
+      {settings.dialog}
+    </>
+  );
 
   const tvAction = room.isHost ? (
     <>
@@ -64,7 +86,7 @@ export const RoomScriptedGame: React.FC<{ scriptId: string; roomId: string }> = 
   if (!synced) {
     return (
       <Stack alignItems="center" py={6}>
-        {rules}
+        {header}
         {tvAction}
         <CircularProgress />
       </Stack>
@@ -73,13 +95,15 @@ export const RoomScriptedGame: React.FC<{ scriptId: string; roomId: string }> = 
   if (!view || !packet) {
     return (
       <>
-        {rules}
+        {header}
         <RoomSetup
           script={script}
           roster={room.players}
           isHost={room.isHost}
-          onStart={(players, options) =>
-            dispatch({ type: 'START', scriptId, players, options, seed: newSeed() })
+          options={preset}
+          onOptionsChange={setPreset}
+          onStart={(players) =>
+            dispatch({ type: 'START', scriptId, players, options: preset, seed: newSeed() })
           }
         />
       </>
@@ -100,7 +124,7 @@ export const RoomScriptedGame: React.FC<{ scriptId: string; roomId: string }> = 
   );
   return (
     <>
-      {rules}
+      {header}
       {tvAction}
       {seat === null ? <TvThemeProvider>{table}</TvThemeProvider> : table}
     </>

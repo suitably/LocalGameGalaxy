@@ -68,7 +68,8 @@ export function caboView(s: CaboState, viewer: number | null): ScriptView {
       ...(s.caller === seat ? [msg('cabo.called')] : []),
     ],
     slots: hand.map((card, slot) => (visible(s, viewer, seat, slot) ? card : null)),
-    slotColumns: 2,
+    // One row of four: on a phone two rows push the table out of view (#800).
+    slotColumns: 4,
   }));
   v.active = over ? [] : [s.turn];
   const drawnOpen = s.drawn && (viewer === s.turn || !s.drawn.fromStock);

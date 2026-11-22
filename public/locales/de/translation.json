@@ -1513,7 +1513,8 @@
           "start": "Karten geben",
           "tableOnly": "Dieses Gerät zeigt nur den Tisch",
           "tableOnlyHint": "Für den Fernseher: Bildschirm dieses Geräts übertragen. Alle Spieler nutzen ihr eigenes Handy für Handkarten und Züge. Ausschalten, wenn du auf diesem Gerät mitspielst.",
-          "waitingForHost": "Der Gastgeber startet das Spiel gleich …"
+          "waitingForHost": "Der Gastgeber startet das Spiel gleich …",
+          "addBack": "{{name}} wieder mitspielen lassen"
         },
         "schwimmen": {
           "out": "raus",
@@ -1533,8 +1534,11 @@
             "passOnce": "Nur einmal schieben",
             "passOnceHint": "Jeder darf pro Runde nur einmal schieben.",
             "firstSwims": "Nur der Erste schwimmt",
-            "firstSwimsHint": "Nur wer als Erstes sein letztes Leben verliert, schwimmt noch. Alle danach sind sofort raus."
-          }
+            "firstSwimsHint": "Nur wer als Erstes sein letztes Leben verliert, schwimmt noch. Alle danach sind sofort raus.",
+            "newMiddle": "Neue Mitte bei 7-8-9",
+            "newMiddleHint": "Liegen 7, 8 und 9 in der Mitte, darf der Spieler am Zug drei neue Karten in die Mitte legen lassen und dann ziehen."
+          },
+          "newMiddle": "Neue Mitte (7-8-9)"
         },
         "durak": {
           "attacker": "greift an",
@@ -1549,7 +1553,14 @@
           "take": "Aufnehmen",
           "attack": "Angreifen",
           "add": "Nachlegen",
-          "done": "Fertig"
+          "done": "Fertig",
+          "transfer": "Weiterschieben mit {{card}}",
+          "option": {
+            "transfer": "Weiterschieben",
+            "transferHint": "Solange noch nichts geschlagen ist, darf der Verteidiger eine Karte gleichen Werts dazulegen und den Angriff an den Nächsten weitergeben.",
+            "neighbours": "Nur Nachbarn greifen an",
+            "neighboursHint": "Nur die Spieler links und rechts vom Verteidiger greifen an und legen nach."
+          }
         },
         "arschloch": {
           "president": "Präsident",
@@ -1596,14 +1607,14 @@
           "trickTo": "Stich für {{name}}"
         },
         "rules": {
-          "schwimmen": "<p>32 Karten. Jeder hat drei Karten, drei liegen offen in der Mitte. Der Geber wählt zu Beginn eines von zwei Blättern; das andere kommt in die Mitte.</p><p><b>Dein Zug:</b> eine Karte tauschen, alle drei tauschen, schieben oder klopfen. Nach dem Klopfen sind alle anderen noch einmal dran. Schieben alle, kommen drei neue Karten in die Mitte.</p><p><b>Wertung:</b> Summe einer Farbe (Ass 11, Bilder 10). Drei Gleiche zählen 30,5. Wer 31 oder drei Asse hat, beendet die Runde sofort – alle anderen verlieren ein Leben. Sonst verliert das niedrigste Blatt.</p><p>Jeder hat drei Leben, danach „schwimmt“ man, beim nächsten Verlust ist man raus. Der Letzte gewinnt.</p><p><b>Hausregeln:</b> Mit „Nur einmal schieben“ darf jeder pro Runde nur einmal schieben. Mit „Nur der Erste schwimmt“ schwimmt nur, wer als Erstes kein Leben mehr hat – alle danach sind sofort raus.</p>",
-          "durak": "<p>36 Karten (6 bis Ass), sechs auf der Hand. Die unterste Karte des Stapels zeigt Trumpf. In der ersten Runde greift der niedrigste Trumpf an.</p><p><b>Angriff:</b> eine oder mehrere Karten gleichen Werts. <b>Verteidigung:</b> jede Karte mit einer höheren derselben Farbe oder mit Trumpf schlagen – oder alles aufnehmen.</p><p>Ist alles geschlagen, dürfen die anderen Karten nachlegen, deren Wert schon auf dem Tisch liegt (höchstens sechs Angriffskarten, nie mehr als der Verteidiger Karten hatte). Danach ziehen alle auf sechs nach. Wer abwehrt, greift als Nächster an; wer aufnimmt, setzt aus.</p><p>Wer am Ende noch Karten hat, ist der Durak.</p>",
+          "schwimmen": "<p>32 Karten. Jeder hat drei Karten, drei liegen offen in der Mitte. Der Geber wählt zu Beginn eines von zwei Blättern; das andere kommt in die Mitte.</p><p><b>Dein Zug:</b> eine Karte tauschen, alle drei tauschen, schieben oder klopfen. Nach dem Klopfen sind alle anderen noch einmal dran. Schieben alle, kommen drei neue Karten in die Mitte.</p><p><b>Wertung:</b> Summe einer Farbe (Ass 11, Bilder 10). Drei Gleiche zählen 30,5. Wer 31 oder drei Asse hat, beendet die Runde sofort – alle anderen verlieren ein Leben. Sonst verliert das niedrigste Blatt.</p><p>Jeder hat drei Leben, danach „schwimmt“ man, beim nächsten Verlust ist man raus. Der Letzte gewinnt.</p><p><b>Hausregeln:</b> Mit „Nur einmal schieben“ darf jeder pro Runde nur einmal schieben. Mit „Nur der Erste schwimmt“ schwimmt nur, wer als Erstes kein Leben mehr hat – alle danach sind sofort raus. Mit „Neue Mitte bei 7-8-9“ darf der Spieler am Zug bei 7, 8 und 9 in der Mitte drei neue Karten verlangen und dann ziehen.</p>",
+          "durak": "<p>36 Karten (6 bis Ass), sechs auf der Hand. Die unterste Karte des Stapels zeigt Trumpf. In der ersten Runde greift der niedrigste Trumpf an.</p><p><b>Angriff:</b> eine oder mehrere Karten gleichen Werts. <b>Verteidigung:</b> jede Karte mit einer höheren derselben Farbe oder mit Trumpf schlagen – oder alles aufnehmen.</p><p>Ist alles geschlagen, dürfen die anderen Karten nachlegen, deren Wert schon auf dem Tisch liegt (höchstens sechs Angriffskarten, nie mehr als der Verteidiger Karten hatte). Danach ziehen alle auf sechs nach. Wer abwehrt, greift als Nächster an; wer aufnimmt, setzt aus.</p><p>Wer am Ende noch Karten hat, ist der Durak.</p><p><b>Spieltisch-Einstellungen:</b> „Weiterschieben“ – solange nichts geschlagen ist, legt der Verteidiger eine Karte gleichen Werts dazu und der Nächste muss verteidigen. „Nur Nachbarn greifen an“ – nur die Spieler links und rechts vom Verteidiger greifen an und legen nach.</p>",
           "arschloch": "<p>Alle Karten werden verteilt (32 bis vier Spieler, sonst 52). Wer ausspielt, legt eine oder mehrere Karten gleichen Werts. Die anderen legen gleich viele höhere Karten oder passen – wer passt, setzt bis zum Ende des Stichs aus. Wer zuletzt gelegt hat, spielt neu aus.</p><p>Wer zuerst keine Karten mehr hat, ist Präsident, der Letzte das Arschloch. Vor der nächsten Runde gibt das Arschloch seine besten Karten an den Präsidenten (zwei ab vier Spielern, sonst eine), der beliebige zurückgibt; ab vier Spielern tauschen auch die Vizes eine Karte. Das Arschloch spielt aus.</p>",
           "skat": "<p>Drei Spieler, 32 Karten, je zehn auf der Hand, zwei im Skat. Mittelhand reizt Vorhand, danach Hinterhand den Gewinner. Wer das Reizen gewinnt, nimmt den Skat auf und drückt zwei Karten – oder spielt Hand – und sagt Farbe, Grand oder Null an.</p><p>Farbe bedienen ist Pflicht; die Buben sind die höchsten Trümpfe (außer bei Null). Der Alleinspieler braucht 61 Augen, bei Null darf er keinen Stich machen.</p><p><b>Wert:</b> Spitzen + 1 (+ Hand, Schneider, Schwarz) × Grundwert (Karo 9, Herz 10, Pik 11, Kreuz 12, Grand 24); Null 23, Hand 35, Ouvert 46, Ouvert Hand 59. Verlorene Spiele zählen doppelt minus. Passen alle, gibt der Nächste. Ohne Ramsch und ohne Schneider-/Schwarz-Ansage.</p>",
-          "maumau": "<p>32 Karten, jeder bekommt fünf. Die aufgedeckte Startkarte hat keine Wirkung.</p><p><b>Dein Zug:</b> lege eine Karte mit gleicher Farbe oder gleichem Wert wie die oberste Karte. Kannst oder willst du nicht, ziehst du eine Karte; passt sie, darfst du nur sie legen, sonst passt du.</p><p><b>Sonderkarten:</b> 7 – der Nächste zieht zwei Karten oder antwortet mit einer 7 (dann vier usw.). 8 – der Nächste setzt aus. Bube – auf alles außer einen Buben, du wünschst dir eine Farbe für die nächste Karte.</p><p>Wer zuerst keine Karte mehr hat, gewinnt die Runde. Gezählt werden die gewonnenen Runden.</p>",
+          "maumau": "<p>32 Karten, jeder bekommt fünf. Die aufgedeckte Startkarte hat keine Wirkung.</p><p><b>Dein Zug:</b> lege eine Karte mit gleicher Farbe oder gleichem Wert wie die oberste Karte. Kannst oder willst du nicht, ziehst du eine Karte; passt sie, darfst du nur sie legen, sonst passt du.</p><p><b>Sonderkarten:</b> 7 – der Nächste zieht zwei Karten oder antwortet mit einer 7 (dann vier usw.). 8 – der Nächste setzt aus. Bube – auf alles außer einen Buben, du wünschst dir eine Farbe für die nächste Karte.</p><p>Wer zuerst keine Karte mehr hat, gewinnt die Runde. Gezählt werden die gewonnenen Runden.</p><p><b>Spieltisch-Einstellungen:</b> „8 setzt aus“, „8 auf 8 gibt weiter“ (wer aussetzen soll, legt eine 8 und der Nächste setzt aus), „Gezogene Karte sofort legen“ und „Weiterspielen für Rangliste“ (nach dem ersten Sieg spielen die anderen die Plätze aus).</p>",
           "schwarzer-peter": "<p>52 Karten ohne den Kreuz-Buben; der Pik-Bube ist der Schwarze Peter. Alle Karten werden verteilt, Paare (gleicher Wert, gleiche Farbe: rot oder schwarz) werden sofort abgelegt.</p><p><b>Dein Zug:</b> ziehe verdeckt eine Karte vom nächsten Spieler im Uhrzeigersinn, der noch Karten hat. Seine Karten werden vorher gemischt. Passt sie zu einer deiner Karten, legst du das Paar ab.</p><p>Wer keine Karten mehr hat, ist fertig. Wer am Ende den Schwarzen Peter hält, verliert die Runde.</p>",
           "golf": "<p>52 Karten und zwei Joker, ab fünf Spielern zwei Decks. Jeder hat sechs verdeckte Karten in zwei Reihen zu drei und deckt zu Beginn zwei davon auf. Verdeckte Karten kennt auch ihr Besitzer nicht.</p><p><b>Dein Zug:</b> ziehe vom Stapel oder nimm die oberste Karte der Ablage. Tausche sie gegen eine deiner Karten (die alte kommt offen auf die Ablage) oder – nur wenn vom Stapel gezogen – lege sie ab und decke eine verdeckte Karte auf.</p><p>Hat jemand alle sechs Karten offen, ist jeder andere noch einmal dran.</p><p><b>Wertung:</b> Ass 1, 2–10 Augenzahl, Bube und Dame 10, König 0, Joker −2. Zwei gleiche Werte in einer Spalte zählen 0 (Joker nie). Nach neun Löchern gewinnt die niedrigste Summe.</p>",
-          "cabo": "<p>52 Karten und zwei Joker. Jeder hat vier verdeckte Karten und sieht sich zu Beginn jeder Runde die unteren zwei an – danach musst du sie dir merken.</p><p><b>Dein Zug:</b> ziehe vom Stapel oder nimm die oberste Karte der Ablage – oder rufe <b>Cabo</b>. Tausche die gezogene Karte gegen eine deiner Karten (die alte kommt auf die Ablage) oder lege sie ab, wenn sie vom Stapel kam.</p><p><b>Abgelegte Sonderkarten (nur vom Stapel):</b> 7/8 – schau eine eigene Karte an. 9/10 – schau eine Karte eines Mitspielers an. Bube/Dame – tausche blind eine eigene Karte mit einer eines Mitspielers. Du darfst die Fähigkeit auslassen.</p><p>Nach Cabo ist jeder andere noch einmal dran. <b>Punkte:</b> Ass 1, 2–10 Augenzahl, Bube 11, Dame 12, roter König 0, schwarzer König 13, Joker 0. Wer Cabo ruft und nicht allein die wenigsten Punkte hat, bekommt 10 dazu. Genau 100 Punkte fallen auf 50 zurück. Über 100 endet das Spiel, die niedrigste Summe gewinnt.</p>"
+          "cabo": "<p>52 Karten und zwei Joker. Jeder hat vier verdeckte Karten und sieht sich zu Beginn jeder Runde die rechten zwei an – danach musst du sie dir merken.</p><p><b>Dein Zug:</b> ziehe vom Stapel oder nimm die oberste Karte der Ablage – oder rufe <b>Cabo</b>. Tausche die gezogene Karte gegen eine deiner Karten (die alte kommt auf die Ablage) oder lege sie ab, wenn sie vom Stapel kam.</p><p><b>Abgelegte Sonderkarten (nur vom Stapel):</b> 7/8 – schau eine eigene Karte an. 9/10 – schau eine Karte eines Mitspielers an. Bube/Dame – tausche blind eine eigene Karte mit einer eines Mitspielers. Du darfst die Fähigkeit auslassen.</p><p>Nach Cabo ist jeder andere noch einmal dran. <b>Punkte:</b> Ass 1, 2–10 Augenzahl, Bube 11, Dame 12, roter König 0, schwarzer König 13, Joker 0. Wer Cabo ruft und nicht allein die wenigsten Punkte hat, bekommt 10 dazu. Genau 100 Punkte fallen auf 50 zurück. Über 100 endet das Spiel, die niedrigste Summe gewinnt.</p>"
         },
         "maumau": {
           "wins_one": "{{count}} Sieg",
@@ -1622,6 +1633,23 @@
             "S": "♠ Pik",
             "H": "♥ Herz",
             "D": "♦ Karo"
+          },
+          "skip": "Aussetzen",
+          "skipPending": "8: aussetzen oder 8 legen",
+          "place": "{{place}}. Platz",
+          "cards_one": "{{count}} Karte",
+          "cards_other": "{{count}} Karten",
+          "playOn": "Weiterspielen",
+          "playOnAsk": "Weiterspielen, um die übrigen Plätze auszuspielen?",
+          "option": {
+            "eightSkips": "8 setzt aus",
+            "eightSkipsHint": "Nach einer 8 muss der Nächste aussetzen.",
+            "eightCounter": "8 auf 8 gibt weiter",
+            "eightCounterHint": "Wer aussetzen soll, darf eine 8 legen; dann setzt der Nächste aus.",
+            "drawPlay": "Gezogene Karte sofort legen",
+            "drawPlayHint": "Passt die gezogene Karte, darf sie sofort gelegt werden. Aus: nach dem Ziehen ist der Nächste dran.",
+            "playOn": "Weiterspielen für Rangliste",
+            "playOnHint": "Hat jemand gewonnen, kann weitergespielt werden, bis alle Plätze feststehen."
           }
         },
         "schwarzerPeter": {
@@ -1655,7 +1683,7 @@
         "cabo": {
           "total": "{{points}} Pkt.",
           "called": "Cabo!",
-          "peek": "{{name}} schaut sich die unteren zwei Karten an",
+          "peek": "{{name}} schaut sich die rechten zwei Karten an",
           "seen": "Gemerkt",
           "drawStock": "Vom Stapel ziehen",
           "takeDiscard": "Ablage nehmen",
@@ -1686,6 +1714,13 @@
             "memoryAid": "Gedächtnisstütze",
             "memoryAidHint": "Karten, die du schon gesehen hast, bleiben für dich offen – leichter, weniger Merken."
           }
+        },
+        "settings": {
+          "title": "Spieltisch-Einstellungen",
+          "nextMatch": "Gilt ab dem nächsten Spiel und wird auf diesem Gerät gespeichert.",
+          "appliesNow": "Änderungen gelten sofort im laufenden Spiel.",
+          "appliesAll": "Änderungen gelten sofort für alle Geräte am Tisch.",
+          "hostOnly": "Nur der Gastgeber kann die Einstellungen ändern."
         }
       },
       "showOnTv": "Auf dem TV anzeigen",

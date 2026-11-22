@@ -5,7 +5,9 @@
  * three, pass or knock. After a knock everyone else plays once more, then the lowest hand loses
  * a life. 31 (or three aces) ends the round at once. Three lives, then you "swim", then you are out.
  * Options (#787): `passOnce` — each seat may pass only once per deal; `firstSwims` — only the
- * first player(s) to lose their last life swim, everyone after them is out at once.
+ * first player(s) to lose their last life swim, everyone after them is out at once;
+ * `newMiddle` (on, #797) — when the middle shows 7, 8 and 9, the seat to act may have it replaced
+ * by three new cards once per turn and then plays its turn.
  */
 import type { Rng } from '../../logic/rng';
 import { RANKS_32, SUITS, nextSeat, rankOf, shuffledDeck, sortCards, suitOf } from './cardDeck';
@@ -15,16 +17,19 @@ import {
   msg,
   type GameScript,
   type ScriptMove,
-  type ScriptOptions,
   type ScriptView,
   type Text,
 } from './scriptTypes';
+import {
+  SCHWIMMEN_OPTIONS,
+  canPass,
+  canRenewMiddle,
+  livesAfterLoss,
+  rulesOf,
+  type SchwimmenRules,
+} from './schwimmenRules';
 
-/** House rules chosen at setup; both off keeps the original behaviour. */
-export type SchwimmenRules = {
-  passOnce: boolean;
-  firstSwims: boolean;
-};
+export { canPass, canRenewMiddle, livesAfterLoss, type SchwimmenRules } from './schwimmenRules';
 
 export interface SchwimmenState {
   /** Lives per seat: 3…1, 0 = swimming, -1 = out. */
@@ -47,6 +52,8 @@ export interface SchwimmenState {
   passed?: boolean[];
   /** Someone has already swum in this match (rule `firstSwims`). */
   swum?: boolean;
+  /** The seat to act already had the middle replaced this turn (rule `newMiddle`). */
+  renewed?: boolean;
 }
 
 const START_LIVES = 3;
@@ -70,20 +77,6 @@ export function schwimmenScore(hand: readonly CardId[]): number {
 
 const alive = (s: SchwimmenState, seat: number) => s.lives[seat] >= 0;
 const aliveSeats = (s: SchwimmenState) => s.lives.flatMap((l, i) => (l >= 0 ? [i] : []));
-
-const rulesOf = (options?: ScriptOptions): SchwimmenRules => ({
-  passOnce: options?.passOnce === true,
-  firstSwims: options?.firstSwims === true,
-});
-
-/** Whether `seat` may still pass in this deal. */
-export const canPass = (s: SchwimmenState, seat: number): boolean =>
-  !(s.rules?.passOnce === true && s.passed?.[seat] === true);
-
-/** Lives after losing a round: the last life leads to swimming, or out once someone swam. */
-export function livesAfterLoss(lives: number, firstSwims: boolean, swum: boolean): number {
-  return lives === 1 && firstSwims && swum ? -1 : lives - 1;
-}
 
 function deal(
   lives: number[],
@@ -146,7 +139,7 @@ function fireSeat(s: SchwimmenState, seats: number[]): number | null {
 function advance(s: SchwimmenState): SchwimmenState {
   const turn = nextSeat(s.turn, s.lives.length, (i) => alive(s, i));
   if (s.knocker !== null && turn === s.knocker) return finish(s, null);
-  return { ...s, turn };
+  return { ...s, turn, renewed: false };
 }
 
 function playMove(s: SchwimmenState, seat: number, move: ScriptMove): SchwimmenState {
@@ -172,6 +165,11 @@ function playMove(s: SchwimmenState, seat: number, move: ScriptMove): SchwimmenS
     );
   }
   if (move.kind === 'slot') return s;
+  if (move.id === 'newMiddle') {
+    if (!canRenewMiddle(s)) return s;
+    // The old middle leaves the game; the turn goes on with the new cards.
+    return { ...s, middle: s.stock.slice(0, 3), stock: s.stock.slice(3), renewed: true };
+  }
   if (move.id === 'swapAll') return setHand(s.middle, hand);
   if (move.id === 'knock') {
     if (s.knocker !== null) return s;
@@ -262,6 +260,7 @@ function view(s: SchwimmenState, viewer: number | null): ScriptView {
       v.playLabel = msg('schwimmen.swapOne');
       v.actions = [
         { id: 'swapAll', label: msg('schwimmen.swapAll') },
+        ...(canRenewMiddle(s) ? [{ id: 'newMiddle', label: msg('schwimmen.newMiddle') }] : []),
         ...(canPass(s, s.turn) ? [{ id: 'pass', label: msg('schwimmen.pass') }] : []),
         ...(s.knocker === null ? [{ id: 'knock', label: msg('schwimmen.knock') }] : []),
       ];
@@ -306,14 +305,8 @@ export const schwimmen: GameScript<SchwimmenState> = {
   ranks: RANKS_32,
   minPlayers: 2,
   maxPlayers: 9,
-  options: [
-    { id: 'passOnce', label: 'schwimmen.option.passOnce', hint: 'schwimmen.option.passOnceHint' },
-    {
-      id: 'firstSwims',
-      label: 'schwimmen.option.firstSwims',
-      hint: 'schwimmen.option.firstSwimsHint',
-    },
-  ],
+  options: SCHWIMMEN_OPTIONS,
+  configure: (s, options) => ({ ...s, rules: rulesOf(options) }),
   start: (count, rng, options) =>
     deal(
       Array<number>(count).fill(START_LIVES),

@@ -44,7 +44,7 @@ describe('Schwimmen deck', () => {
 describe('Schwimmen option passOnce', () => {
   it('is off by default: passing again is allowed', () => {
     const start = schwimmen.start(3, seededRng(1));
-    expect(start.rules).toEqual({ passOnce: false, firstSwims: false });
+    expect(start.rules).toEqual({ passOnce: false, firstSwims: false, newMiddle: true });
     let s = table({});
     for (const seat of [1, 2, 0, 1]) s = schwimmen.move(s, seat, pass, rng);
     expect(s.turn).toBe(2);
@@ -84,10 +84,11 @@ describe('Schwimmen option passOnce', () => {
   });
 
   it('offers both rules as setup switches', () => {
-    expect(schwimmen.options?.map((o) => o.id)).toEqual(['passOnce', 'firstSwims']);
+    expect(schwimmen.options?.map((o) => o.id)).toEqual(['passOnce', 'firstSwims', 'newMiddle']);
     expect(schwimmen.start(2, seededRng(1), { passOnce: true }).rules).toEqual({
       passOnce: true,
       firstSwims: false,
+      newMiddle: true,
     });
   });
 });

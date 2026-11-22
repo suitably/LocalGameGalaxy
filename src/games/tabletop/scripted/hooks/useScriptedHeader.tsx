@@ -1,5 +1,5 @@
 /**
- * Title, back arrow, rules and restart of a scripted card game in the global header [ID: HOOK-TABLETOP-SCRIPT-HEADER]
+ * Title, back arrow, rules, table settings and restart of a scripted card game in the global header [ID: HOOK-TABLETOP-SCRIPT-HEADER]
  */
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +18,8 @@ interface ScriptedHeaderOptions {
   onBackToLobby?: () => void;
   /** Owner only, while a game runs: back to the setup. */
   onRestart?: () => void;
+  /** Games with table settings (`useTableSettings`). */
+  onOpenSettings?: () => void;
 }
 
 /** Returns the rules dialog to render. */
@@ -26,6 +28,7 @@ export function useScriptedHeader({
   onBack,
   onBackToLobby,
   onRestart,
+  onOpenSettings,
 }: ScriptedHeaderOptions): ReactNode {
   const { t } = useTranslation();
   const [rulesOpen, setRulesOpen] = useState(false);
@@ -48,6 +51,7 @@ export function useScriptedHeader({
     onBack,
     onBackToLobby,
     onOpenRules: () => setRulesOpen(true),
+    onOpenSettings,
     onRestart,
     onExportJson,
   });
