@@ -2,8 +2,9 @@
  * Werewolf in a party room: every role on its owner's phone, the host narrates
  * [ID: GAME-WEREWOLF-ROOM-PAGE]
  *
- * The host sets the game up and its device speaks the narration (`useWerewolfRoom`); each
- * device receives only its own sealed view. A device without a seat (the narrator, a TV) shows
+ * Whoever opened the room sets the game up and their device speaks the narration
+ * (`useWerewolfRoom`); after that every player has the same buttons. Each device receives only
+ * its own sealed view. A device without a seat (the narrator, a TV) shows
  * the table: phase, who is called, deaths and finally every role.
  */
 import React from 'react';
@@ -57,31 +58,21 @@ export const WerewolfRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
           </>
         );
       case 'NIGHT':
-        return (
-          <RoomNight
-            view={view}
-            onAction={nightAction}
-            onSkip={nightSkip}
-            onEndPackVote={isHost ? () => dispatch({ type: 'END_PACK_VOTE' }) : undefined}
-          />
-        );
+        return <RoomNight view={view} onAction={nightAction} onSkip={nightSkip} />;
       case 'DAY':
       case 'VOTING':
       case 'HUNTER_SHOT':
         return (
           <RoomDay
             view={view}
-            onStartVote={isHost ? () => dispatch({ type: 'START_VOTE' }) : undefined}
+            onReady={() => dispatch({ type: 'READY', playerId: myId })}
             onVote={(target) => dispatch({ type: 'VOTE', playerId: myId, target })}
             onShoot={(targetId) => dispatch({ type: 'HUNTER_SHOT', playerId: myId, targetId })}
           />
         );
       case 'GAME_OVER':
         return view.winner ? (
-          <GameOver
-            winner={view.winner}
-            onPlayAgain={isHost ? () => dispatch({ type: 'NEW_GAME' }) : undefined}
-          >
+          <GameOver winner={view.winner} onPlayAgain={() => dispatch({ type: 'NEW_GAME' })}>
             {view.result && <RoomRoles view={view} roles={view.result.roles} />}
           </GameOver>
         ) : null;

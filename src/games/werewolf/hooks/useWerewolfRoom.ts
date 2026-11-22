@@ -1,8 +1,9 @@
 /**
  * Werewolf in a party room: sealed game plus the host's chores [ID: HOOK-WEREWOLF-ROOM]
  *
- * The host keeps the roster in step during setup and narrates by voice: nightfall, every role
- * it calls, the morning and the vote. Each device holds only its own view (`werewolfRoomView`).
+ * The device that opened the room runs the game: it keeps the roster in step during setup, runs
+ * the wolves' timer and narrates by voice (nightfall, every role it calls, the morning, the
+ * vote). Its player decides nothing the others don't. Each device holds only its own view (`werewolfRoomView`).
  */
 import { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -80,6 +81,22 @@ export function useWerewolfRoom(roomId: string) {
   useEffect(() => {
     if (isHost && line) speak(line);
   }, [isHost, line, speak]);
+
+  // The wolves' timer: started when they are called, closes the pack vote when it runs out.
+  const wolvesCalled = view?.calling === 'WEREWOLF';
+  const packEndsAt = view?.packEndsAt ?? null;
+  useEffect(() => {
+    if (!isHost || !wolvesCalled) return;
+    if (packEndsAt === null) {
+      dispatch({ type: 'PACK_TIMER', at: Date.now() });
+      return;
+    }
+    const timer = setTimeout(
+      () => dispatch({ type: 'END_PACK_VOTE' }),
+      Math.max(0, packEndsAt - Date.now()),
+    );
+    return () => clearTimeout(timer);
+  }, [isHost, wolvesCalled, packEndsAt, dispatch]);
 
   const start = useCallback(
     (roles: Role[], narrator: boolean) => dispatch({ type: 'START', roles, narrator }),

@@ -13,12 +13,12 @@ import { RoleIcon } from '../RoleIcon';
 
 interface Props {
   view: WerewolfRoomView;
-  onStartVote?: () => void;
+  onReady: () => void;
   onVote: (target: string) => void;
   onShoot: (target: string) => void;
 }
 
-export const RoomDay: React.FC<Props> = ({ view, onStartVote, onVote, onShoot }) => {
+export const RoomDay: React.FC<Props> = ({ view, onReady, onVote, onShoot }) => {
   const { t } = useTranslation();
   const me = view.me;
   const players = asPlayers(view.players);
@@ -73,11 +73,18 @@ export const RoomDay: React.FC<Props> = ({ view, onStartVote, onVote, onShoot })
       <Typography color="text.secondary" sx={{ mb: 3 }}>
         {t('games.werewolf.room.discuss_hint')}
       </Typography>
-      {onStartVote && (
-        <Button variant="contained" onClick={onStartVote} sx={{ minHeight: 48 }}>
-          {t('games.werewolf.room.start_vote')}
+      {me?.isAlive && (
+        <Button
+          variant={me.ready ? 'outlined' : 'contained'}
+          onClick={onReady}
+          sx={{ minHeight: 48, mb: 2 }}
+        >
+          {me.ready ? t('games.werewolf.room.not_ready') : t('games.werewolf.room.ready')}
         </Button>
       )}
+      <Typography color="text.secondary">
+        {t('games.werewolf.room.ready_waiting', { count: view.readyCount, total: aliveCount })}
+      </Typography>
     </Box>
   );
 };

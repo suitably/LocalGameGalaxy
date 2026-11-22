@@ -341,8 +341,7 @@
         "narrate_day_none": "Morning. Nobody died tonight.",
         "narrate_vote": "Time to vote. Everyone votes on their phone.",
         "narrate_hunter": "{{name}} was the hunter and takes a last shot.",
-        "discuss_hint": "Discuss who the werewolves are, then vote.",
-        "start_vote": "Start voting",
+        "discuss_hint": "Discuss who the werewolves are, then tap “Ready to vote”.",
         "your_vote": "Your vote: {{name}}",
         "voted_waiting": "{{count}} of {{total}} have voted.",
         "roles_title": "All roles",
@@ -351,7 +350,10 @@
         "pack_pick": "{{name}}: {{target}}",
         "pack_choosing": "still choosing …",
         "pack_nobody": "nobody",
-        "end_pack_vote": "End the wolves’ turn"
+        "ready": "Ready to vote",
+        "not_ready": "Not ready yet",
+        "ready_waiting": "{{count}} of {{total}} are ready. The vote starts when more than half are.",
+        "pack_time_left": "{{count}} s left – then the most picked player dies (a tie: nobody)."
       }
     },
     "imposter": {

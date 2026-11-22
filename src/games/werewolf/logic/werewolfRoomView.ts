@@ -48,6 +48,10 @@ export interface WerewolfRoomView {
   calling: Role | null;
   /** Position of `calling` in this night's order (0 = night just fell). */
   callIndex: number;
+  /** Game device's clock (ms) when the pack vote closes (while the wolves are called). */
+  packEndsAt: number | null;
+  /** Living players ready to vote (day). */
+  readyCount: number;
   /** Who died last night (day only). */
   victims: string[];
   /** The hunter who has to shoot now. */
@@ -58,6 +62,7 @@ export interface WerewolfRoomView {
     role: Role;
     isAlive: boolean;
     seen: boolean;
+    ready: boolean;
     vote: string | null;
     powerState: PlayerPowerState;
     pack: string[];
@@ -99,6 +104,7 @@ function meFor(state: WerewolfRoomState, player: Player): WerewolfRoomView['me']
     role: player.role ?? 'VILLAGER',
     isAlive: player.isAlive,
     seen: state.seen.includes(player.id),
+    ready: state.ready.includes(player.id),
     vote: state.votes[player.id] ?? null,
     powerState: player.powerState,
     pack: wolf
@@ -129,6 +135,8 @@ export function werewolfRoomView(state: WerewolfRoomState, seat: number | null):
     votedCount: Object.keys(state.votes).length,
     calling: currentNightRole(state),
     callIndex: state.nightStep,
+    packEndsAt: state.packEndsAt,
+    readyCount: state.ready.length,
     victims: game.phase === 'DAY' ? game.nightActionLog : [],
     hunter: game.phase === 'HUNTER_SHOT' ? (game.pendingHunterIds[0] ?? null) : null,
     winner: game.winner,

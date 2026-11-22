@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Role } from './types';
 import {
   INITIAL_WEREWOLF_ROOM,
+  PACK_VOTE_SECONDS,
   currentNightRole,
   lynchedBy,
   werewolfRoomAllows,
@@ -39,6 +40,15 @@ function started(roles: Role[], narrator = false): WerewolfRoomState {
 
 const seeAll = (state: WerewolfRoomState) =>
   run(state, ...state.game.players.map((p) => ({ type: 'SEEN' as const, playerId: p.id })));
+/** Living players tap "ready" until the vote starts. */
+const toVote = (state: WerewolfRoomState) =>
+  state.game.players
+    .filter((p) => p.isAlive)
+    .reduce(
+      (s, p) =>
+        s.game.phase === 'DAY' ? werewolfRoomReducer(s, { type: 'READY', playerId: p.id }) : s,
+      state,
+    );
 const roleOf = (state: WerewolfRoomState, id: string) =>
   state.game.players.find((p) => p.id === id);
 
@@ -116,7 +126,7 @@ describe('werewolf room', () => {
       playerId: 'host',
     });
     expect(day.game.phase).toBe('DAY');
-    const voting = run(day, { type: 'START_VOTE' });
+    const voting = toVote(day);
     const vote = (playerId: string, target: string) => ({
       type: 'VOTE' as const,
       playerId,
@@ -167,8 +177,7 @@ describe('werewolf room', () => {
     });
     expect(state.game.phase).toBe('DAY');
     const last = run(
-      state,
-      { type: 'START_VOTE' },
+      toVote(state),
       { type: 'VOTE', playerId: 'host', target: 'c' },
       { type: 'VOTE', playerId: 'c', target: 'd' },
       { type: 'VOTE', playerId: 'd', target: 'host' },
@@ -214,7 +223,7 @@ describe('werewolf room', () => {
       expect(state.game.players.every((p) => p.isAlive)).toBe(true);
     });
 
-    it('lets the host end a split vote: a tie kills nobody', () => {
+    it('closes on the timer: a tie kills nobody', () => {
       const split = run(night(), pick('host', 'c'), pick('b', 'd'));
       const ended = run(split, { type: 'END_PACK_VOTE' });
       expect(ended.game.phase).toBe('DAY');
@@ -223,14 +232,45 @@ describe('werewolf room', () => {
       expect(roleOf(one, 'd')?.isAlive).toBe(false);
       expect(werewolfRoomAllows(split, { type: 'END_PACK_VOTE' }, 'b', 'host')).toBe(false);
     });
+
+    it('sets the pack timer once per wolves turn', () => {
+      const timed = run(
+        night(),
+        { type: 'PACK_TIMER', at: 1000 },
+        { type: 'PACK_TIMER', at: 5000 },
+      );
+      expect(werewolfRoomView(timed, null).packEndsAt).toBe(1000 + PACK_VOTE_SECONDS * 1000);
+      const done = run(timed, { type: 'END_PACK_VOTE' });
+      expect(done.packEndsAt).toBeNull();
+    });
   });
 
   it('lets players act only for themselves and only the host steer', () => {
     const state = INITIAL_WEREWOLF_ROOM;
     expect(werewolfRoomAllows(state, { type: 'SEEN', playerId: 'b' }, 'b', 'host')).toBe(true);
     expect(werewolfRoomAllows(state, { type: 'SEEN', playerId: 'b' }, 'c', 'host')).toBe(false);
-    expect(werewolfRoomAllows(state, { type: 'START_VOTE' }, 'b', 'host')).toBe(false);
-    expect(werewolfRoomAllows(state, { type: 'START_VOTE' }, 'host', 'host')).toBe(true);
+    expect(
+      werewolfRoomAllows(state, { type: 'START', roles: [], narrator: false }, 'b', 'host'),
+    ).toBe(false);
+    expect(werewolfRoomAllows(state, { type: 'NEW_GAME' }, 'b', 'host')).toBe(true);
+  });
+
+  it('starts the vote once more than half of the living are ready; ready can be taken back', () => {
+    const day = run(seeAll(started(['WEREWOLF', 'VILLAGER', 'VILLAGER', 'VILLAGER', 'VILLAGER'])), {
+      type: 'NIGHT_SKIP',
+      playerId: 'host',
+    });
+    const ready = (playerId: string): WerewolfRoomAction => ({ type: 'READY', playerId });
+    const two = run(day, ready('b'), ready('c'), ready('c'), ready('d'));
+    expect(two.game.phase).toBe('DAY');
+    expect(werewolfRoomView(two, 1).me?.ready).toBe(true);
+    expect(werewolfRoomView(two, null).readyCount).toBe(2);
+    expect(run(two, ready('e')).game.phase).toBe('VOTING');
+  });
+
+  it('starts a new game only once it is over', () => {
+    const state = seeAll(started(['WEREWOLF', 'VILLAGER', 'VILLAGER', 'VILLAGER']));
+    expect(run(state, { type: 'NEW_GAME' })).toBe(state);
   });
 
   it('finds the lynched player', () => {

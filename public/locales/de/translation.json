@@ -341,8 +341,7 @@
         "narrate_day_none": "Es wird Morgen. Heute Nacht ist niemand gestorben.",
         "narrate_vote": "Zeit für die Abstimmung. Alle stimmen auf ihrem Handy ab.",
         "narrate_hunter": "{{name}} war der Jäger und gibt einen letzten Schuss ab.",
-        "discuss_hint": "Diskutiert, wer die Werwölfe sind, dann stimmt ab.",
-        "start_vote": "Abstimmung starten",
+        "discuss_hint": "Diskutiert, wer die Werwölfe sind, und tippt dann auf „Bereit zur Abstimmung“.",
         "your_vote": "Deine Stimme: {{name}}",
         "voted_waiting": "{{count}} von {{total}} haben abgestimmt.",
         "roles_title": "Alle Rollen",
@@ -351,7 +350,10 @@
         "pack_pick": "{{name}}: {{target}}",
         "pack_choosing": "wählt noch …",
         "pack_nobody": "niemand",
-        "end_pack_vote": "Zug der Wölfe beenden"
+        "ready": "Bereit zur Abstimmung",
+        "not_ready": "Doch noch nicht bereit",
+        "ready_waiting": "{{count}} von {{total}} sind bereit. Abgestimmt wird, sobald mehr als die Hälfte bereit ist.",
+        "pack_time_left": "Noch {{count}} s – dann stirbt, wer die meisten Stimmen hat (bei Gleichstand niemand)."
       }
     },
     "imposter": {
