@@ -4,7 +4,6 @@ import { useWebRTCClient } from '../../lib/webrtc';
 import { storage, sessionStorageSafe, STORAGE_KEYS } from '../../lib/storage';
 import { usePhoneClientMessages } from './hooks/usePhoneClientMessages';
 import { RemoteHostSettingsModal } from './components/RemoteHostSettingsModal';
-import type { HostSettings } from './types';
 import { useFeedbackRelay } from './hooks/useFeedbackRelay';
 import { PhoneRoomTransportProvider, usePhoneRoomTransport } from './hooks/useMelodiqRoomTransport';
 import { usePhoneMicStreaming } from './hooks/usePhoneMicStreaming';
@@ -28,8 +27,6 @@ export interface ClientEngineContextType {
   /** Sends a typed message to the host over the data channel. */
   sendClientData: (data: object) => void;
   clientProfile: ClientProfile;
-  /** Host settings last reported by the host (admin phones only). */
-  hostSettings: HostSettings | null;
   isHostSettingsOpen: boolean;
   setHostSettingsOpen: (open: boolean) => void;
   /** Permission role granted by the host (admin, queue manager, …; `roster.update`). */
@@ -51,7 +48,6 @@ const DEFAULT_CLIENT_ENGINE: ClientEngineContextType = {
   sendClientCommand: () => {},
   sendClientData: () => {},
   clientProfile: { name: 'Phone', hue: 120, deviceId: '' },
-  hostSettings: null,
   isHostSettingsOpen: false,
   setHostSettingsOpen: () => {},
   clientRole: 'spectator',
@@ -134,7 +130,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     [],
   );
 
-  const { handleMessage, isSessionPlaying, activeSongId, hostSettings } = usePhoneClientMessages({
+  const { handleMessage, isSessionPlaying, activeSongId } = usePhoneClientMessages({
     getDeviceId,
     setClientRole,
     setSinging,
@@ -170,7 +166,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [isConnected, sendData]);
 
-  // Room events (feedback, …) over the host link; the id is the one the host sees from `identify`
+  // Room events (feedback, host settings, …) over the host link; the id is the one the host sees from `identify`
   const roomTransport = usePhoneRoomTransport({
     link: { send: sendData, onMessage: addMessageListener },
     roomId: partyId ?? '',
@@ -222,7 +218,6 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     sendClientCommand,
     sendClientData: sendData,
     clientProfile,
-    hostSettings,
     isHostSettingsOpen,
     setHostSettingsOpen,
     updateClientProfile,
@@ -240,7 +235,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     <ClientEngineContext.Provider value={value}>
       {!isConnected && <ConnectionOverlay message={statusMessage} />}
       <PhoneRoomTransportProvider value={roomTransport}>{children}</PhoneRoomTransportProvider>
-      {clientRole === 'admin' && <RemoteHostSettingsModal />}
+      {clientRole === 'admin' && <RemoteHostSettingsModal room={roomTransport} />}
     </ClientEngineContext.Provider>
   );
 };
