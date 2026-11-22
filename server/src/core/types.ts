@@ -149,6 +149,17 @@ export interface PartSetting {
   playback?: 'synth';
   /** Display name instead of the part name in the score. */
   name?: string;
+  /** Strum direction overrides of a guitar part (#634). */
+  strum?: StrumSetting;
+}
+
+/** One stroke direction for a whole song or bar, or `auto` (score marks, then rhythm). */
+export type StrumMode = 'auto' | 'down' | 'up';
+
+/** Strum overrides of one part (#634): song-wide direction and per played bar (1-based). */
+export interface StrumSetting {
+  mode?: 'down' | 'up';
+  bars?: Record<string, StrumMode>;
 }
 
 /** Part settings of one score, by part id. */

@@ -29,6 +29,19 @@ export interface PartSetting {
   playback?: 'synth';
   /** Display name instead of the part name in the score. */
   name?: string;
+  /** Strum direction overrides of a guitar part (#634); absent = derived from rhythm and marks. */
+  strum?: StrumSetting;
+}
+
+/** One stroke direction for a whole song or bar, or `auto` (score marks, then rhythm). */
+export type StrumMode = 'auto' | 'down' | 'up';
+
+/** Strum overrides of one part (#634): song-wide direction and per-bar directions. */
+export interface StrumSetting {
+  /** Every strum of the part goes this way, unless its bar says otherwise. */
+  mode?: 'down' | 'up';
+  /** By played bar number (1-based, as the stage labels bars); wins over `mode`. */
+  bars?: Record<string, StrumMode>;
 }
 
 /** Part settings of one score, by part id. */

@@ -9,6 +9,7 @@ import {
   type Hand,
   type InstrumentKind,
   type ScorePart,
+  type StrumDirection,
 } from '../../../../modules/music-score';
 import { STAGE_INSTRUMENTS } from './instruments';
 
@@ -27,6 +28,8 @@ export interface StageNote {
   drum?: DrumVoice;
   /** Drums: sticking, when the score has it. */
   hand?: Hand;
+  /** Guitar strokes: strum direction (#634, `strumDirection.ts`). */
+  strum?: StrumDirection;
   judged: Judgement | null;
   /** Beats sung on pitch (pitch view). */
   acc: number;

@@ -1,6 +1,7 @@
 import path from 'node:path';
 import type { PartSetting, ScorePartSettings } from '../../../core/types';
 import type { SongMeta } from './songFolder';
+import { parseStrumSetting } from './strumSettings';
 
 /**
  * Hidden and renamed parts per score file in `song.json` (#564): checked on the way in and out,
@@ -16,9 +17,10 @@ const validId = (id: string) =>
 const text = (v: unknown) => (typeof v === 'string' ? v.trim().slice(0, MAX_NAME) : '');
 
 /**
- * Checks the part settings of one score (`{ <part id>: { hidden?, playback?, name? } }`, #564)
- * and keeps only what differs from the default: `hidden: true`, `playback: 'synth'` (only for a
- * hidden part) and a non-empty `name`. Returns the settings or an error message.
+ * Checks the part settings of one score (`{ <part id>: { hidden?, playback?, name?, strum? } }`,
+ * #564, #634) and keeps only what differs from the default: `hidden: true`, `playback: 'synth'`
+ * (only for a hidden part), a non-empty `name` and strum overrides. Returns the settings or an
+ * error message.
  */
 export function parsePartSettings(raw: unknown): ScorePartSettings | string {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return 'parts must be an object';
@@ -41,6 +43,9 @@ export function parsePartSettings(raw: unknown): ScorePartSettings | string {
     if (v.hidden === true && v.playback === 'synth') setting.playback = 'synth';
     const name = text(v.name);
     if (name) setting.name = name;
+    const strum = parseStrumSetting(v.strum);
+    if (typeof strum === 'string') return strum;
+    if (strum) setting.strum = strum;
     if (Object.keys(setting).length) out[id] = setting;
   }
   return out;

@@ -2,6 +2,7 @@ import type { ScorePart, ScoreSong } from '../../../../modules/music-score';
 import type { PartSetting, ScorePartSettings } from '../../../../lib/companion/songScoresApi';
 import type { StageScoreSong } from '../engine/players';
 import type { PlayerSeat } from '../engine/types';
+import { withStrums, type StrumSetting } from './strumDirection';
 
 /**
  * Hidden and renamed parts of the score on stage (#564), stored per score file in the song
@@ -17,6 +18,8 @@ export interface PartChange {
   hidden?: boolean;
   playback?: PartPlayback;
   name?: string;
+  /** Strum overrides (#634); undefined clears them. */
+  strum?: StrumSetting | undefined;
 }
 
 /**
@@ -36,9 +39,11 @@ export const partName = (part: ScorePart, settings: ScorePartSettings) =>
 
 /**
  * The song as the stage plays it. Without settings (or when they would hide every part with
- * notes) it is the song itself, so a stage never ends up without a part to play.
+ * notes) it is the song itself, so a stage never ends up without a part to play. Guitar parts
+ * carry their strum directions (#634).
  */
-export function stageView(song: ScoreSong, settings: ScorePartSettings): StageView {
+export function stageView(score: ScoreSong, settings: ScorePartSettings): StageView {
+  const song = withStrums(score, settings);
   const applies = song.parts.some((p) => settings[p.id]?.hidden || settings[p.id]?.name);
   if (!applies) return { song, backing: [] };
   const named = song.parts.map((p) =>
@@ -75,6 +80,8 @@ export function updatePartSettings(
   if (hidden) next.hidden = true;
   if (hidden && playback === 'synth') next.playback = 'synth';
   if (name && name !== part.name) next.name = name;
+  const strum = 'strum' in change ? change.strum : current.strum;
+  if (strum) next.strum = strum;
   const out = { ...settings };
   if (Object.keys(next).length) out[part.id] = next;
   else delete out[part.id];

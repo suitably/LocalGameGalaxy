@@ -17,6 +17,8 @@ import { useTranslation } from 'react-i18next';
 import type { ScorePart, ScoreSong } from '../../../../modules/music-score';
 import { NotesDialogFrame } from '../../components/NotesDialogFrame';
 import { canHide, hiddenCount, type PartPlayback } from '../logic/partSettings';
+import { isStrummed } from '../logic/strumDirection';
+import { StrumSettings } from './StrumSettings';
 import type { StageParts } from '../useStageParts';
 
 interface PartSettingsButtonProps {
@@ -26,16 +28,18 @@ interface PartSettingsButtonProps {
 }
 
 /**
- * Hides and renames parts of the score on stage (#564), from the players sheet. A hidden part is
- * muted or played by the synth as backing; settings of a score from a song folder are stored in
- * its `song.json`.
+ * Hides and renames parts of the score on stage (#564) and sets the strum direction of guitar
+ * parts (#634), from the players sheet. A hidden part is muted or played by the synth as backing;
+ * settings of a score from a song folder are stored in its `song.json`.
  */
 export function PartSettingsButton({ song, parts }: PartSettingsButtonProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
     t(`games.melodiq_notes.stage.${key}`, opts);
   const [open, setOpen] = useState(false);
-  if (!song || song.parts.length < 2) return null;
+  if (!song || (song.parts.length < 2 && !song.parts.some((p) => isStrummed(p.guess)))) {
+    return null;
+  }
   const hidden = hiddenCount(song, parts.settings);
   const { settings } = parts;
 
@@ -81,6 +85,13 @@ export function PartSettingsButton({ song, parts }: PartSettingsButtonProps) {
             </Select>
           )}
         </Stack>
+        {isStrummed(part.guess) && (
+          <StrumSettings
+            setting={setting.strum}
+            barCount={song.measureStarts.length}
+            onChange={(strum) => void parts.change(part, { strum })}
+          />
+        )}
       </Stack>
     );
   };

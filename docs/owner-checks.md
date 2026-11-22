@@ -94,3 +94,10 @@ Parity tests (solo, duet, golden, freestyle, rap fixtures) show identical notes,
 
 - [ ] Answer Q25 in `docs/open-questions.md`: the real copyright holder line for own files (today `REUSE.toml` uses "LocalGameGalaxy", the only author wording in the repo) and confirm the brand/icon PNGs are own work.
 - [ ] After the next release, open a server archive and check `THIRD_PARTY_LICENSES.txt` and `LICENSE` are inside.
+
+## #634 — guitar strum direction
+
+Rhythm rule, file marks (MusicXML bow marks, Guitar Pro `PickStroke`/`Brush`, tested with a hand-written GPIF) and per-part / per-bar overrides in `song.json` are tested.
+
+- [ ] Load a real Guitar Pro file with pick-stroke marks and a MusicXML with bow marks: the arrows above the strums follow the file; a strummed song without marks shows down on beats, up on offbeats.
+- [ ] Set "all down" and a per-bar override in the Parts dialog; both survive a reload of the song folder score.

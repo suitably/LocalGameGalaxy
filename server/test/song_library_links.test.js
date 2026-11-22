@@ -139,6 +139,25 @@ test('Notes library: labelled upload, moving a song, re-scan (#563), part settin
     assert.strictEqual(typeof parsePartSettings([]), 'string');
   });
 
+  await t.test('parsePartSettings checks strum overrides (#634)', () => {
+    assert.deepStrictEqual(
+      parsePartSettings({
+        P1: { strum: { mode: 'down', bars: { 3: 'up', 4: 'down', 5: 'auto' } } },
+        P2: { strum: { mode: 'auto', bars: { 2: 'auto' } } },
+      }),
+      { P1: { strum: { mode: 'down', bars: { 3: 'up', 5: 'auto' } } } },
+    );
+    assert.strictEqual(typeof parsePartSettings({ P1: { strum: { mode: 'sideways' } } }), 'string');
+    assert.strictEqual(
+      typeof parsePartSettings({ P1: { strum: { bars: { x: 'up' } } } }),
+      'string',
+    );
+    assert.strictEqual(
+      typeof parsePartSettings({ P1: { strum: { bars: { 2: 'fast' } } } }),
+      'string',
+    );
+  });
+
   await t.test(
     "PUT parts stores a score's part settings; deleting the score drops them",
     async () => {
@@ -149,13 +168,20 @@ test('Notes library: labelled upload, moving a song, re-scan (#563), part settin
           headers: json,
           body: JSON.stringify({ parts }),
         });
-      const res = await put('Lead.musicxml', { P1: { hidden: true }, P2: { name: 'Keys' } });
+      const res = await put('Lead.musicxml', {
+        P1: { hidden: true },
+        P2: { name: 'Keys' },
+        P3: { strum: { bars: { 7: 'down' } } },
+      });
       assert.strictEqual(res.status, 200);
       const body = await res.json();
       assert.deepStrictEqual(body.scores.find((s) => s.file === 'Lead.musicxml').parts, {
         P1: { hidden: true },
         P2: { name: 'Keys' },
+        P3: { strum: { bars: { 7: 'down' } } },
       });
+      const stored = JSON.parse(fs.readFileSync(path.join(songDir, 'song.json'), 'utf-8'));
+      assert.deepStrictEqual(stored.parts['Lead.musicxml'].P3, { strum: { bars: { 7: 'down' } } });
       assert.strictEqual((await put('Missing.musicxml', {})).status, 404);
       assert.strictEqual((await put('Lead.musicxml', { P1: { hidden: 1 } })).status, 400);
       const del = await app.request(`/api/songs/${id}/files/Lead.musicxml`, {
