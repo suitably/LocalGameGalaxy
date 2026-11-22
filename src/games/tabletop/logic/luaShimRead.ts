@@ -41,7 +41,11 @@ export function widgetName(w: TabletopWidget): string {
   return '';
 }
 
-const centreIn = (w: TabletopWidget, z: ScriptZone) => {
+/** Whether a widget's centre lies in a rectangle (a scripting zone). */
+export const centreIn = (
+  w: TabletopWidget,
+  z: Pick<ScriptZone, 'x' | 'y' | 'width' | 'height'>,
+) => {
   const cx = w.x + w.width / 2;
   const cy = w.y + w.height / 2;
   return cx >= z.x && cx <= z.x + z.width && cy >= z.y && cy <= z.y + z.height;

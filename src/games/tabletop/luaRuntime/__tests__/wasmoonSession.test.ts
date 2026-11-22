@@ -25,6 +25,8 @@ function onLoad(state)
 end
 function onSave() return JSON.encode({ count = count + 1 }) end
 function onObjectDrop(color, obj) obj.setName("dropped by " .. color) end
+function onPlayerTurn(p, prev) printToAll("turn " .. p.color .. " " .. (prev and prev.color or "-")) end
+function onObjectEnterContainer(c, o) printToAll(o.getGUID() .. " into " .. c.guid .. " " .. c.tag) end
 `;
 
 const TOKEN = `
@@ -99,6 +101,11 @@ describe('Lua runtime on wasmoon', () => {
       payload: { patches: { die1: { label: 'dropped by White' } } },
     });
     expect(session.click('nope', 'White')).toBe(false);
+    session.turn('Red', 'White');
+    session.event('onObjectEnterContainer', [{ __obj: 'h1' }, { __obj: 'c1' }]);
+    expect(rec.prints.map((p) => p.text)).toEqual(
+      expect.arrayContaining(['turn Red White', 'c1 into h1 Hand']),
+    );
     session.close();
   });
 });
