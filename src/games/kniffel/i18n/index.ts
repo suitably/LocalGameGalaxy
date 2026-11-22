@@ -36,6 +36,7 @@ export const initKniffelI18n = () => {
             room_connecting: 'Verbinde mit dem Host …',
             room_your_turn: 'Du bist dran: würfeln und eintragen',
             room_turn_of: '{{name}} ist dran',
+            room_playing_for: 'Du spielst für {{name}}',
             points: 'Punkte eintragen',
             strike: 'Streichen (0)',
             cat: {
@@ -104,6 +105,7 @@ export const initKniffelI18n = () => {
             room_connecting: 'Connecting to the host …',
             room_your_turn: 'Your turn: roll and score',
             room_turn_of: "It's {{name}}'s turn",
+            room_playing_for: 'You are playing for {{name}}',
             points: 'Score Points',
             strike: 'Strike (0)',
             cat: {

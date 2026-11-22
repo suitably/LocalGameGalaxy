@@ -16,6 +16,7 @@ import {
   PartyRoomConnecting,
   PartyRoomScoreboard,
 } from '../../features/party/components/PartyRoomScoreboard';
+import { PartyHelpNotice } from '../../features/party/components/PartyHelpNotice';
 import { initKniffelI18n } from './i18n';
 import {
   INITIAL_KNIFFEL_ROOM,
@@ -36,12 +37,14 @@ const start = (hostId: string, players: RoomPlayer[]): KniffelRoomAction => ({
   players,
 });
 const needsStart = (state: KniffelRoomState) => state.players.length === 0;
+const actorOf = (state: KniffelRoomState) =>
+  state.isGameOver ? null : (state.players[state.activePlayerIndex]?.id ?? null);
 const noop = () => {};
 
 export const KniffelRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
   const { t } = useTranslation();
   usePageTitle(t('games.kniffel.title', 'Kniffel'));
-  const { room, state, dispatch, synced } = usePartyRoomGame({
+  const { room, state, dispatch, synced, canAct, actingFor } = usePartyRoomGame({
     gameKey: 'kniffel',
     roomId,
     reducer: kniffelRoomReducer,
@@ -49,6 +52,7 @@ export const KniffelRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
     initialState: INITIAL_KNIFFEL_ROOM,
     needsStart,
     start,
+    actorOf,
   });
 
   if (!synced || state.players.length === 0)
@@ -59,15 +63,18 @@ export const KniffelRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
     );
 
   const active = state.players[state.activePlayerIndex];
-  const myTurn = active?.id === room.myId && !state.isGameOver;
+  const myTurn = canAct;
   const status = state.isGameOver
     ? t('games.kniffel.game_over', 'Spiel beendet!')
-    : myTurn
-      ? t('games.kniffel.room_your_turn')
-      : t('games.kniffel.room_turn_of', { name: active?.name ?? '' });
+    : actingFor
+      ? t('games.kniffel.room_playing_for', { name: active?.name ?? '' })
+      : myTurn
+        ? t('games.kniffel.room_your_turn')
+        : t('games.kniffel.room_turn_of', { name: active?.name ?? '' });
 
   return (
     <GameLayout maxWidth="md">
+      <PartyHelpNotice roomId={roomId} myId={room.myId} players={room.players} />
       <PartyRoomScoreboard
         myId={room.myId}
         entries={state.players.map((p) => ({

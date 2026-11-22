@@ -2722,6 +2722,12 @@
       "forgetTitle": "Forget this Stammtisch?",
       "forgetDesc": "The Stammtisch disappears from this device. You can join again with an invite link.",
       "away": "away"
+    },
+    "help": {
+      "accept": "Others may play for me",
+      "acceptHint": "Help when you are stuck",
+      "badge": "Others may help",
+      "playedForYou": "{{name}} played for you"
     }
   },
   "gartic": {

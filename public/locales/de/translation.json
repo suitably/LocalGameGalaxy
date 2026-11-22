@@ -2722,6 +2722,12 @@
       "forgetTitle": "Stammtisch vergessen?",
       "forgetDesc": "Der Stammtisch verschwindet von diesem Gerät. Über einen Einladungslink kannst du wieder beitreten.",
       "away": "nicht da"
+    },
+    "help": {
+      "accept": "Andere dürfen für mich spielen",
+      "acceptHint": "Hilfe, wenn du nicht weiterweißt",
+      "badge": "Andere dürfen helfen",
+      "playedForYou": "{{name}} hat für dich gespielt"
     }
   },
   "gartic": {

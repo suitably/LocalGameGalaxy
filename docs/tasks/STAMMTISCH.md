@@ -91,10 +91,10 @@ sources:
 
 ## 6. Progress
 
-| Slice | State |
-| ----- | ----- |
-| 1     | done  |
-| 2     | done  |
-| 3     | open  |
-| 4     | open  |
-| 5     | open  |
+| Slice | State                                                                                                          |
+| ----- | -------------------------------------------------------------------------------------------------------------- |
+| 1     | done                                                                                                           |
+| 2     | done                                                                                                           |
+| 3     | done (Kniffel; Knister/Qwixx accept helper actions on the host but have no UI to pick whose sheet to play yet) |
+| 4     | open                                                                                                           |
+| 5     | open                                                                                                           |

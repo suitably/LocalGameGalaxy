@@ -5,11 +5,12 @@
  * reducer over the room transport (`useRoomReducer`), guests following the host to the lobby,
  * the header back arrow to the lobby, and the host dealing once the players are known.
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useHeaderLayout } from '../../../context/HeaderLayoutContext';
 import { useWakeLock } from '../../../hooks/useWakeLock';
-import { useRoomReducer } from '../../../modules/room-game';
+import { useRoomEvents, useRoomReducer } from '../../../modules/room-game';
+import { HELP_GAME_KEY, mayHelp, withHelp, type HelpEvent } from '../logic/partyHelp';
 import { universalPartyManager } from '../logic/universalPartyManager';
 import { useFollowPartyLobby } from './useFollowPartyLobby';
 import { usePartyRoomPlayers, type RoomPlayer } from './usePartyRoomPlayers';
@@ -24,6 +25,8 @@ interface Options<S, A> {
   needsStart: (state: S) => boolean;
   /** The host's start action for the room's players. */
   start: (hostId: string, players: RoomPlayer[]) => A;
+  /** Whose turn it is (turn-based games): a helper may play that turn (`logic/partyHelp.ts`). */
+  actorOf?: (state: S) => string | null;
 }
 
 /** A resumed state names the new host where the game keeps one (`hostId`: deal, restart). */
@@ -40,6 +43,7 @@ export function usePartyRoomGame<S, A>({
   initialState,
   needsStart,
   start,
+  actorOf,
 }: Options<S, A>) {
   const navigate = useNavigate();
   useFollowPartyLobby(roomId);
@@ -52,13 +56,16 @@ export function usePartyRoomGame<S, A>({
   });
   const myId = room.myId;
   const adoptState = useCallback((state: S) => withHost(state, myId), [myId]);
+  // The host also accepts actions from players someone allowed to help them.
+  const players = room.players;
+  const helpedAuthorize = useMemo(() => withHelp(authorize, () => players), [authorize, players]);
   const game = useRoomReducer<S, A>({
     gameKey,
     roomId,
     playerId: room.myId,
     isHost: room.isHost,
     reducer,
-    authorize,
+    authorize: helpedAuthorize,
     initialState,
     resumeTag,
     adoptState,
@@ -79,5 +86,24 @@ export function usePartyRoomGame<S, A>({
     return () => setHomeAction(null);
   }, [navigate, roomId, setHomeAction]);
 
-  return { room, ...game };
+  // Playing someone else's turn: their device is told who did it (`PartyHelpNotice`).
+  const actor = actorOf?.(state) ?? null;
+  const actingFor = actor && mayHelp(room.players, myId, actor) ? actor : null;
+  const { send } = useRoomEvents<HelpEvent>({ gameKey: HELP_GAME_KEY, roomId, onEvent: () => {} });
+  const playerDispatch = useCallback(
+    (action: A) => {
+      if (actingFor) send({ type: 'helped', by: myId, for: actingFor, at: Date.now() });
+      dispatch(action);
+    },
+    [actingFor, send, myId, dispatch],
+  );
+
+  return {
+    room,
+    ...game,
+    dispatch: playerDispatch,
+    /** The player whose turn this device may play now: itself, or someone it may help. */
+    actingFor,
+    canAct: actor !== null && (actor === myId || actingFor !== null),
+  };
 }
