@@ -70,6 +70,14 @@ export const PhoneRoomTransportProvider = ({
   children: ReactNode;
 }) => createElement(PhoneRoomContext.Provider, { value }, children);
 
+/**
+ * Phone side only: the engine's transport (null on the host and until connected). For hooks that
+ * run on both sides but act only on a phone, without building a second host transport.
+ */
+export function usePhoneRoom(): MelodiqRoomTransport | null {
+  return useContext(PhoneRoomContext);
+}
+
 /** Host side: a host peer transport over the WebRTC manager; null without a manager. */
 function useHostRoomTransport(): MelodiqRoomTransport | null {
   const { manager, partyId } = useWebRTC();

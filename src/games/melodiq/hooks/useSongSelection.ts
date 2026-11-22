@@ -3,6 +3,7 @@ import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { type Song, type SongMeta } from '../db';
 import { type MelodiqParticipant } from '../types';
 import { type MelodiqView } from './useMelodiqNavigation';
+import { useQueueRequestSender } from './usePhoneQueueRoom';
 
 interface UseSongSelectionArgs {
   isClient: boolean;
@@ -30,6 +31,7 @@ interface UseSongSelectionArgs {
  * song or starts it locally / on the TV. Also tracks whether playback is currently running.
  */
 export function useSongSelection(a: UseSongSelectionArgs) {
+  const sendQueueRequest = useQueueRequestSender();
   const isPlaybackPlayingRef = useRef<boolean>(false);
   const selectedSongRef = useRef<Song | SongMeta | null>(a.selectedSong);
   const remoteSongRef = useRef<SongMeta | null>(a.remoteSong);
@@ -70,11 +72,11 @@ export function useSongSelection(a: UseSongSelectionArgs) {
         const canForce = a.clientRole === 'admin' || a.clientRole === 'queue_manager';
         const willForcePlay = canForce && (forcePlay || !isHostPlaying);
 
-        window.dispatchEvent(
-          new CustomEvent('melodiq_client_send_data', {
-            detail: { type: 'remote.select_song', songId: songMeta.id, forcePlay: willForcePlay },
-          }),
-        );
+        sendQueueRequest({
+          type: 'queue.select_song',
+          songId: songMeta.id,
+          forcePlay: willForcePlay,
+        });
 
         if (isHostPlaying && !willForcePlay) {
           a.setFeedbackMessage(`Zur Warteschlange hinzugefügt: ${songMeta.title}`);

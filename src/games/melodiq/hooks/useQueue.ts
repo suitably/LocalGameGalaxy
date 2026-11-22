@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import { useState, useCallback, createContext, useContext } from 'react';
 import React from 'react';
 import type { SongMeta } from '../db';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
@@ -6,6 +6,7 @@ import { generateUUID } from '../../../lib/uuid';
 import { enrichQueueParticipants } from '../logic/queueParticipantUtils';
 import { useMultiChannelSync } from '../../../modules/sync';
 import { QUEUE_SYNC } from '../logic/syncChannels';
+import { usePhoneQueueRoom } from './usePhoneQueueRoom';
 
 function recordSongToHistory(song: SongMeta) {
   try {
@@ -103,17 +104,8 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     },
   });
 
-  // Listen for updates from PhoneClientEngine (Client logic)
-  useEffect(() => {
-    if (!isClient) return;
-    const handleClientUpdate = (e: any) => {
-      const data = e.detail;
-      if (data.queue) setQueue(data.queue);
-      if (data.nowPlaying !== undefined) setNowPlayingState(data.nowPlaying);
-    };
-    window.addEventListener('melodiq_client_queue_update', handleClientUpdate);
-    return () => window.removeEventListener('melodiq_client_queue_update', handleClientUpdate);
-  }, []);
+  // Phones: queue and now playing are the host's room state; changes go out as requests
+  const { state: phoneQueue, sendRequest } = usePhoneQueueRoom();
 
   const broadcastQueue = useCallback(
     (newQueue: QueueItem[]) => {
@@ -159,11 +151,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const addToQueue = useCallback(
     (song: SongMeta, requester?: string, requesterId?: string) => {
       if (isClient) {
-        window.dispatchEvent(
-          new CustomEvent('melodiq_client_send_data', {
-            detail: { type: 'queue.add', songId: song.id },
-          }),
-        );
+        sendRequest({ type: 'queue.add', songId: song.id });
         return;
       }
 
@@ -180,15 +168,13 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       });
       recordSongToHistory(song);
     },
-    [broadcastQueue],
+    [broadcastQueue, sendRequest],
   );
 
   const removeFromQueue = useCallback(
     (itemId: string) => {
       if (isClient) {
-        window.dispatchEvent(
-          new CustomEvent('melodiq_client_send_data', { detail: { type: 'queue.remove', itemId } }),
-        );
+        sendRequest({ type: 'queue.remove', itemId });
         return;
       }
 
@@ -199,7 +185,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return next;
       });
     },
-    [broadcastQueue],
+    [broadcastQueue, sendRequest],
   );
 
   const popNext = useCallback((): QueueItem | null => {
@@ -286,11 +272,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const toggleQueueParticipant = useCallback(
     (itemId: string, deviceId: string, profile: any) => {
       if (isClient) {
-        window.dispatchEvent(
-          new CustomEvent('melodiq_client_send_data', {
-            detail: { type: 'queue.toggle_participant', itemId, deviceId, profile },
-          }),
-        );
+        sendRequest({ type: 'queue.toggle_participant', itemId, deviceId, profile });
         return;
       }
 
@@ -336,17 +318,13 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return next;
       });
     },
-    [broadcastQueue],
+    [broadcastQueue, sendRequest],
   );
 
   const reorderQueueParticipant = useCallback(
     (itemId: string, startIndex: number, endIndex: number) => {
       if (isClient) {
-        window.dispatchEvent(
-          new CustomEvent('melodiq_client_send_data', {
-            detail: { type: 'queue.reorder_participant', itemId, startIndex, endIndex },
-          }),
-        );
+        sendRequest({ type: 'queue.reorder_participant', itemId, startIndex, endIndex });
         return;
       }
       setQueue((prev) => {
@@ -364,7 +342,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return next;
       });
     },
-    [broadcastQueue],
+    [broadcastQueue, sendRequest],
   );
 
   const moveItem = useCallback(
@@ -385,10 +363,13 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     [broadcastQueue],
   );
 
+  const shownQueue = isClient ? phoneQueue.queue : queue;
+  const shownNowPlaying = isClient ? phoneQueue.nowPlaying : nowPlaying;
+
   const value = React.useMemo<QueueContextValue>(
     () => ({
-      queue,
-      nowPlaying,
+      queue: shownQueue,
+      nowPlaying: shownNowPlaying,
       addToQueue,
       addNext,
       removeFromQueue,
@@ -402,8 +383,8 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       playPlaylistNow,
     }),
     [
-      queue,
-      nowPlaying,
+      shownQueue,
+      shownNowPlaying,
       addToQueue,
       addNext,
       removeFromQueue,

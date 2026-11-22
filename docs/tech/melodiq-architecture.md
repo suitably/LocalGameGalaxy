@@ -51,7 +51,7 @@ Melodiq follows a strict separation of concerns, divided into domains:
 ### 2.3 Network & Synchronization
 
 - **TV Sync**: `useTVMode.ts` uses the `Presentation API` and `BroadcastChannel` to send `PLAY_SONG`, `STOP_SONG`, and `GAME_STATE` to `MelodiqTV.tsx`.
-- **Client Data Sync**: Custom DOM Events (`melodiq_client_send_data`) and React states sync the Host queue with the Phone clients.
+- **Song queue (host to phones)**: room state plus request events, §2.13.
 - **Audio Streaming**: `WebRTCContext.tsx` and `MicrophoneManager.ts` handle low-latency audio streaming from phone mics to the host browser.
 
 ### 2.4 Audio Stem Separation & Playback Mode
@@ -142,6 +142,25 @@ Maintainer decision 2026-11-07, open points in [ADR-0010](../adr/0010-melodiq-so
 - Store: `logic/songLibraryStore.ts` defines `SongLibraryStore`; `chooseLibraryStoreKind` picks the **companion** store (`/api/melodiq/library/*`, per API user) when the companion is active and no local folder is used, else the **local** store (favourites in `STORAGE_KEYS.MELODIQ_FAVORITES`, playlists in the existing Dexie `playlists` table).
 - State: `hooks/SongLibraryProvider.tsx` (mounted inside `SongsProvider`, so every Melodiq screen shares one copy) loads both lists, writes optimistically and reloads on a failed write; `useSongLibrary()` reads it, `usePlaylists()` is the playlist view of it (own vs. shared by others).
 - Server routes: [song-pipeline §3](song-pipeline.md#3-library-and-media-endpoints); the old `/api/playlists*` routes and the playlist auto-sync toggle are gone.
+
+### 2.13 Song queue (host state and phone requests, room API)
+
+The host's `useQueue.ts` (`QueueProvider`, host storage) stays the source of truth; phones see it as host-run room state and change it only through request events (#817, step 4 of #813; wiring in §2.8). Logic: `logic/queueRoom.ts`.
+
+- Room state: `useRoomReducer` with `gameKey: 'melodiq-queue'` (`QUEUE_ROOM_GAME_KEY`, channel `melodiq-queue_<roomId>`), state `{ queue, nowPlaying }`, one action `{ type: 'HOST_QUEUE', queue, nowPlaying }`. `queueRoomAllows(hostId)` accepts it only from the host's own id (`'host'`). `keepAlive: false` on both sides (the transport option disables it anyway): the peer follows the host link, so a reconnect (also after a host restart) starts a fresh guest that takes the host's next state.
+- Host: `PhoneQueueBridge.tsx` runs `hooks/useHostQueueRoom.ts`, which dispatches `HOST_QUEUE` whenever `queue` / `nowPlaying` change. Late joiners get the state through the room's hello/state handshake.
+- Phone: `QueueProvider` takes `queue` / `nowPlaying` from `hooks/usePhoneQueueRoom.ts` (phone room via `usePhoneRoom()`, null on the host) and sends its changes as requests; `useSongSelection.ts` sends `queue.select_song` through `useQueueRequestSender()`. Phone-only `moveItem` / `addNext` / `clearQueue` have no request and do nothing on a phone.
+- Requests (Melodiq room events, `gameKey: 'melodiq'`), checked by `handleQueueEvent` against `getRoleForDevice(from)` (the transport-stamped sender) and ignored unless `from` is a connected phone:
+
+| Event                                                                       | Allowed for                                                                 | Host call                                                            |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `{ type: 'queue.add', from, songId }`                                       | everyone but `singer`                                                       | `addToQueue(song, peerName, from)`                                   |
+| `{ type: 'queue.select_song', from, songId, forcePlay }`                    | everyone but `singer`; `forcePlay` only for `admin` / `queue_manager`       | DOM event `melodiq_remote_select_song`                               |
+| `{ type: 'queue.remove', from, itemId }`                                    | `admin` / `queue_manager`; `queue_contributor` for entries it added         | `removeFromQueue`                                                    |
+| `{ type: 'queue.reorder_participant', from, itemId, startIndex, endIndex }` | as `queue.remove`                                                           | `reorderQueueParticipant`                                            |
+| `{ type: 'queue.toggle_participant', from, itemId, deviceId, profile? }`    | the sender toggling itself (device or peer id), otherwise as `queue.remove` | `toggleQueueParticipant` (profile defaults to the peer's name / hue) |
+
+- `helper_config` stays a direct data-channel message (#813 decision 7): the phone asks with `{ type: 'helper_config.get' }` 500 ms after connecting (`PhoneClientEngine.tsx`, replaces `queue.get`) and `PhoneQueueBridge.tsx` answers that peer with `helper_config`. Besides the queue room and this reply, `PhoneQueueBridge` only serves `library.search` (until step 5). The old `queue.update`, `queue.get` and `remote.select_song` messages are gone.
 
 ## 3. Known Technical Debt & Refactoring Goals
 
