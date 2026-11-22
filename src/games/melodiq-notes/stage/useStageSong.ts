@@ -17,6 +17,7 @@ import {
   type SongOrigin,
 } from './serverScoreLoad';
 import { musicXmlFile, saveToNotesLibrary } from './logic/notesLibrarySync';
+import type { SaveTarget } from './logic/songLink';
 import { alignRecordingInBrowser, createElementRecording } from './engine/browserRecording';
 import type { StageEngine } from './engine/StageEngine';
 import { defaultSeats } from './engine/players';
@@ -230,41 +231,45 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
   }, [origin]);
 
   /** Everything goes to the song folder (#568): the score if missing, a recording, the marks. */
-  const saveToServer = useCallback(async () => {
-    if (!song) return;
-    const savingAs = generation.current;
-    try {
-      const result = await saveToNotesLibrary({
-        stored,
-        title: song.title,
-        artist: song.artist,
-        scoreFile: openedFile.current,
-        xml,
-        recordingFile: recording?.file ?? null,
-        // marks for the song's mix name no recording
-        recordingName: recording && !recording.file && !recording.songMix ? recording.name : null,
-        marks,
-        offsetSec: offset,
-        marksMeta: { aligner, mode: marksMode, edited },
-      });
-      if (savingAs !== generation.current) return;
-      if (result.scoreFile) {
-        setOrigin({
-          kind: 'notes',
+  const saveToServer = useCallback(
+    async (target?: SaveTarget) => {
+      if (!song) return;
+      const savingAs = generation.current;
+      try {
+        const result = await saveToNotesLibrary({
+          stored,
           title: song.title,
-          songId: result.songId,
-          scoreFile: result.scoreFile,
+          artist: song.artist,
+          scoreFile: openedFile.current,
+          xml,
+          recordingFile: recording?.file ?? null,
+          // marks for the song's mix name no recording
+          recordingName: recording && !recording.file && !recording.songMix ? recording.name : null,
+          marks,
+          offsetSec: offset,
+          marksMeta: { aligner, mode: marksMode, edited },
+          target,
         });
+        if (savingAs !== generation.current) return;
+        if (result.scoreFile) {
+          setOrigin({
+            kind: 'notes',
+            title: song.title,
+            songId: result.songId,
+            scoreFile: result.scoreFile,
+          });
+        }
+        // the recording keeps playing from its object URL, but counts as stored now
+        if (recording?.file && result.recordingName) {
+          setRecording({ name: result.recordingName, url: recording.url, local: true });
+        }
+        setSaved(true);
+      } catch (e) {
+        setError(errorText(e));
       }
-      // the recording keeps playing from its object URL, but counts as stored now
-      if (recording?.file && result.recordingName) {
-        setRecording({ name: result.recordingName, url: recording.url, local: true });
-      }
-      setSaved(true);
-    } catch (e) {
-      setError(errorText(e));
-    }
-  }, [song, stored, xml, marks, offset, recording, aligner, marksMode, edited]);
+    },
+    [song, stored, xml, marks, offset, recording, aligner, marksMode, edited],
+  );
 
   // a stored score only needs marks or a recording; anything else needs its MusicXML to upload
   const canSaveToServer = !!song && isCompanionEnabled() && (!!stored || !!xml);
@@ -314,6 +319,8 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     alignNow,
     saveToServer,
     canSaveToServer,
+    /** The score is not on the server yet: saving asks which song it goes to (#563). */
+    needsSaveTarget: !stored,
     currentScoreFile,
     exportScore,
     nudge: bar.nudge,

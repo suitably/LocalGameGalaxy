@@ -32,10 +32,18 @@ export const createLibrarySong = (meta: { title: string; artist: string }) =>
 export const updateSongMeta = (id: string, meta: SongMetaInput) =>
   request<CompanionSong>(`${songPath(id)}/meta`, jsonBody('PUT', meta));
 
-/** Stores a score or a recording; the server picks a free file name and says which it used. */
-export async function uploadSongFile(songId: string, file: File): Promise<StoredSongFile> {
+/**
+ * Stores a score or a recording; the server picks a free file name and says which it used.
+ * `label` names a score in `song.json` (#563).
+ */
+export async function uploadSongFile(
+  songId: string,
+  file: File,
+  label?: string,
+): Promise<StoredSongFile> {
   const form = new FormData();
   form.append('file', file);
+  if (label?.trim()) form.append('label', label.trim());
   return request<StoredSongFile>(`${songPath(songId)}/files`, { method: 'POST', body: form });
 }
 
@@ -65,3 +73,23 @@ export function songArchiveUrl(songId: string): string {
   const query = token ? `?token=${encodeURIComponent(token)}` : '';
   return companionUrl(`${songPath(songId)}/archive${query}`);
 }
+
+/**
+ * Moves the scores and recordings of a song without `.txt` into another song, e.g. a Melodiq
+ * song (#563); the source song is gone afterwards. `files`: new name of each moved score.
+ */
+export const mergeLibrarySong = (songId: string, intoId: string) =>
+  request<{ song: CompanionSong; files: Record<string, string> }>(
+    `${songPath(songId)}/merge`,
+    jsonBody('POST', { into: intoId }),
+  );
+
+/** Result of the library re-scan; `migration` is null without management rights. */
+export interface LibraryRescanResult {
+  songs: number;
+  migration: { migrated: number; failed: number } | null;
+}
+
+/** Full library scan without a server restart, plus the Notes migration of pieces not moved yet. */
+export const rescanLibrary = () =>
+  request<LibraryRescanResult>('/api/notes/library/rescan', { method: 'POST' });

@@ -132,6 +132,19 @@ export async function readSongMeta(folder: string): Promise<SongMeta | null> {
   }
 }
 
+/** The song's `song.json`, else what it would hold now (the song's current id, title, artist). */
+export async function songMetaOf(song: Song): Promise<SongMeta> {
+  return (
+    (await readSongMeta(song.folder)) ?? {
+      version: 1,
+      id: song.id,
+      title: song.title,
+      artist: song.artist,
+      labels: {},
+    }
+  );
+}
+
 export async function writeSongMeta(folder: string, meta: SongMeta): Promise<void> {
   const labels = Object.fromEntries(Object.entries(meta.labels).filter(([, l]) => l));
   await fs.promises.writeFile(
