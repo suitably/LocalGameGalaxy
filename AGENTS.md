@@ -91,7 +91,7 @@ Before editing `docs/`, read [`docs/workflows/knowledge-base-maintenance.md`](do
 ## 10. Quick facts (read-only)
 
 ```sh
-grep -n "id: '" src/lib/gameRegistry.tsx                  # registered games, hub order
+grep -n "^  [a-zA-Z]*,$" src/lib/catalog/entries.ts         # catalogue order (ADR-0011)
 grep -rn "topicPrefix:" src                               # MQTT topic prefixes
 grep -rn -E "new Dexie\(|DB_NAME =|super\('" src/games    # IndexedDB databases
 sed -n '/STORAGE_KEYS = {/,/} as const/p' src/lib/storage.ts

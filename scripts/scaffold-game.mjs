@@ -373,5 +373,5 @@ console.log(`Scaffolded ${titleEn} (${gameId}), area ${area}.`);
 console.log(`Created:\n${created.map((f) => `  ${f}`).join('\n')}`);
 console.log(`Modified:\n${modified.map((f) => `  ${f}`).join('\n')}`);
 console.log(
-  'Next: replace the placeholder logic/UI, review the TODO description, add the game to docs/tech/game-catalog.md and a changelog.d fragment.',
+  'Next: replace the placeholder logic/UI, review the TODO description, add the id to the hub list in src/lib/catalog/catalog.test.ts, add the game to docs/tech/game-catalog.md and a changelog.d fragment.',
 );

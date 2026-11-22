@@ -95,14 +95,14 @@ Sums tokens and estimated list-price cost of a Claude Code session from its loca
 
 ### `scaffold-game.mjs`
 
-Generator for a new game in the layout the existing games use (no `gameManifest.ts`; the registry is a hand-written array).
+Generator for a new game in the layout the existing games use, with its catalogue entry (ADR-0011).
 
 ```bash
 node scripts/scaffold-game.mjs --id=battle-ship --title="Schiffe versenken" --title-en="Battleship" \
-  [--description=… --description-en=…] [--category=party] [--icon=Sailing] [--dry-run]
+  [--description=… --description-en=…] [--area=party] [--modes=solo,pass_and_play] [--icon=Sailing] [--dry-run]
 ```
 
-- Creates `src/games/<id>/`: `index.ts` (named export), `<Pascal>Game.tsx` (`usePageTitle` + `t()`), `hooks/use<Pascal>State.ts` (persisted through `storage` and a registered `STORAGE_KEYS` entry), `logic/types.ts`, `logic/<camel>Engine.ts` and `logic/<camel>Engine.test.ts`.
-- Patches by text insertion: `src/lib/storage.ts` (`<ID>_GAME_STATE`), `src/lib/gameRegistry.tsx` (icon import, lazy import, `definitions` entry) and `public/locales/{de,en}/translation.json` (`games.<id_with_underscores>.*`).
-- `--icon` is a MUI icon base name (`@mui/icons-material/<Name>Rounded`); `--category` must be a `GameCategory`; `--dry-run` lists the files without writing. It aborts if an anchor in a patched file has moved.
-- Afterwards: replace the placeholder logic and UI, fix the `TODO` description, add the game to [game-catalog](../docs/tech/game-catalog.md) and add a `changelog.d` fragment.
+- Creates `src/games/<id>/`: `index.ts` (named export), `<Pascal>Game.tsx` (`usePageTitle` + `t()`), `hooks/use<Pascal>State.ts` (persisted through `storage` and a registered `STORAGE_KEYS` entry), `logic/types.ts`, `logic/<camel>Engine.ts`, `logic/<camel>Engine.test.ts` and `definition.tsx` (catalogue entry).
+- Patches by text insertion: `src/lib/storage.ts` (`<ID>_GAME_STATE`), `src/lib/catalog/entries.ts` (import and `ROUTE_GAMES` line) and `public/locales/{de,en}/translation.json` (`games.<id_with_underscores>.*`).
+- `--icon` is a MUI icon base name (`@mui/icons-material/<Name>Rounded`); `--area` is an `AreaId`, `--modes` a comma list of catalogue `Mode`s (`party_room` is refused: it needs a `PartyGameType` and a room route, added by hand); `--dry-run` lists the files without writing. It aborts if an anchor in a patched file has moved.
+- Afterwards: replace the placeholder logic and UI, fix the `TODO` description, add the id to the hub list in `src/lib/catalog/catalog.test.ts`, add the game to [game-catalog](../docs/tech/game-catalog.md) and add a `changelog.d` fragment.
