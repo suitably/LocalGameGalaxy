@@ -181,6 +181,12 @@ export const STORAGE_KEYS = {
   /** Player name shared by the party lobby and party games (historical key name). */
   PARTY_PLAYER_NAME: 'guessart_player_name',
   HOST_ROOM_CODE: 'galaxy_host_room_code',
+  /** Saved Stammtisch rooms (`features/party/logic/stammtisch.ts`). */
+  STAMMTISCH_ROOMS: 'galaxy_stammtisch_rooms',
+  /** Room id of the Stammtisch this device opens on app start. */
+  STAMMTISCH_AUTO_OPEN: 'galaxy_stammtisch_auto_open',
+  /** Session flag: the auto-open already happened in this app session. */
+  STAMMTISCH_AUTO_OPENED: 'galaxy_stammtisch_auto_opened',
 
   // Draw pot (Lostopf): pots this device hosts (with admin keys) and its own draw history
   DRAWPOT_HOSTED: 'drawpot_hosted',

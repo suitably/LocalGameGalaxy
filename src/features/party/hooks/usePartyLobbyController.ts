@@ -21,6 +21,7 @@ import {
   resolvePendingLaunch,
 } from '../logic/partyRoutes';
 import { shouldFollowIntoGame, visitedGameAt } from '../logic/lobbyReturn';
+import { useStammtisch } from './useStammtisch';
 
 export function usePartyLobbyController(initialRoomId?: string) {
   const navigate = useNavigate();
@@ -213,8 +214,10 @@ export function usePartyLobbyController(initialRoomId?: string) {
   const shareUrl = buildShareUrl();
   const players = roomState?.players || [];
   const amIHost = universalPartyManager.isHost(roomId);
+  const stammtisch = useStammtisch(roomId, roomState);
 
   return {
+    stammtisch,
     roomId,
     roomState,
     copied,

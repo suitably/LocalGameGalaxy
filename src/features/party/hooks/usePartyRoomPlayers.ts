@@ -2,7 +2,8 @@
  * Players of a party room in seat order, for games played in the room; spectators are left out
  * [ID: HOOK-PARTY-ROOM-PLAYERS]
  *
- * The one roster games read (#647 S3): `{ id, name, seat, isHost }` per player, plus `me`.
+ * The one roster games read (#647 S3): `{ id, name, seat, isHost }` per player, plus `me`. In a
+ * Stammtisch only members heard recently are listed (`universalPartyManager.isPresent`).
  * `isHost` is fixed while the game page stays open: the game's state lives in memory on its host,
  * so a host takeover in the party room must not hand the running game to a device without it.
  */
@@ -13,6 +14,8 @@ import { roomPlayersOf, type RoomPlayer } from '../logic/partyRoster';
 
 export type { RoomPlayer };
 
+const isPresent = (id: string) => universalPartyManager.isPresent(id);
+
 export function usePartyRoomPlayers(roomId: string) {
   const [players, setPlayers] = useState<RoomPlayer[]>(() => {
     const live = universalPartyManager.getRoomState();
@@ -20,13 +23,14 @@ export function usePartyRoomPlayers(roomId: string) {
       live?.roomId === roomId
         ? live
         : storage.getJson<PartyRoomState | null>(`${STORAGE_PREFIXES.PARTY_STATE}${roomId}`, null),
+      isPresent,
     );
   });
 
   useEffect(() => {
     universalPartyManager.subscribeToParty(roomId);
     return universalPartyManager.onPartyUpdate((state) => {
-      if (state.roomId === roomId) setPlayers(roomPlayersOf(state));
+      if (state.roomId === roomId) setPlayers(roomPlayersOf(state, isPresent));
     });
   }, [roomId]);
 

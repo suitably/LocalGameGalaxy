@@ -33,7 +33,8 @@ export const PartyRoomHeader: React.FC<{ lobby: PartyLobbyController }> = ({ lob
             variant="filled"
             sx={{ fontWeight: 'bold', fontSize: '0.95rem' }}
           />
-          {amIHost && (
+          {/* A Stammtisch keeps its code: saved entries and links point to it. */}
+          {amIHost && !lobby.stammtisch.isStammtisch && (
             <Tooltip title={t('party.editRoomCode', 'Eigenen Raum-Code festlegen')}>
               <IconButton
                 aria-label={t('party.editRoomCode', 'Eigenen Raum-Code festlegen')}

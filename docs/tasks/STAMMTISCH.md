@@ -93,7 +93,7 @@ sources:
 
 | Slice | State |
 | ----- | ----- |
-| 1     | open  |
+| 1     | done  |
 | 2     | open  |
 | 3     | open  |
 | 4     | open  |

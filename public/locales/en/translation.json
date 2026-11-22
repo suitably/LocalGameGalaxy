@@ -36,7 +36,11 @@
     "sections": {
       "tools": "Helpers"
     },
-    "empty": "No games match this selection."
+    "empty": "No games match this selection.",
+    "stammtisch": {
+      "desc": "Your fixed room: tap and you are in.",
+      "open": "Go"
+    }
   },
   "games": {
     "darts": {
@@ -2701,7 +2705,24 @@
     "chooseAndStart": "Choose game & start",
     "partyModeChip": "Party mode",
     "werewolf_desc": "Every role secretly on its own phone, the host narrates.",
-    "imposter_desc": "Everyone sees their word secretly on their own phone – who only has the hint?"
+    "imposter_desc": "Everyone sees their word secretly on their own phone – who only has the hint?",
+    "stammtisch": {
+      "title": "Stammtisch",
+      "desc": "A fixed room with the same code: everyone can come back any time.",
+      "save": "Save as Stammtisch",
+      "saveHere": "Save on this device",
+      "saveTitle": "Save as Stammtisch",
+      "saveDesc": "The room keeps its code. Whoever saves it comes back with one tap from the home screen.",
+      "nameLabel": "Name",
+      "waiting": "Waiting for the others …",
+      "autoOpen": "Open on start",
+      "autoOpenHint": "The app starts right in this room",
+      "claimHost": "Take over hosting",
+      "forget": "Forget",
+      "forgetTitle": "Forget this Stammtisch?",
+      "forgetDesc": "The Stammtisch disappears from this device. You can join again with an invite link.",
+      "away": "away"
+    }
   },
   "gartic": {
     "waitingHeader": "Waiting for other players...",

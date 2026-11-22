@@ -9,6 +9,7 @@ import { PartyRoomHeader } from './components/PartyRoomHeader';
 import { PartyRemovedNotice } from './components/PartyRemovedNotice';
 import { PartyServerInfoCard } from './components/PartyServerInfoCard';
 import { PartyShareCard } from './components/PartyShareCard';
+import { PartyStammtischCard } from './components/PartyStammtischCard';
 import { PartyPlayerRoster } from './components/PartyPlayerRoster';
 import { PartyGameSelection } from './components/PartyGameSelection';
 import { usePartyLobbyController } from './hooks/usePartyLobbyController';
@@ -68,6 +69,8 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
               <PartyRoomHeader lobby={lobby} />
 
               <PartyPendingGame lobby={lobby} />
+
+              <PartyStammtischCard lobby={lobby} />
 
               <PartyServerInfoCard lobby={lobby} />
 

@@ -1,0 +1,1 @@
+- **Stammtisch**: save a party room as a Stammtisch and it keeps its code; every member finds it on the home screen and comes back with one tap as the same player, any day. A device can open its Stammtisch right on app start, any member can take over hosting from the lobby, and members who are not here are shown as away and not dealt into the next game.
