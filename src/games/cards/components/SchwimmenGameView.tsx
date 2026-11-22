@@ -31,7 +31,7 @@ export const SchwimmenGameView: React.FC<SchwimmenGameViewProps> = ({
   return (
     <Box sx={{ width: '100%', maxWidth: 700, mx: 'auto', py: { xs: 1, sm: 2 } }}>
       <CardGameHeader
-        roundLabel={`${t('games.cards.round', 'Runde')} ${game.roundNumber}`}
+        roundLabel={`${t('games.cards.round')} ${game.roundNumber}`}
         onExit={onExit}
         onRestart={game.restart}
         onUndo={roundHistory.length > 0 ? game.undo : undefined}
@@ -51,10 +51,7 @@ export const SchwimmenGameView: React.FC<SchwimmenGameViewProps> = ({
           }}
         >
           <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
-            {t(
-              'games.cards.schwimmen.hint',
-              'Markiere den Verlierer mit „-1 Leben“ oder tippe bei 31 auf „Blitz“.',
-            )}
+            {t('games.cards.schwimmen.hint')}
           </Typography>
         </Paper>
       )}
@@ -84,8 +81,8 @@ export const SchwimmenGameView: React.FC<SchwimmenGameViewProps> = ({
           sx={{ py: 1.5, fontSize: '1.05rem' }}
         >
           {selectedLoserIds.length === 0
-            ? t('games.cards.schwimmen.select_loser_btn', 'Verlierer auswählen')
-            : `${t('games.cards.schwimmen.deduct_lives_btn', 'Runde abschließen')} (${selectedLoserIds.length} ${t('games.cards.schwimmen.lives_deducted', 'Leben abziehen')})`}
+            ? t('games.cards.schwimmen.select_loser_btn')
+            : `${t('games.cards.schwimmen.deduct_lives_btn')} (${selectedLoserIds.length} ${t('games.cards.schwimmen.lives_deducted')})`}
         </Button>
       )}
 
@@ -104,13 +101,13 @@ export const SchwimmenGameView: React.FC<SchwimmenGameViewProps> = ({
         >
           <EmojiEventsRoundedIcon sx={{ fontSize: 64, color: piece.yellow, mb: 1 }} />
           <Typography variant="h5" component="p" sx={{ fontWeight: 800 }}>
-            {winner.name} {t('games.cards.has_won', 'hat gewonnen!')}
+            {winner.name} {t('games.cards.has_won')}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
-            {t('games.cards.survived_all', 'Hat alle Runden überstanden!')}
+            {t('games.cards.survived_all')}
           </Typography>
           <Button variant="contained" onClick={game.restart} startIcon={<ReplayRoundedIcon />}>
-            {t('games.cards.play_again', 'Nochmal spielen')}
+            {t('games.cards.play_again')}
           </Button>
         </Paper>
       )}

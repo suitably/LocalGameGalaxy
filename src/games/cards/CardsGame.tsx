@@ -16,7 +16,7 @@ initCardsI18n();
 
 export const CardsGame: React.FC = () => {
   const { t } = useTranslation();
-  usePageTitle(t('games.cards.title', 'Kartenspiel-Zähler'));
+  usePageTitle(t('games.cards.title'));
   useWakeLock(true);
 
   const [activeSession, setActiveSession] = useState<{

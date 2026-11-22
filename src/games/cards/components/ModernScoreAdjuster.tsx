@@ -97,7 +97,7 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
             {playerName}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            {t('games.cards.current_score', 'Punktestand')}: <strong>{currentTotal}P</strong>
+            {t('games.cards.current_score')}: <strong>{currentTotal}P</strong>
           </Typography>
         </Box>
 
@@ -137,7 +137,7 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
         <IconButton
           onClick={() => handleStep(-1)}
-          aria-label={t('games.cards.decrease_points', 'Einen Punkt weniger für {{name}}', {
+          aria-label={t('games.cards.decrease_points', {
             name: playerName,
           })}
           sx={stepperSx}
@@ -164,7 +164,7 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
 
         <IconButton
           onClick={() => handleStep(1)}
-          aria-label={t('games.cards.increase_points', 'Einen Punkt mehr für {{name}}', {
+          aria-label={t('games.cards.increase_points', {
             name: playerName,
           })}
           sx={stepperSx}
@@ -173,11 +173,11 @@ export const ModernScoreAdjuster: React.FC<ModernScoreAdjusterProps> = ({
         </IconButton>
 
         {delta !== 0 && (
-          <Tooltip title={t('games.cards.reset_delta', 'Auf 0 zurücksetzen')}>
+          <Tooltip title={t('games.cards.reset_delta')}>
             <IconButton
               size="small"
               onClick={handleClear}
-              aria-label={t('games.cards.reset_delta', 'Auf 0 zurücksetzen')}
+              aria-label={t('games.cards.reset_delta')}
               sx={{
                 minWidth: 44,
                 minHeight: 44,

@@ -38,7 +38,7 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
     <Box sx={{ width: '100%', maxWidth: 720, mx: 'auto', py: { xs: 1.5, sm: 3 } }}>
       {/* Select Card Game */}
       <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 1.5 }}>
-        1. {t('games.cards.select_game', 'Kartenspiel wählen:')}
+        1. {t('games.cards.select_game')}
       </Typography>
 
       <Box
@@ -118,7 +118,7 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
           fontSize: '1.1rem',
         }}
       >
-        {t('games.cards.start_session', 'Runde starten')} ({selectedGame.name})
+        {t('games.cards.start_session')} ({selectedGame.name})
       </Button>
     </Box>
   );

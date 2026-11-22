@@ -44,7 +44,7 @@ export const SchwimmenPlayerCard: React.FC<SchwimmenPlayerCardProps> = ({
   const status = player.isEliminated ? (
     <Chip
       icon={<DangerousRoundedIcon fontSize="small" />}
-      label={t('games.cards.eliminated', 'Ertrunken')}
+      label={t('games.cards.eliminated')}
       size="small"
       color="error"
       variant="outlined"
@@ -53,7 +53,7 @@ export const SchwimmenPlayerCard: React.FC<SchwimmenPlayerCardProps> = ({
   ) : player.isSwimming ? (
     <Chip
       icon={<PoolRoundedIcon fontSize="small" />}
-      label={t('games.cards.swimming_status', 'Schwimmt (0 Leben)')}
+      label={t('games.cards.swimming_status')}
       size="small"
       sx={{
         ...chipSx,
@@ -90,16 +90,11 @@ export const SchwimmenPlayerCard: React.FC<SchwimmenPlayerCardProps> = ({
             sx={{ fontWeight: 700, px: 1.5 }}
           >
             {isMarkedLoser
-              ? t('games.cards.schwimmen.marked_loser', 'Verliert Leben')
-              : t('games.cards.schwimmen.lose_life_btn', '-1 Leben')}
+              ? t('games.cards.schwimmen.marked_loser')
+              : t('games.cards.schwimmen.lose_life_btn')}
           </Button>
 
-          <Tooltip
-            title={t(
-              'games.cards.schwimmen.blitz_tooltip',
-              'Blitz! (31) - Alle anderen verlieren 1 Leben',
-            )}
-          >
+          <Tooltip title={t('games.cards.schwimmen.blitz_tooltip')}>
             <Button
               variant="contained"
               size="small"
@@ -113,25 +108,25 @@ export const SchwimmenPlayerCard: React.FC<SchwimmenPlayerCardProps> = ({
                 '&:hover': { bgcolor: piece.yellow, filter: 'brightness(0.92)' },
               }}
             >
-              {t('games.cards.schwimmen.blitz_btn', 'Blitz!')}
+              {t('games.cards.schwimmen.blitz_btn')}
             </Button>
           </Tooltip>
 
           <Box sx={{ display: 'flex', alignItems: 'center', ml: 0.5 }}>
-            <Tooltip title={t('games.cards.schwimmen.minus_life', 'Leben abziehen')}>
+            <Tooltip title={t('games.cards.schwimmen.minus_life')}>
               <IconButton
                 size="small"
                 onClick={() => onAdjustLife(-1)}
-                aria-label={t('games.cards.schwimmen.minus_life', 'Leben abziehen')}
+                aria-label={t('games.cards.schwimmen.minus_life')}
               >
                 <RemoveRoundedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title={t('games.cards.schwimmen.plus_life', 'Leben hinzufügen')}>
+            <Tooltip title={t('games.cards.schwimmen.plus_life')}>
               <IconButton
                 size="small"
                 onClick={() => onAdjustLife(1)}
-                aria-label={t('games.cards.schwimmen.plus_life', 'Leben hinzufügen')}
+                aria-label={t('games.cards.schwimmen.plus_life')}
               >
                 <AddRoundedIcon fontSize="small" />
               </IconButton>

@@ -52,7 +52,7 @@ export const useSchwimmenState = (initialPlayers: string[], defaultLives: number
     const result = processSchwimmenRound(players, { losers: selectedLoserIds });
     const loserNames = names(players.filter((p) => selectedLoserIds.includes(p.id)));
     applyRound(result, {
-      description: `${loserNames} ${t('games.cards.schwimmen.lost_life_desc', 'verliert 1 Leben')}`,
+      description: `${loserNames} ${t('games.cards.schwimmen.lost_life_desc')}`,
       losers: selectedLoserIds,
       isBlitz: false,
     });
@@ -63,7 +63,6 @@ export const useSchwimmenState = (initialPlayers: string[], defaultLives: number
     const penalized = names(players.filter((p) => !p.isEliminated && p.id !== player.id));
     applyRound(result, {
       description: t('games.cards.schwimmen.blitz_history', {
-        defaultValue: 'Blitz von {{name}}! ({{others}} -1 Leben)',
         name: player.name,
         others: penalized,
       }),

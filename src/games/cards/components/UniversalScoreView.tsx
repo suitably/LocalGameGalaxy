@@ -63,7 +63,7 @@ export const UniversalScoreView: React.FC<UniversalScoreViewProps> = ({
   };
 
   const totalDeltasNonZero = Object.values(currentDeltas).some((d) => d !== 0);
-  const roundLabel = `${t('games.cards.round', 'Runde')} ${roundNumber}`;
+  const roundLabel = `${t('games.cards.round')} ${roundNumber}`;
 
   return (
     <Box sx={{ width: '100%', maxWidth: 720, mx: 'auto', py: { xs: 1, sm: 2 } }}>
@@ -100,12 +100,12 @@ export const UniversalScoreView: React.FC<UniversalScoreViewProps> = ({
         disabled={!totalDeltasNonZero && roundNumber > 1}
         sx={{ py: 1.5, fontSize: '1.05rem' }}
       >
-        {t('games.cards.complete_round', 'Runde auswerten')} ({roundLabel})
+        {t('games.cards.complete_round')} ({roundLabel})
       </Button>
 
       <CardScoreHistoryDialog
         open={historyOpen}
-        title={t('games.cards.round_history', 'Rundenhistorie')}
+        title={t('games.cards.round_history')}
         onClose={() => setHistoryOpen(false)}
       >
         <CardRoundTable

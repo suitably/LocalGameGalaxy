@@ -33,20 +33,16 @@ export const SchwimmenBlitzDialog: React.FC<SchwimmenBlitzDialogProps> = ({
     <Dialog open={Boolean(player)} onClose={onCancel} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <FlashOnRoundedIcon sx={{ color: piece.yellow }} />
-        {t('games.cards.schwimmen.blitz_dialog_title', 'Blitz / Feuer!')}
+        {t('games.cards.schwimmen.blitz_dialog_title')}
       </DialogTitle>
       <DialogContent>
         <Typography variant="body1" sx={{ mt: 1 }}>
-          <strong>{player?.name}</strong>{' '}
-          {t(
-            'games.cards.schwimmen.blitz_dialog_desc',
-            'hat 31 / Blitz! Alle anderen aktiven Spieler verlieren sofort 1 Leben.',
-          )}
+          <strong>{player?.name}</strong> {t('games.cards.schwimmen.blitz_dialog_desc')}
         </Typography>
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onCancel} sx={{ color: 'text.secondary' }}>
-          {t('common.cancel', 'Abbrechen')}
+          {t('common.cancel')}
         </Button>
         <Button
           variant="contained"
@@ -58,7 +54,7 @@ export const SchwimmenBlitzDialog: React.FC<SchwimmenBlitzDialogProps> = ({
             '&:hover': { bgcolor: piece.yellow, filter: 'brightness(0.92)' },
           }}
         >
-          {t('games.cards.schwimmen.confirm_blitz', 'Blitz ausführen')}
+          {t('games.cards.schwimmen.confirm_blitz')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -82,7 +78,7 @@ export const SchwimmenHistoryDialog: React.FC<SchwimmenHistoryDialogProps> = ({
   return (
     <CardScoreHistoryDialog
       open={open}
-      title={t('games.cards.round_history', 'Rundenhistorie')}
+      title={t('games.cards.round_history')}
       maxWidth="xs"
       onClose={onClose}
     >
@@ -93,7 +89,7 @@ export const SchwimmenHistoryDialog: React.FC<SchwimmenHistoryDialogProps> = ({
               variant="subtitle2"
               sx={{ fontWeight: 800, color: rh.isBlitz ? piece.yellow : piece.teal }}
             >
-              {t('games.cards.round', 'Runde')} {rh.round}
+              {t('games.cards.round')} {rh.round}
             </Typography>
             <Typography variant="body2">{rh.description}</Typography>
           </Box>

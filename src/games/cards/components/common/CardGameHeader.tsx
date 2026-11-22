@@ -45,20 +45,20 @@ export const CardGameHeader: React.FC<CardGameHeaderProps> = ({
   useEffect(() => {
     setMenuItems([
       {
-        label: t('games.cards.undo', 'Rückgängig'),
+        label: t('games.cards.undo'),
         icon: <UndoRoundedIcon />,
         action: () => callbacks.current.onUndo?.(),
         disabled: !canUndo,
         showAlways: true,
       },
       {
-        label: t('games.cards.round_history', 'Rundenhistorie'),
+        label: t('games.cards.round_history'),
         icon: <HistoryRoundedIcon />,
         action: () => callbacks.current.onHistory?.(),
         disabled: !canShowHistory,
       },
       {
-        label: t('games.cards.restart', 'Neu starten'),
+        label: t('games.cards.restart'),
         icon: <ReplayRoundedIcon />,
         action: () => setConfirmRestart(true),
       },
@@ -85,12 +85,9 @@ export const CardGameHeader: React.FC<CardGameHeaderProps> = ({
       </Typography>
       <ConfirmDialog
         open={confirmRestart}
-        title={t('games.cards.restart_title', 'Partie neu starten?')}
-        message={t(
-          'games.cards.restart_message',
-          'Alle Runden und Punkte dieser Partie werden gelöscht.',
-        )}
-        confirmText={t('games.cards.restart', 'Neu starten')}
+        title={t('games.cards.restart_title')}
+        message={t('games.cards.restart_message')}
+        confirmText={t('games.cards.restart')}
         confirmColor="error"
         onConfirm={() => {
           setConfirmRestart(false);

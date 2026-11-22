@@ -39,7 +39,7 @@ export const CardScoreHistoryDialog: React.FC<CardScoreHistoryDialogProps> = ({
         {children}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('common.close', 'Schließen')}</Button>
+        <Button onClick={onClose}>{t('common.close')}</Button>
       </DialogActions>
     </Dialog>
   );
@@ -69,7 +69,7 @@ export const CardRoundTable: React.FC<CardRoundTableProps> = ({
     <Table size="small">
       <TableHead>
         <TableRow>
-          <TableCell sx={{ fontWeight: 'bold' }}>{t('games.cards.round', 'Runde')}</TableCell>
+          <TableCell sx={{ fontWeight: 'bold' }}>{t('games.cards.round')}</TableCell>
           {leadingHeaders.map((label) => (
             <TableCell key={label} sx={{ fontWeight: 'bold' }}>
               {label}

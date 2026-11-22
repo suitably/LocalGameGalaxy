@@ -37,7 +37,7 @@ export const OhHellGameView: React.FC<OhHellGameViewProps> = ({
   const cardsThisRound = roundsSequence[roundIdx] || 1;
   const isLastRound = roundIdx >= roundsSequence.length - 1;
   const totalBidsEntered = sumCountInputs(currentBids);
-  const cardsLabel = t('games.cards.cards_count', 'Karten');
+  const cardsLabel = t('games.cards.cards_count');
 
   const handleCompleteRound = () => {
     const result = processOhHellRound(players, {
@@ -80,7 +80,7 @@ export const OhHellGameView: React.FC<OhHellGameViewProps> = ({
   return (
     <Box sx={{ width: '100%', maxWidth: 750, mx: 'auto', py: { xs: 1, sm: 2 } }}>
       <CardGameHeader
-        roundLabel={`${t('games.cards.round', 'Runde')} ${roundIdx + 1}/${roundsSequence.length} (${cardsThisRound} ${cardsLabel})`}
+        roundLabel={`${t('games.cards.round')} ${roundIdx + 1}/${roundsSequence.length} (${cardsThisRound} ${cardsLabel})`}
         onExit={onExit}
         onRestart={handleRestart}
         onHistory={() => setHistoryOpen(true)}
@@ -111,12 +111,12 @@ export const OhHellGameView: React.FC<OhHellGameViewProps> = ({
         >
           <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'secondary.light' }}>
             {phase === 'bidding'
-              ? `1. ${t('games.cards.phase_bidding', 'Stichansage (Vorhersage)')}`
-              : `2. ${t('games.cards.phase_tricks', 'Ergebnis (Gemachte Stiche)')}`}
+              ? `1. ${t('games.cards.phase_bidding')}`
+              : `2. ${t('games.cards.phase_tricks')}`}
           </Typography>
 
           <Chip
-            label={`${t('games.cards.total_bids', 'Gesamtansage')}: ${totalBidsEntered} / ${cardsThisRound} ${cardsLabel}`}
+            label={`${t('games.cards.total_bids')}: ${totalBidsEntered} / ${cardsThisRound} ${cardsLabel}`}
             size="small"
             color={totalBidsEntered === cardsThisRound ? 'warning' : 'info'}
             variant="outlined"
@@ -133,23 +133,23 @@ export const OhHellGameView: React.FC<OhHellGameViewProps> = ({
                 {p.name}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {t('games.cards.current_score', 'Punktestand')}: <strong>{p.score}P</strong>
+                {t('games.cards.current_score')}: <strong>{p.score}P</strong>
               </Typography>
             </Box>
 
             {phase === 'bidding' ? (
-              countInput(t('games.cards.bid_label', 'Ansage'), currentBids[p.id], (val) =>
+              countInput(t('games.cards.bid_label'), currentBids[p.id], (val) =>
                 setCurrentBids((prev) => ({ ...prev, [p.id]: val })),
               )
             ) : (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                 <Chip
-                  label={`${t('games.cards.bid_label', 'Ansage')}: ${currentBids[p.id] || 0}`}
+                  label={`${t('games.cards.bid_label')}: ${currentBids[p.id] || 0}`}
                   size="small"
                   variant="outlined"
                   sx={{ fontWeight: 600 }}
                 />
-                {countInput(t('games.cards.tricks_label', 'Stiche'), currentTricks[p.id], (val) =>
+                {countInput(t('games.cards.tricks_label'), currentTricks[p.id], (val) =>
                   setCurrentTricks((prev) => ({ ...prev, [p.id]: val })),
                 )}
               </Box>
@@ -167,7 +167,7 @@ export const OhHellGameView: React.FC<OhHellGameViewProps> = ({
           onClick={() => setPhase('tricks')}
           sx={{ py: 1.5 }}
         >
-          {t('games.cards.continue_to_tricks', 'Ansagen fixieren & Runde spielen')}
+          {t('games.cards.continue_to_tricks')}
         </Button>
       ) : (
         <Button
@@ -178,13 +178,13 @@ export const OhHellGameView: React.FC<OhHellGameViewProps> = ({
           onClick={handleCompleteRound}
           sx={{ py: 1.5 }}
         >
-          {t('games.cards.complete_round', 'Runde auswerten')}
+          {t('games.cards.complete_round')}
         </Button>
       )}
 
       <CardScoreHistoryDialog
         open={historyOpen}
-        title={t('games.cards.score_table', 'Punktetabelle')}
+        title={t('games.cards.score_table')}
         maxWidth="md"
         onClose={() => setHistoryOpen(false)}
       >
