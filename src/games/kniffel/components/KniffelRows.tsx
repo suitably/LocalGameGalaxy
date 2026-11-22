@@ -53,6 +53,8 @@ interface ScoreCellProps {
   clickable: boolean;
   highlight: boolean;
   onClick: () => void;
+  /** Name for party "tap here" markers (`data-room-target`). */
+  target?: string;
 }
 
 export const KniffelScoreCell: React.FC<ScoreCellProps> = ({
@@ -61,10 +63,12 @@ export const KniffelScoreCell: React.FC<ScoreCellProps> = ({
   clickable,
   highlight,
   onClick,
+  target,
 }) => {
   const scored = value !== null;
   return (
     <Box
+      data-room-target={target}
       onClick={onClick}
       sx={{
         flex: 1,

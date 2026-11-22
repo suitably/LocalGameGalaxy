@@ -1,0 +1,1 @@
+- **Show where to tap**: in a Kniffel party game, the hand button in the header lets you tap a die, the roll button or a score cell on your screen; the same spot pulses on the other player's screen until they tap it.

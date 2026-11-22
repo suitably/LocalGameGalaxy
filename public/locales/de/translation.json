@@ -2728,6 +2728,10 @@
       "acceptHint": "Hilfe, wenn du nicht weiterweißt",
       "badge": "Andere dürfen helfen",
       "playedForYou": "{{name}} hat für dich gespielt"
+    },
+    "marker": {
+      "show": "Zeigen, wo getippt werden soll",
+      "hint": "Tippe auf die Stelle, die du zeigen willst."
     }
   },
   "gartic": {

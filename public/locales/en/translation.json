@@ -2728,6 +2728,10 @@
       "acceptHint": "Help when you are stuck",
       "badge": "Others may help",
       "playedForYou": "{{name}} played for you"
+    },
+    "marker": {
+      "show": "Show where to tap",
+      "hint": "Tap the spot you want to show."
     }
   },
   "gartic": {

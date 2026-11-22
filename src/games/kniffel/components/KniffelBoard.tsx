@@ -69,6 +69,7 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
         clickable={isClickable}
         highlight={highlight}
         onClick={() => board.handleCellClick(category, playerIdx)}
+        target={`kniffel.score.${category}.${playerIdx}`}
       />
     );
   };
