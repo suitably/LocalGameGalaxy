@@ -160,7 +160,13 @@ The host's `useQueue.ts` (`QueueProvider`, host storage) stays the source of tru
 | `{ type: 'queue.reorder_participant', from, itemId, startIndex, endIndex }` | as `queue.remove`                                                           | `reorderQueueParticipant`                                            |
 | `{ type: 'queue.toggle_participant', from, itemId, deviceId, profile? }`    | the sender toggling itself (device or peer id), otherwise as `queue.remove` | `toggleQueueParticipant` (profile defaults to the peer's name / hue) |
 
-- `helper_config` stays a direct data-channel message (#813 decision 7): the phone asks with `{ type: 'helper_config.get' }` 500 ms after connecting (`PhoneClientEngine.tsx`, replaces `queue.get`) and `PhoneQueueBridge.tsx` answers that peer with `helper_config`. Besides the queue room and this reply, `PhoneQueueBridge` only serves `library.search` (until step 5). The old `queue.update`, `queue.get` and `remote.select_song` messages are gone.
+- `helper_config` stays a direct data-channel message (#813 decision 7): the phone asks with `{ type: 'helper_config.get' }` 500 ms after connecting (`PhoneClientEngine.tsx`, replaces `queue.get`) and `PhoneQueueBridge.tsx` answers that peer with `helper_config`. Besides the queue room and this reply, `PhoneQueueBridge` only mounts `useHostLibrarySearch` (§2.14). The old `queue.update`, `queue.get` and `remote.select_song` messages are gone.
+
+### 2.14 Library search (room events)
+
+- Pure logic `logic/librarySearch.ts` [ID: GAME-MELODIQ-LIBRARY-SEARCH]: `searchLibrary(songs, query, filters)` (genre, year or decade like `2010s`, language, then title/artist text; first 50 songs, stripped to id/title/artist/year/genre/language), parsers, `handleLibrarySearchEvent` (host) and `handleLibraryResultsEvent` (phone).
+- Events on the Melodiq room events channel (`useRoomEvents`, `gameKey: 'melodiq'`): `{ type: 'library.search', from, reqId, query, filters }` phone to host; `{ type: 'library.results', from, to, reqId, results }` host to the requester only (`to` = the request's `from`; other phones ignore it). The old direct `library.search` / `library.results` data-channel messages are gone.
+- Host: `hooks/useHostLibrarySearch.ts` (mounted by `PhoneQueueBridge`). Phone: `hooks/usePhoneLibrarySearch.ts` (`search()`, `results` of the latest `reqId` only; stale replies are dropped). **Unverified:** no phone UI calls it yet (the old message had no sender in the code either).
 
 ## 3. Known Technical Debt & Refactoring Goals
 
