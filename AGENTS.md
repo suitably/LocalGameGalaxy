@@ -52,7 +52,7 @@ Before building anything shared (player rosters, sync, dice, dialogs, header act
 ## 6. i18n
 
 - All user-facing text via `t('key')`, always in **both** `de` and `en`.
-- Put a string where its game already keeps its strings: `public/locales/{de,en}/translation.json`, or the game's own bundle `src/games/<id>/i18n/{de,en}.json` (cards, darts, kniffel, knister, melodiq, qwixx, sudoku, wordle; ADR-0011 §7 moves every game there). Hub title/description keys always go to `public/locales`. Details: [`docs/tech/i18n-strategy.md`](docs/tech/i18n-strategy.md).
+- Put a string where its game already keeps its strings: `public/locales/{de,en}/translation.json`, or the game's own bundle `src/games/<id>/i18n/{de,en}.json` (cards, darts, kniffel, knister, melodiq, qwixx, sudoku, werewolf, wordle; ADR-0011 §7 moves every game there). Hub title/description keys always go to `public/locales`. Details: [`docs/tech/i18n-strategy.md`](docs/tech/i18n-strategy.md).
 
 ## 7. Capacitor (Android) UI
 

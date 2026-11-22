@@ -9,8 +9,10 @@
  */
 import i18n from 'i18next';
 
+/** A JSON translation file; arrays are read with `t(key, { returnObjects: true })`. */
+export type TranslationValue = string | TranslationTree | TranslationValue[];
 export interface TranslationTree {
-  [key: string]: string | TranslationTree;
+  [key: string]: TranslationValue;
 }
 
 export interface GameBundle {
