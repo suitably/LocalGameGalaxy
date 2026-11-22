@@ -4,3 +4,4 @@
 - `docs/tasks/index.md`: lists the spec.
 - `docs/tech/game-catalog.md` §3: Knister, Kniffel and Qwixx party-room sync (`usePartyRoomGame`) was missing from the table.
 - No code outside `docs/` changed.
+- Decisions recorded: help scope, markers without grant, auto-open off, host-change resume general for all `useRoomReducer` games.

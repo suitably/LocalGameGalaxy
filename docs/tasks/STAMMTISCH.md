@@ -73,17 +73,21 @@ sources:
 ## 4. Slices (one PR each, in order)
 
 1. **Stammtisch rooms** — storage key + pure helpers (`logic/stammtisch.ts`: add, rename, remove, find) with tests; "Save as Stammtisch" in the lobby; hub tile; "Open Stammtisch on start" setting and the waiting state. Docs: `persistence.md` (key), `architecture.md`/`game-catalog.md` (party), locales de/en.
-2. **Resume after a host change** — see Q1: host persists room game state; a guest taking over seeds its host peer from its last received state (higher `rev` wins). Tests in `modules/room-game`.
+2. **Resume after a host change** — see §5: guest takeover from its last received state for all `useRoomReducer` games; host-side persistence for Stammtisch rooms; sealed games resume only with the old host. Tests in `modules/room-game`.
 3. **Act for a player** — `PartyPlayer.helpers`, consent switch in the lobby (own entry only), authorize wrapper + `canActFor` in `usePartyRoomGame`, Kniffel UI uses it, "X did Y for you" notice. Tests for the wrapper (pure function in `features/party/logic/`).
 4. **Markers** — `useRoomMarkers` + `RoomMarkerLayer` + header "Show" action; tag Kniffel elements; then Knister and Qwixx. Docs: `sync-protocol.md` (new live channel).
 5. **Kniffel international rules** — logic, tests, table setting.
 6. Later, separate decision: help in Spieltisch card games (needs the helped seat's sealed packet on the helper's device) and a larger-type display setting.
 
-## 5. Open points (decide before the slice that needs them)
+## 5. Decisions on the open points (maintainer, 2026-11-22)
 
-- Q1 (slice 2): A running match does **not** survive a host change today: the host's `RoomStatePeer` is the only authoritative copy (`roomPeerRegistry.ts` header), a new host starts from `initialState`, and `usePartyRoomGame` deals again (`needsStart`). Guests do hold the last state they rendered. Proposal (slice 2, before help): the host persists its state per room and game, and a guest that takes over seeds its host peer from its last received state (higher `rev` wins), so a Stammtisch match can be paused and resumed.
-- Q2 (slice 3): Grant scope default — "everyone in this Stammtisch" or "chosen players"? Proposal: everyone, switchable.
-- Q3 (slice 4): Should a helper be able to mark elements on screens of players who did not grant help? Proposal: markers need no grant (they only point), acting does.
+- **Host change (slice 2) — general, not Stammtisch-only.** Today a running match does not survive a host change: the host's `RoomStatePeer` is the only authoritative copy (`roomPeerRegistry.ts` header), a new host starts from `initialState`, and `usePartyRoomGame` deals again (`needsStart`). Guests hold the last state they rendered.
+  - **Every room game on `useRoomReducer`** (Kniffel, Knister, Qwixx and the other non-sealed room games): a guest that takes over seeds its host peer from its last received state (higher `rev` wins). Lives in `modules/room-game`, so it applies in any party room.
+  - **Stammtisch only, on top:** the host also persists the state per room and game, so a match can be paused and resumed on a later day, even when everyone was offline in between.
+  - **Sealed games** (Spieltisch card games, Werewolf, Imposter via `SealedRoomPeer`): guests only have their own sealed view, so a guest cannot resume. The match continues only when the old host returns with its persisted state; otherwise the new host asks to start a new game. **Unverified:** whether the sealed host already persists enough (`sessionStore.ts` keeps the Spieltisch session for the owner) — check in slice 2.
+- **Help scope (slice 3):** a grant applies to everyone in the room by default; the player can narrow it to chosen players.
+- **Markers (slice 4):** need no grant — they only point, never act.
+- **Open Stammtisch on start (slice 1):** off by default, switched on per device.
 
 ## 6. Progress
 
