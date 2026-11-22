@@ -212,6 +212,8 @@ export const STORAGE_PREFIXES = {
    * (local storage), base64url AES-GCM 256 (`src/modules/sync/roomKeys.ts`, ADR 0009).
    */
   ROOM_KEY: 'galaxy_room_key_',
+  /** Last state of a room game per party room (Stammtisch resume, `modules/room-game/roomSnapshot.ts`). */
+  ROOM_GAME_SNAPSHOT: 'galaxy_room_game_snapshot_',
   GAME_RELAY: 'galaxy_game_relay_',
   /** Running scripted card game per game id (local table or the room this device hosts). */
   TABLETOP_SCRIPTED: 'tabletop_scripted_',

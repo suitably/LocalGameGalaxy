@@ -4,8 +4,8 @@
  *
  * The one roster games read (#647 S3): `{ id, name, seat, isHost }` per player, plus `me`. In a
  * Stammtisch only members heard recently are listed (`universalPartyManager.isPresent`).
- * `isHost` is fixed while the game page stays open: the game's state lives in memory on its host,
- * so a host takeover in the party room must not hand the running game to a device without it.
+ * `isHost` is fixed while the game page stays open (the game's state lives in memory on its host),
+ * unless the game resumes from a guest copy (`liveHost`, `usePartyRoomGame`).
  */
 import { useEffect, useMemo, useState } from 'react';
 import { storage, STORAGE_PREFIXES } from '../../../lib/storage';
@@ -16,7 +16,7 @@ export type { RoomPlayer };
 
 const isPresent = (id: string) => universalPartyManager.isPresent(id);
 
-export function usePartyRoomPlayers(roomId: string) {
+export function usePartyRoomPlayers(roomId: string, { liveHost = false } = {}) {
   const [players, setPlayers] = useState<RoomPlayer[]>(() => {
     const live = universalPartyManager.getRoomState();
     return roomPlayersOf(
@@ -34,8 +34,17 @@ export function usePartyRoomPlayers(roomId: string) {
     });
   }, [roomId]);
 
-  // The role this game page opened with, per room.
-  const isHost = useMemo(() => universalPartyManager.isHost(roomId), [roomId]);
+  // The role this game page opened with, per room — or, with `liveHost`, the current one: a game
+  // that resumes from a guest copy (`useRoomReducer`) can be handed to a new host mid-game.
+  const openedAsHost = useMemo(() => universalPartyManager.isHost(roomId), [roomId]);
+  const [currentHost, setCurrentHost] = useState(openedAsHost);
+  useEffect(() => {
+    if (!liveHost) return;
+    return universalPartyManager.onPartyUpdate(
+      (state) => state.roomId === roomId && setCurrentHost(universalPartyManager.isHost(roomId)),
+    );
+  }, [roomId, liveHost]);
+  const isHost = liveHost ? currentHost : openedAsHost;
 
   const myId = universalPartyManager.getMyPlayerId();
   return {
