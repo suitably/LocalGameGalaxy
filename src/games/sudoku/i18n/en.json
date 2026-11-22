@@ -1,0 +1,54 @@
+{
+  "sudoku": {
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard",
+      "expert": "Expert"
+    },
+    "mistakes": "Mistakes",
+    "hints": "Hints",
+    "best_time": "Best Time",
+    "new_game": "New Game",
+    "actions": {
+      "undo": "Undo (Ctrl+Z)",
+      "erase": "Erase (Del)",
+      "notes": "Notes / Pencil (N)",
+      "hint": "Hint (H)"
+    },
+    "notes_on": "Notes ON",
+    "notes_off": "Notes",
+    "victory": {
+      "title": "Solved!",
+      "new_record": "New personal best time!"
+    },
+    "share": {
+      "title": "Sudoku result",
+      "text": "🔢 Sudoku ({{difficulty}}) solved in {{time}}!\nMistakes: {{mistakes}}, hints: {{hints}}"
+    },
+    "menu": {
+      "stats": "Statistics",
+      "help": "Rules"
+    },
+    "confirm_new": {
+      "title": "Start a new game?",
+      "message": "The current Sudoku ends and your progress is lost. Start a new game on \"{{difficulty}}\"?",
+      "confirm": "New game"
+    },
+    "game_over": {
+      "title": "Game Over"
+    },
+    "stats": {
+      "title": "Sudoku Statistics",
+      "played": "Played",
+      "completed": "Solved",
+      "best_times": "Best Times"
+    },
+    "help": {
+      "title": "Sudoku Rules",
+      "p1": "Every row, column, and 3x3 box must contain the digits 1 through 9 exactly once.",
+      "p2": "Use the pencil mode (Notes) to mark candidate numbers in empty cells.",
+      "p3": "After 3 mistakes, the game is over. You can use hints and undo at any time."
+    }
+  }
+}

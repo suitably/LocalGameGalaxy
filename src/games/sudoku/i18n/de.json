@@ -1,0 +1,54 @@
+{
+  "sudoku": {
+    "difficulty": {
+      "easy": "Leicht",
+      "medium": "Mittel",
+      "hard": "Schwer",
+      "expert": "Experte"
+    },
+    "mistakes": "Fehler",
+    "hints": "Hinweise",
+    "best_time": "Bestzeit",
+    "new_game": "Neues Spiel",
+    "actions": {
+      "undo": "Rückgängig (Ctrl+Z)",
+      "erase": "Löschen (Entf)",
+      "notes": "Notizen / Bleistift (N)",
+      "hint": "Hinweis (H)"
+    },
+    "notes_on": "Notizen AN",
+    "notes_off": "Notizen",
+    "victory": {
+      "title": "Gelöst!",
+      "new_record": "Neue persönliche Bestzeit!"
+    },
+    "share": {
+      "title": "Sudoku-Ergebnis",
+      "text": "🔢 Sudoku ({{difficulty}}) gelöst in {{time}}!\nFehler: {{mistakes}}, Hinweise: {{hints}}"
+    },
+    "menu": {
+      "stats": "Statistiken",
+      "help": "Regeln"
+    },
+    "confirm_new": {
+      "title": "Neues Spiel starten?",
+      "message": "Das laufende Sudoku wird beendet und dein Fortschritt geht verloren. Neues Spiel auf „{{difficulty}}“ starten?",
+      "confirm": "Neues Spiel"
+    },
+    "game_over": {
+      "title": "Game Over"
+    },
+    "stats": {
+      "title": "Sudoku Statistiken",
+      "played": "Gespielt",
+      "completed": "Gelöst",
+      "best_times": "Bestzeiten"
+    },
+    "help": {
+      "title": "Sudoku Regeln",
+      "p1": "Jede Zeile, Spalte und jeder 3x3-Block muss die Zahlen von 1 bis 9 genau einmal enthalten.",
+      "p2": "Nutze den Bleistift-Modus (Notizen), um mögliche Zahlenkandidaten in einer Zelle vorzumerken.",
+      "p3": "Bei 3 Fehlern ist die Runde verloren. Du kannst jederzeit Hinweise oder die Rückgängig-Funktion nutzen."
+    }
+  }
+}
