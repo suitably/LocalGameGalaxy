@@ -1983,6 +1983,9 @@
     "privacy_title": "Datenschutz",
     "privacy_desc": "Welche Daten die Spiele nutzen, welche Dienste sie kontaktieren und welche Rechte du hast.",
     "privacy_open": "Datenschutzerklärung",
+    "source_title": "Quellcode",
+    "source_desc": "Nexumia ist freie Software unter der GNU AGPL v3.0 oder später. Den Quellcode gibt es auf GitHub.",
+    "source_open": "Quellcode",
     "notify_open": "Benachrichtigungen einrichten"
   },
   "server": {

@@ -42,6 +42,9 @@ jobs:
       - name: Run Repository Hygiene
         run: npm run check:hygiene
 
+      - name: Dependency Licence Allow-List
+        run: npm run check:licences
+
       # Tag pushes only: tag, every package.json / lockfile, Android versionName and CHANGELOG agree (#593)
       - name: Verify Release Version Consistency
         if: github.event_name == 'push'
@@ -266,6 +269,14 @@ jobs:
           cp server/dist/nexumia-server-macos release/macos/
           cp server/release-scripts/start-server.command release/macos/
           chmod +x release/macos/nexumia-server-macos release/macos/start-server.command
+
+      # AGPL licence text and the licences of every bundled npm package (#594)
+      - name: Add Licence Notices
+        run: |
+          node scripts/check-licences.mjs --notice server --out THIRD_PARTY_LICENSES.txt
+          for os in linux windows macos; do
+            cp LICENSE THIRD_PARTY_LICENSES.txt "release/$os/"
+          done
 
       - name: Create Archives
         run: |

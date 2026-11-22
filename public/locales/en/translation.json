@@ -1983,6 +1983,9 @@
     "privacy_title": "Privacy",
     "privacy_desc": "Which data the games use, which services they contact and your rights.",
     "privacy_open": "Privacy Notice",
+    "source_title": "Source code",
+    "source_desc": "Nexumia is free software under the GNU AGPL v3.0 or later. Get the source code on GitHub.",
+    "source_open": "Source code",
     "notify_open": "Set up notifications"
   },
   "server": {

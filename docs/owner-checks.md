@@ -87,3 +87,10 @@ Parity tests (solo, duet, golden, freestyle, rap fixtures) show identical notes,
 
 - [ ] With a companion server, sing a karaoke song with a `.txt` (solo and duet) and compare the score with an earlier run.
 - [ ] Sing a song that has only a MusicXML with a lyric vocal part (+ bar marks): lyrics and pitch follow the mix. A phone that loads such a song needs its own companion connection (it fetches the score directly).
+
+## #594 — REUSE and dependency licences
+
+`reuse lint` (REUSE 3.3) passes for all files and `npm run check:licences` allows every production dependency of root, `server/` and `signaling/`; release archives get `THIRD_PARTY_LICENSES.txt`.
+
+- [ ] Answer Q25 in `docs/open-questions.md`: the real copyright holder line for own files (today `REUSE.toml` uses "LocalGameGalaxy", the only author wording in the repo) and confirm the brand/icon PNGs are own work.
+- [ ] After the next release, open a server archive and check `THIRD_PARTY_LICENSES.txt` and `LICENSE` are inside.

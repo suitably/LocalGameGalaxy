@@ -1,0 +1,80 @@
+version = 1
+SPDX-PackageName = "LocalGameGalaxy (Nexumia)"
+SPDX-PackageDownloadLocation = "https://github.com/suitably/LocalGameGalaxy"
+
+# Licensing of every file in the repository (REUSE 3.3). Sources and reasons:
+# docs/tech/dependencies.md. Later annotations win over earlier ones.
+
+# Own code, docs and assets. "closest": a file's own SPDX/copyright header wins (gradlew).
+# Holder wording follows the repository (`author: "LocalGameGalaxy"`); see open question Q25.
+[[annotations]]
+path = "**"
+precedence = "closest"
+SPDX-FileCopyrightText = "LocalGameGalaxy"
+SPDX-License-Identifier = "AGPL-3.0-or-later"
+
+# Unchanged files of the Capacitor Android template
+# (node_modules/@capacitor/cli/assets/android-template.tar.gz, MIT, LICENSE: Drifty Co.)
+# and the files `cap sync` generates from it.
+[[annotations]]
+path = [
+  "android/build.gradle",
+  "android/settings.gradle",
+  "android/variables.gradle",
+  "android/capacitor.settings.gradle",
+  "android/gradle/wrapper/gradle-wrapper.properties",
+  "android/app/.gitignore",
+  "android/app/proguard-rules.pro",
+  "android/app/capacitor.build.gradle",
+  "android/app/src/androidTest/java/com/getcapacitor/myapp/ExampleInstrumentedTest.java",
+  "android/app/src/test/java/com/getcapacitor/myapp/ExampleUnitTest.java",
+  "android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml",
+  "android/app/src/main/res/drawable/ic_launcher_background.xml",
+  "android/app/src/main/res/layout/activity_main.xml",
+  "android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+  "android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
+  "android/app/src/main/res/values/styles.xml",
+  "android/app/src/main/res/xml/file_paths.xml",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2017-present Drifty Co."
+SPDX-License-Identifier = "MIT"
+
+# Capacitor template files changed for this app (the MIT notice stays with them).
+[[annotations]]
+path = [
+  "android/.gitignore",
+  "android/gradle.properties",
+  "android/app/build.gradle",
+  "android/app/src/main/AndroidManifest.xml",
+  "android/app/src/main/java/com/localgamegalaxy/melodiq/MainActivity.java",
+  "android/app/src/main/res/values/ic_launcher_background.xml",
+  "android/app/src/main/res/values/strings.xml",
+]
+precedence = "override"
+SPDX-FileCopyrightText = ["2017-present Drifty Co.", "LocalGameGalaxy"]
+SPDX-License-Identifier = "MIT AND AGPL-3.0-or-later"
+
+# Gradle wrapper binary (identical to the Capacitor template's copy; META-INF/LICENSE: Apache-2.0).
+# Holder wording from the matching gradlew.bat header. gradlew/gradlew.bat carry their own headers.
+[[annotations]]
+path = "android/gradle/wrapper/gradle-wrapper.jar"
+precedence = "override"
+SPDX-FileCopyrightText = "2015 the original author or authors (Gradle)"
+SPDX-License-Identifier = "Apache-2.0"
+
+# Wordle word lists generated from Hunspell dictionaries (src/games/wordle/data/README.md).
+# igerman98 via npm dictionary-de 3.0.0, `license` file: GPL version 2 or 3.
+[[annotations]]
+path = "src/games/wordle/data/words-de.ts"
+precedence = "override"
+SPDX-FileCopyrightText = "1999-2016 Björn Jacke <bjoern@j3e.de>"
+SPDX-License-Identifier = "GPL-2.0-only OR GPL-3.0-only"
+
+# SCOWL via npm dictionary-en 4.0.0 (npm metadata "MIT AND BSD", not SPDX; full terms copied
+# into LICENSES/LicenseRef-SCOWL.txt).
+[[annotations]]
+path = "src/games/wordle/data/words-en.ts"
+precedence = "override"
+SPDX-FileCopyrightText = "2000-2018 Kevin Atkinson and the SCOWL contributors"
+SPDX-License-Identifier = "LicenseRef-SCOWL"
