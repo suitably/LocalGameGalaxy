@@ -86,22 +86,34 @@ export function usePartyRoomGame<S, A>({
     return () => setHomeAction(null);
   }, [navigate, roomId, setHomeAction]);
 
-  // Playing someone else's turn: their device is told who did it (`PartyHelpNotice`).
+  // Playing for someone else: their device is told who did it (`PartyHelpNotice`).
   const actor = actorOf?.(state) ?? null;
   const actingFor = actor && mayHelp(room.players, myId, actor) ? actor : null;
   const { send } = useRoomEvents<HelpEvent>({ gameKey: HELP_GAME_KEY, roomId, onEvent: () => {} });
-  const playerDispatch = useCallback(
-    (action: A) => {
-      if (actingFor) send({ type: 'helped', by: myId, for: actingFor, at: Date.now() });
+  const dispatchFor = useCallback(
+    (playerId: string, action: A) => {
+      if (playerId !== myId) send({ type: 'helped', by: myId, for: playerId, at: Date.now() });
       dispatch(action);
     },
-    [actingFor, send, myId, dispatch],
+    [send, myId, dispatch],
+  );
+  const playerDispatch = useCallback(
+    (action: A) => dispatchFor(actingFor ?? myId, action),
+    [dispatchFor, actingFor, myId],
+  );
+  const helpable = useMemo(
+    () => room.players.filter((p) => mayHelp(room.players, myId, p.id)),
+    [room.players, myId],
   );
 
   return {
     room,
     ...game,
     dispatch: playerDispatch,
+    /** Dispatches an action done for `playerId` (announced to them when it is not this device). */
+    dispatchFor,
+    /** Players this device may play for (they allowed help). */
+    helpable,
     /** The player whose turn this device may play now: itself, or someone it may help. */
     actingFor,
     canAct: actor !== null && (actor === myId || actingFor !== null),

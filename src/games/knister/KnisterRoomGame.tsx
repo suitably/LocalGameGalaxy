@@ -28,6 +28,9 @@ import { KnisterBoard } from './components/KnisterBoard';
 import { KnisterDiceRoller } from './components/KnisterDiceRoller';
 import { KnisterGameOverModal } from './components/KnisterGameOverModal';
 import { KnisterSpectatorView } from './components/KnisterSpectatorView';
+import { PartyHelpNotice } from '../../features/party/components/PartyHelpNotice';
+import { PartySheetPicker } from '../../features/party/components/PartySheetPicker';
+import { RoomMarkers } from '../../features/party/components/RoomMarkers';
 
 initKnisterI18n();
 
@@ -41,7 +44,7 @@ const needsStart = (state: KnisterRoomState) => state.players.length === 0;
 export const KnisterRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
   const { t } = useTranslation();
   usePageTitle(t('games.knister.title', 'Knister'));
-  const { room, state, dispatch, synced } = usePartyRoomGame({
+  const { room, state, dispatch, dispatchFor, helpable, synced } = usePartyRoomGame({
     gameKey: 'knister',
     roomId,
     reducer: knisterRoomReducer,
@@ -52,16 +55,23 @@ export const KnisterRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
   });
   const [overClosed, setOverClosed] = useState(false);
 
-  const me = state.players.find((p) => p.id === room.myId);
+  // A device that may help others can play their sheet too (`PartySheetPicker`).
+  const [sheetOf, setSheetOf] = useState(room.myId);
+  const own = state.players.find((p) => p.id === room.myId);
+  const helped = helpable.some((p) => p.id === sheetOf) ? sheetOf : room.myId;
+  const me = state.players.find((p) => p.id === helped) ?? own;
+  const forOther = me !== undefined && me.id !== room.myId;
   const roll = state.currentRoll;
-  const iPlaced = state.placed.includes(room.myId);
+  const iPlaced = me ? state.placed.includes(me.id) : false;
   const waitingFor = useMemo(
     () => state.players.filter((p) => !state.placed.includes(p.id)).map((p) => p.name),
     [state.players, state.placed],
   );
 
   let status = '';
-  if (roll && !iPlaced) status = t('games.knister.room_place', { sum: roll.sum });
+  if (roll && !iPlaced && forOther)
+    status = `${t('party.help.sheetOf', { name: me.name })}: ${t('games.knister.room_place', { sum: roll.sum })}`;
+  else if (roll && !iPlaced) status = t('games.knister.room_place', { sum: roll.sum });
   else if (roll) status = t('games.knister.room_waiting', { names: waitingFor.join(', ') });
   else if (!state.isGameOver && state.rollCount > 0) status = t('games.knister.room_roll');
 
@@ -73,6 +83,14 @@ export const KnisterRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
         <KnisterSpectatorView state={state} />
       ) : (
         <>
+          <PartyHelpNotice roomId={roomId} myId={room.myId} players={room.players} />
+          <RoomMarkers roomId={roomId} myId={room.myId} to={forOther ? me.id : 'all'} />
+          <PartySheetPicker
+            myId={room.myId}
+            helpable={helpable.filter((p) => state.players.some((x) => x.id === p.id))}
+            value={helped}
+            onChange={setSheetOf}
+          />
           <PartyRoomScoreboard
             myId={room.myId}
             entries={state.players.map((p) => ({
@@ -103,7 +121,7 @@ export const KnisterRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
             grid={me.grid}
             currentSum={roll && !iPlaced ? roll.sum : null}
             onCellClick={(row, col) =>
-              roll && !iPlaced && dispatch({ type: 'PLACE', row, col, playerId: room.myId })
+              roll && !iPlaced && dispatchFor(me.id, { type: 'PLACE', row, col, playerId: me.id })
             }
             disabled={state.isGameOver || !roll || iPlaced}
           />

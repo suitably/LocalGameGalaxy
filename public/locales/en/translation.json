@@ -2727,7 +2727,10 @@
       "accept": "Others may play for me",
       "acceptHint": "Help when you are stuck",
       "badge": "Others may help",
-      "playedForYou": "{{name}} played for you"
+      "playedForYou": "{{name}} played for you",
+      "mySheet": "My sheet",
+      "sheetOf": "For {{name}}",
+      "rollingFor": "You are rolling for {{name}}"
     },
     "marker": {
       "show": "Show where to tap",

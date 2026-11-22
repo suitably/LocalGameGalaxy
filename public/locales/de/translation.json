@@ -2727,7 +2727,10 @@
       "accept": "Andere dürfen für mich spielen",
       "acceptHint": "Hilfe, wenn du nicht weiterweißt",
       "badge": "Andere dürfen helfen",
-      "playedForYou": "{{name}} hat für dich gespielt"
+      "playedForYou": "{{name}} hat für dich gespielt",
+      "mySheet": "Mein Blatt",
+      "sheetOf": "Für {{name}}",
+      "rollingFor": "Du würfelst für {{name}}"
     },
     "marker": {
       "show": "Zeigen, wo getippt werden soll",
