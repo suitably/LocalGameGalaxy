@@ -58,6 +58,7 @@ describe('game catalogue', { timeout: 30000 }, () => {
       melodiq: true,
       tabletop: true,
       imposter: true,
+      werewolf: true,
       knister: true,
       kniffel: true,
       qwixx: true,
@@ -138,6 +139,7 @@ describe('game catalogue', { timeout: 30000 }, () => {
       'storyteller',
       'melodiq',
       'melodiq-notes',
+      'werewolf',
       'imposter',
     ]);
     expect(partyPickerEntries('table').map((e) => e.id)).toEqual([
@@ -161,7 +163,7 @@ describe('game catalogue', { timeout: 30000 }, () => {
   it('resolves every page and party link', async () => {
     const { ROUTE_GAMES, resolvePendingLaunch } = await load();
     expect(ROUTE_GAMES.map((g) => g.route)).toContain('games/garticphone');
-    for (const type of ['guessart', 'garticphone', 'melodiq', 'kniffel']) {
+    for (const type of ['guessart', 'garticphone', 'melodiq', 'kniffel', 'werewolf']) {
       expect(resolvePendingLaunch(new URLSearchParams(`launch=${type}`))).toEqual({
         gameType: type,
       });
@@ -170,6 +172,6 @@ describe('game catalogue', { timeout: 30000 }, () => {
       gameType: 'tabletop',
       gameId: 'skat',
     });
-    expect(resolvePendingLaunch(new URLSearchParams('launch=werewolf'))).toBeNull();
+    expect(resolvePendingLaunch(new URLSearchParams('launch=wordle'))).toBeNull();
   });
 });
