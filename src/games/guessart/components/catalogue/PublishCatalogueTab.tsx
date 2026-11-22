@@ -92,13 +92,10 @@ export const PublishCatalogueTab: React.FC<PublishCatalogueTabProps> = ({
         {/* Intro */}
         <Box>
           <Typography variant="subtitle1" fontWeight={800} gutterBottom>
-            {t('guessart.publishTitle', 'Änderungen in das Git-Repository übertragen')}
+            {t('guessart.publishTitle')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {t(
-              'guessart.publishDesc',
-              'Erstelle automatisiert einen GitHub Pull Request mit deinen lokalen Kategorien und Wörtern. Der Repository-Admin kann diese anschließend prüfen und freigeben.',
-            )}
+            {t('guessart.publishDesc')}
           </Typography>
         </Box>
 
@@ -106,29 +103,25 @@ export const PublishCatalogueTab: React.FC<PublishCatalogueTabProps> = ({
         <Card variant="outlined" sx={{ borderRadius: 2 }}>
           <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
             <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-              {t('guessart.diffSummaryTitle', 'Lokale Änderungen gegenüber dem Standard-Katalog')}
+              {t('guessart.diffSummaryTitle')}
             </Typography>
 
             {diff.totalChanges === 0 ? (
               <Alert severity="info" icon={<InfoOutlinedIcon />} sx={{ mt: 1 }}>
-                {t(
-                  'guessart.noDiffNotice',
-                  'Keine Unterschiede zum Standard-Katalog festgestellt. Du kannst trotzdem einen PR erstellen oder zuerst neue Wörter hinzufügen.',
-                )}
+                {t('guessart.noDiffNotice')}
               </Alert>
             ) : (
               <Box sx={{ mt: 1 }}>
                 <Typography variant="body2">
-                  • <strong>{t('guessart.catalogueCategories', 'Kategorien')}:</strong>{' '}
-                  {diff.addedCategories.length} {t('common.added', 'hinzugefügt')},{' '}
-                  {diff.modifiedCategories.length} {t('common.modified', 'geändert')},{' '}
-                  {diff.deletedCategories.length} {t('common.deleted', 'gelöscht')}
+                  • <strong>{t('guessart.catalogueCategories')}:</strong>{' '}
+                  {diff.addedCategories.length} {t('common.added')},{' '}
+                  {diff.modifiedCategories.length} {t('common.modified')},{' '}
+                  {diff.deletedCategories.length} {t('common.deleted')}
                 </Typography>
                 <Typography variant="body2" sx={{ mt: 0.5 }}>
-                  • <strong>{t('guessart.catalogueWords', 'Wörter')}:</strong>{' '}
-                  {diff.addedWords.length} {t('common.added', 'hinzugefügt')},{' '}
-                  {diff.modifiedWords.length} {t('common.modified', 'geändert')},{' '}
-                  {diff.deletedWords.length} {t('common.deleted', 'gelöscht')}
+                  • <strong>{t('guessart.catalogueWords')}:</strong> {diff.addedWords.length}{' '}
+                  {t('common.added')}, {diff.modifiedWords.length} {t('common.modified')},{' '}
+                  {diff.deletedWords.length} {t('common.deleted')}
                 </Typography>
               </Box>
             )}
@@ -140,11 +133,8 @@ export const PublishCatalogueTab: React.FC<PublishCatalogueTabProps> = ({
           fullWidth
           multiline
           rows={3}
-          label={t('guessart.prUserNoteLabel', 'Beschreibung der Änderungen (optional)')}
-          placeholder={t(
-            'guessart.prUserNotePlaceholder',
-            'z.B. 10 neue Tierarten und Fabelwesen hinzugefügt...',
-          )}
+          label={t('guessart.prUserNoteLabel')}
+          placeholder={t('guessart.prUserNotePlaceholder')}
           value={userNote}
           onChange={(e) => setUserNote(e.target.value)}
           disabled={submitting}
@@ -158,16 +148,11 @@ export const PublishCatalogueTab: React.FC<PublishCatalogueTabProps> = ({
             sx={{ borderRadius: 2 }}
           >
             <Typography variant="subtitle2" fontWeight={800}>
-              {result.updated
-                ? t(
-                    'guessart.prUpdatedSuccess',
-                    'Bestehender Pull Request erfolgreich aktualisiert!',
-                  )
-                : t('guessart.prCreatedSuccess', 'Pull Request erfolgreich erstellt!')}{' '}
-              #{result.prNumber}
+              {result.updated ? t('guessart.prUpdatedSuccess') : t('guessart.prCreatedSuccess')} #
+              {result.prNumber}
             </Typography>
             <Typography variant="body2" sx={{ mb: 1 }}>
-              {t('guessart.prBranchInfo', 'Branch')}: <code>{result.branch}</code>
+              {t('guessart.prBranchInfo')}: <code>{result.branch}</code>
             </Typography>
             {result.prUrl && (
               <Button
@@ -180,7 +165,7 @@ export const PublishCatalogueTab: React.FC<PublishCatalogueTabProps> = ({
                 rel="noopener noreferrer"
                 sx={{ textTransform: 'none', fontWeight: 700, mt: 0.5 }}
               >
-                {t('guessart.openPrOnGithub', 'Pull Request auf GitHub ansehen')}
+                {t('guessart.openPrOnGithub')}
               </Button>
             )}
           </Alert>
@@ -189,14 +174,11 @@ export const PublishCatalogueTab: React.FC<PublishCatalogueTabProps> = ({
         {result?.error && (
           <Alert severity="error" sx={{ borderRadius: 2 }}>
             <Typography variant="subtitle2" fontWeight={800}>
-              {t('guessart.prFailedTitle', 'Fehler beim Erstellen des Pull Requests')}
+              {t('guessart.prFailedTitle')}
             </Typography>
             <Typography variant="body2">{result.error}</Typography>
             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              {t(
-                'guessart.githubErrorHint',
-                'Stelle sicher, dass dein GitHub Personal Access Token (PAT) in den Einstellungen hinterlegt ist und Schreibrechte besitzt.',
-              )}
+              {t('guessart.githubErrorHint')}
             </Typography>
           </Alert>
         )}
@@ -214,7 +196,7 @@ export const PublishCatalogueTab: React.FC<PublishCatalogueTabProps> = ({
             disabled={submitting}
             sx={{ textTransform: 'none', fontWeight: 800, px: 3, py: 1.2, borderRadius: 2 }}
           >
-            {t('guessart.submitPrButton', 'Pull Request auf GitHub erstellen')}
+            {t('guessart.submitPrButton')}
           </Button>
         </Box>
       </Stack>

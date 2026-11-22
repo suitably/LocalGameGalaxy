@@ -31,21 +31,19 @@ export const GuessArtSpectatorView: React.FC<{
           <>
             <Typography variant="h6" fontWeight={800}>
               {round.status === 'selecting'
-                ? t('guessart.spectatorChoosing', '{{name}} wählt ein Wort', { name })
-                : t('guessart.spectatorDrawing', '{{name}} zeichnet', { name })}
+                ? t('guessart.spectatorChoosing', { name })
+                : t('guessart.spectatorDrawing', { name })}
             </Typography>
             {round.word && <Chip color="primary" label={round.word} sx={{ fontWeight: 800 }} />}
           </>
         )}
         {isGuesser && (
           <Typography variant="h6" fontWeight={800}>
-            {t('guessart.spectatorGuessing', '{{name}} rät', { name })}
+            {t('guessart.spectatorGuessing', { name })}
           </Typography>
         )}
         {!isDrawer && !isGuesser && (
-          <Typography color="text.secondary">
-            {t('guessart.spectatorIdle', '{{name}} ist gerade nicht dran.', { name })}
-          </Typography>
+          <Typography color="text.secondary">{t('guessart.spectatorIdle', { name })}</Typography>
         )}
         {(isDrawer || isGuesser) && drawing && (
           <Box sx={{ height: 320, borderRadius: 2, overflow: 'hidden' }}>

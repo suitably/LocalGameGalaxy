@@ -40,9 +40,7 @@ export const CategoryFormDialog: React.FC<CategoryFormDialogProps> = ({
       PaperProps={{ sx: { borderRadius: 3 } }}
     >
       <DialogTitle sx={{ fontWeight: 800 }}>
-        {isNew
-          ? t('guessart.addCategoryTitle', 'Neue Kategorie')
-          : t('guessart.editCategoryTitle', 'Kategorie bearbeiten')}
+        {isNew ? t('guessart.addCategoryTitle') : t('guessart.editCategoryTitle')}
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ pt: 1 }}>
@@ -51,21 +49,18 @@ export const CategoryFormDialog: React.FC<CategoryFormDialogProps> = ({
           <TextField
             size="small"
             fullWidth
-            label={t('guessart.categoryIdLabel', 'Kategorie-ID (intern)')}
-            placeholder={t('guessart.categoryIdExample', 'z.B. cat_fantasy')}
+            label={t('guessart.categoryIdLabel')}
+            placeholder={t('guessart.categoryIdExample')}
             value={form.id}
             onChange={(e) => set({ id: e.target.value })}
-            helperText={t(
-              'guessart.categoryIdHint',
-              'Eindeutiger Bezeichner (Kleinbuchstaben & Unterstriche)',
-            )}
+            helperText={t('guessart.categoryIdHint')}
           />
 
           <TextField
             size="small"
             fullWidth
-            label={t('guessart.categoryNameDe', 'Name (Deutsch)')}
-            placeholder={t('guessart.categoryNameExampleDe', 'z.B. Fabelwesen')}
+            label={t('guessart.categoryNameDe')}
+            placeholder={t('guessart.categoryNameExampleDe')}
             value={form.nameDe}
             onChange={(e) => set({ nameDe: e.target.value })}
           />
@@ -73,8 +68,8 @@ export const CategoryFormDialog: React.FC<CategoryFormDialogProps> = ({
           <TextField
             size="small"
             fullWidth
-            label={t('guessart.categoryNameEn', 'Name (Englisch)')}
-            placeholder={t('guessart.categoryNameExampleEn', 'e.g. Mythical Creatures')}
+            label={t('guessart.categoryNameEn')}
+            placeholder={t('guessart.categoryNameExampleEn')}
             value={form.nameEn}
             onChange={(e) => set({ nameEn: e.target.value })}
           />

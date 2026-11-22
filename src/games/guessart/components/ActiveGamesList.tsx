@@ -57,10 +57,10 @@ export const ActiveGamesList: React.FC<ActiveGamesListProps> = ({
     <Stack spacing={1.5}>
       <Box display="flex" justifyContent="space-between" alignItems="center">
         <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
-          {t('guessart.activeGamesTitle', 'Laufende Spiele')} ({games.length})
+          {t('guessart.activeGamesTitle')} ({games.length})
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          {t('guessart.asyncMultiplayerHint', 'Mehrere Runden parallel spielbar')}
+          {t('guessart.asyncMultiplayerHint')}
         </Typography>
       </Box>
 
@@ -109,7 +109,6 @@ export const ActiveGamesList: React.FC<ActiveGamesListProps> = ({
                     <Chip
                       label={t('guessart.roundHeader', {
                         round: game.roundNumber,
-                        defaultValue: `Runde ${game.roundNumber}`,
                       })}
                       size="small"
                       variant="outlined"
@@ -132,11 +131,7 @@ export const ActiveGamesList: React.FC<ActiveGamesListProps> = ({
                         <PsychologyRoundedIcon sx={{ fontSize: '0.9rem !important' }} />
                       )
                     }
-                    label={
-                      isDrawing
-                        ? t('guessart.statusDrawing', 'Zeichnen')
-                        : t('guessart.statusGuessing', 'Raten')
-                    }
+                    label={isDrawing ? t('guessart.statusDrawing') : t('guessart.statusGuessing')}
                     size="small"
                     color={isDrawing ? 'primary' : 'secondary'}
                     sx={{ fontWeight: 700, fontSize: '0.75rem' }}
@@ -152,14 +147,12 @@ export const ActiveGamesList: React.FC<ActiveGamesListProps> = ({
 
               <Box display="flex" alignItems="center" gap={0.5} ml={1}>
                 {isGameHost && (
-                  <Tooltip
-                    title={t('guessart.sharePlayerLinks', 'Mitspieler-Links teilen (Async)')}
-                  >
+                  <Tooltip title={t('guessart.sharePlayerLinks')}>
                     <IconButton
                       color="default"
                       size="small"
                       onClick={(e) => handleShareClick(game, e)}
-                      aria-label={t('guessart.sharePlayerLinks', 'Mitspieler-Links teilen')}
+                      aria-label={t('guessart.sharePlayerLinks')}
                     >
                       <ShareRoundedIcon fontSize="small" />
                     </IconButton>
@@ -167,7 +160,7 @@ export const ActiveGamesList: React.FC<ActiveGamesListProps> = ({
                 )}
 
                 {onEditGame && (
-                  <Tooltip title={t('guessart.editGame', 'Spiel bearbeiten')}>
+                  <Tooltip title={t('guessart.editGame')}>
                     <IconButton
                       color="default"
                       size="small"
@@ -175,7 +168,7 @@ export const ActiveGamesList: React.FC<ActiveGamesListProps> = ({
                         e.stopPropagation();
                         onEditGame(game);
                       }}
-                      aria-label={t('guessart.editGame', 'Spiel bearbeiten')}
+                      aria-label={t('guessart.editGame')}
                     >
                       <EditRoundedIcon fontSize="small" />
                     </IconButton>
@@ -183,7 +176,7 @@ export const ActiveGamesList: React.FC<ActiveGamesListProps> = ({
                 )}
 
                 {onOpenHistory && (
-                  <Tooltip title={t('guessart.viewHistory', 'Historie ansehen')}>
+                  <Tooltip title={t('guessart.viewHistory')}>
                     <IconButton
                       color="info"
                       size="small"
@@ -191,24 +184,24 @@ export const ActiveGamesList: React.FC<ActiveGamesListProps> = ({
                         e.stopPropagation();
                         onOpenHistory(game.id);
                       }}
-                      aria-label={t('guessart.viewHistory', 'Historie ansehen')}
+                      aria-label={t('guessart.viewHistory')}
                     >
                       <HistoryRoundedIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
                 )}
 
-                <Tooltip title={t('guessart.resumeGame', 'Weiterspielen')}>
+                <Tooltip title={t('guessart.resumeGame')}>
                   <IconButton
                     color="primary"
                     onClick={() => onResumeGame(game.id)}
-                    aria-label={t('guessart.resumeGame', 'Weiterspielen')}
+                    aria-label={t('guessart.resumeGame')}
                   >
                     <PlayArrowRoundedIcon />
                   </IconButton>
                 </Tooltip>
 
-                <Tooltip title={t('common.delete', 'Löschen')}>
+                <Tooltip title={t('common.delete')}>
                   <IconButton
                     color="error"
                     size="small"
@@ -216,7 +209,7 @@ export const ActiveGamesList: React.FC<ActiveGamesListProps> = ({
                       e.stopPropagation();
                       onDeleteGame(game.id);
                     }}
-                    aria-label={t('common.delete', 'Löschen')}
+                    aria-label={t('common.delete')}
                   >
                     <DeleteOutlineRoundedIcon fontSize="small" />
                   </IconButton>

@@ -23,7 +23,7 @@ export const ManualWordForm: React.FC<ManualWordFormProps> = ({
   return (
     <Stack spacing={2} sx={{ mt: 1 }}>
       <TextField
-        label={t('guessart.manualWordLabel', 'Zu zeichnendes Wort')}
+        label={t('guessart.manualWordLabel')}
         value={word}
         onChange={(e) => onWordChange(e.target.value)}
         fullWidth
@@ -31,14 +31,11 @@ export const ManualWordForm: React.FC<ManualWordFormProps> = ({
         autoFocus
       />
       <TextField
-        label={t(
-          'guessart.manualSynonymsLabel',
-          'Synonyme / Alternative Schreibweisen (kommagetrennt)',
-        )}
+        label={t('guessart.manualSynonymsLabel')}
         value={synonyms}
         onChange={(e) => onSynonymsChange(e.target.value)}
         fullWidth
-        placeholder={t('guessart.manualSynonymsExample', 'z.B. Rad, Drahtesel')}
+        placeholder={t('guessart.manualSynonymsExample')}
       />
       <Button
         variant="contained"
@@ -47,11 +44,7 @@ export const ManualWordForm: React.FC<ManualWordFormProps> = ({
         disabled={submitting}
         sx={{ py: 1.5, fontWeight: 700 }}
       >
-        {submitting ? (
-          <CircularProgress size={22} color="inherit" />
-        ) : (
-          t('guessart.startDrawing', 'Zeichnen starten')
-        )}
+        {submitting ? <CircularProgress size={22} color="inherit" /> : t('guessart.startDrawing')}
       </Button>
     </Stack>
   );

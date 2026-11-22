@@ -38,13 +38,10 @@ export const GameInfoDialog: React.FC<GameInfoDialogProps> = ({ open, onClose })
     >
       <DialogContent sx={{ p: { xs: 2.5, sm: 3.5 } }}>
         <Typography variant="h5" fontWeight={800} color="primary.text" gutterBottom>
-          {t('guessart.rulesTitle', 'Spielregeln: GuessArt')}
+          {t('guessart.rulesTitle')}
         </Typography>
         <Typography variant="body2" color="text.secondary" paragraph>
-          {t(
-            'guessart.rulesIntro',
-            'GuessArt ist ein lokales Zeichen- und Ratespiel für 2 oder mehr Spieler.',
-          )}
+          {t('guessart.rulesIntro')}
         </Typography>
 
         <Divider sx={{ my: 2 }} />
@@ -54,13 +51,10 @@ export const GameInfoDialog: React.FC<GameInfoDialogProps> = ({ open, onClose })
             <BrushRoundedIcon color="primary" sx={{ mt: 0.3 }} />
             <Box>
               <Typography variant="subtitle1" fontWeight={700}>
-                {t('guessart.step1Title', '1. Zeichnen')}
+                {t('guessart.step1Title')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {t(
-                  'guessart.step1Desc',
-                  'Ein Spieler wählt ein Wort aus und zeichnet es auf der Leinwand. Es gibt kein Zeitlimit.',
-                )}
+                {t('guessart.step1Desc')}
               </Typography>
             </Box>
           </Box>
@@ -69,13 +63,10 @@ export const GameInfoDialog: React.FC<GameInfoDialogProps> = ({ open, onClose })
             <PsychologyRoundedIcon color="secondary" sx={{ mt: 0.3 }} />
             <Box>
               <Typography variant="subtitle1" fontWeight={700}>
-                {t('guessart.step2Title', '2. Raten')}
+                {t('guessart.step2Title')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {t(
-                  'guessart.step2Desc',
-                  'Die anderen Spieler versuchen, das Wort zu erraten. Die Zeichnung wird als animierter Zeitraffer abgespielt!',
-                )}
+                {t('guessart.step2Desc')}
               </Typography>
             </Box>
           </Box>
@@ -84,13 +75,10 @@ export const GameInfoDialog: React.FC<GameInfoDialogProps> = ({ open, onClose })
             <LightbulbRoundedIcon sx={{ color: 'warning.main', mt: 0.3 }} />
             <Box>
               <Typography variant="subtitle1" fontWeight={700}>
-                {t('guessart.step3Title', '3. Tipps nutzen')}
+                {t('guessart.step3Title')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {t(
-                  'guessart.step3Desc',
-                  'Wenn man nicht weiterweiß, schaltet der Tipp-Button zuerst die Wortlänge frei und beim zweiten Klick einen Buchstaben-Pool.',
-                )}
+                {t('guessart.step3Desc')}
               </Typography>
             </Box>
           </Box>

@@ -67,19 +67,16 @@ export const CatalogueEditorDialog: React.FC<CatalogueEditorDialogProps> = ({
             <MenuBookRoundedIcon color="primary" fontSize="large" />
             <Box>
               <Typography variant="h6" fontWeight={800}>
-                {t('guessart.catalogueEditorTitle', 'Wortkatalog-Editor')}
+                {t('guessart.catalogueEditorTitle')}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {t(
-                  'guessart.catalogueEditorSubtitle',
-                  'Kategorien & Wörter lokal anpassen oder per GitHub PR veröffentlichen',
-                )}
+                {t('guessart.catalogueEditorSubtitle')}
               </Typography>
             </Box>
           </Box>
 
           <Box display="flex" alignItems="center" gap={1}>
-            <Tooltip title={t('guessart.resetToDefaults', 'Auf Standard zurücksetzen')}>
+            <Tooltip title={t('guessart.resetToDefaults')}>
               <Button
                 size="small"
                 color="error"
@@ -94,12 +91,12 @@ export const CatalogueEditorDialog: React.FC<CatalogueEditorDialogProps> = ({
                 }}
               >
                 <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                  {t('guessart.resetToDefaults', 'Auf Standard zurücksetzen')}
+                  {t('guessart.resetToDefaults')}
                 </Box>
               </Button>
             </Tooltip>
 
-            <IconButton onClick={onClose} size="small" aria-label={t('common.close', 'Schließen')}>
+            <IconButton onClick={onClose} size="small" aria-label={t('common.close')}>
               <CloseRoundedIcon />
             </IconButton>
           </Box>
@@ -137,11 +134,8 @@ export const CatalogueEditorDialog: React.FC<CatalogueEditorDialogProps> = ({
 
       <ConfirmDialog
         open={editor.confirmResetOpen}
-        title={t('guessart.resetToDefaults', 'Auf Standard zurücksetzen')}
-        message={t(
-          'guessart.confirmResetCatalogue',
-          'Wirklich auf den Standard-Katalog zurücksetzen? Eigene Änderungen gehen verloren.',
-        )}
+        title={t('guessart.resetToDefaults')}
+        message={t('guessart.confirmResetCatalogue')}
         confirmColor="error"
         onConfirm={editor.handleConfirmReset}
         onCancel={() => editor.setConfirmResetOpen(false)}

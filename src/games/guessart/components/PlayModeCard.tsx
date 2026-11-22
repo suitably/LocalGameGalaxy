@@ -11,20 +11,14 @@ export const PlayModeCard: React.FC = () => {
       <CardContent>
         <Stack spacing={1.5}>
           <Typography variant="subtitle1" fontWeight={800}>
-            {t('guessart.liveTitle', 'Live mit anderen Geräten')}
+            {t('guessart.liveTitle')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {t(
-              'guessart.liveDesc',
-              'Alle sind gleichzeitig dabei: Mitspieler in der Lobby einladen, der Host startet.',
-            )}
+            {t('guessart.liveDesc')}
           </Typography>
           <InvitePlayersButton game="guessart" />
           <Typography variant="body2" color="text.secondary">
-            {t(
-              'guessart.overDaysDesc',
-              'Über Tage spielen: Mitspieler unten eintragen und jedem einen eigenen Link schicken.',
-            )}
+            {t('guessart.overDaysDesc')}
           </Typography>
         </Stack>
       </CardContent>

@@ -35,13 +35,13 @@ export const WordEditorTab: React.FC<WordEditorTabProps> = ({ categories, words,
     <Box sx={{ py: 1 }}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} mb={2} alignItems="center">
         <FormControl size="small" sx={{ minWidth: 180, width: { xs: '100%', sm: 'auto' } }}>
-          <InputLabel>{t('guessart.categoryFilter', 'Kategorie')}</InputLabel>
+          <InputLabel>{t('guessart.categoryFilter')}</InputLabel>
           <Select
             value={s.selectedCategory}
-            label={t('guessart.categoryFilter', 'Kategorie')}
+            label={t('guessart.categoryFilter')}
             onChange={(e) => s.changeCategory(e.target.value)}
           >
-            <MenuItem value="all">{t('guessart.allCategories', 'Alle Kategorien')}</MenuItem>
+            <MenuItem value="all">{t('guessart.allCategories')}</MenuItem>
             {categories.map((c) => {
               const count = words.filter((w) => String(w.categoryId) === String(c.id)).length;
               return (
@@ -55,7 +55,7 @@ export const WordEditorTab: React.FC<WordEditorTabProps> = ({ categories, words,
 
         <TextField
           size="small"
-          placeholder={t('guessart.searchWordsPlaceholder', 'Wort suchen...')}
+          placeholder={t('guessart.searchWordsPlaceholder')}
           value={s.searchQuery}
           onChange={(e) => s.changeSearch(e.target.value)}
           fullWidth
@@ -64,7 +64,7 @@ export const WordEditorTab: React.FC<WordEditorTabProps> = ({ categories, words,
           }}
         />
 
-        <Tooltip title={t('guessart.addWord', 'Wort hinzufügen')}>
+        <Tooltip title={t('guessart.addWord')}>
           <Button
             variant="contained"
             size="small"
@@ -79,17 +79,17 @@ export const WordEditorTab: React.FC<WordEditorTabProps> = ({ categories, words,
             }}
           >
             <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-              {t('guessart.addWord', 'Wort hinzufügen')}
+              {t('guessart.addWord')}
             </Box>
             <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-              {t('guessart.addWordShort', 'Wort +')}
+              {t('guessart.addWordShort')}
             </Box>
           </Button>
         </Tooltip>
       </Stack>
 
       <Typography variant="caption" color="text.secondary" display="block" mb={1}>
-        {s.filteredWords.length} {t('guessart.matchingWordsFound', 'Wörter gefunden')}
+        {s.filteredWords.length} {t('guessart.matchingWordsFound')}
       </Typography>
 
       <Stack spacing={1.2}>
@@ -129,7 +129,7 @@ export const WordEditorTab: React.FC<WordEditorTabProps> = ({ categories, words,
 
       <ConfirmDialog
         open={s.wordToDelete !== null}
-        message={t('guessart.confirmDeleteWord', 'Wort wirklich löschen?')}
+        message={t('guessart.confirmDeleteWord')}
         confirmColor="error"
         onConfirm={s.handleConfirmDelete}
         onCancel={() => s.setWordToDelete(null)}

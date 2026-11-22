@@ -69,7 +69,7 @@ export const useEditGameState = ({
 
     const trimmedPlayers = players.map((p) => ({ ...p, name: p.name.trim() }));
     if (trimmedPlayers.some((p) => !p.name)) {
-      setFeedback(t('guessart.playerEmptyError', 'Spielernamen dürfen nicht leer sein.'));
+      setFeedback(t('guessart.playerEmptyError'));
       return;
     }
 
@@ -77,7 +77,7 @@ export const useEditGameState = ({
     for (const p of trimmedPlayers) {
       const lower = p.name.toLowerCase();
       if (nameSet.has(lower)) {
-        setFeedback(t('guessart.duplicatePlayerError', 'Spielernamen müssen eindeutig sein.'));
+        setFeedback(t('guessart.duplicatePlayerError'));
         return;
       }
       nameSet.add(lower);
@@ -100,11 +100,7 @@ export const useEditGameState = ({
       onClose();
     } catch (err) {
       console.error('Failed to update game details', err);
-      setFeedback(
-        err instanceof Error
-          ? err.message
-          : t('guessart.genericError', 'Ein Fehler ist aufgetreten.'),
-      );
+      setFeedback(err instanceof Error ? err.message : t('guessart.genericError'));
     } finally {
       setSaving(false);
     }

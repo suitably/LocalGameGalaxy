@@ -9,16 +9,10 @@ export const TemporaryTurnChip: React.FC = () => {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   return (
-    <Tooltip
-      title={t('guessart.temporaryTurnDesc', 'Nur für diesen Zug lokal – danach wieder Remote')}
-    >
+    <Tooltip title={t('guessart.temporaryTurnDesc')}>
       <Chip
         icon={<TransferWithinAStationRoundedIcon fontSize="small" />}
-        label={
-          isSmallScreen
-            ? t('guessart.temporaryTurnShort', '1x')
-            : t('guessart.temporaryTurnChip', 'Einmaliger Zug')
-        }
+        label={isSmallScreen ? t('guessart.temporaryTurnShort') : t('guessart.temporaryTurnChip')}
         size="small"
         color="warning"
         variant="outlined"

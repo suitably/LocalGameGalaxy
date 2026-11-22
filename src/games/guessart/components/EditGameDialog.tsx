@@ -63,29 +63,14 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({
           <EditRoundedIcon color="primary" />
           <Box>
             <Typography variant="h6" fontWeight={800} component="div">
-              {isHost
-                ? t('guessart.editGameTitle', 'Spiel & Spieler bearbeiten')
-                : t('guessart.editProfileTitle', 'Spiel & Profil bearbeiten')}
+              {isHost ? t('guessart.editGameTitle') : t('guessart.editProfileTitle')}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {isHost
-                ? t(
-                    'guessart.editGameSubtitle',
-                    'Passe den Namen des Spiels und die Spielernamen an.',
-                  )
-                : t(
-                    'guessart.editProfileSubtitle',
-                    'Passe deinen Spielernamen oder den lokalen Spielnamen an.',
-                  )}
+              {isHost ? t('guessart.editGameSubtitle') : t('guessart.editProfileSubtitle')}
             </Typography>
           </Box>
         </Box>
-        <IconButton
-          aria-label={t('common.close', 'Schließen')}
-          onClick={onClose}
-          disabled={saving}
-          size="small"
-        >
+        <IconButton aria-label={t('common.close')} onClick={onClose} disabled={saving} size="small">
           <CloseRoundedIcon />
         </IconButton>
       </DialogTitle>
@@ -102,24 +87,21 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({
           {isHost ? (
             <Box>
               <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-                {t('guessart.gameName', 'Spielname')}
+                {t('guessart.gameName')}
               </Typography>
               <TextField
                 size="small"
                 fullWidth
                 value={gameName}
                 onChange={(e) => form.setGameName(e.target.value)}
-                placeholder={t(
-                  'guessart.gameNamePlaceholder',
-                  'z.B. Spieleabend, WG-Runde (optional)',
-                )}
+                placeholder={t('guessart.gameNamePlaceholder')}
               />
             </Box>
           ) : (
             <Box>
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={0.5}>
                 <Typography variant="subtitle2" fontWeight={700}>
-                  {t('guessart.localGameNameLabel', 'Spielname (lokal auf diesem Gerät)')}
+                  {t('guessart.localGameNameLabel')}
                 </Typography>
                 {form.hasCustomLocalAlias && (
                   <Button
@@ -130,7 +112,7 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({
                     onClick={form.resetLocalAlias}
                     sx={{ textTransform: 'none', py: 0, px: 1, fontSize: '0.75rem' }}
                   >
-                    {t('guessart.resetLocalGameName', 'Auf Host-Namen zurücksetzen')}
+                    {t('guessart.resetLocalGameName')}
                   </Button>
                 )}
               </Box>
@@ -139,10 +121,8 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({
                 fullWidth
                 value={localAlias}
                 onChange={(e) => form.setLocalAlias(e.target.value)}
-                placeholder={
-                  game.name || t('guessart.defaultHostGameName', 'Standardname vom Host')
-                }
-                helperText={t('guessart.localGameNameHint', 'Wird nur auf diesem Gerät angezeigt')}
+                placeholder={game.name || t('guessart.defaultHostGameName')}
+                helperText={t('guessart.localGameNameHint')}
               />
             </Box>
           )}
@@ -151,8 +131,8 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({
           <Box>
             <Typography variant="subtitle2" fontWeight={700} gutterBottom>
               {isHost
-                ? `${t('guessart.playersTitle', 'Mitspieler')} (${players.length})`
-                : t('guessart.yourPlayerName', 'Dein Spielername')}
+                ? `${t('guessart.playersTitle')} (${players.length})`
+                : t('guessart.yourPlayerName')}
             </Typography>
 
             <Stack spacing={1.2}>
@@ -165,9 +145,8 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({
                     isHost
                       ? t('guessart.playerNumber', {
                           number: index + 1,
-                          defaultValue: `Spieler ${index + 1}`,
                         })
-                      : t('guessart.yourName', 'Dein Spielername')
+                      : t('guessart.yourName')
                   }
                   value={player.name}
                   onChange={(e) => form.changePlayerName(player.id, e.target.value)}
@@ -180,7 +159,7 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({
 
       <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
         <Button onClick={onClose} disabled={saving} color="inherit">
-          {t('common.cancel', 'Abbrechen')}
+          {t('common.cancel')}
         </Button>
         <Button
           onClick={form.save}
@@ -190,7 +169,7 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({
           startIcon={saving ? <CircularProgress size={18} color="inherit" /> : <SaveRoundedIcon />}
           sx={{ textTransform: 'none', fontWeight: 700, px: 3 }}
         >
-          {t('guessart.saveChanges', 'Änderungen speichern')}
+          {t('guessart.saveChanges')}
         </Button>
       </DialogActions>
     </Dialog>

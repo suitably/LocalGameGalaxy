@@ -65,7 +65,7 @@ export const SharePlayerLinksDialog: React.FC<SharePlayerLinksDialogProps> = ({
     markPlayerLocal,
     open,
     onClose,
-    t('guessart.shareLinksTitle', 'Mitspieler-Links & Benachrichtigungen'),
+    t('guessart.shareLinksTitle'),
     `GuessArt - "${game?.name || 'Spiel'}"`,
   );
   if (!sharedProps) return null;
@@ -78,13 +78,9 @@ export const SharePlayerLinksDialog: React.FC<SharePlayerLinksDialogProps> = ({
         `🎨 ${t('common.shareMessage', {
           name: player.name,
           link,
-          defaultValue: `Hallo ${player.name}! Hier ist dein Mitspieler-Link: ${link}`,
         })}`
       }
-      descriptionText={t(
-        'guessart.shareLinksDesc',
-        'Sobald ein Link oder QR-Code geteilt wird, wird der Spieler als Remote markiert. Mitspieler spielen auf ihrem Smartphone mit und empfangen Push-Benachrichtigungen.',
-      )}
+      descriptionText={t('guessart.shareLinksDesc')}
       enablePushBanner={true}
     />
   );

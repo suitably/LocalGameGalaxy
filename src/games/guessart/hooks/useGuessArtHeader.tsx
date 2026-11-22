@@ -100,19 +100,19 @@ export function useGuessArtHeader(options: GuessArtHeaderOptions): void {
         showAlways: true,
       });
       items.push({
-        label: t('guessart.shareGameLink', 'Spiel-Link teilen'),
+        label: t('guessart.shareGameLink'),
         icon: <ShareRoundedIcon />,
         action: () => callbacks.current.onOpenShareLinks(),
       });
     }
     items.push(
       {
-        label: t('guessart.editGame', 'Spiel bearbeiten'),
+        label: t('guessart.editGame'),
         icon: <EditRoundedIcon />,
         action: () => callbacks.current.onEditGame(),
       },
       {
-        label: t('guessart.viewHistory', 'Historie ansehen'),
+        label: t('guessart.viewHistory'),
         icon: <HistoryRoundedIcon />,
         action: () => callbacks.current.onOpenHistory(),
       },

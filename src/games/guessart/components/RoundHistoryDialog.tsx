@@ -51,14 +51,14 @@ export const RoundHistoryDialog: React.FC<RoundHistoryDialogProps> = ({
           <HistoryRoundedIcon color="primary" />
           <Box>
             <Typography variant="h6" fontWeight={800} component="div">
-              {t('guessart.historyTitle', 'Runden-Historie')}
+              {t('guessart.historyTitle')}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {t('guessart.historySubtitle', 'Vergangene Zeichnungen & Runden dieses Spiels')}
+              {t('guessart.historySubtitle')}
             </Typography>
           </Box>
         </Box>
-        <IconButton aria-label={t('common.close', 'Schließen')} onClick={onClose} size="small">
+        <IconButton aria-label={t('common.close')} onClick={onClose} size="small">
           <CloseRoundedIcon />
         </IconButton>
       </DialogTitle>
@@ -70,9 +70,7 @@ export const RoundHistoryDialog: React.FC<RoundHistoryDialogProps> = ({
           </Box>
         ) : history.rounds.length === 0 ? (
           <Box textAlign="center" py={6}>
-            <Typography color="text.secondary">
-              {t('guessart.noRoundsYet', 'Noch keine Runden gespielt.')}
-            </Typography>
+            <Typography color="text.secondary">{t('guessart.noRoundsYet')}</Typography>
           </Box>
         ) : (
           <Stack spacing={1.5}>
@@ -96,7 +94,7 @@ export const RoundHistoryDialog: React.FC<RoundHistoryDialogProps> = ({
 
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose} variant="outlined" color="primary">
-          {t('common.close', 'Schließen')}
+          {t('common.close')}
         </Button>
       </DialogActions>
     </Dialog>

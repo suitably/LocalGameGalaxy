@@ -79,7 +79,7 @@ export const WaitingForGuesserView: React.FC<WaitingForGuesserViewProps> = ({
           }}
         >
           <Typography variant="caption" fontWeight={700} color="text.secondary">
-            {t('guessart.guessesHistoryLabel', 'Bisherige Versuche:')}
+            {t('guessart.guessesHistoryLabel')}
           </Typography>
           <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
             {round.guesses.map((g, idx) => (
@@ -115,7 +115,6 @@ export const WaitingForGuesserView: React.FC<WaitingForGuesserViewProps> = ({
           <Typography variant="body2" fontWeight={600}>
             {t('guessart.waitingForGuesserDesc', {
               name: guesserName,
-              defaultValue: `${guesserName} rät gerade...`,
             })}
           </Typography>
         </Box>
@@ -123,12 +122,12 @@ export const WaitingForGuesserView: React.FC<WaitingForGuesserViewProps> = ({
         {isHost && (
           <Stack direction="row" spacing={1} alignItems="center">
             {onOpenShareLinks && (
-              <Tooltip title={t('guessart.shareLinksTitle', 'Mitspieler-Links')}>
+              <Tooltip title={t('guessart.shareLinksTitle')}>
                 <IconButton
                   size="small"
                   color="primary"
                   onClick={onOpenShareLinks}
-                  aria-label={t('guessart.shareLinksTitle', 'Mitspieler-Links')}
+                  aria-label={t('guessart.shareLinksTitle')}
                   sx={{
                     bgcolor: 'action.hover',
                     border: '1px solid',
@@ -152,7 +151,6 @@ export const WaitingForGuesserView: React.FC<WaitingForGuesserViewProps> = ({
               >
                 {t('guessart.guessHereInstead', {
                   name: guesserName,
-                  defaultValue: `Hier als ${guesserName} raten`,
                 })}
               </Button>
             )}

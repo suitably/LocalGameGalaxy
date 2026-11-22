@@ -104,7 +104,7 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
     if (knownGuessesRef.current.has(norm)) {
       setFeedback({
         type: 'warning',
-        text: t('guessart.repeatedGuess', 'Dieses Wort hast du schon versucht!'),
+        text: t('guessart.repeatedGuess'),
       });
       return;
     }
@@ -117,7 +117,7 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
       if (!result.correct) {
         setFeedback({
           type: 'error',
-          text: t('guessart.wrongGuess', 'Leider falsch! Versuch es weiter.'),
+          text: t('guessart.wrongGuess'),
         });
         // Reset guess input for next attempt
         setGuess('');
@@ -132,10 +132,7 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
     }
   };
 
-  const hintLabel =
-    hintStage >= 2
-      ? t('guessart.noMoreHints', 'Keine weiteren Tipps')
-      : t('guessart.getHint', 'Tipp anfordern');
+  const hintLabel = hintStage >= 2 ? t('guessart.noMoreHints') : t('guessart.getHint');
 
   return (
     <Box
@@ -212,7 +209,7 @@ export const GuessPanel: React.FC<GuessPanelProps> = ({
             }
             setGuess(finalVal);
           }}
-          placeholder={t('guessart.guessPlaceholder', 'Was wurde gezeichnet?')}
+          placeholder={t('guessart.guessPlaceholder')}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               e.preventDefault();

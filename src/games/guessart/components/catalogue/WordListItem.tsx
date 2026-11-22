@@ -56,10 +56,10 @@ export const WordListItem: React.FC<WordListItemProps> = ({
               <Chip
                 label={
                   word.difficulty === 1
-                    ? t('guessart.diffEasy', 'Leicht')
+                    ? t('guessart.diffEasy')
                     : word.difficulty === 3
-                      ? t('guessart.diffHard', 'Schwer')
-                      : t('guessart.diffMedium', 'Mittel')
+                      ? t('guessart.diffHard')
+                      : t('guessart.diffMedium')
                 }
                 size="small"
                 color={difficultyColor(word.difficulty || 2)}
@@ -79,18 +79,18 @@ export const WordListItem: React.FC<WordListItemProps> = ({
                 color="text.secondary"
                 sx={{ mt: 0.5, display: 'block' }}
               >
-                {t('guessart.synonymsLabel', 'Synonyme')}: {[...deSyn, ...enSyn].join(', ')}
+                {t('guessart.synonymsLabel')}: {[...deSyn, ...enSyn].join(', ')}
               </Typography>
             )}
           </Box>
 
           <Box display="flex" gap={0.5}>
-            <Tooltip title={t('common.edit', 'Bearbeiten')}>
+            <Tooltip title={t('common.edit')}>
               <IconButton size="small" onClick={() => onEdit(word)}>
                 <EditRoundedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
-            <Tooltip title={t('common.delete', 'Löschen')}>
+            <Tooltip title={t('common.delete')}>
               <IconButton size="small" color="error" onClick={() => onDelete(word.id)}>
                 <DeleteOutlineRoundedIcon fontSize="small" />
               </IconButton>

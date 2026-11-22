@@ -55,9 +55,7 @@ export const useWordEditorState = (
       : editingWord?.id || `w_${Date.now()}`;
     const updatedWord = buildWordFromForm(form, wordId);
     if (!updatedWord) {
-      setFeedback(
-        t('guessart.canonicalNamesRequired', 'Hauptbegriff in Deutsch und Englisch erforderlich!'),
-      );
+      setFeedback(t('guessart.canonicalNamesRequired'));
       return;
     }
     onChange(

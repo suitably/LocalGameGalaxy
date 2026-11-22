@@ -229,6 +229,9 @@
     "spectatorGuessing": "{{name}} rät",
     "spectatorIdle": "{{name}} ist gerade nicht dran.",
     "joinLoading": "Spiel wird geladen …",
-    "joinFailed": "Das Spiel konnte nicht geladen werden. Prüfe die Internetverbindung und scanne den Code erneut – oder lass dir den Link schicken."
+    "joinFailed": "Das Spiel konnte nicht geladen werden. Prüfe die Internetverbindung und scanne den Code erneut – oder lass dir den Link schicken.",
+    "manualWordMode": "Manuelle Begriffseingabe",
+    "addCategoryShort": "Kategorie +",
+    "addWordShort": "Wort +"
   }
 }

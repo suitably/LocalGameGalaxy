@@ -32,7 +32,7 @@ export const HintLetterChips: React.FC<HintLetterChipsProps> = ({ letters, onLet
       }}
     >
       <Typography variant="caption" color="text.secondary" fontWeight={600}>
-        {t('guessart.hintLettersLabel', 'Buchstaben-Pool:')}
+        {t('guessart.hintLettersLabel')}
       </Typography>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.8, justifyContent: 'center' }}>
         {letters.map((entry) => (

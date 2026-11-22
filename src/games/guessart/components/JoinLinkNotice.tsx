@@ -17,12 +17,7 @@ export const JoinLinkNotice: React.FC<{ status: JoinLinkStatus }> = ({ status })
       role="status"
       sx={{ m: 2, borderRadius: 2 }}
     >
-      {loading
-        ? t('guessart.joinLoading', 'Spiel wird geladen …')
-        : t(
-            'guessart.joinFailed',
-            'Das Spiel konnte nicht geladen werden. Prüfe die Internetverbindung und scanne den Code erneut – oder lass dir den Link schicken.',
-          )}
+      {loading ? t('guessart.joinLoading') : t('guessart.joinFailed')}
     </Alert>
   );
 };

@@ -21,7 +21,7 @@ export const GuessArtRoomGame: React.FC<{ roomId: string; language: string }> = 
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  usePageTitle(t('games.guessart.title', 'GuessArt'));
+  usePageTitle(t('games.guessart.title'));
   const { setHomeAction, setCustomHeaderActions } = useHeaderLayout();
   useFollowPartyLobby(roomId);
   useWakeLock(true);
@@ -50,8 +50,8 @@ export const GuessArtRoomGame: React.FC<{ roomId: string; language: string }> = 
             <CircularProgress />
             <Typography color="text.secondary" textAlign="center">
               {live.synced && live.isHost
-                ? t('guessart.roomNeedTwo', 'Es werden mindestens 2 Spieler in der Lobby benötigt.')
-                : t('guessart.roomConnecting', 'Verbinde mit dem Raum …')}
+                ? t('guessart.roomNeedTwo')
+                : t('guessart.roomConnecting')}
             </Typography>
           </Stack>
         ) : !game.players.some((p) => p.id === live.myId) ? (

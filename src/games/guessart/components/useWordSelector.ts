@@ -58,9 +58,7 @@ export const useWordSelector = (
     try {
       await onSelectWord(payload);
     } catch (err) {
-      setFeedback(
-        err instanceof Error ? err.message : t('guessart.genericError', 'An error occurred'),
-      );
+      setFeedback(err instanceof Error ? err.message : t('guessart.genericError'));
     } finally {
       setSubmitting(false);
     }
@@ -78,7 +76,7 @@ export const useWordSelector = (
   const submitManualWord = async () => {
     const trimmed = manualWord.trim();
     if (!trimmed) {
-      setFeedback(t('guessart.manualWordRequired', 'Bitte gib ein Wort ein!'));
+      setFeedback(t('guessart.manualWordRequired'));
       return;
     }
     const synonyms = manualSynonyms

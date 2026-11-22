@@ -51,8 +51,8 @@ export const RoundHistoryItem: React.FC<RoundHistoryItemProps> = ({
   const roundTarget = isCompleted
     ? round.word
     : isCurrentGuessing
-      ? t('guessart.hiddenWord', 'Wird aktuell geraten...')
-      : round.word || t('guessart.selectingWord', 'Wortauswahl...');
+      ? t('guessart.hiddenWord')
+      : round.word || t('guessart.selectingWord');
 
   return (
     <Accordion
@@ -84,7 +84,6 @@ export const RoundHistoryItem: React.FC<RoundHistoryItemProps> = ({
             <Chip
               label={t('guessart.roundHeader', {
                 round: round.roundNumber,
-                defaultValue: `Runde ${round.roundNumber}`,
               })}
               size="small"
               color={isCompleted ? 'success' : 'primary'}
@@ -125,7 +124,6 @@ export const RoundHistoryItem: React.FC<RoundHistoryItemProps> = ({
                 icon={<CheckCircleOutlineRoundedIcon fontSize="small" />}
                 label={t('guessart.attemptsCount', {
                   count: round.guesses?.length || 1,
-                  defaultValue: `${round.guesses?.length || 1} Versuche`,
                 })}
                 size="small"
                 color="success"

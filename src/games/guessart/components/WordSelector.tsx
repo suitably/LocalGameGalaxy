@@ -48,10 +48,10 @@ export const WordSelector: React.FC<WordSelectorProps> = ({
       >
         <Typography variant="h6" fontWeight={700}>
           {isManualMode
-            ? t('guessart.manualWordTitle', 'Eigenes Wort eingeben')
+            ? t('guessart.manualWordTitle')
             : selectedCategory
-              ? t('guessart.pickWordTitle', 'Wähle ein Wort zum Zeichnen')
-              : t('guessart.pickCategoryTitle', 'Wähle eine Kategorie')}
+              ? t('guessart.pickWordTitle')
+              : t('guessart.pickCategoryTitle')}
         </Typography>
         <Box display="flex" alignItems="center" gap={1}>
           {onOpenCatalogue && !isManualMode && (
@@ -62,7 +62,7 @@ export const WordSelector: React.FC<WordSelectorProps> = ({
               onClick={onOpenCatalogue}
               sx={{ textTransform: 'none', fontWeight: 600 }}
             >
-              {t('guessart.catalogueButton', 'Wortkatalog')}
+              {t('guessart.catalogueButton')}
             </Button>
           )}
           <Button
@@ -72,9 +72,7 @@ export const WordSelector: React.FC<WordSelectorProps> = ({
             onClick={sel.toggleManualMode}
             sx={{ textTransform: 'none', fontWeight: 600 }}
           >
-            {isManualMode
-              ? t('guessart.useCatalog', 'Katalog nutzen')
-              : t('guessart.customWord', 'Eigenes Wort')}
+            {isManualMode ? t('guessart.useCatalog') : t('guessart.customWord')}
           </Button>
         </Box>
       </Box>
@@ -128,7 +126,7 @@ export const WordSelector: React.FC<WordSelectorProps> = ({
             onClick={() => sel.setSelectedCategory(null)}
             sx={{ alignSelf: 'flex-start' }}
           >
-            {t('guessart.backToCategories', 'Zurück zu den Kategorien')}
+            {t('guessart.backToCategories')}
           </Button>
 
           <Stack spacing={1.5}>
@@ -150,10 +148,10 @@ export const WordSelector: React.FC<WordSelectorProps> = ({
                   <Chip
                     label={
                       word.difficulty === 1
-                        ? t('guessart.difficultyEasy', 'Leicht')
+                        ? t('guessart.difficultyEasy')
                         : word.difficulty === 2
-                          ? t('guessart.difficultyMedium', 'Mittel')
-                          : t('guessart.difficultyHard', 'Schwer')
+                          ? t('guessart.difficultyMedium')
+                          : t('guessart.difficultyHard')
                     }
                     size="small"
                     color={

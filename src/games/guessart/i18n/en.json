@@ -229,6 +229,9 @@
     "spectatorGuessing": "{{name}} is guessing",
     "spectatorIdle": "It is not {{name}}'s turn right now.",
     "joinLoading": "Loading game …",
-    "joinFailed": "The game could not be loaded. Check your internet connection and scan the code again – or ask for the link instead."
+    "joinFailed": "The game could not be loaded. Check your internet connection and scan the code again – or ask for the link instead.",
+    "manualWordMode": "Manual word entry",
+    "addCategoryShort": "Category +",
+    "addWordShort": "Word +"
   }
 }

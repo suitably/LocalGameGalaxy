@@ -70,7 +70,7 @@ export const GuessArtHeaderTitle: React.FC<GuessArtHeaderTitleProps> = ({
               flexShrink: 0,
             }}
           >
-            {t('guessart.drawWordPrompt', 'Zeichne:')}
+            {t('guessart.drawWordPrompt')}
           </Typography>
           <Typography
             variant="body2"
@@ -87,7 +87,7 @@ export const GuessArtHeaderTitle: React.FC<GuessArtHeaderTitleProps> = ({
           >
             {round.word}
           </Typography>
-          <Tooltip title={t('guessart.secretWordOnlyYou', 'Nur für dich sichtbar')}>
+          <Tooltip title={t('guessart.secretWordOnlyYou')}>
             <LockRoundedIcon sx={{ fontSize: { xs: 13, sm: 15 }, opacity: 0.85, flexShrink: 0 }} />
           </Tooltip>
         </Box>
@@ -95,7 +95,6 @@ export const GuessArtHeaderTitle: React.FC<GuessArtHeaderTitleProps> = ({
         <Chip
           label={t('guessart.roundHeader', {
             round: round.roundNumber,
-            defaultValue: `Runde ${round.roundNumber}`,
           })}
           size="small"
           variant="outlined"
@@ -145,7 +144,6 @@ export const GuessArtHeaderTitle: React.FC<GuessArtHeaderTitleProps> = ({
             ? `R${round.roundNumber}`
             : t('guessart.roundHeader', {
                 round: round.roundNumber,
-                defaultValue: `Runde ${round.roundNumber}`,
               })
         }
         size="small"
@@ -176,13 +174,11 @@ export const GuessArtHeaderTitle: React.FC<GuessArtHeaderTitleProps> = ({
               ? currentDrawer
               : t('guessart.drawerLabel', {
                   name: currentDrawer,
-                  defaultValue: `Zeichnet: ${currentDrawer}`,
                 })
             : isSmallScreen
               ? currentGuesser
               : t('guessart.guesserLabel', {
                   name: currentGuesser,
-                  defaultValue: `Rät: ${currentGuesser}`,
                 })
         }
         color={isDrawing ? 'primary' : 'secondary'}

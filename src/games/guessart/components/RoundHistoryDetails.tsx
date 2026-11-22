@@ -43,9 +43,7 @@ export const RoundHistoryDetails: React.FC<RoundHistoryDetailsProps> = ({
               onClick={onToggleReplay}
               sx={{ textTransform: 'none', borderRadius: 2, fontSize: '0.825rem' }}
             >
-              {isReplaying
-                ? t('guessart.showFinalDrawing', 'Fertiges Bild anzeigen')
-                : t('guessart.replayDrawing', 'Animation abspielen')}
+              {isReplaying ? t('guessart.showFinalDrawing') : t('guessart.replayDrawing')}
             </Button>
           </Box>
 
@@ -72,7 +70,7 @@ export const RoundHistoryDetails: React.FC<RoundHistoryDetailsProps> = ({
         </Box>
       ) : (
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          {t('guessart.noDrawingData', 'Keine Zeichnungsdaten vorhanden.')}
+          {t('guessart.noDrawingData')}
         </Typography>
       )}
 
@@ -85,7 +83,7 @@ export const RoundHistoryDetails: React.FC<RoundHistoryDetailsProps> = ({
             display="block"
             mb={0.5}
           >
-            {t('guessart.guessesHistoryLabel', 'Geratene Begriffe:')}
+            {t('guessart.guessesHistoryLabel')}
           </Typography>
           <Stack direction="row" spacing={0.8} flexWrap="wrap" useFlexGap>
             {round.guesses.map((g, idx) => {
@@ -114,9 +112,7 @@ export const RoundHistoryDetails: React.FC<RoundHistoryDetailsProps> = ({
                 <Tooltip
                   key={key}
                   title={
-                    isAdded
-                      ? t('guessart.synonymAddedTooltip', 'Bereits hinzugefügt')
-                      : t('guessart.addSynonymTooltip', 'Als Synonym zum Wort speichern')
+                    isAdded ? t('guessart.synonymAddedTooltip') : t('guessart.addSynonymTooltip')
                   }
                 >
                   <Chip

@@ -13,7 +13,7 @@ export const FormDialogActions: React.FC<FormDialogActionsProps> = ({ onClose, o
   return (
     <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
       <Button onClick={onClose} color="inherit">
-        {t('common.cancel', 'Abbrechen')}
+        {t('common.cancel')}
       </Button>
       <Button
         onClick={onSave}
@@ -21,7 +21,7 @@ export const FormDialogActions: React.FC<FormDialogActionsProps> = ({ onClose, o
         color="primary"
         sx={{ textTransform: 'none', fontWeight: 700 }}
       >
-        {t('common.save', 'Speichern')}
+        {t('common.save')}
       </Button>
     </DialogActions>
   );

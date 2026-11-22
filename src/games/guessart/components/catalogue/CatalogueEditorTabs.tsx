@@ -48,7 +48,7 @@ export const CatalogueEditorTabs: React.FC<CatalogueEditorTabsProps> = ({
           label={
             <Box component="span" display="flex" alignItems="center" gap={0.5}>
               <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                {t('guessart.catalogueCategories', 'Kategorien')}
+                {t('guessart.catalogueCategories')}
               </Box>
               <Box component="span">({categoryCount})</Box>
             </Box>
@@ -60,7 +60,7 @@ export const CatalogueEditorTabs: React.FC<CatalogueEditorTabsProps> = ({
           label={
             <Box component="span" display="flex" alignItems="center" gap={0.5}>
               <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                {t('guessart.catalogueWords', 'Wörter')}
+                {t('guessart.catalogueWords')}
               </Box>
               <Box component="span">({wordCount})</Box>
             </Box>
@@ -72,7 +72,7 @@ export const CatalogueEditorTabs: React.FC<CatalogueEditorTabsProps> = ({
           label={
             <Box component="span">
               <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                {t('guessart.publishPrTab', 'Veröffentlichen (Git PR)')}
+                {t('guessart.publishPrTab')}
               </Box>
               <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
                 PR

@@ -31,7 +31,6 @@ export const RoundSuccessSynonyms: React.FC<RoundSuccessSynonymsProps> = ({
         setFeedback(
           t('guessart.synonymAddedSuccess', {
             synonym: guess,
-            defaultValue: `"${guess}" wurde als Synonym hinzugefügt!`,
           }),
         );
       }
@@ -54,7 +53,7 @@ export const RoundSuccessSynonyms: React.FC<RoundSuccessSynonymsProps> = ({
     >
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
         <Typography variant="caption" fontWeight={700} color="text.secondary">
-          {t('guessart.addAsSynonymPrompt', 'Eingaben als Synonym übernehmen:')}
+          {t('guessart.addAsSynonymPrompt')}
         </Typography>
         <SynonymLanguageToggle value={selectedLang} onChange={setSelectedLang} />
       </Box>
@@ -65,11 +64,7 @@ export const RoundSuccessSynonyms: React.FC<RoundSuccessSynonymsProps> = ({
           return (
             <Tooltip
               key={guess}
-              title={
-                isAdded
-                  ? t('guessart.synonymAddedTooltip', 'Bereits hinzugefügt')
-                  : t('guessart.addSynonymTooltip', 'Als Synonym zum Wort speichern')
-              }
+              title={isAdded ? t('guessart.synonymAddedTooltip') : t('guessart.addSynonymTooltip')}
             >
               <Chip
                 label={guess}

@@ -66,7 +66,7 @@ export const RoundSuccessModal: React.FC<RoundSuccessModalProps> = ({
         >
           <CheckCircleRoundedIcon color="success" sx={{ fontSize: { xs: 48, sm: 60 } }} />
           <Typography variant="h5" fontWeight={800}>
-            {t('guessart.correctCelebration', 'Richtig erraten!')}
+            {t('guessart.correctCelebration')}
           </Typography>
 
           {drawerName && guesserName && (
@@ -81,7 +81,7 @@ export const RoundSuccessModal: React.FC<RoundSuccessModalProps> = ({
 
           <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2, width: '100%' }}>
             <Typography variant="body2" color="text.secondary">
-              {t('guessart.searchedWord', 'Gesuchtes Wort:')}
+              {t('guessart.searchedWord')}
             </Typography>
             <Typography variant="h4" fontWeight={800} color="primary.text" sx={{ mt: 0.5 }}>
               {word}
@@ -94,7 +94,6 @@ export const RoundSuccessModal: React.FC<RoundSuccessModalProps> = ({
               >
                 {t('guessart.drawnAsOriginal', {
                   word: originalWord,
-                  defaultValue: `(Gezeichnet als: ${originalWord})`,
                 })}
               </Typography>
             )}
@@ -104,7 +103,6 @@ export const RoundSuccessModal: React.FC<RoundSuccessModalProps> = ({
             {t('guessart.roundStats', {
               round: roundNumber,
               guesses: guessesCount,
-              defaultValue: `Runde ${roundNumber} mit ${guessesCount} Versuchen gelöst!`,
             })}
           </Typography>
 
@@ -126,7 +124,7 @@ export const RoundSuccessModal: React.FC<RoundSuccessModalProps> = ({
             onClick={onNextRound}
             sx={{ mt: 1, py: 1.5, fontWeight: 700 }}
           >
-            {t('guessart.nextRound', 'Nächste Runde')}
+            {t('guessart.nextRound')}
           </Button>
         </Box>
       </DialogContent>

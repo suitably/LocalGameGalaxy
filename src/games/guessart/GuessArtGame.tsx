@@ -22,7 +22,7 @@ import { playerAssignment } from './logic/playerAssignment';
 
 const GuessArtLocalGame: React.FC = () => {
   const { t, i18n } = useTranslation();
-  usePageTitle(t('games.guessart.title', 'GuessArt'));
+  usePageTitle(t('games.guessart.title'));
 
   const { activeGameId, setActiveGameId } = useGuessArtUrlParam();
   const {

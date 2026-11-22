@@ -66,9 +66,7 @@ export const WordFormDialog: React.FC<WordFormDialogProps> = ({
       PaperProps={{ sx: { borderRadius: 3 } }}
     >
       <DialogTitle sx={{ fontWeight: 800 }}>
-        {isNew
-          ? t('guessart.addWordTitle', 'Neues Wort hinzufügen')
-          : t('guessart.editWordTitle', 'Wort bearbeiten')}
+        {isNew ? t('guessart.addWordTitle') : t('guessart.editWordTitle')}
       </DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ pt: 1 }}>
@@ -76,10 +74,10 @@ export const WordFormDialog: React.FC<WordFormDialogProps> = ({
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <FormControl size="small" fullWidth>
-              <InputLabel>{t('guessart.categoryFilter', 'Kategorie')}</InputLabel>
+              <InputLabel>{t('guessart.categoryFilter')}</InputLabel>
               <Select
                 value={form.categoryId}
-                label={t('guessart.categoryFilter', 'Kategorie')}
+                label={t('guessart.categoryFilter')}
                 onChange={(e) => set({ categoryId: e.target.value })}
               >
                 {categories.map((c) => (
@@ -91,26 +89,26 @@ export const WordFormDialog: React.FC<WordFormDialogProps> = ({
             </FormControl>
 
             <FormControl size="small" fullWidth>
-              <InputLabel>{t('guessart.difficulty', 'Schwierigkeit')}</InputLabel>
+              <InputLabel>{t('guessart.difficulty')}</InputLabel>
               <Select
                 value={form.difficulty}
-                label={t('guessart.difficulty', 'Schwierigkeit')}
+                label={t('guessart.difficulty')}
                 onChange={(e) => set({ difficulty: Number(e.target.value) })}
               >
-                <MenuItem value={1}>{t('guessart.diffEasy', '1 - Leicht')}</MenuItem>
-                <MenuItem value={2}>{t('guessart.diffMedium', '2 - Mittel')}</MenuItem>
-                <MenuItem value={3}>{t('guessart.diffHard', '3 - Schwer')}</MenuItem>
+                <MenuItem value={1}>{t('guessart.diffEasy')}</MenuItem>
+                <MenuItem value={2}>{t('guessart.diffMedium')}</MenuItem>
+                <MenuItem value={3}>{t('guessart.diffHard')}</MenuItem>
               </Select>
             </FormControl>
           </Stack>
 
           <Box sx={sectionSx}>
-            <LanguageHeading code="DE" label={t('guessart.germanWordSettings', 'Deutsch')} />
+            <LanguageHeading code="DE" label={t('guessart.germanWordSettings')} />
             <TextField
               size="small"
               fullWidth
-              label={t('guessart.canonicalWordDe', 'Hauptbegriff')}
-              placeholder={t('guessart.wordExampleDe', 'z.B. Hund')}
+              label={t('guessart.canonicalWordDe')}
+              placeholder={t('guessart.wordExampleDe')}
               value={form.deCanonical}
               onChange={(e) => set({ deCanonical: e.target.value })}
               sx={{ mb: 1.5 }}
@@ -118,24 +116,21 @@ export const WordFormDialog: React.FC<WordFormDialogProps> = ({
             <TextField
               size="small"
               fullWidth
-              label={t('guessart.synonymsDe', 'Synonyme (kommagetrennt)')}
-              placeholder={t('guessart.synonymsExampleDe', 'z.B. Welpe, Vierbeiner, Köter')}
+              label={t('guessart.synonymsDe')}
+              placeholder={t('guessart.synonymsExampleDe')}
               value={form.deSynonyms}
               onChange={(e) => set({ deSynonyms: e.target.value })}
-              helperText={t(
-                'guessart.synonymsOptionalHint',
-                'Optionale alternative richtige Antworten',
-              )}
+              helperText={t('guessart.synonymsOptionalHint')}
             />
           </Box>
 
           <Box sx={sectionSx}>
-            <LanguageHeading code="EN" label={t('guessart.englishWordSettings', 'Englisch')} />
+            <LanguageHeading code="EN" label={t('guessart.englishWordSettings')} />
             <TextField
               size="small"
               fullWidth
-              label={t('guessart.canonicalWordEn', 'Hauptbegriff')}
-              placeholder={t('guessart.wordExampleEn', 'e.g. Dog')}
+              label={t('guessart.canonicalWordEn')}
+              placeholder={t('guessart.wordExampleEn')}
               value={form.enCanonical}
               onChange={(e) => set({ enCanonical: e.target.value })}
               sx={{ mb: 1.5 }}
@@ -143,8 +138,8 @@ export const WordFormDialog: React.FC<WordFormDialogProps> = ({
             <TextField
               size="small"
               fullWidth
-              label={t('guessart.synonymsEn', 'Synonyme (kommagetrennt)')}
-              placeholder={t('guessart.synonymsExampleEn', 'e.g. Puppy, Hound, Canine')}
+              label={t('guessart.synonymsEn')}
+              placeholder={t('guessart.synonymsExampleEn')}
               value={form.enSynonyms}
               onChange={(e) => set({ enSynonyms: e.target.value })}
             />

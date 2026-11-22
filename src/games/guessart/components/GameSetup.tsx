@@ -64,7 +64,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
 
   const handleStart = () => {
     if (players.length < 2) {
-      setFeedback(t('guessart.minPlayers', 'Mindestens 2 Spieler werden benötigt!'));
+      setFeedback(t('guessart.minPlayers'));
       return;
     }
     const currentLang = i18n.language.startsWith('de') ? 'de' : 'en';
@@ -88,10 +88,10 @@ export const GameSetup: React.FC<GameSetupProps> = ({
               onClick={onOpenCatalogue}
               sx={{ textTransform: 'none', fontWeight: 600 }}
             >
-              {t('guessart.catalogueButton', 'Wortkatalog')}
+              {t('guessart.catalogueButton')}
             </Button>
           )}
-          <IconButton size="small" onClick={onOpenInfo} aria-label={t('common.info', 'Info')}>
+          <IconButton size="small" onClick={onOpenInfo} aria-label={t('common.info')}>
             <InfoOutlinedIcon />
           </IconButton>
         </Box>
@@ -135,10 +135,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
                   Gartic Phone (Flüsterpost)
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {t(
-                    'guessart.garticShortDesc',
-                    'Live Multiplayer: Satz schreiben ➔ Zeichnen ➔ Raten ➔ Album-Show!',
-                  )}
+                  {t('guessart.garticShortDesc')}
                 </Typography>
               </Box>
             </Box>
@@ -150,7 +147,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
               onClick={onOpenGartic}
               sx={{ fontWeight: 700, borderRadius: 2 }}
             >
-              {t('guessart.playGartic', 'Gartic Phone spielen')}
+              {t('guessart.playGartic')}
             </Button>
           </CardContent>
         </Card>
@@ -171,12 +168,9 @@ export const GameSetup: React.FC<GameSetupProps> = ({
         onAddPlayer={onAddPlayer}
         onRemovePlayer={(val) => onRemovePlayer(String(val))}
         onToggleRemote={onToggleRemote}
-        title={t('guessart.playersTitle', 'Mitspieler')}
-        description={t(
-          'guessart.playersSetupDesc',
-          'Füge mindestens 2 Spieler hinzu. Gespielt werden kann flexibel an einem Gerät oder mit eigenen Einladungslinks.',
-        )}
-        placeholder={t('guessart.playerNamePlaceholder', 'Name eingeben...')}
+        title={t('guessart.playersTitle')}
+        description={t('guessart.playersSetupDesc')}
+        placeholder={t('guessart.playerNamePlaceholder')}
         minPlayers={2}
       />
 
@@ -190,8 +184,8 @@ export const GameSetup: React.FC<GameSetupProps> = ({
           <TextField
             size="small"
             fullWidth
-            label={t('guessart.gameName', 'Spielname')}
-            placeholder={t('guessart.gameNamePlaceholder', 'z.B. Spieleabend, WG-Runde (optional)')}
+            label={t('guessart.gameName')}
+            placeholder={t('guessart.gameNamePlaceholder')}
             value={gameName}
             onChange={(e) => setGameName(e.target.value)}
             sx={{ mb: 2 }}
@@ -208,13 +202,10 @@ export const GameSetup: React.FC<GameSetupProps> = ({
             label={
               <Box>
                 <Typography variant="body2" fontWeight={600}>
-                  {t('guessart.manualWordMode', 'Manuelle Begriffseingabe')}
+                  {t('guessart.manualWordMode')}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {t(
-                    'guessart.manualWordModeDesc',
-                    'Begriffe selbst tippen statt aus dem Katalog zu wählen.',
-                  )}
+                  {t('guessart.manualWordModeDesc')}
                 </Typography>
               </Box>
             }
@@ -237,7 +228,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
           boxShadow: 0,
         }}
       >
-        {t('guessart.startGame', 'Spiel starten')}
+        {t('guessart.startGame')}
       </Button>
     </Stack>
   );

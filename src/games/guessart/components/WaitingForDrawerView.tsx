@@ -82,7 +82,6 @@ export const WaitingForDrawerView: React.FC<WaitingForDrawerViewProps> = ({
         <Typography variant="h5" fontWeight={800} gutterBottom>
           {t('guessart.waitingForDrawerTitle', {
             name: drawerName,
-            defaultValue: `${drawerName} zeichnet gerade...`,
           })}
         </Typography>
 
@@ -90,12 +89,10 @@ export const WaitingForDrawerView: React.FC<WaitingForDrawerViewProps> = ({
           {isLocalGuesser
             ? t('guessart.waitingForDrawerDescLocalGuesser', {
                 name: drawerName,
-                defaultValue: `Sobald ${drawerName} fertig gezeichnet hat, startet hier direkt deine Raterunde!`,
               })
             : t('guessart.waitingForDrawerDescSpectator', {
                 drawer: drawerName,
                 guesser: guesserName,
-                defaultValue: `${drawerName} zeichnet gerade für ${guesserName}. Sobald die Zeichnung fertig ist, geht es weiter.`,
               })}
         </Typography>
 
@@ -110,11 +107,11 @@ export const WaitingForDrawerView: React.FC<WaitingForDrawerViewProps> = ({
         {isHost && (
           <Box display="flex" justifyContent="center" alignItems="center" gap={1.5} mt={3}>
             {onOpenShareLinks && (
-              <Tooltip title={t('guessart.shareLinksTitle', 'Mitspieler-Links')}>
+              <Tooltip title={t('guessart.shareLinksTitle')}>
                 <IconButton
                   color="primary"
                   onClick={onOpenShareLinks}
-                  aria-label={t('guessart.shareLinksTitle', 'Mitspieler-Links')}
+                  aria-label={t('guessart.shareLinksTitle')}
                   sx={{
                     bgcolor: 'action.hover',
                     border: '1px solid',
@@ -131,7 +128,6 @@ export const WaitingForDrawerView: React.FC<WaitingForDrawerViewProps> = ({
               <Tooltip
                 title={t('guessart.drawHereInstead', {
                   name: drawerName,
-                  defaultValue: `Hier als ${drawerName} zeichnen`,
                 })}
               >
                 <IconButton
@@ -139,7 +135,6 @@ export const WaitingForDrawerView: React.FC<WaitingForDrawerViewProps> = ({
                   onClick={handleClaim}
                   aria-label={t('guessart.drawHereInstead', {
                     name: drawerName,
-                    defaultValue: `Hier als ${drawerName} zeichnen`,
                   })}
                   sx={{
                     bgcolor: 'action.hover',

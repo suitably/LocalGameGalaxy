@@ -67,18 +67,16 @@ export const CategoryEditorTab: React.FC<CategoryEditorTabProps> = ({
     const trimmedDe = form.nameDe.trim();
 
     if (!trimmedId) {
-      setFeedback(t('guessart.catIdRequired', 'Kategorie-ID ist erforderlich.'));
+      setFeedback(t('guessart.catIdRequired'));
       return;
     }
     if (!trimmedEn || !trimmedDe) {
-      setFeedback(
-        t('guessart.catNamesRequired', 'Namen in Deutsch und Englisch sind erforderlich.'),
-      );
+      setFeedback(t('guessart.catNamesRequired'));
       return;
     }
 
     if (isNew && categories.some((c) => String(c.id).toLowerCase() === trimmedId)) {
-      setFeedback(t('guessart.catIdExists', 'Diese Kategorie-ID existiert bereits!'));
+      setFeedback(t('guessart.catIdExists'));
       return;
     }
 
@@ -131,17 +129,16 @@ export const CategoryEditorTab: React.FC<CategoryEditorTabProps> = ({
     wordsInPendingCat.length > 0
       ? t('guessart.confirmDeleteCategoryWithWords', {
           count: wordsInPendingCat.length,
-          defaultValue: `Kategorie löschen? ${wordsInPendingCat.length} enthaltene Wörter werden ebenfalls gelöscht.`,
         })
-      : t('guessart.confirmDeleteCategory', 'Kategorie wirklich löschen?');
+      : t('guessart.confirmDeleteCategory');
 
   return (
     <Box sx={{ py: 1 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="subtitle2" color="text.secondary" fontWeight={700}>
-          {t('guessart.categoriesListTitle', 'Verfügbare Kategorien')} ({categories.length})
+          {t('guessart.categoriesListTitle')} ({categories.length})
         </Typography>
-        <Tooltip title={t('guessart.addCategory', 'Kategorie hinzufügen')}>
+        <Tooltip title={t('guessart.addCategory')}>
           <Button
             variant="contained"
             size="small"
@@ -150,10 +147,10 @@ export const CategoryEditorTab: React.FC<CategoryEditorTabProps> = ({
             sx={{ textTransform: 'none', fontWeight: 700 }}
           >
             <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-              {t('guessart.addCategory', 'Kategorie hinzufügen')}
+              {t('guessart.addCategory')}
             </Box>
             <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-              {t('guessart.addCategoryShort', 'Kategorie +')}
+              {t('guessart.addCategoryShort')}
             </Box>
           </Button>
         </Tooltip>
@@ -177,18 +174,18 @@ export const CategoryEditorTab: React.FC<CategoryEditorTabProps> = ({
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
                         ID: <code style={{ fontSize: '0.8rem' }}>{cat.id}</code> • {wordsCount}{' '}
-                        {t('guessart.wordsLabel', 'Wörter')}
+                        {t('guessart.wordsLabel')}
                       </Typography>
                     </Box>
                   </Box>
 
                   <Box display="flex" gap={0.5}>
-                    <Tooltip title={t('common.edit', 'Bearbeiten')}>
+                    <Tooltip title={t('common.edit')}>
                       <IconButton size="small" onClick={() => handleOpenEdit(cat)}>
                         <EditRoundedIcon fontSize="small" />
                       </IconButton>
                     </Tooltip>
-                    <Tooltip title={t('common.delete', 'Löschen')}>
+                    <Tooltip title={t('common.delete')}>
                       <IconButton
                         size="small"
                         color="error"
