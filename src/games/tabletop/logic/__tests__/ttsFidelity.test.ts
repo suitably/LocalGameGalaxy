@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import deLocale from '../../../../../public/locales/de/translation.json';
-import enLocale from '../../../../../public/locales/en/translation.json';
+import deLocale from '../../i18n/de.json';
+import enLocale from '../../i18n/en.json';
 import { parseTtsSaveFile } from '../ttsParser';
 import { localizeLabels } from '../localizeLabels';
 import type { TTSObjectState, TTSSaveFile } from '../ttsTypes';
