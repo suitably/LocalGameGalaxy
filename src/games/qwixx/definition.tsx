@@ -12,7 +12,7 @@ export const definition = defineGame({
   id: 'qwixx',
   route: 'games/qwixx',
   i18n: 'games.qwixx',
-  title: 'Qwixx',
+  title: 'Farbreihen',
   kind: 'game',
   area: 'dice',
   color: 'orange',

@@ -23,7 +23,7 @@ interface GarticHeaderOptions {
 export function useGarticHeader(options: GarticHeaderOptions): React.ReactNode {
   const { roomId, isHost } = options;
   const { t } = useTranslation();
-  usePageTitle(t('games.garticphone.title', 'Gartic Phone'));
+  usePageTitle(t('games.garticphone.title', 'Zeichen-Stille-Post'));
   const { setHomeAction, setMenuItems } = useHeaderLayout();
   const [shareOpen, setShareOpen] = useState(false);
   const [confirmEndOpen, setConfirmEndOpen] = useState(false);

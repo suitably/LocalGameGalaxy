@@ -12,7 +12,7 @@ export const definition = defineGame({
   id: 'garticphone',
   route: 'games/garticphone',
   i18n: 'games.garticphone',
-  title: 'Gartic Phone',
+  title: 'Zeichen-Stille-Post',
   kind: 'game',
   area: 'party',
   color: 'pink',

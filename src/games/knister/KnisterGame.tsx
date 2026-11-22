@@ -22,7 +22,7 @@ initKnisterI18n();
 
 export const KnisterGame: React.FC = () => {
   const { t } = useTranslation();
-  usePageTitle(t('games.knister.title', 'Knister'));
+  usePageTitle(t('games.knister.title', 'Würfelgitter'));
   useWakeLock(true);
 
   const game = useKnisterGameState();

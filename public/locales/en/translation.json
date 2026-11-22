@@ -70,7 +70,7 @@
       "restart_desc": "Are you sure you want to restart? All current scores and throws will be lost."
     },
     "wordle": {
-      "title": "Wordle",
+      "title": "Word Guess",
       "description": "Guess the hidden 5-letter word in 6 attempts. Play the daily challenge or duel friends."
     },
     "sudoku": {
@@ -444,7 +444,7 @@
       }
     },
     "qwixx": {
-      "title": "Qwixx",
+      "title": "Color Rows",
       "description": "Tactical dice-rolling score sheet game. Cross numbers, lock rows, and maximize your score!"
     },
     "guessart": {
@@ -456,13 +456,13 @@
       "description": "Collaborative story writing game! Write stories turn by turn with modular modifiers like Blind Mode, Time Attack, and Word Roulette."
     },
     "garticphone": {
-      "title": "Gartic Phone",
+      "title": "Drawing Telephone",
       "description": "The hilarious pass-the-message drawing game! Write sentence ➔ Draw ➔ Guess ➔ Draw ➔ Animated Album Show!",
       "inviteHelp": "Invite friends: Scan the QR code with other smartphones or share the link."
     },
     "party": {
       "title": "Party Mode",
-      "description": "Unified multiplayer lobby for synchronized party games: Gartic Phone & more!"
+      "description": "Unified multiplayer lobby for synchronized party games: Drawing Telephone & more!"
     },
     "melodiq": {
       "title": "Melodiq",
@@ -1029,7 +1029,7 @@
       }
     },
     "kniffel": {
-      "title": "Yahtzee",
+      "title": "Five Dice",
       "description": "The classic dice game. Score points by cleverly combining 5 dice.",
       "roll": "Roll",
       "rolling": "Rolling...",
@@ -1057,9 +1057,9 @@
         "full_house": "Full House",
         "small_straight": "Small Straight",
         "large_straight": "Large Straight",
-        "kniffel": "Yahtzee",
+        "kniffel": "Five of a Kind",
         "chance": "Chance",
-        "kniffel_bonus": "Yahtzee Bonus"
+        "kniffel_bonus": "Five of a Kind Bonus"
       },
       "hint": {
         "ones": "Sum of all Ones",
@@ -1079,7 +1079,7 @@
       }
     },
     "knister": {
-      "title": "Knister",
+      "title": "Dice Grid",
       "description": "The popular 5x5 Dice Bingo! Form pairs, straights, and full houses on your grid."
     },
     "cards": {
@@ -1564,8 +1564,8 @@
             "desc": "Six cards in a grid, pairs in a column count zero. Nine holes, fewest points win – for 2 to 6 players."
           },
           "cabo": {
-            "title": "Cabo",
-            "desc": "Four face-down cards: remember, swap, peek – call Cabo when you have the fewest points. For 2 to 6 players."
+            "title": "Lowball",
+            "desc": "Four face-down cards: remember, swap, peek – knock when you have the fewest points. For 2 to 6 players."
           }
         },
         "turn": "{{name}}'s turn",
@@ -1685,7 +1685,7 @@
           "maumau": "<p>32 cards, five each. The face-up start card has no effect.</p><p><b>Your turn:</b> play a card of the same suit or rank as the top card. If you cannot or do not want to, draw one card; if it fits you may play only that card, otherwise you pass.</p><p><b>Special cards:</b> 7 – the next player draws two cards or answers with a 7 (then four, and so on). 8 – the next player is skipped. Jack – on anything but a jack; you wish a suit for the next card.</p><p>The first player without cards wins the round. Round wins are counted.</p><p><b>Table settings:</b> “8 skips”, “8 on 8 passes it on” (whoever is to be skipped plays an 8 and the next player is skipped), “Play a drawn card at once” and “Play on for a ranking” (after the first win the others play out the places).</p>",
           "schwarzer-peter": "<p>52 cards without the jack of clubs; the jack of spades is the Schwarzer Peter (Old Maid). All cards are dealt, pairs (same rank, same colour: red or black) go down at once.</p><p><b>Your turn:</b> draw one face-down card from the next player clockwise who still holds cards. Their cards are shuffled first. If it matches one of yours, the pair goes down.</p><p>A player without cards is done. Whoever holds the Schwarzer Peter at the end loses the round.</p>",
           "golf": "<p>52 cards and two jokers, two decks from five players. Everyone has six face-down cards in two rows of three and flips two at the start. Nobody knows a face-down card, not even its owner.</p><p><b>Your turn:</b> draw from the stock or take the top discard. Swap it for one of your cards (the old one goes face up onto the discard) or – only when drawn from the stock – discard it and flip a face-down card.</p><p>Once someone has all six cards face up, everyone else plays once more.</p><p><b>Scoring:</b> ace 1, 2–10 face value, jack and queen 10, king 0, joker −2. Two equal ranks in one column count 0 (jokers never). After nine holes the lowest total wins.</p>",
-          "cabo": "<p>52 cards and two jokers. Everyone has four face-down cards and looks at the right two at the start of each round – after that you have to remember them.</p><p><b>Your turn:</b> draw from the stock or take the top discard – or call <b>Cabo</b>. Swap the drawn card for one of yours (the old one goes onto the discard) or discard it if it came from the stock.</p><p><b>Discarded special cards (stock only):</b> 7/8 – look at one of your cards. 9/10 – look at another player's card. Jack/queen – blind-swap one of your cards with another player's. You may skip the power.</p><p>After Cabo everyone else plays once more. <b>Points:</b> ace 1, 2–10 face value, jack 11, queen 12, red king 0, black king 13, joker 0. Whoever calls Cabo without the strictly lowest hand gets 10 more. Exactly 100 falls back to 50. Above 100 the game ends, the lowest total wins.</p>"
+          "cabo": "<p>52 cards and two jokers. Everyone has four face-down cards and looks at the right two at the start of each round – after that you have to remember them.</p><p><b>Your turn:</b> draw from the stock or take the top discard – or call <b>Lowball</b>. Swap the drawn card for one of yours (the old one goes onto the discard) or discard it if it came from the stock.</p><p><b>Discarded special cards (stock only):</b> 7/8 – look at one of your cards. 9/10 – look at another player's card. Jack/queen – blind-swap one of your cards with another player's. You may skip the power.</p><p>After Lowball everyone else plays once more. <b>Points:</b> ace 1, 2–10 face value, jack 11, queen 12, red king 0, black king 13, joker 0. Whoever calls Lowball without the strictly lowest hand gets 10 more. Exactly 100 falls back to 50. Above 100 the game ends, the lowest total wins.</p>"
         },
         "maumau": {
           "wins_one": "{{count}} win",
@@ -1753,12 +1753,12 @@
         },
         "cabo": {
           "total": "{{points}} pts",
-          "called": "Cabo!",
+          "called": "Knock!",
           "peek": "{{name}} looks at the right two cards",
           "seen": "Got it",
           "drawStock": "Draw from stock",
           "takeDiscard": "Take discard",
-          "call": "Call Cabo",
+          "call": "Knock",
           "place": "{{name}} swaps the drawn card in or discards it",
           "discard": "Discard",
           "discardFor": {
@@ -1777,9 +1777,9 @@
           "endTurn": "End turn",
           "drawn": "Drawn",
           "drew": "Drawn: {{card}}",
-          "lastLap": "{{name}} called Cabo – last lap",
+          "lastLap": "{{name}} knocked – last lap",
           "won": "{{name}} wins with the fewest points",
-          "penalty": "{{name}} called Cabo but was not strictly lowest: +{{points}}",
+          "penalty": "{{name}} knocked but was not strictly lowest: +{{points}}",
           "reset": "{{name}} had exactly 100 – back to {{points}}",
           "option": {
             "memoryAid": "Memory aid",
@@ -2123,7 +2123,7 @@
   },
   "server": {
     "title": "Nexumia Server Connection",
-    "desc": "Connect to a Nexumia Server to stream your Melodiq karaoke song library, download tracks, and use AI vocal separation. Party games (GuessArt, Gartic Phone, Werewolf, Qwixx) run serverless and do not require this server.",
+    "desc": "Connect to a Nexumia Server to stream your Melodiq karaoke song library, download tracks, and use AI vocal separation. Party games (GuessArt, Drawing Telephone, Werewolf, Color Rows) run serverless and do not require this server.",
     "enable": "Enable Server Connection",
     "url": "Server URL",
     "token": "Security Token",
@@ -2458,7 +2458,7 @@
     "liveDesc": "Everyone plays at the same time: invite players to the lobby, the host starts.",
     "overDaysDesc": "Play over days: add the players below and send each one their own link.",
     "garticShortDesc": "Live Multiplayer: Write phrase ➔ Draw ➔ Guess ➔ Album reveal show!",
-    "playGartic": "Play Gartic Phone",
+    "playGartic": "Play Drawing Telephone",
     "roomCode": "Room Code",
     "readyToStart": "Ready!",
     "needMinPlayers": "Min 2 players needed",
@@ -2627,7 +2627,7 @@
   },
   "party": {
     "hubBannerTitle": "Party Mode (Multiplayer Lobby)",
-    "hubBannerSubtitle": "1 Room for the whole evening: Connect friends & play Gartic Phone together!",
+    "hubBannerSubtitle": "1 Room for the whole evening: Connect friends & play Drawing Telephone together!",
     "openLobby": "Open Lobby ➔",
     "lobbyTitle": "Party Lobby",
     "room": "Party Room",
@@ -2645,7 +2645,7 @@
     "hostSelectPrompt": "Select a game to launch for all players:",
     "guestWaitingPrompt": "The host is currently choosing the next game...",
     "garticDesc": "Telephone drawing game! Write phrase ➔ Draw ➔ Guess ➔ Draw ➔ Hilarious album reveal!",
-    "launchGartic": "Launch Gartic Phone",
+    "launchGartic": "Launch Drawing Telephone",
     "needMin2": "At least 2 players needed",
     "ready": "Ready",
     "backToLobby": "Back to Party Lobby",
@@ -2667,7 +2667,7 @@
     "confirmEndGameTitle": "End Game?",
     "confirmEndGameDesc": "Do you want to cancel the current game for all connected players and return to the party lobby?",
     "confirmEndTitle": "Really end game?",
-    "confirmEndDesc": "The current Gartic Phone match will be cancelled for all connected players and everyone returns to the party lobby.",
+    "confirmEndDesc": "The current Drawing Telephone match will be cancelled for all connected players and everyone returns to the party lobby.",
     "shareLobby": "Share Lobby",
     "shareLobbyTooltip": "Share lobby / invite friends",
     "shareLobbyDesc": "Share this link or scan the QR code to invite more friends to the game:",
@@ -2680,7 +2680,7 @@
     "melodiq_notes_desc": "Everyone plays their own part on their own device; the stage shows the band.",
     "melodiq_desc": "Karaoke on the TV, the guests' phones are the microphones.",
     "storyteller_desc": "Write a story together, one after the other.",
-    "guessart_desc": "Pictionary drawing game with pass-and-play or peer sync.",
+    "guessart_desc": "Drawing and guessing game with pass-and-play or peer sync.",
     "no_custom_tabletop": "No custom party-ready tabletop games imported yet.",
     "custom_game_info": "{{min}}-{{max}} Players • {{cards}} Cards",
     "party_ready": "Party Ready",
@@ -2701,7 +2701,7 @@
     "spectatorWatching": "You are watching",
     "spectatorPickHint": "Pick whose view to follow",
     "gameSelectionTitle": "Game selection",
-    "gameSelectionDesc": "Choose between party classics (Gartic Phone, GuessArt), dice games and synced tabletop card and board games.",
+    "gameSelectionDesc": "Choose between party classics (Drawing Telephone, GuessArt), dice games and synced tabletop card and board games.",
     "chooseAndStart": "Choose game & start",
     "partyModeChip": "Party mode",
     "werewolf_desc": "Every role secretly on its own phone, the host narrates.",

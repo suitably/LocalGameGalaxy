@@ -52,5 +52,5 @@ export const TABLETOP_ENTRIES: CatalogEntry[] = [
   cardGame('maumau', 'Mau-Mau', 'orange'),
   cardGame('schwarzer-peter', 'Schwarzer Peter', 'green'),
   cardGame('golf', 'Golf', 'teal'),
-  cardGame('cabo', 'Cabo', 'purple'),
+  cardGame('cabo', 'Tiefstapler', 'purple'),
 ];

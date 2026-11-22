@@ -74,7 +74,7 @@ export const KnisterCombinationsLegend: React.FC<KnisterCombinationsLegendProps>
       }}
     >
       <DialogTitle sx={{ fontWeight: 800, fontSize: '1.25rem' }}>
-        {t('games.knister.legend_title', 'Knister Punkteübersicht')}
+        {t('games.knister.legend_title', 'Würfelgitter Punkteübersicht')}
       </DialogTitle>
 
       <DialogContent sx={{ px: { xs: 1.5, sm: 3 } }}>

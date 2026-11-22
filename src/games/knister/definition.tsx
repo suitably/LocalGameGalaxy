@@ -12,7 +12,7 @@ export const definition = defineGame({
   id: 'knister',
   route: 'games/knister',
   i18n: 'games.knister',
-  title: 'Knister',
+  title: 'Würfelgitter',
   kind: 'game',
   area: 'dice',
   color: 'orange',

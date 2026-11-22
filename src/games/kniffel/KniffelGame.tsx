@@ -21,7 +21,7 @@ initKniffelI18n();
 
 export const KniffelGame: React.FC = () => {
   const { t } = useTranslation();
-  usePageTitle(t('games.kniffel.title', 'Kniffel'));
+  usePageTitle(t('games.kniffel.title', 'Fünf Würfel'));
 
   const [state, dispatch] = useReducer(kniffelReducer, INITIAL_KNIFFEL_STATE, (initial) => {
     const saved = storage.getJson<KniffelState | null>(STORAGE_KEYS.KNIFFEL_CURRENT_GAME, null);
