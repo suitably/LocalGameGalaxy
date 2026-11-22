@@ -165,6 +165,8 @@ export const STORAGE_KEYS = {
   // Kniffel
   KNIFFEL_CURRENT_GAME: 'kniffel_current_game',
   KNIFFEL_SHOW_DICE: 'kniffel_show_dice',
+  /** Rules the host picked last for Kniffel in a party room (`kniffel` | `international`). */
+  KNIFFEL_ROOM_RULES: 'kniffel_room_rules',
 
   // GuessArt
   GUESSART_SEEN_INFO: 'guessart_seen_info',

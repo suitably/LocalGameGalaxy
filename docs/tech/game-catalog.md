@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-11-07
+  at: 2026-11-22
   method: 'derived from code on branch docs/okf-knowledge-base (base consolidated/quality-sprint-october @ c298e79): gameRegistry.tsx, grep of imports, STORAGE_KEYS usage, Dexie/IndexedDB names, *.test.* files'
 sources:
   - 'src/lib/gameRegistry.tsx'
@@ -58,7 +58,7 @@ All games use [`src/lib/storage.ts`](../../src/lib/storage.ts) for key/value sta
 | drawpot       | —                                                                       | `STORAGE_KEYS.DRAWPOT_HOSTED` (pots created here, with admin keys), `DRAWPOT_HISTORY` (own draws per pot); the pot itself lives in the worker's Durable Object `DRAW_POTS` (`cloudflare/drawPot/`)                                   |
 | qwixx         | —                                                                       | `STORAGE_KEYS.QWIXX_MY_SHEET`, `QWIXX_SHOW_DICE`, `QWIXX_LOCAL_TABLE`, prefix `STORAGE_PREFIXES.QWIXX_ROOM_SHEET` (own sheet per party room and game)                                                                                |
 | knister       | —                                                                       | `STORAGE_KEYS.KNISTER_CURRENT_GAME`, `KNISTER_SHOW_DICE`, `KNISTER_HIGHSCORE`                                                                                                                                                        |
-| kniffel       | —                                                                       | `STORAGE_KEYS.KNIFFEL_CURRENT_GAME`, `KNIFFEL_SHOW_DICE`                                                                                                                                                                             |
+| kniffel       | —                                                                       | `STORAGE_KEYS.KNIFFEL_CURRENT_GAME`, `KNIFFEL_SHOW_DICE`, `KNIFFEL_ROOM_RULES` (rules the host picked last in a party room)                                                                                                          |
 | guessart      | `guessart-local` (raw IndexedDB via `modules/async-game`)               | `STORAGE_KEYS.GUESSART_SEEN_INFO`, `GUESSART_LOBBY_PLAYERS` (`guessart_lobby_players_v2`), `GUESSART_LOBBY_PLAYERS_LEGACY`; prefixes `STORAGE_PREFIXES.GUESSART_GAME_ALIAS`, `GUESSART_LOCAL_PLAYERS`, `GUESSART_TEMP_LOCAL_PLAYERS` |
 | storyteller   | `storyteller-local` (raw IndexedDB via `modules/async-game`)            | `STORAGE_KEYS.STORYTELLER_LOBBY_PLAYERS`, `STORYTELLER_LOBBY_MODIFIERS`; prefix `STORAGE_PREFIXES.STORYTELLER_LOCAL_PLAYERS`                                                                                                         |
 | cards         | —                                                                       | literal `'cards_lobby_players'` passed as `storageKey` to `useLobbyPlayers` in `components/CardsLobby.tsx` (the registered `CARDS_LOBBY_PLAYERS` is never referenced)                                                                |

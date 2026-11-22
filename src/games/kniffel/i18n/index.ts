@@ -37,6 +37,11 @@ export const initKniffelI18n = () => {
             room_your_turn: 'Du bist dran: würfeln und eintragen',
             room_turn_of: '{{name}} ist dran',
             room_playing_for: 'Du spielst für {{name}}',
+            rules_label: 'Regeln',
+            rules_kniffel: 'Kniffel',
+            rules_international: 'International',
+            rules_hint:
+              'International: weitere Kniffel zählen 100 und als Joker für Full House und Straßen.',
             points: 'Punkte eintragen',
             strike: 'Streichen (0)',
             cat: {
@@ -69,7 +74,7 @@ export const initKniffelI18n = () => {
               large_straight: '5 in Folge · 40',
               kniffel: '5 gleiche · 50',
               chance: 'Alle Augen zählen',
-              kniffel_bonus: 'Jeder weitere · 50',
+              kniffel_bonus: 'Jeder weitere · {{points}}',
             },
           },
         },
@@ -106,6 +111,11 @@ export const initKniffelI18n = () => {
             room_your_turn: 'Your turn: roll and score',
             room_turn_of: "It's {{name}}'s turn",
             room_playing_for: 'You are playing for {{name}}',
+            rules_label: 'Rules',
+            rules_kniffel: 'Kniffel',
+            rules_international: 'International',
+            rules_hint:
+              'International: further five of a kinds score 100 and are jokers for Full House and straights.',
             points: 'Score Points',
             strike: 'Strike (0)',
             cat: {
@@ -138,7 +148,7 @@ export const initKniffelI18n = () => {
               large_straight: '5 in a row · 40',
               kniffel: '5 of a kind · 50',
               chance: 'Sum of all dice',
-              kniffel_bonus: 'Each additional · 50',
+              kniffel_bonus: 'Each additional · {{points}}',
             },
           },
         },

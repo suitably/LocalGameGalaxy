@@ -23,12 +23,15 @@ import {
   INITIAL_KNIFFEL_ROOM,
   kniffelRoomAllows,
   kniffelRoomReducer,
+  rulesChangeable,
   type KniffelRoomAction,
   type KniffelRoomState,
 } from './logic/kniffelRoom';
 import { evaluatePossibleScores, getTotalScore } from './logic/kniffelScoring';
 import { KniffelBoard } from './components/KniffelBoard';
 import { KniffelDiceRoller } from './components/KniffelDiceRoller';
+import { KniffelRulesPicker } from './components/KniffelRulesPicker';
+import { loadKniffelRoomRules } from './components/kniffelRulesStorage';
 
 initKniffelI18n();
 
@@ -36,6 +39,7 @@ const start = (hostId: string, players: RoomPlayer[]): KniffelRoomAction => ({
   type: 'START',
   hostId,
   players,
+  rules: loadKniffelRoomRules(),
 });
 const needsStart = (state: KniffelRoomState) => state.players.length === 0;
 const actorOf = (state: KniffelRoomState) =>
@@ -64,6 +68,7 @@ export const KniffelRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
     );
 
   const active = state.players[state.activePlayerIndex];
+  const rules = state.rules ?? 'kniffel';
   const myTurn = canAct;
   const status = state.isGameOver
     ? t('games.kniffel.game_over', 'Spiel beendet!')
@@ -86,13 +91,17 @@ export const KniffelRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
         entries={state.players.map((p) => ({
           id: p.id,
           name: p.name,
-          score: getTotalScore({ ...p.scores }),
+          score: getTotalScore({ ...p.scores }, rules),
           pending: p.id === active?.id && !state.isGameOver,
         }))}
       />
       <Typography textAlign="center" fontWeight={700} color="primary.text" mb={1}>
         {status}
       </Typography>
+
+      {room.isHost && rulesChangeable(state) && (
+        <KniffelRulesPicker rules={rules} onChange={(r) => dispatch({ type: 'RULES', rules: r })} />
+      )}
 
       <KniffelDiceRoller
         dice={state.dice}
@@ -106,7 +115,8 @@ export const KniffelRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
       <KniffelBoard
         players={state.players}
         activePlayerIndex={state.activePlayerIndex}
-        possibleScores={evaluatePossibleScores(state.dice)}
+        possibleScores={evaluatePossibleScores(state.dice, rules, active?.scores)}
+        rules={rules}
         rollCount={state.rollCount}
         onScoreCategory={(category, score) => dispatch({ type: 'SCORE', category, score })}
         onSwitchPlayer={noop}
