@@ -157,11 +157,11 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [isConnected]);
 
-  // Request initial data on connect
+  // Ask for the helper URL on connect (a direct message; the queue comes as room state)
   useEffect(() => {
     if (isConnected) {
       setTimeout(() => {
-        sendData({ type: 'queue.get' });
+        sendData({ type: 'helper_config.get' });
       }, 500);
     }
   }, [isConnected, sendData]);

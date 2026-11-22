@@ -149,9 +149,6 @@ export const usePhoneClientMessages = ({
         case 'game_state_update':
           if (data.state) handleGameState(data.state);
           break;
-        case 'queue.update':
-          emit('melodiq_client_queue_update', data);
-          break;
         case 'session_sync':
           handleSessionSync(data);
           break;
