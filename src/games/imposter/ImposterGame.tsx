@@ -51,7 +51,7 @@ export const ImposterGame: React.FC = () => {
   useEffect(() => {
     setMenuItems([
       {
-        label: t('common.a11y.info', 'Info'),
+        label: t('common.a11y.info'),
         icon: <InfoOutlinedIcon />,
         action: () => setInfoOpen(true),
         showAlways: true,

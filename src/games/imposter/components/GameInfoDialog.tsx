@@ -40,7 +40,7 @@ export const GameInfoDialog: React.FC<GameInfoDialogProps> = ({ open, onClose })
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, pb: 1 }}>
         <InfoOutlinedIcon color="primary" />
         <Typography variant="h5" component="span" fontWeight="bold">
-          {t('games.imposter.info.title', 'How to play')}
+          {t('games.imposter.info.title')}
         </Typography>
       </DialogTitle>
       <DialogContent
