@@ -35,6 +35,7 @@ export type PartyGameType =
   | 'melodiq-notes'
   | 'melodiq'
   | 'tabletop'
+  | 'imposter'
   | RoomDiceGame;
 
 export interface PartyRoomState {

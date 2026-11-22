@@ -382,6 +382,24 @@
         "hint_de": "Hinweis (DE)",
         "custom_categories": "Eigene Kategorien",
         "standard_categories": "Standard-Kategorien"
+      },
+      "room": {
+        "connecting": "Verbinde mit dem Party-Raum …",
+        "waiting_setup": "Der Host wählt die Kategorien und startet die Runde.",
+        "card_hidden": "Deine Karte ist verdeckt. Schau sie dir an, ohne dass andere mitlesen.",
+        "show_card": "Karte zeigen",
+        "hide_card": "Karte verbergen",
+        "seen_waiting": "{{count}} von {{total}} haben ihre Karte gelesen.",
+        "discuss_hint": "Nennt reihum ein Wort, das zum Begriff passt – und findet heraus, wer ihn nicht kennt.",
+        "start_vote": "Abstimmung starten",
+        "time_up": "Zeit ist um",
+        "voted_waiting": "{{count}} von {{total}} haben abgestimmt.",
+        "tie": "Gleichstand – niemand wurde rausgewählt.",
+        "word_was": "Das Wort war „{{word}}“, der Tipp „{{hint}}“.",
+        "votes_one": "{{count}} Stimme",
+        "votes_other": "{{count}} Stimmen",
+        "new_round": "Neue Runde",
+        "table_hint": "Dieses Gerät zeigt den Tisch"
       }
     },
     "qwixx": {
@@ -2644,7 +2662,8 @@
     "gameSelectionTitle": "Spielauswahl",
     "gameSelectionDesc": "Wähle zwischen Party-Klassikern (Gartic Phone, GuessArt), Würfelspielen und synchronisierten Tabletop-Karten- & Brettspielen.",
     "chooseAndStart": "Spiel wählen & starten",
-    "partyModeChip": "Party-Modus"
+    "partyModeChip": "Party-Modus",
+    "imposter_desc": "Jeder sieht sein Wort geheim auf dem eigenen Handy – wer hat nur den Hinweis?"
   },
   "gartic": {
     "waitingHeader": "Warte auf die anderen Spieler...",

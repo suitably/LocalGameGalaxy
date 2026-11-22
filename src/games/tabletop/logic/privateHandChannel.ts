@@ -22,44 +22,16 @@ import {
   withZoneVisibilityChanges,
   type BroadcastSecrets,
 } from './hiddenZoneRedaction';
-import {
-  deriveSealKey,
-  exportPublicKey,
-  generateSealKeyPair,
-  seal,
-  unseal,
-  type SealedBox,
-} from './sealCrypto';
+import { seal, unseal, type SealedBox } from '../../../modules/room-game/sealed/sealCrypto';
+import { SealChannel } from '../../../modules/room-game/sealed/sealChannel';
+
+export { isSealingSupported } from '../../../modules/room-game/sealed/sealChannel';
 
 export type SealedSecrets = Record<number, SealedBox>;
 
-export const isSealingSupported = (): boolean =>
-  typeof globalThis.crypto !== 'undefined' && typeof globalThis.crypto.subtle !== 'undefined';
-
-export class PrivateHandChannel {
-  private readonly keyPair: Promise<CryptoKeyPair | null>;
-  private readonly seatKeys = new Map<number, CryptoKey>();
-  private hostKey: { jwk: string; key: CryptoKey } | null = null;
-
-  private readonly supported: boolean;
-
-  constructor(supported = isSealingSupported()) {
-    this.supported = supported;
-    this.keyPair = supported ? generateSealKeyPair().catch(() => null) : Promise.resolve(null);
-  }
-
-  async publicKey(): Promise<JsonWebKey | undefined> {
-    const pair = await this.keyPair;
-    return pair ? exportPublicKey(pair.publicKey) : undefined;
-  }
-
+/** Tabletop redaction (hands, hidden zones) on top of the shared seal channel. */
+export class PrivateHandChannel extends SealChannel {
   // ─── Host ─────────────────────────────────────────────────────────────
-
-  async registerSeat(seat: number, theirPublic: JsonWebKey): Promise<void> {
-    const pair = await this.keyPair;
-    if (!pair) return;
-    this.seatKeys.set(seat, await deriveSealKey(pair.privateKey, theirPublic));
-  }
 
   /**
    * Hands are redacted whenever sealing works, also before (or without) any seat key, so a
@@ -120,27 +92,7 @@ export class PrivateHandChannel {
     return { delta: { ...full, widgets }, sealed: await this.sealAll(secrets) };
   }
 
-  /** Any JSON value sealed for one seat (scripted card games); `undefined` without a seat key. */
-  async sealFor(seat: number, value: unknown): Promise<SealedBox | undefined> {
-    const key = this.seatKeys.get(seat);
-    return key ? seal(key, value) : undefined;
-  }
-
   // ─── Seat device ──────────────────────────────────────────────────────
-
-  private async keyFor(hostPublic: JsonWebKey): Promise<CryptoKey | null> {
-    const jwk = JSON.stringify(hostPublic);
-    if (this.hostKey?.jwk === jwk) return this.hostKey.key;
-    const pair = await this.keyPair;
-    if (!pair) return null;
-    this.hostKey = { jwk, key: await deriveSealKey(pair.privateKey, hostPublic) };
-    return this.hostKey.key;
-  }
-
-  /** Remembers the host's key from a snapshot so later deltas can be opened. */
-  async acceptHostKey(hostPublic: JsonWebKey | undefined): Promise<void> {
-    if (hostPublic && this.supported) await this.keyFor(hostPublic);
-  }
 
   /** This seat's cards restored in received widgets; others' stay redacted. */
   async open<T extends Record<string, unknown>>(
@@ -155,16 +107,6 @@ export class PrivateHandChannel {
       return restoreCards(widgets as never, secrets) as T;
     } catch {
       return widgets;
-    }
-  }
-
-  /** Opens a box the host sealed for this device; `null` when it cannot be opened. */
-  async openFromHost<T>(box: SealedBox): Promise<T | null> {
-    if (!this.hostKey) return null;
-    try {
-      return await unseal<T>(this.hostKey.key, box);
-    } catch {
-      return null;
     }
   }
 }

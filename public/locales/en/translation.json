@@ -382,6 +382,24 @@
         "hint_de": "Hint (DE)",
         "custom_categories": "Custom Categories",
         "standard_categories": "Standard Categories"
+      },
+      "room": {
+        "connecting": "Connecting to the party room …",
+        "waiting_setup": "The host picks the categories and starts the round.",
+        "card_hidden": "Your card is face down. Look at it where nobody can read along.",
+        "show_card": "Show card",
+        "hide_card": "Hide card",
+        "seen_waiting": "{{count}} of {{total}} have read their card.",
+        "discuss_hint": "Take turns naming a word that fits – and find out who does not know it.",
+        "start_vote": "Start voting",
+        "time_up": "Time is up",
+        "voted_waiting": "{{count}} of {{total}} have voted.",
+        "tie": "A tie – nobody was voted out.",
+        "word_was": "The word was “{{word}}”, the hint “{{hint}}”.",
+        "votes_one": "{{count}} vote",
+        "votes_other": "{{count}} votes",
+        "new_round": "New round",
+        "table_hint": "This device shows the table"
       }
     },
     "qwixx": {
@@ -2644,7 +2662,8 @@
     "gameSelectionTitle": "Game selection",
     "gameSelectionDesc": "Choose between party classics (Gartic Phone, GuessArt), dice games and synced tabletop card and board games.",
     "chooseAndStart": "Choose game & start",
-    "partyModeChip": "Party mode"
+    "partyModeChip": "Party mode",
+    "imposter_desc": "Everyone sees their word secretly on their own phone – who only has the hint?"
   },
   "gartic": {
     "waitingHeader": "Waiting for other players...",
