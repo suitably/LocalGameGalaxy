@@ -106,8 +106,8 @@ export const WordleKeyboard: React.FC<WordleKeyboardProps> = ({
                 aria-label={
                   isSpecial
                     ? key === 'ENTER'
-                      ? t('wordle.key_enter', 'Enter')
-                      : t('wordle.key_delete', 'Delete')
+                      ? t('wordle.key_enter')
+                      : t('wordle.key_delete')
                     : `${key}: ${t(statusLabelKey(status))}`
                 }
                 onClick={() => {

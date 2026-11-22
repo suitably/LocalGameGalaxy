@@ -58,6 +58,11 @@
       "absent": "not in word",
       "tbd": "typed",
       "empty": "empty"
+    },
+    "status": {
+      "won": "Won",
+      "lost": "Lost",
+      "playing": "In progress"
     }
   }
 }

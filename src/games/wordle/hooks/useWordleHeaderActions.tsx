@@ -22,23 +22,23 @@ export const useWordleHeaderActions = (open: (dialog: WordleDialog) => void): vo
   useEffect(() => {
     setMenuItems([
       {
-        label: t('wordle.stats.btn_tooltip', 'Statistiken'),
+        label: t('wordle.stats.btn_tooltip'),
         icon: <BarChartRoundedIcon />,
         action: () => openRef.current('stats'),
         showAlways: true,
       },
       {
-        label: t('wordle.history.btn_tooltip', 'Verlauf'),
+        label: t('wordle.history.btn_tooltip'),
         icon: <HistoryIcon />,
         action: () => openRef.current('history'),
       },
       {
-        label: t('wordle.duel.btn_tooltip', 'Freund herausfordern'),
+        label: t('wordle.duel.btn_tooltip'),
         icon: <PersonAddAlt1RoundedIcon />,
         action: () => openRef.current('duel'),
       },
       {
-        label: t('wordle.help.title', 'Spielregeln'),
+        label: t('wordle.help.title'),
         icon: <HelpOutlineRoundedIcon />,
         action: () => openRef.current('help'),
       },

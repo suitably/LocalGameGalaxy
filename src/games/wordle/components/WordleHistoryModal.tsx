@@ -38,13 +38,11 @@ export const WordleHistoryModal: React.FC<WordleHistoryModalProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ fontWeight: 800 }}>
-        {t('wordle.history.title', 'Historie (Tagesrätsel)')}
-      </DialogTitle>
+      <DialogTitle sx={{ fontWeight: 800 }}>{t('wordle.history.title')}</DialogTitle>
       <DialogContent sx={{ px: { xs: 2, sm: 3 }, py: 1 }}>
         {history.length === 0 ? (
           <Typography variant="body1" sx={{ textAlign: 'center', my: 4, color: 'text.secondary' }}>
-            {t('wordle.history.empty', 'Noch keine Tagesrätsel gespielt.')}
+            {t('wordle.history.empty')}
           </Typography>
         ) : (
           <Stack spacing={3} sx={{ mt: 1 }}>
@@ -90,16 +88,16 @@ export const WordleHistoryModal: React.FC<WordleHistoryModalProps> = ({
                     }}
                   >
                     {entry.status === 'won'
-                      ? t('wordle.status.won', 'Gewonnen')
+                      ? t('wordle.status.won')
                       : entry.status === 'lost'
-                        ? t('wordle.status.lost', 'Verloren')
-                        : t('wordle.status.playing', 'Am Spielen')}
+                        ? t('wordle.status.lost')
+                        : t('wordle.status.playing')}
                   </Typography>
                 </Box>
 
                 {(entry.status === 'won' || entry.status === 'lost') && (
                   <Typography variant="body2" sx={{ mb: 1.5, color: 'text.secondary' }}>
-                    {t('wordle.history.target_word', 'Gesuchtes Wort:')}{' '}
+                    {t('wordle.history.target_word')}{' '}
                     <Box
                       component="span"
                       sx={{ color: 'secondary.main', fontWeight: 800, letterSpacing: 1 }}
@@ -153,7 +151,7 @@ export const WordleHistoryModal: React.FC<WordleHistoryModalProps> = ({
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('common.close', 'Schließen')}</Button>
+        <Button onClick={onClose}>{t('common.close')}</Button>
       </DialogActions>
     </Dialog>
   );

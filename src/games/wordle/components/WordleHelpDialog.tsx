@@ -31,7 +31,7 @@ export const WordleHelpDialog: React.FC<{ open: boolean; onClose: () => void }> 
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 800 }}>{t('wordle.help.title', 'Spielregeln')}</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 800 }}>{t('wordle.help.title')}</DialogTitle>
       <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
         <Typography variant="body2">{t('wordle.help.p1')}</Typography>
         <Typography variant="body2">{t('wordle.help.p2')}</Typography>
@@ -60,7 +60,7 @@ export const WordleHelpDialog: React.FC<{ open: boolean; onClose: () => void }> 
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('common.close', 'Schließen')}</Button>
+        <Button onClick={onClose}>{t('common.close')}</Button>
       </DialogActions>
     </Dialog>
   );

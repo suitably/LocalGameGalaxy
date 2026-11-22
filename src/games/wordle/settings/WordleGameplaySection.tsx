@@ -15,11 +15,8 @@ export const WordleGameplaySection: React.FC = () => {
         setDictionaryOnly(value);
         saveDictionaryOnly(value);
       }}
-      label={t('wordle.settings.dictionary_only', 'Nur Wörterbuch-Wörter')}
-      description={t(
-        'wordle.settings.dictionary_only_hint',
-        'Tipps müssen ein bekanntes Wort sein. Ungültige Wörter kosten keinen Versuch.',
-      )}
+      label={t('wordle.settings.dictionary_only')}
+      description={t('wordle.settings.dictionary_only_hint')}
     />
   );
 };

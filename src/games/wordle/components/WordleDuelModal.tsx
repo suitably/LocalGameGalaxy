@@ -75,20 +75,17 @@ export const WordleDuelModal: React.FC<WordleDuelModalProps> = ({ open, onClose 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ textAlign: 'center', fontWeight: 800 }}>
-        {t('wordle.duel.title', 'Freund herausfordern')}
+        {t('wordle.duel.title')}
       </DialogTitle>
 
       <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Typography variant="body2" color="text.secondary" textAlign="center">
-          {t(
-            'wordle.duel.desc',
-            'Wähle ein beliebiges 5-Buchstaben-Wort. Dein Freund muss es erraten!',
-          )}
+          {t('wordle.duel.desc')}
         </Typography>
 
         <TextField
           autoFocus
-          label={t('wordle.duel.input_label', 'Geheimes Wort (5 Buchstaben)')}
+          label={t('wordle.duel.input_label')}
           value={cleanWord}
           onChange={(e) => setCustomWord(e.target.value)}
           inputProps={{
@@ -142,16 +139,16 @@ export const WordleDuelModal: React.FC<WordleDuelModalProps> = ({ open, onClose 
 
         {copied && (
           <Alert severity="success" sx={{ py: 0.5 }}>
-            {t('wordle.copied_to_clipboard', 'Link kopiert!')}
+            {t('wordle.copied_to_clipboard')}
           </Alert>
         )}
       </DialogContent>
 
       <DialogActions sx={{ p: 2, gap: 1 }}>
-        <Button onClick={onClose}>{t('common.close', 'Schließen')}</Button>
+        <Button onClick={onClose}>{t('common.close')}</Button>
         {isValid && (
           <Button variant="contained" startIcon={<ShareRoundedIcon />} onClick={handleShare}>
-            {t('common.share', 'Teilen')}
+            {t('common.share')}
           </Button>
         )}
       </DialogActions>

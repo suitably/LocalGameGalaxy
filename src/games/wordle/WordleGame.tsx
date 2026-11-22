@@ -21,7 +21,7 @@ import { useWordleHeaderActions } from './hooks/useWordleHeaderActions';
 
 export const WordleGame: React.FC = () => {
   const { t } = useTranslation();
-  usePageTitle(t('games.wordle.title', 'Wordle'));
+  usePageTitle(t('games.wordle.title'));
 
   const {
     state,
@@ -60,19 +60,19 @@ export const WordleGame: React.FC = () => {
             variant={state.mode === 'daily' ? 'contained' : 'outlined'}
             onClick={() => switchMode('daily')}
           >
-            {t('wordle.mode.daily', 'Tagesrätsel')}
+            {t('wordle.mode.daily')}
           </Button>
           <Button
             variant={state.mode === 'practice' ? 'contained' : 'outlined'}
             onClick={() => switchMode('practice')}
           >
-            {t('wordle.mode.practice', 'Üben')}
+            {t('wordle.mode.practice')}
           </Button>
         </ButtonGroup>
 
         {state.mode === 'duel' && (
           <Alert severity="info" sx={{ width: '100%', mb: 1.5, py: 0.2 }}>
-            {t('wordle.duel.active_banner', 'Du spielst ein Duell-Wort eines Freundes!')}
+            {t('wordle.duel.active_banner')}
           </Alert>
         )}
 
@@ -92,7 +92,7 @@ export const WordleGame: React.FC = () => {
             onClick={() => startNewGame('practice')}
             sx={{ mb: 1, fontWeight: 700 }}
           >
-            {t('wordle.new_word', 'Neues Wort')}
+            {t('wordle.new_word')}
           </Button>
         )}
 

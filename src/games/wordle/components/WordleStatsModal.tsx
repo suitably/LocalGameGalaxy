@@ -63,10 +63,10 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle sx={{ textAlign: 'center', fontWeight: 800, pb: 1 }}>
         {gameStatus === 'won'
-          ? t('wordle.modal.title_won', 'Gewonnen!')
+          ? t('wordle.modal.title_won')
           : gameStatus === 'lost'
-            ? t('wordle.modal.title_lost', 'Schade!')
-            : t('wordle.modal.title_stats', 'Statistiken')}
+            ? t('wordle.modal.title_lost')
+            : t('wordle.modal.title_stats')}
       </DialogTitle>
 
       <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
@@ -81,7 +81,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
             }}
           >
             <Typography variant="body2" color="text.secondary">
-              {t('wordle.modal.target_was', 'Das gesuchte Wort war:')}
+              {t('wordle.modal.target_was')}
             </Typography>
             <Typography
               variant="h5"
@@ -99,7 +99,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
               {stats.played}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {t('wordle.stats.played', 'Gespielt')}
+              {t('wordle.stats.played')}
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center', flex: 1 }}>
@@ -107,7 +107,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
               {winRate}%
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {t('wordle.stats.win_rate', 'Gewonnen')}
+              {t('wordle.stats.win_rate')}
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center', flex: 1 }}>
@@ -115,7 +115,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
               {stats.currentStreak}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {t('wordle.stats.current_streak', 'Serie')}
+              {t('wordle.stats.current_streak')}
             </Typography>
           </Box>
           <Box sx={{ textAlign: 'center', flex: 1 }}>
@@ -123,14 +123,14 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
               {stats.maxStreak}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {t('wordle.stats.max_streak', 'Rekord')}
+              {t('wordle.stats.max_streak')}
             </Typography>
           </Box>
         </Stack>
 
         {/* Guess Distribution Bars */}
         <Typography variant="subtitle2" sx={{ fontWeight: 700, mt: 3, mb: 1.5 }}>
-          {t('wordle.stats.distribution', 'Verteilung der Versuche')}
+          {t('wordle.stats.distribution')}
         </Typography>
 
         <Stack spacing={1}>
@@ -178,7 +178,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
 
         {copied && (
           <Alert severity="success" sx={{ mt: 2, py: 0.5 }}>
-            {t('wordle.copied_to_clipboard', 'In die Zwischenablage kopiert!')}
+            {t('wordle.copied_to_clipboard')}
           </Alert>
         )}
       </DialogContent>
@@ -193,7 +193,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
               onPlayAgain();
             }}
           >
-            {t('wordle.play_again', 'Nochmal spielen')}
+            {t('wordle.play_again')}
           </Button>
         )}
 
@@ -205,10 +205,10 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
               startIcon={copied ? <CheckRoundedIcon /> : <ShareRoundedIcon />}
               onClick={handleShare}
             >
-              {copied ? t('common.copied', 'Kopiert!') : t('common.share', 'Teilen')}
+              {copied ? t('common.copied') : t('common.share')}
             </Button>
           )}
-          <Button onClick={onClose}>{t('common.close', 'Schließen')}</Button>
+          <Button onClick={onClose}>{t('common.close')}</Button>
         </Box>
       </DialogActions>
     </Dialog>
