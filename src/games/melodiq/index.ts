@@ -1,3 +1,8 @@
+import { initMelodiqI18n } from './i18n';
+
+// Every route of Melodiq loads through this barrel; its strings must be there first.
+initMelodiqI18n();
+
 export { MelodiqGame } from './MelodiqGame';
 export { MelodiqTV } from './MelodiqTV';
 export { MelodiqQueue } from './components/MelodiqQueue';
@@ -14,7 +19,7 @@ export { UserProfilesManager } from './components/UserProfilesManager';
 export { GameSettingsPanel } from './components/GameSettingsPanel';
 export { HelperConnection } from './components/HelperConnection';
 export { MicrophoneManager } from './audio/MicrophoneManager';
-export { initMelodiqI18n } from './i18n';
+export { initMelodiqI18n };
 export type { UserProfile, ActivePlayer } from './types';
 export { default as db } from './db';
 export { PhoneClientEngine } from './PhoneClientEngine';
