@@ -96,10 +96,10 @@ A cast TV (Presentation API) runs in its own storage partition and only gets JSO
 
 ## 4. Translations
 
-| Source                                                                    | Games                                                                                     |
-| ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Per-game bundle `src/games/<id>/i18n/{de,en}.json` (`registerGameBundle`) | cards, darts, imposter, kniffel, knister, melodiq, qwixx, sudoku, werewolf, wordle        |
-| `public/locales/{de,en}/translation.json`                                 | drawpot, guessart, storyteller, melodiq-notes, tabletop, garticphone, party, hub/settings |
+| Source                                                                    | Games                                                                                        |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Per-game bundle `src/games/<id>/i18n/{de,en}.json` (`registerGameBundle`) | cards, darts, guessart, imposter, kniffel, knister, melodiq, qwixx, sudoku, werewolf, wordle |
+| `public/locales/{de,en}/translation.json`                                 | drawpot, storyteller, melodiq-notes, tabletop, garticphone, party, hub/settings              |
 
 Details: [i18n-strategy.md](i18n-strategy.md).
 
