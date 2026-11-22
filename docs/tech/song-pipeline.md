@@ -51,16 +51,17 @@ Decision record: [ADR-0006](../adr/0006-audio-separator-onnx-whisper-alignment.m
 
 ## 3. Library and media endpoints
 
-| Endpoint                               | Purpose                                                                                     |
-| -------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `GET /api/songs`, `GET /api/songs/:id` | scanned library: karaoke songs (UltraStar `*.txt`); `?all=1` adds songs without `.txt` (§4) |
-| `POST /api/songs/refresh`              | rescan                                                                                      |
-| `PUT /api/songs/:id/txt`               | overwrite the `.txt`                                                                        |
-| `POST /api/songs/:id/video`            | set / download a video                                                                      |
-| `DELETE /api/songs/:id`                | delete (needs master token or API key with `allowSongDeletion`)                             |
-| `GET /media?path=…`                    | file streaming with HTTP 206 range support                                                  |
-| `GET /api/browse`                      | directory browser for the config UI                                                         |
-| `GET/POST/DELETE /api/playlists…`      | server playlists (`playlists.json`)                                                         |
+| Endpoint                                                                | Purpose                                                                                                                                                                                                                 |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/songs`, `GET /api/songs/:id`                                  | scanned library: karaoke songs (UltraStar `*.txt`); `?all=1` adds songs without `.txt` (§4); `album` from `#ALBUM`, else `song.json`                                                                                    |
+| `POST /api/songs/refresh`                                               | rescan                                                                                                                                                                                                                  |
+| `PUT /api/songs/:id/txt`                                                | overwrite the `.txt`                                                                                                                                                                                                    |
+| `POST /api/songs/:id/video`                                             | set / download a video                                                                                                                                                                                                  |
+| `DELETE /api/songs/:id`                                                 | delete (needs master token or API key with `allowSongDeletion`)                                                                                                                                                         |
+| `GET /media?path=…`                                                     | file streaming with HTTP 206 range support                                                                                                                                                                              |
+| `GET /api/browse`                                                       | directory browser for the config UI                                                                                                                                                                                     |
+| `GET/PUT /api/melodiq/library/favorites`                                | the API user's favourite song ids (#636, `melodiq-library.json`)                                                                                                                                                        |
+| `GET/POST /api/melodiq/library/playlists`, `PUT/DELETE …/playlists/:id` | the API user's playlists plus the ones others share (`shared`); only the owner changes one, the owner or master token deletes it; private ones answer `404` to others ([ADR-0010](../adr/0010-melodiq-song-library.md)) |
 
 Auth for all of these: [server-security.md](server-security.md). Client side: `src/games/melodiq/api/` and the settings UI under `src/features/settings/components/server/`.
 

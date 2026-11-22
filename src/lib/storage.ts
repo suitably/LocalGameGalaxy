@@ -59,7 +59,8 @@ export const STORAGE_KEYS = {
   MELODIQ_P2_DEVICE: 'melodiq_p2_device',
 
   // Melodiq Playlists & Session
-  MELODIQ_ENABLE_PLAYLIST_SYNC: 'melodiq_enable_playlist_sync',
+  /** Favourite song ids (JSON array) when the song library is stored on this device (#636). */
+  MELODIQ_FAVORITES: 'melodiq_favorites',
   MELODIQ_META_CACHE: 'melodiq_meta_cache',
   MELODIQ_RTC_CONNECTED: 'melodiq_rtc_connected',
 

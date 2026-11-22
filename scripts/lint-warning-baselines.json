@@ -61,7 +61,6 @@
   "src/games/melodiq/hooks/useHistory.ts": 1,
   "src/games/melodiq/hooks/useLocalLibrary.ts": 3,
   "src/games/melodiq/hooks/useMelodiqGlobalEvents.tsx": 11,
-  "src/games/melodiq/hooks/usePlaylists.ts": 3,
   "src/games/melodiq/hooks/useQueue.ts": 14,
   "src/games/melodiq/hooks/useSearchFilters.tsx": 1,
   "src/games/melodiq/hooks/useSongs.tsx": 2,

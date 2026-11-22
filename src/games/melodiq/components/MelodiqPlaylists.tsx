@@ -1,21 +1,10 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Typography,
-  Button,
-  Grid,
-  IconButton,
-  Switch,
-  FormControlLabel,
-  Tooltip,
-} from '@mui/material';
-import CloudSyncIcon from '@mui/icons-material/CloudSyncRounded';
-import CloudOffIcon from '@mui/icons-material/CloudOffRounded';
+import { Box, Typography, Button, Grid, Switch, FormControlLabel } from '@mui/material';
 import AddIcon from '@mui/icons-material/AddRounded';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlayRounded';
 import { useTranslation } from 'react-i18next';
 import { usePlaylists } from '../hooks/usePlaylists';
-import { type Playlist } from '../db';
+import { type LibraryPlaylist as Playlist } from '../logic/songLibrary';
 import { PlaylistCard } from './PlaylistCard';
 import { PlaylistNameDialog } from './PlaylistNameDialog';
 import { ConfirmDialog } from '../../../components/common/ConfirmDialog';
@@ -30,8 +19,7 @@ export const MelodiqPlaylists: React.FC<MelodiqPlaylistsProps> = ({ onSelectPlay
     playlists,
     showGlobalPlaylists,
     setShowGlobalPlaylists,
-    syncEnabled,
-    toggleSync,
+    storeKind,
     createPlaylist,
     deletePlaylist,
     updatePlaylistName,
@@ -62,33 +50,24 @@ export const MelodiqPlaylists: React.FC<MelodiqPlaylistsProps> = ({ onSelectPlay
   };
 
   return (
-    <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ p: { xs: 2, sm: 3 }, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <Typography variant="h5" sx={{ flexGrow: 1 }}>
           {t('melodiq.playlists')}
         </Typography>
 
-        <Tooltip title={syncEnabled ? t('melodiq.sync_enabled') : t('melodiq.sync_disabled')}>
-          <IconButton
-            onClick={() => toggleSync(!syncEnabled)}
-            color={syncEnabled ? 'primary' : 'default'}
-            sx={{ mr: 2 }}
-          >
-            {syncEnabled ? <CloudSyncIcon /> : <CloudOffIcon />}
-          </IconButton>
-        </Tooltip>
-
-        <FormControlLabel
-          control={
-            <Switch
-              checked={showGlobalPlaylists}
-              onChange={(e) => setShowGlobalPlaylists(e.target.checked)}
-              color="primary"
-              disabled={!syncEnabled}
-            />
-          }
-          label={t('melodiq.global_playlists')}
-        />
+        {storeKind === 'companion' && (
+          <FormControlLabel
+            control={
+              <Switch
+                checked={showGlobalPlaylists}
+                onChange={(e) => setShowGlobalPlaylists(e.target.checked)}
+                color="primary"
+              />
+            }
+            label={t('melodiq.global_playlists')}
+          />
+        )}
       </Box>
 
       <Box sx={{ mb: 3 }}>

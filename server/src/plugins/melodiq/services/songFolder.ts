@@ -34,6 +34,8 @@ export interface SongMeta {
   id: string;
   title: string;
   artist: string;
+  /** Album shown in the Melodiq library (#636); optional. */
+  album?: string;
   /** Free text per score file, shown instead of the file name. */
   labels: Record<string, string>;
   /** Hidden and renamed parts per score file (#564). */
@@ -128,6 +130,7 @@ export async function readSongMeta(folder: string): Promise<SongMeta | null> {
       id: typeof raw.id === 'string' && SONG_ID_PATTERN.test(raw.id) ? raw.id : '',
       title: text(raw.title),
       artist: text(raw.artist),
+      ...(text(raw.album) ? { album: text(raw.album) } : {}),
       labels: typeof labels === 'string' ? {} : labels,
       parts: readParts(raw.parts),
     };
@@ -258,6 +261,7 @@ export async function readScoreOnlySong(dir: string, dirFiles: string[]): Promis
     id: meta.id,
     title: meta.title,
     artist: meta.artist,
+    album: meta.album,
     bpm: 0,
     gap: 0,
     video: null,

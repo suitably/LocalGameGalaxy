@@ -67,8 +67,8 @@ export const MelodiqGameContent: React.FC = () => {
 
   const [showQueueDrawer, setShowQueueDrawer] = useState(false);
 
-  const { currentView, setCurrentView, handleSetCurrentView, handleCloseSubView } =
-    useMelodiqNavigation();
+  const nav = useMelodiqNavigation();
+  const { currentView, setCurrentView, handleSetCurrentView, handleCloseSubView } = nav;
   useGameSettingsHost({ audience: isClient ? 'client' : 'host', onClose: refreshSongs });
 
   const playback = useMelodiqPlayback({
@@ -141,7 +141,11 @@ export const MelodiqGameContent: React.FC = () => {
         color: 'text.primary',
       }}
     >
-      <MelodiqSubViews currentView={currentView} setCurrentView={setCurrentView} />
+      <MelodiqSubViews
+        currentView={currentView}
+        activePlaylistId={nav.activePlaylistId}
+        onOpenPlaylist={nav.openPlaylist}
+      />
 
       <MelodiqHomeView
         visible={currentView === 'Home' || currentView === 'Session'}
@@ -159,6 +163,7 @@ export const MelodiqGameContent: React.FC = () => {
         handleSongLongPress={handleSongLongPress}
         handleDownloadAndQueue={handleDownloadAndQueue}
         handleDownloadOnly={handleDownloadOnly}
+        onOpenPlaylist={nav.openPlaylist}
       />
 
       <PlaybackManager

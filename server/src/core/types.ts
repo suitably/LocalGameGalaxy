@@ -111,6 +111,8 @@ export interface Song {
   bpm: number;
   gap: number;
   edition?: string;
+  /** UltraStar `#ALBUM`, else `song.json` `album` (#636). */
+  album?: string;
   genre?: string;
   language?: string;
   year?: string;
@@ -230,12 +232,4 @@ export interface SeparatorJob {
   progress: number;
   log: string[];
   error: string | null;
-}
-
-export interface Playlist {
-  id: string;
-  name: string;
-  songs: string[];
-  creatorToken?: string;
-  updatedAt: number;
 }

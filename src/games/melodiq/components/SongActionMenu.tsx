@@ -13,6 +13,8 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
 import AddToQueueIcon from '@mui/icons-material/AddToQueueRounded';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlayRounded';
 import QueueMusicIcon from '@mui/icons-material/QueueMusicRounded';
+import FavoriteIcon from '@mui/icons-material/FavoriteRounded';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorderRounded';
 import VideoLibraryIcon from '@mui/icons-material/VideoLibraryRounded';
 import DeleteIcon from '@mui/icons-material/DeleteRounded';
 import SyncIcon from '@mui/icons-material/SyncRounded';
@@ -34,6 +36,9 @@ interface SongActionMenuProps {
   separationProgress: number;
   onQueueOption: (action: 'play_now' | 'play_next' | 'add_end') => void;
   onAddToPlaylist: () => void;
+  /** Favourite toggle (#636); none hides the entry. */
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
   onChangeVideo: () => void;
   onSeparateVocals: () => void;
   onFullSync: () => void;
@@ -103,6 +108,20 @@ export const SongActionMenu: React.FC<SongActionMenuProps> = (props) => {
             </ListItemIcon>
             <ListItemText primary={t('melodiq.add_end')} secondary={t('melodiq.add_end_desc')} />
           </ListItemButton>
+          {props.onToggleFavorite && (
+            <ListItemButton onClick={props.onToggleFavorite}>
+              <ListItemIcon>
+                {props.isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
+              </ListItemIcon>
+              <ListItemText
+                primary={t(
+                  props.isFavorite
+                    ? 'melodiq.library.remove_favorite'
+                    : 'melodiq.library.add_favorite',
+                )}
+              />
+            </ListItemButton>
+          )}
           {!isClient && (
             <ListItemButton onClick={props.onAddToPlaylist}>
               <ListItemIcon>

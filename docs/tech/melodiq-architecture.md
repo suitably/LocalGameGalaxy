@@ -10,7 +10,7 @@ generated:
   by: previous-agent
 verified:
   at: 2026-11-22
-  method: '2026-11-22: §2.11 written from code (#604); 2026-11-14: §2.9 / §2.10 written from code and measurements; rest 2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
+  method: '2026-11-22: §2.12 written from code (#636); §2.11 written from code (#604); 2026-11-14: §2.9 / §2.10 written from code and measurements; rest 2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
 # Melodiq Architecture
@@ -128,6 +128,17 @@ Gameplay reads the vocal parts of the shared `ScoreSong` (`src/modules/music-sco
 - Parity: `logic/songVocals.test.ts` checks that solo, duet, golden, freestyle and rap `.txt` fixtures give the same notes, line breaks and scores through the old `ParsedSong` shape and through `ScoreSong`, and that a score-only song produces sung lines; `logic/scoreVocals.test.ts` covers listing, score choice, marks and the failure reasons.
 - Songs without `.txt` (#604): `fetchServerSongs` (`logic/serverSongsProvider.ts`) asks `/api/songs?all=1` and keeps karaoke songs plus songs with sheet music (`isSingableServerSong` in `logic/scoreVocals.ts`; whether a score has a vocal part is only known after reading it, the server does not parse scores). `processServerSongs` keeps `scores` on the `Song`. Without `txtContent`, `useSongVocals` runs `loadScoreVocals`: scores with bar marks first, else folder order (`scoreCandidates`); each is fetched (`fetchCompanionFile`) and read (`readScoreBytes`, `modules/music-score/readScore.ts`, shared with Melodiq Notes' `readScoreFile`) until one has a vocal part (`sungParts`); its `.marks.json` (`getSongMarks`) times it when the marks belong to the song's mix (`marksForMix`, fine-tune offset applied), else the score's tempo. Failures show an i18n message (`melodiq.session.no_vocal_part`, `score_load_failed`, `no_lyrics`, `parse_failed`; `loadError` is an i18n key). Phones get the song list from the host; a phone reading a score needs the companion server itself.
 - The library scan (`logic/localLibraryProvider.ts`) reads `.txt` header fields with the shared `parseUltraStarTxt`.
+
+### 2.12 Song library: artists, albums, favourites, playlists (#636)
+
+Maintainer decision 2026-11-07, open points in [ADR-0010](../adr/0010-melodiq-song-library.md).
+
+- UI: `MelodiqHomeView` puts `LibraryTabs` (All / Artists / Albums / Favourites / Playlists, scrollable on a phone; Playlists hidden on phone clients) under the search bar. "All" is the old song grid/list (`LocalSongsView`); the other tabs render `components/library/SongLibraryView.tsx`: Artists and Albums are accordions (`LibraryGroupList`, one group open), song rows (`LibrarySongRow`) carry a favourite heart and a menu button that opens the song action menu; Playlists embeds `MelodiqPlaylists`, and a picked playlist opens the `PlaylistDetails` view (`useMelodiqNavigation().openPlaylist`). The song action menu has a favourite toggle too. Search and the genre/edition filters apply to every tab; the search matches every word in title, artist or album (`filterLibrary`).
+- Logic (pure, tested): `logic/songLibrary.ts` (`groupByArtist`, `groupByAlbum`, unknown artist/album last, `filterLibrary`, `toggleFavorite`, playlist list helpers); `components/library/libraryGroups.ts` maps the groups to labelled accordion entries.
+- Album: UltraStar `#ALBUM` (server scanner and local scan), else `song.json` `album` (server); empty is shown as "Unknown album".
+- Store: `logic/songLibraryStore.ts` defines `SongLibraryStore`; `chooseLibraryStoreKind` picks the **companion** store (`/api/melodiq/library/*`, per API user) when the companion is active and no local folder is used, else the **local** store (favourites in `STORAGE_KEYS.MELODIQ_FAVORITES`, playlists in the existing Dexie `playlists` table).
+- State: `hooks/SongLibraryProvider.tsx` (mounted inside `SongsProvider`, so every Melodiq screen shares one copy) loads both lists, writes optimistically and reloads on a failed write; `useSongLibrary()` reads it, `usePlaylists()` is the playlist view of it (own vs. shared by others).
+- Server routes: [song-pipeline §3](song-pipeline.md#3-library-and-media-endpoints); the old `/api/playlists*` routes and the playlist auto-sync toggle are gone.
 
 ## 3. Known Technical Debt & Refactoring Goals
 

@@ -125,6 +125,7 @@ export function processServerSongs(
           : Boolean(s.vocalsAudio || (txtContent && txtContent.includes('#VOCALS:'))),
       duration: parsedDuration,
       edition: typeof s.edition === 'string' ? s.edition : undefined,
+      album: typeof s.album === 'string' ? s.album : undefined,
       hasCover: typeof s.hasCover === 'boolean' ? s.hasCover : Boolean(coverUrl || coverThumbnail),
       hasVideo: typeof s.hasVideo === 'boolean' ? s.hasVideo : Boolean(rawVideo || ytId),
       usdbId: typeof s.usdbId === 'number' ? s.usdbId : undefined,

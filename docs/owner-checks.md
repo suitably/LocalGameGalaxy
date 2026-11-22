@@ -101,3 +101,11 @@ Rhythm rule, file marks (MusicXML bow marks, Guitar Pro `PickStroke`/`Brush`, te
 
 - [ ] Load a real Guitar Pro file with pick-stroke marks and a MusicXML with bow marks: the arrows above the strums follow the file; a strummed song without marks shows down on beats, up on offbeats.
 - [ ] Set "all down" and a per-bar override in the Parts dialog; both survive a reload of the song folder score.
+
+## #636 — Melodiq song library
+
+Grouping, filtering, store selection and the companion routes are tested (`test/melodiq_song_library.test.js`); the UI was not run in a browser by an agent ([ADR-0010](adr/0010-melodiq-song-library.md)).
+
+- [ ] On a phone and a TV: the tabs All / Artists / Albums / Favourites / Playlists, search across tabs, the favourite heart and add-to-playlist work.
+- [ ] With two API keys on the companion: a shared playlist is visible but read-only for the other user, a private one is invisible; legacy `playlists.json` lists appear once after the update (the old `/api/playlists` routes are gone, so older app versions lose playlist sync).
+- [ ] With a local folder instead of the server, favourites and playlists stay on the device.
