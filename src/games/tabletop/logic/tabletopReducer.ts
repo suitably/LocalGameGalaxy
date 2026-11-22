@@ -33,6 +33,8 @@ import { raiseWidget, type ZOrderOp } from './zOrder';
 import type { WidgetPatch } from './widgetEdits';
 import { selectionReducer } from './reducers/selectionReducer';
 import { gestureOf } from './dragGesture';
+import type { HandRequestOp } from './handRequests';
+import { handRequestReducer } from './reducers/handRequestReducer';
 
 export interface FlyingCardAnimation {
   id: string;
@@ -143,7 +145,9 @@ type TabletopActionBody =
       type: 'RESIZE_HIDDEN_ZONE';
       payload: { id: string; x: number; y: number; width: number; height: number };
     }
-  | { type: 'TOGGLE_ZONE_REVEAL'; payload: { id: string } };
+  | { type: 'TOGGLE_ZONE_REVEAL'; payload: { id: string } }
+  /** Requests between seats about hand cards (#557); authorized per op in `intentAuthorization.ts`. */
+  | { type: 'HAND_REQUEST'; payload: HandRequestOp };
 
 /** Actions that never fire routine triggers: loading, remote results, editing, local UI. */
 const NO_TRIGGER_ACTIONS = new Set<TabletopAction['type']>([
@@ -522,6 +526,9 @@ function applyAction(
         ? state
         : { ...state, game: { ...state.game, widgets } };
     }
+
+    case 'HAND_REQUEST':
+      return handRequestReducer(state, action.payload, ctx.rng);
 
     case 'RUN_ROUTINE': {
       // The routine's steps are ordinary actions, applied in order on the device that owns state.

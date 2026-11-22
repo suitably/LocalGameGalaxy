@@ -344,6 +344,7 @@ export interface TabletopGameDefinition extends TabletopGameMetadata, RuleScript
   updatedAt?: number;
   ruleText?: string;
   hiddenZones?: Record<string, HiddenZone>;
+  // `handRequests` (#557) is added in `handRequests.ts` (interface merging; line budget).
   scriptZones?: Record<string, ScriptZone>;
   importReport?: ImportReport;
   scripts?: GameScripts;

@@ -15,6 +15,7 @@ import type {
 } from './types';
 import type { GameDelta } from './stateDelta';
 import { isHandHolder } from './handHolder';
+import { revealGrants } from './handRequests';
 
 /** The parts of a card that reveal its face. */
 export interface CardSecret {
@@ -61,10 +62,14 @@ const secretOf = (card: CardWidget): CardSecret => ({
   ...(card.cardType !== undefined ? { cardType: card.cardType } : {}),
 });
 
-/** Redacts private cards in a widget map; `owners` decides which cards are private. */
+/**
+ * Redacts private cards in a widget map; `owners` decides which cards are private, `grants` which
+ * other seats get a face too (cards shown through a view request, #557).
+ */
 function redactWidgets<T extends Record<string, TabletopWidget | null>>(
   widgets: T,
   owners: Map<string, number>,
+  grants: Map<string, number[]> = new Map(),
 ): { widgets: T; secrets: SeatSecrets } {
   const out: Record<string, TabletopWidget | null> = { ...widgets };
   const secrets: SeatSecrets = {};
@@ -72,7 +77,9 @@ function redactWidgets<T extends Record<string, TabletopWidget | null>>(
     const seat = owners.get(id);
     if (seat === undefined || !w || w.type !== 'card') continue;
     out[id] = redactCard(w as CardWidget);
-    (secrets[seat] ??= {})[id] = secretOf(w as CardWidget);
+    for (const reader of [seat, ...(grants.get(id) ?? [])]) {
+      (secrets[reader] ??= {})[id] = secretOf(w as CardWidget);
+    }
   }
   return { widgets: out as T, secrets };
 }
@@ -82,7 +89,9 @@ export function redactGame(game: TabletopGameDefinition): {
   game: TabletopGameDefinition;
   secrets: SeatSecrets;
 } {
-  const { widgets, secrets } = redactWidgets(game.widgets, privateCardOwners(game.widgets));
+  const owners = privateCardOwners(game.widgets);
+  const grants = revealGrants(game.handRequests, owners);
+  const { widgets, secrets } = redactWidgets(game.widgets, owners, grants);
   return { game: { ...game, widgets }, secrets };
 }
 
@@ -91,8 +100,36 @@ export function redactDelta(
   delta: GameDelta,
   gameAfter: TabletopGameDefinition,
 ): { delta: GameDelta; secrets: SeatSecrets } {
-  const { widgets, secrets } = redactWidgets(delta.widgets, privateCardOwners(gameAfter.widgets));
+  const owners = privateCardOwners(gameAfter.widgets);
+  const grants = revealGrants(gameAfter.handRequests, owners);
+  const { widgets, secrets } = redactWidgets(delta.widgets, owners, grants);
   return { delta: { ...delta, widgets }, secrets };
+}
+
+type GrantSource = Pick<TabletopGameDefinition, 'widgets' | 'handRequests'>;
+
+const grantsOf = (game: GrantSource) =>
+  revealGrants(game.handRequests, privateCardOwners(game.widgets));
+
+/**
+ * Adds unchanged cards whose view grants changed (a request was answered or dismissed, #557), so
+ * the requester gets the face in its sealed box, or loses it again with the redacted copy.
+ */
+export function withGrantChanges(
+  delta: GameDelta,
+  before: GrantSource,
+  after: GrantSource,
+): GameDelta {
+  if (before.handRequests === after.handRequests) return delta;
+  const was = grantsOf(before);
+  const now = grantsOf(after);
+  let widgets: GameDelta['widgets'] | null = null;
+  for (const id of new Set([...was.keys(), ...now.keys()])) {
+    if (id in delta.widgets || !after.widgets[id]) continue;
+    if (JSON.stringify(was.get(id)) === JSON.stringify(now.get(id))) continue;
+    (widgets ??= { ...delta.widgets })[id] = after.widgets[id];
+  }
+  return widgets ? { ...delta, widgets } : delta;
 }
 
 /**
