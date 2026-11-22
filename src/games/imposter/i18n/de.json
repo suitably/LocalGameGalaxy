@@ -1,0 +1,85 @@
+{
+  "games": {
+    "imposter": {
+      "rules": "Regeln: Normale Spieler erhalten ein Wort. Der Imposter erhält ein Hinweiswort. Diskutiert und findet den Imposter!",
+      "info": {
+        "title": "Spielanleitung",
+        "got_it": "Verstanden!",
+        "rules": [
+          "Jeder normale Spieler sieht ein geheimes Wort.",
+          "Der Imposter sieht nur einen allgemeinen Hinweis, nicht das Wort selbst.",
+          "Reihum nennt jeder Spieler ein Wort oder einen kurzen Hinweis, der zum Begriff passt.",
+          "Diskutiert und stimmt ab, wer der Imposter ist!",
+          "Wird der Imposter enttarnt, gewinnen die Unschuldigen. Ansonsten gewinnt der Imposter."
+        ]
+      },
+      "setup": {
+        "title": "Imposter Setup",
+        "imposter_count": "Anzahl der Imposter",
+        "timer_length": "Timer",
+        "minutes": "Minuten",
+        "seconds": "Sekunden",
+        "select_category": "Kategorien wählen",
+        "select_all": "Alle auswählen",
+        "select_none": "Keine auswählen",
+        "reset_to_default": "Zurücksetzen"
+      },
+      "handover": {
+        "pass_to": "Handy an {{name}} geben",
+        "your_word": "Dein Wort ist:",
+        "you_are_imposter": "Du bist der IMPOSTER",
+        "imposter_hint": "Tipp: {{hint}}",
+        "understood": "Ich habe es verstanden"
+      },
+      "game": {
+        "timer": "Diskussionszeit",
+        "pause": "Pause",
+        "resume": "Weiter",
+        "end_round": "Runde beenden",
+        "confirm_end": "Bist du sicher, dass du die Runde vorzeitig beenden möchtest?",
+        "end_round_confirm": "Jetzt beenden",
+        "kick_title": "Wer ist der Imposter?"
+      },
+      "result": {
+        "imposters_win": "Die Imposter gewinnen!",
+        "innocents_win": "Die Unschuldigen gewinnen!",
+        "imposter": "der Imposter",
+        "normal": "ein Unschuldiger",
+        "revealed_role": "{{name}} war {{role}}!"
+      },
+      "editor": {
+        "title": "Kategorien-Editor",
+        "add_category": "Kategorie hinzufügen",
+        "edit_category": "Kategorie bearbeiten",
+        "category_name_en": "Kategorienname (EN)",
+        "category_name_de": "Kategorienname (DE)",
+        "words": "Wörter",
+        "add_word": "Wort hinzufügen",
+        "word_en": "Wort (EN)",
+        "word_de": "Wort (DE)",
+        "hint_en": "Hinweis (EN)",
+        "hint_de": "Hinweis (DE)",
+        "custom_categories": "Eigene Kategorien",
+        "standard_categories": "Standard-Kategorien"
+      },
+      "room": {
+        "connecting": "Verbinde mit dem Party-Raum …",
+        "waiting_setup": "Der Host wählt die Kategorien und startet die Runde.",
+        "card_hidden": "Deine Karte ist verdeckt. Schau sie dir an, ohne dass andere mitlesen.",
+        "show_card": "Karte zeigen",
+        "hide_card": "Karte verbergen",
+        "seen_waiting": "{{count}} von {{total}} haben ihre Karte gelesen.",
+        "discuss_hint": "Nennt reihum ein Wort, das zum Begriff passt – und findet heraus, wer ihn nicht kennt.",
+        "start_vote": "Abstimmung starten",
+        "time_up": "Zeit ist um",
+        "voted_waiting": "{{count}} von {{total}} haben abgestimmt.",
+        "tie": "Gleichstand – niemand wurde rausgewählt.",
+        "word_was": "Das Wort war „{{word}}“, der Tipp „{{hint}}“.",
+        "votes_one": "{{count}} Stimme",
+        "votes_other": "{{count}} Stimmen",
+        "new_round": "Neue Runde",
+        "table_hint": "Dieses Gerät zeigt den Tisch"
+      }
+    }
+  }
+}

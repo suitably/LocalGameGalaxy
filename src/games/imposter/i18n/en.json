@@ -1,0 +1,85 @@
+{
+  "games": {
+    "imposter": {
+      "rules": "Rules: Normal players get a word. Imposter gets a hint. Discuss and find the imposter!",
+      "info": {
+        "title": "How to play",
+        "got_it": "Got it!",
+        "rules": [
+          "Every normal player sees a secret word.",
+          "The Imposter only sees a general hint, not the word itself.",
+          "Each player says one word or clue related to their secret word.",
+          "Discuss and vote on who you think the Imposter is!",
+          "If the Imposter is voted out, the innocents win. Otherwise, the Imposter wins."
+        ]
+      },
+      "setup": {
+        "title": "Imposter Setup",
+        "imposter_count": "Number of Imposters",
+        "timer_length": "Timer",
+        "minutes": "Minutes",
+        "seconds": "Seconds",
+        "select_category": "Select Categories",
+        "select_all": "Select All",
+        "select_none": "Select None",
+        "reset_to_default": "Reset to Default"
+      },
+      "handover": {
+        "pass_to": "Pass phone to {{name}}",
+        "your_word": "Your word is:",
+        "you_are_imposter": "You are the IMPOSTER",
+        "imposter_hint": "Tip: {{hint}}",
+        "understood": "I understood"
+      },
+      "game": {
+        "timer": "Discussion Time",
+        "pause": "Pause",
+        "resume": "Resume",
+        "end_round": "End Round",
+        "confirm_end": "Are you sure you want to end the round early?",
+        "end_round_confirm": "End now",
+        "kick_title": "Who is the Imposter?"
+      },
+      "result": {
+        "imposters_win": "Imposters Win!",
+        "innocents_win": "Innocents Win!",
+        "imposter": "the Imposter",
+        "normal": "an Innocent",
+        "revealed_role": "{{name}} was {{role}}!"
+      },
+      "editor": {
+        "title": "Category Editor",
+        "add_category": "Add Category",
+        "edit_category": "Edit Category",
+        "category_name_en": "Category Name (EN)",
+        "category_name_de": "Category Name (DE)",
+        "words": "Words",
+        "add_word": "Add Word",
+        "word_en": "Word (EN)",
+        "word_de": "Word (DE)",
+        "hint_en": "Hint (EN)",
+        "hint_de": "Hint (DE)",
+        "custom_categories": "Custom Categories",
+        "standard_categories": "Standard Categories"
+      },
+      "room": {
+        "connecting": "Connecting to the party room …",
+        "waiting_setup": "The host picks the categories and starts the round.",
+        "card_hidden": "Your card is face down. Look at it where nobody can read along.",
+        "show_card": "Show card",
+        "hide_card": "Hide card",
+        "seen_waiting": "{{count}} of {{total}} have read their card.",
+        "discuss_hint": "Take turns naming a word that fits – and find out who does not know it.",
+        "start_vote": "Start voting",
+        "time_up": "Time is up",
+        "voted_waiting": "{{count}} of {{total}} have voted.",
+        "tie": "A tie – nobody was voted out.",
+        "word_was": "The word was “{{word}}”, the hint “{{hint}}”.",
+        "votes_one": "{{count}} vote",
+        "votes_other": "{{count}} votes",
+        "new_round": "New round",
+        "table_hint": "This device shows the table"
+      }
+    }
+  }
+}
