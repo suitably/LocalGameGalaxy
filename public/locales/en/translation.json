@@ -1648,13 +1648,13 @@
       "playAlong": "Play along (table on TV)",
       "showTableOnly": "Show table only",
       "handRequests": {
-        "button": "Ask to see cards",
-        "askTitle": "See another player's cards",
+        "button": "See or give cards",
+        "askTitle": "Cards with other players",
         "modeCards": "Pick cards",
         "modeCount": "Any cards",
         "pickHint": "Tap the positions in {{name}}'s hand you want to see.",
-        "countLabel_one": "Any {{count}} card",
-        "countLabel_other": "Any {{count}} cards",
+        "countLabel_one": "{{count}} card",
+        "countLabel_other": "{{count}} cards",
         "cardN": "Card {{n}}",
         "waiting": "Waiting for {{name}} to answer. Changes update the request.",
         "send": "Ask",
@@ -1675,7 +1675,17 @@
         "shownTitle": "{{name}} shows you",
         "rejectedTitle": "{{name}} said no",
         "rejectedBody": "{{name}} does not show these cards.",
-        "onlyYou": "Only you see these cards. Closing hides them again."
+        "onlyYou": "Only you see these cards. Closing hides them again.",
+        "tabSee": "See cards",
+        "tabGive": "Give cards",
+        "offerHint": "Tap the cards you want to give to {{name}}.",
+        "modeRandom": "Random cards",
+        "offerWaiting": "Waiting for {{name}} to accept. Changes update the offer.",
+        "offerSend": "Offer",
+        "offerIncoming_one": "{{name}} offers you {{count}} card",
+        "offerIncoming_other": "{{name}} offers you {{count}} cards",
+        "offerAccept": "Take",
+        "offerRejected": "{{name}} did not take your cards"
       }
     },
     "drawpot": {

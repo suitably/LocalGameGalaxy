@@ -1648,13 +1648,13 @@
       "playAlong": "Mitspielen (Tisch auf dem TV)",
       "showTableOnly": "Nur Tisch anzeigen",
       "handRequests": {
-        "button": "Karten ansehen fragen",
-        "askTitle": "Karten eines anderen Spielers ansehen",
+        "button": "Karten ansehen oder geben",
+        "askTitle": "Karten mit anderen Spielern",
         "modeCards": "Karten wählen",
         "modeCount": "Beliebige Karten",
         "pickHint": "Tippe die Positionen in der Hand von {{name}} an, die du sehen möchtest.",
-        "countLabel_one": "Beliebige {{count}} Karte",
-        "countLabel_other": "Beliebige {{count}} Karten",
+        "countLabel_one": "{{count}} Karte",
+        "countLabel_other": "{{count}} Karten",
         "cardN": "Karte {{n}}",
         "waiting": "Warte auf die Antwort von {{name}}. Änderungen aktualisieren die Anfrage.",
         "send": "Fragen",
@@ -1675,7 +1675,17 @@
         "shownTitle": "{{name}} zeigt dir",
         "rejectedTitle": "{{name}} hat abgelehnt",
         "rejectedBody": "{{name}} zeigt diese Karten nicht.",
-        "onlyYou": "Nur du siehst diese Karten. Schließen verdeckt sie wieder."
+        "onlyYou": "Nur du siehst diese Karten. Schließen verdeckt sie wieder.",
+        "tabSee": "Ansehen",
+        "tabGive": "Geben",
+        "offerHint": "Tippe die Karten an, die du {{name}} geben möchtest.",
+        "modeRandom": "Zufällige Karten",
+        "offerWaiting": "Warte, bis {{name}} annimmt. Änderungen aktualisieren das Angebot.",
+        "offerSend": "Anbieten",
+        "offerIncoming_one": "{{name}} bietet dir {{count}} Karte an",
+        "offerIncoming_other": "{{name}} bietet dir {{count}} Karten an",
+        "offerAccept": "Nehmen",
+        "offerRejected": "{{name}} hat deine Karten nicht genommen"
       }
     },
     "drawpot": {

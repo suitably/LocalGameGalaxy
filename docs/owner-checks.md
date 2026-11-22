@@ -55,3 +55,20 @@ Lanes, keys, judging and the percussion setting are in code with tests ([ADR-000
 - [ ] On a real e-drum kit, toms land on the intended lanes (Roland sends 45 for tom 2, which maps to the tom 3 lane, and 39 for tom 4 rim, which maps to percussion; a per-kit mapping may be needed); hi-hat edge 22/26 and tom 3 rim 58 behave as expected.
 - [ ] With 7–8 lanes on a laptop/TV, lane width and the hollow (open) vs filled (closed) hi-hat are readable; tom colours on the phone pult's single tom pad are readable.
 - [ ] Synth tom pitches and the percussion sound are distinguishable; display-only percussion is audible in "others" band mode.
+
+## #662 — end-to-end encrypted MQTT rooms
+
+Envelope, keys, retain policy and link handling are in code with fake-broker tests ([ADR-0009](adr/0009-mqtt-end-to-end-encryption.md)). `npm run e2e:multiplayer` ran on 2026-11-22 against a local MQTT-over-WebSocket broker (`MQTT_RELAY=ws://localhost:1884`, aedes): 20 of 21 scenarios passed; the one failure ("garticphone: watching host … lobby visits", no back-to-lobby button found) and the "back to lobby" SKIPs happen on `main` too, so they are not caused by encryption.
+
+- [ ] Run `npm run e2e:multiplayer` once against the public brokers (blocked from the cloud sessions).
+- [ ] On real phones: the invite link / QR carries `#…key=…`, a guest joins and plays a room game; `/party?room=<CODE>` without the key shows the encrypted-room hint; a Melodiq phone QR from the lobby still connects; a GuessArt/Storyteller "play over days" link (full and short QR) loads the game.
+- [ ] Review the new privacy text in `public/datenschutz.html` / `public/privacy.html`.
+- [ ] Decide when to drop the plaintext fallback for key-less rooms (planned for a later release in ADR-0009).
+
+## #557 — view requests and card offers between hands
+
+State machine, authorization and sealed reveal are tested (`logic/__tests__/handRequests.test.ts`); the UI is type-checked and linted only.
+
+- [ ] With 3 phones + host on an HTTPS origin: A asks B for specific cards and for N random cards; only A sees the faces (C and the TV keep backs), the faces revert after A closes the result; extending, reducing and withdrawing a pending ask updates B's notice; two requesters to B are answered separately.
+- [ ] Offers: a chosen-card offer that is taken moves the cards face up into the receiver's hand only; a rejected random offer leaves them with the giver, who sees the rejection.
+- [ ] Spectators have no request button; in local pass-and-play nothing shows over the handover cover; dialog and notices fit a 390 px phone.

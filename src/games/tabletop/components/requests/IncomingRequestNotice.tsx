@@ -5,11 +5,12 @@
  * pick, a chosen subset, or rejects. The table stays usable while it is open.
  */
 import React, { useState } from 'react';
-import { Box, Button, Paper, Snackbar, Typography } from '@mui/material';
+import { Button, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { TabletopWidget } from '../../logic/types';
 import { askSize, type ViewAnswer, type ViewRequest } from '../../logic/handRequests';
 import { MiniCardRow } from './MiniCardRow';
+import { NoticeShell } from './NoticeShell';
 
 interface IncomingRequestNoticeProps {
   /** The oldest request waiting for this seat's answer, if any. */
@@ -44,31 +45,14 @@ export const IncomingRequestNotice: React.FC<IncomingRequestNoticeProps> = ({
     setChoice((c) => (c?.includes(id) ? c.filter((x) => x !== id) : [...(c ?? []), id]));
 
   return (
-    <Snackbar open anchorOrigin={{ vertical: 'top', horizontal: 'center' }}>
-      <Paper
-        elevation={8}
-        role="alert"
-        sx={{ p: 1.5, width: 'min(420px, calc(100vw - 32px))', borderRadius: 3 }}
-      >
-        <Typography variant="subtitle2" fontWeight={800}>
-          {ask.mode === 'cards'
-            ? t('games.tabletop.handRequests.incomingCards', { name: fromName, count })
-            : t('games.tabletop.handRequests.incomingCount', { name: fromName, count })}
-        </Typography>
-        {choice && (
-          <Typography variant="caption" color="text.secondary">
-            {t('games.tabletop.handRequests.chooseHint')}
-          </Typography>
-        )}
-        <MiniCardRow
-          cardIds={myCardIds}
-          widgets={widgets}
-          faceUp
-          marked={asked}
-          selected={choice ?? []}
-          onToggle={choice ? toggle : undefined}
-        />
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-end' }}>
+    <NoticeShell
+      title={
+        ask.mode === 'cards'
+          ? t('games.tabletop.handRequests.incomingCards', { name: fromName, count })
+          : t('games.tabletop.handRequests.incomingCount', { name: fromName, count })
+      }
+      actions={
+        <>
           <Button size="small" color="inherit" onClick={() => reply({ type: 'reject' })}>
             {t('games.tabletop.handRequests.reject')}
           </Button>
@@ -103,8 +87,22 @@ export const IncomingRequestNotice: React.FC<IncomingRequestNoticeProps> = ({
               </Button>
             </>
           )}
-        </Box>
-      </Paper>
-    </Snackbar>
+        </>
+      }
+    >
+      {choice && (
+        <Typography variant="caption" color="text.secondary">
+          {t('games.tabletop.handRequests.chooseHint')}
+        </Typography>
+      )}
+      <MiniCardRow
+        cardIds={myCardIds}
+        widgets={widgets}
+        faceUp
+        marked={asked}
+        selected={choice ?? []}
+        onToggle={choice ? toggle : undefined}
+      />
+    </NoticeShell>
   );
 };

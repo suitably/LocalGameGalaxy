@@ -223,3 +223,109 @@ describe('handRequests: sealed reveal (#557)', () => {
     expect([...revealGrants(requests, privateCardOwners(widgets)).keys()]).toEqual(['b0']);
   });
 });
+
+describe('handRequests: card offers (#557 step 2)', () => {
+  const host = (g: TabletopGameDefinition, payload: HandRequestOp, seat: number) =>
+    tabletopReducer(
+      { game: g, flyingCards: [] },
+      prepareHostAction({ type: 'HAND_REQUEST', payload }, g, seat, 11),
+    ).game;
+  const holder = (g: TabletopGameDefinition, id: string) =>
+    (g.widgets[id] as unknown as { childIds: string[] }).childIds;
+
+  it('offers chosen or random own cards; foreign cards are dropped', () => {
+    const r = run([
+      { op: 'offer', from: 0, to: 2, offer: { mode: 'cards', cardIds: ['a1', 'b0'] } },
+      { op: 'offer', from: 1, to: 2, offer: { mode: 'random', count: 2 } },
+    ]);
+    expect(r?.['offer:0>2']).toEqual({
+      kind: 'offer',
+      from: 0,
+      to: 2,
+      status: 'pending',
+      cardIds: ['a1'],
+    });
+    const random = r?.['offer:1>2'];
+    expect(random?.kind === 'offer' && random.status === 'pending' && random.cardIds).toHaveLength(
+      2,
+    );
+    expect(
+      run([{ op: 'offer', from: 0, to: 2, offer: { mode: 'cards', cardIds: ['b0'] } }]),
+    ).toBeUndefined();
+  });
+
+  it('accept moves the offered cards into the receiver hand, reject keeps them', () => {
+    const offered = host(
+      game,
+      { op: 'offer', from: 0, to: 2, offer: { mode: 'cards', cardIds: ['a0', 'a2'] } },
+      0,
+    );
+    const taken = host(
+      offered,
+      { op: 'answer', from: 0, to: 2, kind: 'offer', answer: { type: 'accept' } },
+      2,
+    );
+    expect(holder(taken, 'h0')).toEqual(['a1']);
+    expect(holder(taken, 'h2')).toEqual(['c0', 'a0', 'a2']);
+    expect(taken.handRequests).toEqual({});
+    // the moved cards are now sealed for the receiver, not the giver
+    const { secrets } = redactGame(taken);
+    expect(Object.keys(secrets[2]).sort()).toEqual(['a0', 'a2', 'c0']);
+    expect(secrets[0].a0).toBeUndefined();
+
+    const refused = host(
+      offered,
+      { op: 'answer', from: 0, to: 2, kind: 'offer', answer: { type: 'reject' } },
+      2,
+    );
+    expect(holder(refused, 'h0')).toEqual(['a0', 'a1', 'a2']);
+    expect(refused.handRequests?.['offer:0>2']).toMatchObject({ status: 'rejected' });
+    const dismissed = host(refused, { op: 'close', from: 0, to: 2, kind: 'offer' }, 0);
+    expect(dismissed.handRequests).toEqual({});
+  });
+
+  it('only cards still in the giver hand move', () => {
+    const offered = host(
+      game,
+      { op: 'offer', from: 1, to: 0, offer: { mode: 'cards', cardIds: ['b0', 'b1'] } },
+      1,
+    );
+    const played = {
+      ...offered,
+      widgets: { ...offered.widgets, h1: hand('h1', 1, ['b1', 'b2', 'b3']) },
+    } as TabletopGameDefinition;
+    const taken = host(
+      played,
+      { op: 'answer', from: 1, to: 0, kind: 'offer', answer: { type: 'accept' } },
+      0,
+    );
+    expect(holder(taken, 'h0')).toEqual(['a0', 'a1', 'a2', 'b1']);
+    expect(holder(taken, 'h1')).toEqual(['b2', 'b3']);
+  });
+
+  it('only the giver offers or withdraws, only the receiver answers (3 players)', () => {
+    const at = (seat: number | null, spectator = false): IntentSender => ({ spectator, seat });
+    const ok = (payload: HandRequestOp, sender: IntentSender) =>
+      acceptIntent({ type: 'HAND_REQUEST', payload }, sender, game);
+    const offer: HandRequestOp = {
+      op: 'offer',
+      from: 0,
+      to: 2,
+      offer: { mode: 'random', count: 1 },
+    };
+    const accept: HandRequestOp = {
+      op: 'answer',
+      from: 0,
+      to: 2,
+      kind: 'offer',
+      answer: { type: 'accept' },
+    };
+    expect(ok(offer, at(0))).toBe(true);
+    expect(ok(offer, at(1))).toBe(false);
+    expect(ok(offer, at(0, true))).toBe(false);
+    expect(ok(accept, at(2))).toBe(true);
+    expect(ok(accept, at(0))).toBe(false);
+    expect(ok(accept, at(1))).toBe(false);
+    expect(ok({ op: 'close', from: 0, to: 2, kind: 'offer' }, at(2))).toBe(false);
+  });
+});

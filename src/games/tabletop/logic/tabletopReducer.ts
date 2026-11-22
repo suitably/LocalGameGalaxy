@@ -528,7 +528,7 @@ function applyAction(
     }
 
     case 'HAND_REQUEST':
-      return handRequestReducer(state, action.payload, ctx.rng);
+      return handRequestReducer(state, action.payload, ctx.rng, (s, a) => applyAction(s, a, ctx));
 
     case 'RUN_ROUTINE': {
       // The routine's steps are ordinary actions, applied in order on the device that owns state.
