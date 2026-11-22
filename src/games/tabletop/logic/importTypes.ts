@@ -23,6 +23,8 @@ export interface ImportReport {
   buttons?: { total: number; translated: number };
   /** Script functions the Lua translator left out, with the reason (#704). */
   untranslated?: UntranslatedScriptFunction[];
+  /** TTS API names the Lua runtime met without a shim (#705, `luaShim.ts`). */
+  unshimmed?: string[];
 }
 
 /**

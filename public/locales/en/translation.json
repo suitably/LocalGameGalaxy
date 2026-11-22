@@ -1075,6 +1075,19 @@
         "global": "Global script",
         "global_toggle": "Show/hide global script"
       },
+      "lua": {
+        "enable": "Run Lua scripts (experimental)",
+        "disable": "Stop Lua scripts",
+        "log_title": "Script log",
+        "log_empty": "The scripts have printed nothing yet.",
+        "unshimmed_one": "{{count}} TTS call without support yet:",
+        "unshimmed_other": "{{count}} TTS calls without support yet:",
+        "status_starting": "Starting the scripts…",
+        "status_running": "Scripts are running on this device.",
+        "status_stopped": "Scripts are stopped.",
+        "status_killed": "A script took too long and was stopped. The table keeps every change made so far.",
+        "status_failed": "The scripts could not be started."
+      },
       "import_report": {
         "title": "Import report: {{count}} objects",
         "converted": "{{count}} converted",

@@ -15,7 +15,12 @@ import { prepareHostAction } from './hostActions';
 import { newSeed } from './rng';
 import { buildLuaPrelude } from './luaPrelude';
 import { createLuaShim } from './luaShim';
-import type { LuaRuntimeMeta, LuaShimHost } from './luaShimTypes';
+import {
+  LUA_RUNTIME_BUTTON_PREFIX,
+  LUA_TRANSLATED_BUTTON_PREFIX,
+  type LuaRuntimeMeta,
+  type LuaShimHost,
+} from './luaShimTypes';
 import { initialMeta, scriptSources, scriptStates } from './luaScriptState';
 
 export interface LuaSessionOutput {
@@ -46,6 +51,23 @@ export interface LuaSession {
   /** `onSave()` results per owner (`-1` = Global) and the runtime meta. */
   save(): { states: Record<string, string>; meta: LuaRuntimeMeta };
   close(): void;
+}
+
+/**
+ * Before `onLoad`: script buttons of an earlier run go (onLoad creates them again) and the
+ * translator's static buttons are hidden, so a button is not there twice.
+ */
+function replaceStaticButtons(host: LuaShimHost): void {
+  const widgets = host.game().widgets;
+  const ids = Object.keys(widgets);
+  const stale = ids.filter((id) => id.startsWith(LUA_RUNTIME_BUTTON_PREFIX));
+  if (stale.length > 0) host.emit({ type: 'DELETE_WIDGETS', payload: { ids: stale } });
+  const shown = ids.filter(
+    (id) => id.startsWith(LUA_TRANSLATED_BUTTON_PREFIX) && widgets[id].display !== false,
+  );
+  if (shown.length === 0) return;
+  const patches = Object.fromEntries(shown.map((id) => [id, { display: false }]));
+  host.emit({ type: 'PATCH_WIDGETS', payload: { patches } });
 }
 
 export function createLuaSession(
@@ -87,6 +109,7 @@ export function createLuaSession(
   return {
     async start() {
       await vm.run(buildLuaPrelude(options.budget));
+      enter(() => replaceStaticButtons(host));
       for (const [owner, source] of scriptSources(mirror.game)) call('__rt_load', owner, source);
       call('__rt_start', scriptStates(mirror.game), options.seed ?? newSeed());
     },

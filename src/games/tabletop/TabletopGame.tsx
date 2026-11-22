@@ -17,6 +17,7 @@ import { HandDockStrip } from './components/surface/HandDockStrip';
 import { TabletopControllerView } from './components/controller/TabletopControllerView';
 import { TabletopLobbyView } from './components/views/TabletopLobbyView';
 import { useTabletopSync } from './hooks/useTabletopSync';
+import { useLuaRuntime } from './hooks/useLuaRuntime';
 import { usePartyLobbyReturn } from './hooks/usePartyLobbyReturn';
 import { useTabletopAutosave } from './hooks/useTabletopAutosave';
 import { AssetUrlContext, useAssetUrls } from './hooks/useAssetUrls';
@@ -115,12 +116,12 @@ export function TabletopGame() {
     setRestartCount((n) => n + 1);
   };
 
-  // Sync setup
+  const lua = useLuaRuntime(gameState.game, dispatch, ownsState && !loading && !error, seat);
   const { broadcastAction, syncedDispatch } = useTabletopSync({
     roomId,
     isHost,
     game: gameState.game,
-    dispatch,
+    dispatch: lua.dispatch,
     onReturnToLobby: returnToLobby,
     seat,
     spectator: isSpectator,
@@ -172,6 +173,7 @@ export function TabletopGame() {
     onLoad: loadSavedTable,
     onRestart: restartGame,
     onOpenTableSettings: () => setTableSettingsOpen(true),
+    lua: lua.lua,
   };
   const tableSettings = {
     tableSettingsOpen,

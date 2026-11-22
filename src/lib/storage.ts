@@ -150,6 +150,8 @@ export const STORAGE_KEYS = {
   CARDS_LOBBY_PLAYERS: 'cards_lobby_players',
   /** Player names for scripted card games on one device (Spieltisch). */
   TABLETOP_CARD_PLAYERS: 'tabletop_card_players',
+  /** '1' = run the Lua scripts of imported Workshop games on this host (experimental, #705). */
+  TABLETOP_LUA_RUNTIME: 'tabletop_lua_runtime',
 
   // Knister & Qwixx
   KNISTER_CURRENT_GAME: 'knister_current_game',

@@ -1075,6 +1075,19 @@
         "global": "Globales Skript",
         "global_toggle": "Globales Skript ein-/ausblenden"
       },
+      "lua": {
+        "enable": "Lua-Skripte ausführen (experimentell)",
+        "disable": "Lua-Skripte stoppen",
+        "log_title": "Skriptprotokoll",
+        "log_empty": "Die Skripte haben noch nichts ausgegeben.",
+        "unshimmed_one": "{{count}} TTS-Aufruf wird noch nicht unterstützt:",
+        "unshimmed_other": "{{count}} TTS-Aufrufe werden noch nicht unterstützt:",
+        "status_starting": "Skripte werden gestartet …",
+        "status_running": "Skripte laufen auf diesem Gerät.",
+        "status_stopped": "Skripte sind gestoppt.",
+        "status_killed": "Ein Skript hat zu lange gebraucht und wurde gestoppt. Der Tisch behält alle bisherigen Änderungen.",
+        "status_failed": "Die Skripte konnten nicht gestartet werden."
+      },
       "import_report": {
         "title": "Importbericht: {{count}} Objekte",
         "converted": "{{count}} umgewandelt",

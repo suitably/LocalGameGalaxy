@@ -134,5 +134,12 @@ export function sanitizeImportReport(raw: unknown): ImportReport | undefined {
     ...(Array.isArray(raw.untranslated)
       ? { untranslated: sanitizeUntranslated(raw.untranslated) }
       : {}),
+    ...(Array.isArray(raw.unshimmed)
+      ? {
+          unshimmed: raw.unshimmed
+            .filter((n): n is string => typeof n === 'string')
+            .slice(0, MAX_UNTRANSLATED),
+        }
+      : {}),
   };
 }

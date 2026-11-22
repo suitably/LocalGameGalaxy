@@ -117,3 +117,11 @@ Slice 3 (Spieltisch with mode picker) was already on `main`; slices 4 (dice game
 - [ ] From the party lobby with 3 real phones over MQTT: Kniffel and Qwixx — the right player rolls and scores, Qwixx "Fertig" passes the roll on, a row closed by one player locks on every sheet, the game end shows everywhere; a phone reloaded mid-game keeps its Qwixx sheet.
 - [ ] One device: Knister with 3 players (cover after each placement, a typed-in number becomes everyone's roll), Kniffel cover after each score, Qwixx with 2+ names ("fertig", cover, new game clears all sheets).
 - [ ] Lobby on a 360 px Android phone and an iPhone with a notch: leave and "fertig" buttons clear the home indicator.
+
+## #705 — host-only Lua runtime behind a flag
+
+VM interface, sandbox, shim v1 (~45 functions), events, persistence and the flag are in code; a hand-written Lua script runs in real wasmoon under Vitest. The Worker and `.wasm` are precached. Corpus mods need Steam Workshop data, which the cloud sessions cannot reach.
+
+- [ ] Import a Workshop mod with a scripted setup (with Steam access), switch on "Run Lua scripts (experimental)": `onLoad` and its buttons run on the host; phones receive only deltas; "Stop Lua scripts" restores the translator buttons.
+- [ ] Run the TTS compatibility harness with Steam access and record the tier-C count before/after (also the input #706–#708 need).
+- [ ] In a real browser and on a phone host: the Worker starts, a runaway script is stopped, the table stays consistent after a kill.
