@@ -25,7 +25,10 @@ export type EntryKind = 'game' | 'tool' | 'place';
 export const SPIELTISCH_SECTIONS = ['starters', 'cards', 'dice', 'trackers'] as const;
 export type SpieltischSection = (typeof SPIELTISCH_SECTIONS)[number];
 
-/** Where an entry is listed. `hidden`: reachable by route or party lobby, but no tile. */
+/**
+ * Where an entry is listed. Every entry but `hidden` has a hub tile (tools in their own section);
+ * a Spieltisch section also lists it on the Spieltisch.
+ */
 export type Listing = 'hub' | SpieltischSection | 'hidden';
 
 export interface CatalogEntry {
@@ -41,7 +44,7 @@ export interface CatalogEntry {
   descKey: string;
   modes: readonly Mode[];
   listing: Listing;
-  /** Own page, or a Spieltisch game (rule script or preset) opened by its id. */
+  /** Where a tile opens (usually its own page), or a Spieltisch game (rule script or preset) by id. */
   launch: { type: 'route'; route: string } | { type: 'tabletop' };
   /** Present when the party lobby can start it; tabletop entries start as `tabletop` + `gameId`. */
   party?: { gameType: PartyGameType; descKey?: string };

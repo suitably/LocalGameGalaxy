@@ -6,10 +6,23 @@ import { AREAS } from '../areas';
 import { piecePalette } from '../../themeTokens';
 import type { PartyGameType } from '../../features/party/logic/universalPartyManager';
 import { CATALOG, ROUTE_GAMES } from './entries';
-import type { CatalogEntry, GameDefinition, Listing } from './types';
+import type { CatalogEntry, Listing } from './types';
 
-/** Tiles of the hub, in catalogue order. */
-export const hubEntries = (): GameDefinition[] => ROUTE_GAMES.filter((g) => g.listing === 'hub');
+const listed = (e: CatalogEntry) => e.listing !== 'hidden';
+/** Places (the Spieltisch) close their area, after its games. */
+const placesLast = (a: CatalogEntry, b: CatalogEntry) =>
+  Number(a.kind === 'place') - Number(b.kind === 'place');
+
+/** Game tiles of the hub (Spieltisch games included), in catalogue order, places last. */
+export const hubGames = (): CatalogEntry[] =>
+  CATALOG.filter((e) => listed(e) && e.kind !== 'tool').sort(placesLast);
+
+/** Tool tiles of the hub (score keepers, draws), shown apart from the games. */
+export const hubTools = (): CatalogEntry[] => CATALOG.filter((e) => listed(e) && e.kind === 'tool');
+
+/** The page of a route entry by id (the party room's entry, for the hub's room button). */
+export const routeOf = (id: string): string | undefined =>
+  ROUTE_GAMES.find((g) => g.id === id)?.launch.route;
 
 /** Entries listed in one place (a Spieltisch section, the hub, or hidden ones). */
 export const entriesIn = (listing: Listing): CatalogEntry[] =>

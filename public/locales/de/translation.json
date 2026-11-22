@@ -24,7 +24,19 @@
       "music": "Musik",
       "social_deduction": "Social Deduction",
       "party": "Party"
-    }
+    },
+    "party_room": {
+      "title": "Party-Raum",
+      "desc": "Ein Raum für den ganzen Abend: Alle treten per QR-Code mit dem eigenen Handy bei, der Fernseher zeigt das Spiel.",
+      "open": "Raum öffnen"
+    },
+    "filter": {
+      "own_devices": "Mit eigenen Handys"
+    },
+    "sections": {
+      "tools": "Helfer"
+    },
+    "empty": "Keine Spiele für diese Auswahl."
   },
   "games": {
     "darts": {
@@ -1017,7 +1029,7 @@
     },
     "tabletop": {
       "title": "Spieltisch",
-      "description": "Karten-, Brett- und Würfelspiele: ein Gerät reihum oder jeder am eigenen Handy, mit verdeckten Handkarten.",
+      "description": "Eigene und importierte Spiele, der freie Tisch und alle Karten-, Brett- und Würfelspiele an einem Ort.",
       "subtitle": "Karten-, Brett- und Würfelspiele – auf einem Gerät für alle oder jeder am eigenen.",
       "manage_games": "Spiele verwalten",
       "starter_games": "Klassiker & Vorlagen",

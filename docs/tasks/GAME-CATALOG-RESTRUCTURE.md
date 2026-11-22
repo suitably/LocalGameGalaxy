@@ -153,8 +153,8 @@ Snapshot tests must still pass unchanged at the end of phase 2.
 
 ## 7. Progress
 
-| Step                       | Status                                                                                     |
-| -------------------------- | ------------------------------------------------------------------------------------------ |
-| 0.1, 0.2, 1.1–1.3, 2.1–2.5 | done: ADR-0011, `src/lib/catalog/`, `catalog.test.ts`, rule 11 (one PR, behaviour-neutral) |
-| 3.1–3.6                    | open                                                                                       |
-| 4.1–7.1                    | open                                                                                       |
+| Step                       | Status                                                                                                                 |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| 0.1, 0.2, 1.1–1.3, 2.1–2.5 | done: ADR-0011, `src/lib/catalog/`, `catalog.test.ts`, rule 11 (one PR, behaviour-neutral)                             |
+| 3.1–3.6                    | done: party-room entry, all games by area, own-phones filter, tools section, Gartic tile, Spieltisch as place (one PR) |
+| 4.1–7.1                    | open                                                                                                                   |

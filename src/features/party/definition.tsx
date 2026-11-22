@@ -16,7 +16,8 @@ export const definition = defineGame({
   kind: 'place',
   area: 'party',
   modes: ['party_room'],
-  listing: 'hub',
+  // No tile: the hub opens with its own party-room entry.
+  listing: 'hidden',
   icon: <CelebrationIcon sx={{ fontSize: 72, mb: 2 }} />,
   component: <PartyLobby />,
 });

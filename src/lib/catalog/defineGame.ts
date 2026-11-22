@@ -12,16 +12,18 @@ export function lazyNamed<M, K extends keyof M & string>(load: () => Promise<M>,
 type RouteGameInput = Omit<GameDefinition, 'launch' | 'route' | 'titleKey' | 'descKey'> & {
   /** Route without leading slash. */
   route: string;
+  /** Where a tile opens, when not the page itself (a game only the party lobby starts). */
+  opens?: string;
   /** i18n prefix; title and description keys are `<prefix>.title` / `<prefix>.description`. */
   i18n: string;
 };
 
 /** A game with its own page; `launch` and the i18n keys follow from `route` and `i18n`. */
-export function defineGame({ i18n, route, ...rest }: RouteGameInput): GameDefinition {
+export function defineGame({ i18n, route, opens, ...rest }: RouteGameInput): GameDefinition {
   return {
     ...rest,
     route,
-    launch: { type: 'route', route: `/${route}` },
+    launch: { type: 'route', route: opens ?? `/${route}` },
     titleKey: `${i18n}.title`,
     descKey: `${i18n}.description`,
   };
