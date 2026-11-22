@@ -4,6 +4,8 @@
  * 32 cards, three in hand, three open in the middle. On your turn: swap one card, swap all
  * three, pass or knock. After a knock everyone else plays once more, then the lowest hand loses
  * a life. 31 (or three aces) ends the round at once. Three lives, then you "swim", then you are out.
+ * Options (#787): `passOnce` — each seat may pass only once per deal; `firstSwims` — only the
+ * first player(s) to lose their last life swim, everyone after them is out at once.
  */
 import type { Rng } from '../../logic/rng';
 import { RANKS_32, SUITS, nextSeat, rankOf, shuffledDeck, sortCards, suitOf } from './cardDeck';
@@ -13,9 +15,16 @@ import {
   msg,
   type GameScript,
   type ScriptMove,
+  type ScriptOptions,
   type ScriptView,
   type Text,
 } from './scriptTypes';
+
+/** House rules chosen at setup; both off keeps the original behaviour. */
+export type SchwimmenRules = {
+  passOnce: boolean;
+  firstSwims: boolean;
+};
 
 export interface SchwimmenState {
   /** Lives per seat: 3…1, 0 = swimming, -1 = out. */
@@ -32,6 +41,12 @@ export interface SchwimmenState {
   /** Passes in a row; when everyone passed, the middle is replaced. */
   passes: number;
   result: { losers: number[]; scores: number[]; fire: number | null } | null;
+  /** Missing in sessions saved before the options existed: all off. */
+  rules?: SchwimmenRules;
+  /** Seats that passed in this deal (rule `passOnce`). */
+  passed?: boolean[];
+  /** Someone has already swum in this match (rule `firstSwims`). */
+  swum?: boolean;
 }
 
 const START_LIVES = 3;
@@ -56,7 +71,27 @@ export function schwimmenScore(hand: readonly CardId[]): number {
 const alive = (s: SchwimmenState, seat: number) => s.lives[seat] >= 0;
 const aliveSeats = (s: SchwimmenState) => s.lives.flatMap((l, i) => (l >= 0 ? [i] : []));
 
-function deal(lives: number[], dealer: number, rng: Rng): SchwimmenState {
+const rulesOf = (options?: ScriptOptions): SchwimmenRules => ({
+  passOnce: options?.passOnce === true,
+  firstSwims: options?.firstSwims === true,
+});
+
+/** Whether `seat` may still pass in this deal. */
+export const canPass = (s: SchwimmenState, seat: number): boolean =>
+  !(s.rules?.passOnce === true && s.passed?.[seat] === true);
+
+/** Lives after losing a round: the last life leads to swimming, or out once someone swam. */
+export function livesAfterLoss(lives: number, firstSwims: boolean, swum: boolean): number {
+  return lives === 1 && firstSwims && swum ? -1 : lives - 1;
+}
+
+function deal(
+  lives: number[],
+  dealer: number,
+  rng: Rng,
+  rules: SchwimmenRules,
+  swum: boolean,
+): SchwimmenState {
   const deck = shuffledDeck(RANKS_32, rng);
   const hands = lives.map((l) => (l >= 0 ? deck.splice(0, 3) : []));
   return {
@@ -71,6 +106,9 @@ function deal(lives: number[], dealer: number, rng: Rng): SchwimmenState {
     knocker: null,
     passes: 0,
     result: null,
+    rules,
+    passed: lives.map(() => false),
+    swum,
   };
 }
 
@@ -85,11 +123,16 @@ function finish(s: SchwimmenState, fire: number | null): SchwimmenState {
     // Everyone equal: nobody loses.
     if (losers.length === seats.length) losers = [];
   }
-  const lives = s.lives.map((l, i) => (losers.includes(i) ? l - 1 : l));
+  const firstSwims = s.rules?.firstSwims === true;
+  const swumBefore = s.swum === true;
+  const lives = s.lives.map((l, i) =>
+    losers.includes(i) ? livesAfterLoss(l, firstSwims, swumBefore) : l,
+  );
   const left = lives.filter((l) => l >= 0).length;
   return {
     ...s,
     lives,
+    swum: swumBefore || lives.includes(0),
     phase: left <= 1 ? 'matchEnd' : 'roundEnd',
     result: { losers, scores, fire },
   };
@@ -135,10 +178,18 @@ function playMove(s: SchwimmenState, seat: number, move: ScriptMove): SchwimmenS
     return advance({ ...s, knocker: seat, passes: 0 });
   }
   if (move.id === 'pass') {
+    if (!canPass(s, seat)) return s;
     const passes = s.passes + 1;
-    if (passes < aliveSeats(s).length) return advance({ ...s, passes });
-    if (s.stock.length < 3) return finish(s, null);
-    return advance({ ...s, passes: 0, middle: s.stock.slice(0, 3), stock: s.stock.slice(3) });
+    const passed = s.lives.map((_, i) => i === seat || s.passed?.[i] === true);
+    if (passes < aliveSeats(s).length) return advance({ ...s, passes, passed });
+    if (s.stock.length < 3) return finish({ ...s, passed }, null);
+    return advance({
+      ...s,
+      passes: 0,
+      passed,
+      middle: s.stock.slice(0, 3),
+      stock: s.stock.slice(3),
+    });
   }
   return s;
 }
@@ -161,11 +212,14 @@ function move(s: SchwimmenState, seat: number, m: ScriptMove, rng: Rng): Schwimm
     return fire !== null ? finish(next, fire) : next;
   }
   if (m.id !== 'next') return s;
-  if (s.phase === 'matchEnd') return schwimmen.start(s.lives.length, rng);
+  const rules = s.rules ?? rulesOf();
+  if (s.phase === 'matchEnd') return schwimmen.start(s.lives.length, rng, rules);
   return deal(
     s.lives,
     nextSeat(s.dealer, s.lives.length, (i) => alive(s, i)),
     rng,
+    rules,
+    s.swum === true,
   );
 }
 
@@ -208,7 +262,7 @@ function view(s: SchwimmenState, viewer: number | null): ScriptView {
       v.playLabel = msg('schwimmen.swapOne');
       v.actions = [
         { id: 'swapAll', label: msg('schwimmen.swapAll') },
-        { id: 'pass', label: msg('schwimmen.pass') },
+        ...(canPass(s, s.turn) ? [{ id: 'pass', label: msg('schwimmen.pass') }] : []),
         ...(s.knocker === null ? [{ id: 'knock', label: msg('schwimmen.knock') }] : []),
       ];
     }
@@ -252,8 +306,22 @@ export const schwimmen: GameScript<SchwimmenState> = {
   ranks: RANKS_32,
   minPlayers: 2,
   maxPlayers: 9,
-  start: (count, rng) =>
-    deal(Array<number>(count).fill(START_LIVES), Math.floor(rng() * count), rng),
+  options: [
+    { id: 'passOnce', label: 'schwimmen.option.passOnce', hint: 'schwimmen.option.passOnceHint' },
+    {
+      id: 'firstSwims',
+      label: 'schwimmen.option.firstSwims',
+      hint: 'schwimmen.option.firstSwimsHint',
+    },
+  ],
+  start: (count, rng, options) =>
+    deal(
+      Array<number>(count).fill(START_LIVES),
+      Math.floor(rng() * count),
+      rng,
+      rulesOf(options),
+      false,
+    ),
   move,
   view,
 };

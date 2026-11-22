@@ -1,4 +1,4 @@
-import { drumLaneOf } from './instruments';
+import { DRUM_KICK_LANE, drumLaneOf } from './instruments';
 import { ALIGN_SAMPLE_RATE, fft, frameCentre, frameCount, hann } from './dsp';
 import type { AlignProgress } from './alignment';
 import type { ChromaOnsets } from './chromaOnsets';
@@ -122,7 +122,7 @@ export function noteEvents(song: ScoreSong): NoteEvent[] {
     for (const n of part.notes) {
       if (part.isDrum) {
         const lane = drumLaneOf(n.pitch);
-        if (lane === 4) at(n.t).weight[0] += 1;
+        if (lane === DRUM_KICK_LANE) at(n.t).weight[0] += 1;
         else at(n.t).weight[2] += lane === 0 || lane === 2 ? 1 : 0.3;
       } else if (part.guess === 'bass') {
         at(n.t).weight[0] += 0.7;

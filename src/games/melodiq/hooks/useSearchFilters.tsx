@@ -5,6 +5,7 @@ import { type DownloadJob } from './useDownloads';
 import { type UsdbSongItem } from '../types';
 import { melodiqFetch } from '../api/melodiqFetch';
 import { isUsdbLoginRequiredError, navigateToUsdbSettings } from '../utils/usdbNavigation';
+import { filterLibrary } from '../logic/songLibrary';
 
 export type SortOption =
   'title-asc' | 'title-desc' | 'artist-asc' | 'artist-desc' | 'year-desc' | 'year-asc';
@@ -147,14 +148,8 @@ export function useSearchFilters(songs: SongMeta[], jobs?: DownloadJob[]) {
       result = [...uniqueDummies, ...result];
     }
 
-    if (searchQuery) {
-      const lowerQuery = searchQuery.toLowerCase();
-      result = result.filter(
-        (song) =>
-          (song.title || '').toLowerCase().includes(lowerQuery) ||
-          (song.artist || '').toLowerCase().includes(lowerQuery),
-      );
-    }
+    // every word must match title, artist or album (#636)
+    if (searchQuery) result = filterLibrary(result, searchQuery);
 
     return sortSongs(applyFacetFilters(result, activeFilters), sortOption);
   }, [songs, jobs, searchQuery, activeFilters, sortOption]);

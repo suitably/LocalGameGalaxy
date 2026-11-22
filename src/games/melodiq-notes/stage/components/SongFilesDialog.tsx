@@ -10,25 +10,20 @@ import {
   useMediaQuery,
   type Theme,
 } from '@mui/material';
-import UploadIcon from '@mui/icons-material/UploadFileRounded';
 import ZipIcon from '@mui/icons-material/FolderZipRounded';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '../../../../components/common/ConfirmDialog';
 import { songArchiveUrl } from '../../../../lib/companion/notesLibraryApi';
 import type { CompanionSong } from '../../../../lib/companion/songScoresApi';
 import { NotesDialogFrame } from '../../components/NotesDialogFrame';
-import {
-  SONG_FILE_ACCEPT,
-  canEditSongMeta,
-  songFileRows,
-  type SongFileRow,
-} from '../logic/songFileEdits';
+import { canEditSongMeta, songFileRows, type SongFileRow } from '../logic/songFileEdits';
 import { useFolderAlignment } from '../useFolderAlignment';
 import { useSongFilesManager } from '../useSongFilesManager';
 import { RecordingSearch } from './RecordingSearch';
 import { ScoreAlignmentLine } from './ScoreAlignmentLine';
 import { SongFileRowItem } from './SongFileRowItem';
+import { SongFilesAddBar } from './SongFilesAddBar';
 
 interface SongFilesDialogProps {
   song: CompanionSong;
@@ -51,7 +46,6 @@ export function SongFilesDialog({ song: initial, onClose }: SongFilesDialogProps
   const aligner = useFolderAlignment(m.song);
   const [deleting, setDeleting] = useState<SongFileRow | null>(null);
   const [discarding, setDiscarding] = useState(false);
-  const input = useRef<HTMLInputElement>(null);
   const rows = songFileRows(m.song);
   const scores = rows.filter((r) => r.kind === 'score');
   const recordings = rows.filter((r) => r.kind === 'recording');
@@ -153,30 +147,7 @@ export function SongFilesDialog({ song: initial, onClose }: SongFilesDialogProps
             {k('files_recordings_hint')}
           </Typography>
           <RecordingSearch song={m.song} disabled={busy} onReplaced={m.adopt} />
-          <input
-            ref={input}
-            type="file"
-            hidden
-            multiple
-            accept={SONG_FILE_ACCEPT}
-            onChange={(e) => {
-              const files = Array.from(e.target.files ?? []);
-              e.target.value = '';
-              if (files.length) void m.upload(files);
-            }}
-          />
-          <Button
-            variant="outlined"
-            startIcon={<UploadIcon />}
-            disabled={busy}
-            onClick={() => input.current?.click()}
-            sx={{ alignSelf: 'flex-start' }}
-          >
-            {k('files_add')}
-          </Button>
-          <Typography variant="caption" color="text.secondary">
-            {k('files_add_hint')}
-          </Typography>
+          <SongFilesAddBar m={m} disabled={busy} onMoved={() => onClose(true)} />
           {m.busy && <LinearProgress />}
         </Stack>
       </DialogContent>

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMediaQuery, useTheme } from '@mui/material';
-import type { Note } from '../../parser';
+import type { Note } from '../../logic/songVocals';
 import {
   ACTIVE_LINE_REM,
   lyricsFitFactor,

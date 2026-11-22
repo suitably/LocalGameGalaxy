@@ -1,6 +1,6 @@
 import { partyMailbox } from './partyMailbox';
 import { storage, sessionStorageSafe, STORAGE_KEYS, STORAGE_PREFIXES } from '../../../lib/storage';
-import { MultiChannelSyncCoordinator } from '../../../modules/sync';
+import { MultiChannelSyncCoordinator, ensureRoomKey } from '../../../modules/sync';
 import { releaseRoomPeers } from '../../../modules/room-game';
 import { addPresencePlayer, assignSlots, mergeIncomingState, removePlayer } from './partyRoster';
 import {
@@ -27,7 +27,7 @@ export interface PartyPlayer {
 }
 
 /** Dice games played in the room, everyone on their own sheet (`modules/room-game`). */
-export type RoomDiceGame = 'knister';
+export type RoomDiceGame = 'knister' | 'kniffel' | 'qwixx';
 export type PartyGameType =
   | 'guessart'
   | 'garticphone'
@@ -138,6 +138,8 @@ class UniversalPartyManager {
     const hostId = this.getMyPlayerId();
 
     sessionStorageSafe.set(`${STORAGE_PREFIXES.PARTY_HOST_ID}${roomId}`, hostId);
+    // New rooms are always end-to-end encrypted; the key travels in the invite link (ADR 0009).
+    ensureRoomKey(roomId, 'session');
 
     const previous =
       this.currentRoomState?.roomId === roomId

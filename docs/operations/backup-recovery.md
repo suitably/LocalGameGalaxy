@@ -26,7 +26,7 @@ The application stores data on both the server and client hosts. The following e
 | Scope      | Data Type                                                                              | Location                                                                                                             | Backup Strategy                                                                    |
 | ---------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | **Server** | Token, API keys, USDB/GitHub credentials                                               | `config.json` (Docker: `./config/config.json` → `/app/config`)                                                       | File backup (manual/automation)                                                    |
-| **Server** | User playlists data                                                                    | `playlists.json` next to `config.json`                                                                               | File backup (automated job)                                                        |
+| **Server** | Song library (favourites, playlists per API user, #636)                                | `melodiq-library.json` next to `config.json`                                                                         | File backup (automated job)                                                        |
 | **Server** | Songs and stems                                                                        | `MUSIC_DIR` / configured directories (Docker: `./music` → `/app/music`)                                              | Directory backup                                                                   |
 | **Client** | Scores, playlists, sheet music, word pairs, GuessArt/Storyteller games, tabletop games | IndexedDB (`MelodiqDB`, `MelodiqNotesDB`, `ImposterDB`, `guessart-local`, `storyteller-local`, `galaxy_tabletop_db`) | **No export feature in the app** (**Inference** from code search); per-device only |
 | **Client** | App preferences, game state                                                            | `localStorage` (`STORAGE_KEYS`)                                                                                      | No export feature; per-device only                                                 |
@@ -47,7 +47,7 @@ mkdir -p "$BACKUP_DIR"
 
 # Backup configurations
 cp /app/server/config.json "$BACKUP_DIR/config_$TIMESTAMP.json"
-cp /app/playlists.json "$BACKUP_DIR/playlists_$TIMESTAMP.json"
+cp /app/melodiq-library.json "$BACKUP_DIR/melodiq-library_$TIMESTAMP.json"
 
 # Compress backups and clean up files older than 14 days
 tar -czf "$BACKUP_DIR/stems_$TIMESTAMP.tar.gz" /app/server/music
@@ -63,7 +63,7 @@ find "$BACKUP_DIR" -type f -mtime +14 -delete
 2. Restore the configuration files:
    ```bash
    cp /var/backups/localgamegalaxy/config_2026xxxx.json /app/server/config.json
-   cp /var/backups/localgamegalaxy/playlists_2026xxxx.json /app/playlists.json
+   cp /var/backups/localgamegalaxy/melodiq-library_2026xxxx.json /app/melodiq-library.json
    ```
 3. Extract music stems:
    ```bash
@@ -133,6 +133,6 @@ Object.keys(data).forEach((key) => localStorage.setItem(key, data[key]));
 In the event of complete server failure:
 
 1. Provision a new host instance with Docker installed.
-2. Clone the repository and copy back the latest `config.json` and `playlists.json` from backups.
-3. If music backups are unavailable, users must re-download songs from the interface. The metadata and playlists will load cleanly from `playlists.json`.
+2. Clone the repository and copy back the latest `config.json` and `melodiq-library.json` from backups.
+3. If music backups are unavailable, users must re-download songs from the interface. The metadata and playlists will load cleanly from `melodiq-library.json`.
 4. Instruct users to reload their browsers. If database schemas get stuck, prompt them to run "Clear Database" (triggering the Dexie deletion and automatic seeding script).

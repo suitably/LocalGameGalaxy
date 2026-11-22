@@ -25,7 +25,7 @@ export function introBeat(e: StageEngine): number | null {
 /** What the synth plays for the song; a recording's intro counts in by itself, so it gets no clicks. */
 export function stageBandEvents(e: StageEngine, song: ScoreSong, mode: BandMode) {
   const clicks = introBeat(e) === null ? e.countIn : 0;
-  return buildBandEvents(song, e.seats, mode, clicks, e.startBeat);
+  return buildBandEvents(song, e.seats, mode, clicks, e.startBeat, e.drumOptions);
 }
 
 /** Keeps the recording on the song clock: plays wherever it has sound (its intro too), waits with learn mode, seeks after loops. */

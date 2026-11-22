@@ -11,6 +11,9 @@ export const HEADER_MENU_ENTRIES = [
   { key: 'onOpenSaves', labelKey: 'games.tabletop.saves.title' },
   { key: 'onOpenTableSettings', labelKey: 'games.tabletop.editor.table' },
   { key: 'onExportJson', labelKey: 'games.tabletop.export_json' },
+  { key: 'onEnableLuaScripts', labelKey: 'games.tabletop.lua.enable' },
+  { key: 'onDisableLuaScripts', labelKey: 'games.tabletop.lua.disable' },
+  { key: 'onOpenLuaLog', labelKey: 'games.tabletop.lua.log_title' },
   { key: 'onRestart', labelKey: 'games.tabletop.restart' },
 ] as const;
 

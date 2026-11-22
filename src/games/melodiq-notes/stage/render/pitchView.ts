@@ -11,6 +11,7 @@ import {
   fadeIfPlayed,
   STAGE,
 } from './common';
+import { judgementColors } from '../logic/judgementStyle';
 import { pitchGeometry } from './geometry';
 import type { HitPoint, ViewContext } from './view';
 
@@ -63,7 +64,7 @@ export function drawPitch(v: ViewContext): HitPoint {
       g.save();
       roundRect(g, x, y - bh / 2, bw, bh, bh / 2);
       g.clip();
-      g.fillStyle = STAGE.perfect;
+      g.fillStyle = judgementColors().perfect;
       g.fillRect(x, y - bh / 2, bw * sung, bh);
       g.restore();
     }

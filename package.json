@@ -30,11 +30,12 @@
     "changelog": "node scripts/changelog.mjs",
     "tokens": "node scripts/token-usage.mjs",
     "check:security": "node scripts/check-audit.mjs",
+    "check:licences": "node scripts/check-licences.mjs",
     "cleanup:previews": "node scripts/cleanup-cloudflare-previews.mjs",
     "prepare": "husky",
     "quality-gates": "npm run check:hygiene && npm run check:architecture:diff && npm run check:budget && npm run check:duplicates && npm run lint && npm run check:lint-budget && npm test",
     "test:tts-compat": "node --test scripts/tts-compat/*.test.mjs",
-    "ci:gates": "npm run check:hygiene && npm run test:scripts && npm run test:tts-compat && npm run check:changelog && npm run check:architecture && npm run check:budget && npm run check:duplicates && npm run lint && npm run check:lint-budget && npm test",
+    "ci:gates": "npm run check:hygiene && npm run test:scripts && npm run test:tts-compat && npm run check:changelog && npm run check:licences && npm run check:architecture && npm run check:budget && npm run check:duplicates && npm run lint && npm run check:lint-budget && npm test",
     "build:wordle-words": "node scripts/build-wordle-words.mjs"
   },
   "lint-staged": {
@@ -90,7 +91,8 @@
     "react-router-dom": "7.18.5",
     "react-virtuoso": "4.18.20",
     "simple-peer": "9.11.1",
-    "uuid": "14.0.3"
+    "uuid": "14.0.3",
+    "wasmoon": "1.16.0"
   },
   "devDependencies": {
     "@capacitor/cli": "8.6.2",

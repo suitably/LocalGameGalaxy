@@ -86,6 +86,16 @@ describe('partyRoutes (#417)', () => {
       'https://nexumia.de/#/party?room=R1&gameRelay=https%3A%2F%2Fmy.host%3A3000',
     );
   });
+
+  it('share URL carries the room key in the fragment (ADR 0009)', () => {
+    const base = { origin: 'https://nexumia.de', pathname: '/', roomId: 'R1' };
+    expect(
+      buildPartyShareUrl({ ...base, roomKey: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk' }),
+    ).toBe('https://nexumia.de/#/party?room=R1&key=kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk');
+    expect(buildPartyShareUrl({ ...base, roomKey: 'not-a-key' })).toBe(
+      'https://nexumia.de/#/party?room=R1',
+    );
+  });
 });
 
 describe('resolvePendingLaunch (Spieltisch → party lobby)', () => {
@@ -126,6 +136,13 @@ describe('resolvePendingLaunch (Spieltisch → party lobby)', () => {
     expect(getGameRoute({ gameType: 'knister', roomId: 'R1', isHost: true, seat: 0 })).toBe(
       '/games/knister?room=R1',
     );
+    // Kniffel and Qwixx too (#467 slice 5)
+    for (const gameType of ['kniffel', 'qwixx'] as const) {
+      expect(resolvePendingLaunch(new URLSearchParams(`launch=${gameType}`))).toEqual({ gameType });
+      expect(getGameRoute({ gameType, roomId: 'R1', isHost: false, seat: 1 })).toBe(
+        `/games/${gameType}?room=R1`,
+      );
+    }
   });
 });
 

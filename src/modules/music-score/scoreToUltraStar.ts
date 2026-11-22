@@ -9,8 +9,10 @@
 import { ULTRASTAR_PITCH_OFFSET } from './ultrastarScore';
 import { createAudioMap, type AudioMap } from './timing';
 import type { BarMark, ScoreNote, ScorePart, ScoreSong, UltraStarKind } from './types';
+import type { UltraStarNote, UltraStarTrack } from './ultrastar';
 
-const KIND_CHAR: Record<UltraStarKind, string> = {
+/** UltraStar note type of a score note: its kind, else a normal note (`:`). */
+export const KIND_CHAR: Record<UltraStarKind, string> = {
   golden: '*',
   freestyle: 'F',
   rap: 'R',
@@ -100,24 +102,62 @@ function lyric(prev: ScoreNote | undefined, note: ScoreNote, first: boolean): st
   return continues || first ? word : ` ${word}`;
 }
 
-function trackLines(part: ScorePart, map: AudioMap, gapSec: number, step: number, minGap: number) {
+function trackNotes(part: ScorePart, map: AudioMap, gapSec: number, step: number, minGap: number) {
   const placed = quantize(part.notes, map, gapSec, step);
   const breaks = breakIndexes(part, placed, map, minGap);
-  const lines: string[] = [];
+  const notes: UltraStarNote[] = [];
   placed.forEach((p, i) => {
     const breakBeat = breaks.get(i);
     if (breakBeat !== undefined) {
       const prev = placed[i - 1];
       const at = Math.round((map.secAt(breakBeat) - gapSec) / step);
-      lines.push(`- ${Math.max(prev.start + prev.dur, Math.min(at, p.start))}`);
+      const start = Math.max(prev.start + prev.dur, Math.min(at, p.start));
+      notes.push({ type: '-', start, duration: 0, pitch: 0, text: '' });
     }
-    const kind = p.note.ultrastar ? KIND_CHAR[p.note.ultrastar] : ':';
-    const pitch = Math.round(p.note.pitch) - ULTRASTAR_PITCH_OFFSET;
-    const text = lyric(i > 0 ? placed[i - 1].note : undefined, p.note, i === 0);
-    lines.push(`${kind} ${p.start} ${p.dur} ${pitch} ${text}`);
+    notes.push({
+      type: p.note.ultrastar ? KIND_CHAR[p.note.ultrastar] : ':',
+      start: p.start,
+      duration: p.dur,
+      pitch: Math.round(p.note.pitch) - ULTRASTAR_PITCH_OFFSET,
+      text: lyric(i > 0 ? placed[i - 1].note : undefined, p.note, i === 0),
+    });
   });
-  return lines;
+  return notes;
 }
+
+/** Score parts placed on an UltraStar beat grid: what a `.txt` of them would hold. */
+export interface UltraStarGrid {
+  bpm: number;
+  gapMs: number;
+  tracks: UltraStarTrack[];
+}
+
+/**
+ * Parts on the UltraStar grid of `opts.bpm` (default: see `defaultUltraStarBpm`), `#GAP` at the
+ * first note; the structured core of `scoreToUltraStar`, also Melodiq's timing for a score without
+ * `.txt` (#604).
+ */
+export function scoreToUltraStarGrid(
+  song: ScoreSong,
+  parts: ScorePart[],
+  marks: BarMark[],
+  opts: UltraStarExportOptions = {},
+): UltraStarGrid {
+  const map = createAudioMap(song, marks);
+  const bpm = opts.bpm && opts.bpm > 0 ? opts.bpm : defaultUltraStarBpm(marks);
+  const step = 15 / bpm;
+  const firstSec = Math.min(...parts.map((p) => map.secAt(Math.min(...p.notes.map((n) => n.t)))));
+  const gapMs = Math.max(0, Math.round(firstSec * 1000));
+  const minGap = opts.lineBreakGapSec ?? DEFAULT_LINE_GAP_SEC;
+  const tracks = parts.map((part) => ({
+    name: part.name,
+    notes: trackNotes(part, map, gapMs / 1000, step, minGap),
+  }));
+  return { bpm, gapMs, tracks };
+}
+
+const noteLine = (n: UltraStarNote) =>
+  n.type === '-' ? `- ${n.start}` : `${n.type} ${n.start} ${n.duration} ${n.pitch} ${n.text}`;
 
 /**
  * The vocal part (or, as a duet, two parts) as UltraStar `.txt` content.
@@ -144,13 +184,7 @@ export function scoreToUltraStar(
     return part;
   });
 
-  const map = createAudioMap(song, marks);
-  const bpm = opts.bpm && opts.bpm > 0 ? opts.bpm : defaultUltraStarBpm(marks);
-  const step = 15 / bpm;
-  const firstSec = Math.min(...parts.map((p) => map.secAt(Math.min(...p.notes.map((n) => n.t)))));
-  const gapMs = Math.max(0, Math.round(firstSec * 1000));
-  const minGap = opts.lineBreakGapSec ?? DEFAULT_LINE_GAP_SEC;
-
+  const { bpm, gapMs, tracks } = scoreToUltraStarGrid(song, parts, marks, opts);
   const out = [
     `#TITLE:${song.title}`,
     `#ARTIST:${song.artist}`,
@@ -160,9 +194,9 @@ export function scoreToUltraStar(
   ];
   if (parts.length === 2)
     out.push(`#DUETSINGERP1:${parts[0].name}`, `#DUETSINGERP2:${parts[1].name}`);
-  parts.forEach((part, i) => {
+  tracks.forEach((track, i) => {
     if (parts.length === 2) out.push(`P${i + 1}`);
-    out.push(...trackLines(part, map, gapMs / 1000, step, minGap));
+    out.push(...track.notes.map(noteLine));
   });
   out.push('E', '');
   return out.join('\n');

@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Box } from '@mui/material';
-import { type Playlist } from '../db';
 import { MelodiqPlaylists } from './MelodiqPlaylists';
 import { PlaylistDetails } from './PlaylistDetails';
 import { MelodiqConnection } from '../MelodiqConnection';
@@ -8,7 +7,9 @@ import { type MelodiqView } from '../hooks/useMelodiqNavigation';
 
 interface MelodiqSubViewsProps {
   currentView: MelodiqView;
-  setCurrentView: (view: MelodiqView) => void;
+  activePlaylistId: string | null;
+  /** Shows the playlist details view for this playlist. */
+  onOpenPlaylist: (playlistId: string) => void;
 }
 
 /**
@@ -18,10 +19,9 @@ interface MelodiqSubViewsProps {
  */
 export const MelodiqSubViews: React.FC<MelodiqSubViewsProps> = ({
   currentView,
-  setCurrentView,
+  activePlaylistId,
+  onOpenPlaylist,
 }) => {
-  const [activePlaylist, setActivePlaylist] = useState<Playlist | null>(null);
-
   return (
     <>
       <Box
@@ -35,16 +35,11 @@ export const MelodiqSubViews: React.FC<MelodiqSubViewsProps> = ({
       </Box>
 
       <Box sx={{ display: currentView === 'Playlists' ? 'block' : 'none', height: '100%' }}>
-        <MelodiqPlaylists
-          onSelectPlaylist={(p) => {
-            setActivePlaylist(p);
-            setCurrentView('PlaylistDetails');
-          }}
-        />
+        <MelodiqPlaylists onSelectPlaylist={(p) => onOpenPlaylist(p.id)} />
       </Box>
 
       <Box sx={{ display: currentView === 'PlaylistDetails' ? 'block' : 'none', height: '100%' }}>
-        {activePlaylist && <PlaylistDetails playlist={activePlaylist} />}
+        {activePlaylistId && <PlaylistDetails playlistId={activePlaylistId} />}
       </Box>
     </>
   );

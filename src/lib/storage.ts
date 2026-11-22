@@ -59,7 +59,8 @@ export const STORAGE_KEYS = {
   MELODIQ_P2_DEVICE: 'melodiq_p2_device',
 
   // Melodiq Playlists & Session
-  MELODIQ_ENABLE_PLAYLIST_SYNC: 'melodiq_enable_playlist_sync',
+  /** Favourite song ids (JSON array) when the song library is stored on this device (#636). */
+  MELODIQ_FAVORITES: 'melodiq_favorites',
   MELODIQ_META_CACHE: 'melodiq_meta_cache',
   MELODIQ_RTC_CONNECTED: 'melodiq_rtc_connected',
 
@@ -105,6 +106,10 @@ export const STORAGE_KEYS = {
   MELODIQ_NOTES_INSTRUMENT: 'melodiq_notes_instrument',
   /** Best result per player and song (`SongResult[]` JSON, #699). */
   MELODIQ_NOTES_RESULTS: 'melodiq_notes_results',
+  /** Colours of the judgements on the stage ('standard' | 'colorblind', #699). */
+  MELODIQ_NOTES_JUDGEMENT_PALETTE: 'melodiq_notes_judgement_palette',
+  /** Whether the drum percussion lane is judged ('1'); default display-only (#571). */
+  MELODIQ_NOTES_JUDGE_PERCUSSION: 'melodiq_notes_judge_percussion',
 
   // Werewolf game state
   WEREWOLF_STATE: 'werewolf-game-state',
@@ -145,6 +150,8 @@ export const STORAGE_KEYS = {
   CARDS_LOBBY_PLAYERS: 'cards_lobby_players',
   /** Player names for scripted card games on one device (Spieltisch). */
   TABLETOP_CARD_PLAYERS: 'tabletop_card_players',
+  /** '1' = run the Lua scripts of imported Workshop games on this host (experimental, #705). */
+  TABLETOP_LUA_RUNTIME: 'tabletop_lua_runtime',
 
   // Knister & Qwixx
   KNISTER_CURRENT_GAME: 'knister_current_game',
@@ -152,6 +159,8 @@ export const STORAGE_KEYS = {
   KNISTER_HIGHSCORE: 'knister_highscore',
   QWIXX_MY_SHEET: 'qwixx_my_sheet',
   QWIXX_SHOW_DICE: 'qwixx_show_dice',
+  /** Qwixx on one device for several players: every sheet + whose sheet is open (#467). */
+  QWIXX_LOCAL_TABLE: 'qwixx_local_table',
 
   // Kniffel
   KNIFFEL_CURRENT_GAME: 'kniffel_current_game',
@@ -167,9 +176,7 @@ export const STORAGE_KEYS = {
   STORYTELLER_LOBBY_PLAYERS: 'storyteller_lobby_players',
   STORYTELLER_LOBBY_MODIFIERS: 'storyteller_lobby_modifiers',
 
-  // Gartic Phone & Universal Party
-  GARTIC_STATE_PREFIX: 'galaxy_gartic_state_',
-  GARTIC_HOST_PREFIX: 'gartic_host_',
+  // Universal Party
   PARTY_MY_PLAYER_ID: 'party_my_player_id',
   /** Player name shared by the party lobby and party games (historical key name). */
   PARTY_PLAYER_NAME: 'guessart_player_name',
@@ -194,9 +201,16 @@ export const STORAGE_KEYS = {
 export const STORAGE_PREFIXES = {
   PARTY_STATE: 'galaxy_party_state_',
   PARTY_HOST_ID: 'party_host_id_',
+  /**
+   * MQTT end-to-end key per party room (session storage) or per "play over days" game id
+   * (local storage), base64url AES-GCM 256 (`src/modules/sync/roomKeys.ts`, ADR 0009).
+   */
+  ROOM_KEY: 'galaxy_room_key_',
   GAME_RELAY: 'galaxy_game_relay_',
   /** Running scripted card game per game id (local table or the room this device hosts). */
   TABLETOP_SCRIPTED: 'tabletop_scripted_',
+  /** This device's own Qwixx sheet in a party room, per room id (#467). */
+  QWIXX_ROOM_SHEET: 'qwixx_room_sheet_',
   GUESSART_GAME_ALIAS: 'guessart_game_alias_',
   GUESSART_LOCAL_PLAYERS: 'guessart_local_players_',
   GUESSART_TEMP_LOCAL_PLAYERS: 'guessart_temp_local_players_',

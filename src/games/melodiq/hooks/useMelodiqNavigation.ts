@@ -27,6 +27,13 @@ export function useMelodiqNavigation() {
     setCurrentView(v as MelodiqView);
   }, []);
 
+  // Playlist shown by the PlaylistDetails view (opened from the Playlists view or library tab)
+  const [activePlaylistId, setActivePlaylistId] = useState<string | null>(null);
+  const openPlaylist = useCallback((id: string) => {
+    setActivePlaylistId(id);
+    setCurrentView('PlaylistDetails');
+  }, []);
+
   const handleCloseSubView = useCallback(() => {
     if (isSubView(window.history.state?.melodiqSubView)) {
       window.history.back();
@@ -65,5 +72,7 @@ export function useMelodiqNavigation() {
     setCurrentView,
     handleSetCurrentView,
     handleCloseSubView,
+    activePlaylistId,
+    openPlaylist,
   };
 }

@@ -6,6 +6,7 @@ import { TOUCH_TARGET } from '../../../../lib/touchTarget';
 import { NotesSheet } from '../../components/NotesSheet';
 import type { StageEngine } from '../engine/StageEngine';
 import type { StageInputSource } from '../useStageInput';
+import { DrumLaneOptions } from './DrumLaneOptions';
 import { InputMenu } from './InputMenu';
 import { PlayerList } from './PlayerList';
 import { ModeSwitch } from './ModeSwitch';
@@ -30,6 +31,8 @@ interface SessionBarProps {
   lead?: ReactNode;
   /** After them: the recording. */
   trail?: ReactNode;
+  /** Below the player list: editing the score's parts (#564). */
+  playersExtra?: ReactNode;
 }
 
 const chipSx = { minHeight: TOUCH_TARGET, textTransform: 'none' } as const;
@@ -41,7 +44,8 @@ const chipSx = { minHeight: TOUCH_TARGET, textTransform: 'none' } as const;
  * while the header is hidden.
  */
 export function SessionBar(props: SessionBarProps) {
-  const { engine, input, scheduleClicks, onInvite, onRemoveRemote, lead, trail } = props;
+  const { engine, input, scheduleClicks, onInvite, onRemoveRemote, lead, trail, playersExtra } =
+    props;
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
     t(`games.melodiq_notes.stage.${key}`, opts);
@@ -107,6 +111,8 @@ export function SessionBar(props: SessionBarProps) {
         }
       >
         <PlayerList engine={engine} onInvite={onInvite} onRemoveRemote={onRemoveRemote} />
+        <DrumLaneOptions engine={engine} />
+        {playersExtra}
       </NotesSheet>
     </Stack>
   );

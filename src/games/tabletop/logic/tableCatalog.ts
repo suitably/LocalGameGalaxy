@@ -91,7 +91,7 @@ export const CARD_GAMES: TableGameEntry[] = [
   cardGame('cabo', 'Cabo', piecePalette.purple),
 ];
 
-/** Dice games with their own score sheets; with own devices once they sync (#467 slice 5). */
+/** Dice games with their own score sheets; with own devices through the party room (#467). */
 export const DICE_GAMES: TableGameEntry[] = [
   {
     id: 'kniffel',
@@ -102,7 +102,7 @@ export const DICE_GAMES: TableGameEntry[] = [
     descKey: 'games.kniffel.description',
     icon: 'dice',
     color: piecePalette.red,
-    modes: ['shared_device'],
+    modes: ['shared_device', 'own_devices'],
   },
   {
     id: 'knister',
@@ -124,7 +124,7 @@ export const DICE_GAMES: TableGameEntry[] = [
     descKey: 'games.qwixx.description',
     icon: 'dice',
     color: piecePalette.orange,
-    modes: ['shared_device'],
+    modes: ['shared_device', 'own_devices'],
   },
 ];
 

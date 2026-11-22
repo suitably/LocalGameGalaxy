@@ -3,6 +3,7 @@ import { Box, Container, Divider, Paper } from '@mui/material';
 import { PartyGamePickerModal } from './components/PartyGamePickerModal';
 import { EditPlayerNameDialog, EditRoomCodeDialog } from './components/PartySettingsDialogs';
 import { PartyActiveGameBanner } from './components/PartyActiveGameBanner';
+import { PartyEncryptedRoomNotice } from './components/PartyEncryptedRoomNotice';
 import { PartyPendingGame } from './components/PartyPendingGame';
 import { PartyRoomHeader } from './components/PartyRoomHeader';
 import { PartyRemovedNotice } from './components/PartyRemovedNotice';
@@ -60,6 +61,8 @@ export const PartyLobby: React.FC<PartyLobbyProps> = ({ initialRoomId }) => {
             <PartyRemovedNotice lobby={lobby} />
           ) : (
             <>
+              <PartyEncryptedRoomNotice roomId={lobby.roomId} />
+
               <PartyActiveGameBanner lobby={lobby} />
 
               <PartyRoomHeader lobby={lobby} />

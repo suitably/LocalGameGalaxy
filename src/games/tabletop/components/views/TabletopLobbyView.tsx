@@ -6,8 +6,7 @@ import { Box, Button, Container, Grid, Paper, Typography } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/SettingsRounded';
 import { useTranslation } from 'react-i18next';
 import { GameManagerDialog } from '../manager/GameManagerDialog';
-import { PublishTabletopGameDialog } from '../publisher/PublishTabletopGameDialog';
-import type { TabletopGameDefinition, TabletopGameSummary } from '../../logic/types';
+import type { TabletopGameSummary } from '../../logic/types';
 import { listTabletopGames } from '../../logic/tabletopStorage';
 import {
   CARD_GAMES,
@@ -31,7 +30,6 @@ interface TabletopLobbyViewProps {
 export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) => {
   const { t } = useTranslation();
   const [managerOpen, setManagerOpen] = useState(false);
-  const [publishGame, setPublishGame] = useState<TabletopGameDefinition | null>(null);
   const [installedGames, setInstalledGames] = useState<TabletopGameSummary[]>([]);
   const [choosing, setChoosing] = useState<TableGameEntry | null>(null);
 
@@ -142,12 +140,6 @@ export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) 
         onClose={() => setManagerOpen(false)}
         onPlayParty={(id) => onOpen(routeFor(byId(id), 'own_devices'))}
         onPlayLocal={(id) => onOpen(routeFor(byId(id), 'shared_device'))}
-        onPublish={setPublishGame}
-      />
-      <PublishTabletopGameDialog
-        open={Boolean(publishGame)}
-        game={publishGame}
-        onClose={() => setPublishGame(null)}
       />
     </Box>
   );

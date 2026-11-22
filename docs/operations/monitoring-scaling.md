@@ -105,5 +105,5 @@ Configure your monitoring stack (e.g. Prometheus + Alertmanager or custom script
 The companion server utilizes a **single-worker job queue** to run separation tasks sequentially.
 
 - **Concurrency**: The server executes exactly **one** separation job at a time. Other requests remain queued in `separatorQueue`.
-- **Scaling Limit**: Do **not** attempt to scale horizontally by running multiple instances of the server sharing the same directory without a distributed lock manager. This would corrupt the database files and lead to file lock conflicts on `playlists.json`.
+- **Scaling Limit**: Do **not** attempt to scale horizontally by running multiple instances of the server sharing the same directory without a distributed lock manager. This would corrupt the database files and lead to file lock conflicts on `melodiq-library.json`.
 - **Hardware Requirement**: For reliable CPU-based separation, the host machine must have at least **4 CPU cores** and **4 GB of total system RAM**.

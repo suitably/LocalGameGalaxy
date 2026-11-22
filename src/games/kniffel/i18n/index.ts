@@ -33,6 +33,9 @@ export const initKniffelI18n = () => {
             lower_total: 'Summe unten',
             game_over: 'Spiel beendet!',
             play_again: 'Nochmal spielen',
+            room_connecting: 'Verbinde mit dem Host …',
+            room_your_turn: 'Du bist dran: würfeln und eintragen',
+            room_turn_of: '{{name}} ist dran',
             points: 'Punkte eintragen',
             strike: 'Streichen (0)',
             cat: {
@@ -98,6 +101,9 @@ export const initKniffelI18n = () => {
             lower_total: 'Lower Total',
             game_over: 'Game Over!',
             play_again: 'Play Again',
+            room_connecting: 'Connecting to the host …',
+            room_your_turn: 'Your turn: roll and score',
+            room_turn_of: "It's {{name}}'s turn",
             points: 'Score Points',
             strike: 'Strike (0)',
             cat: {

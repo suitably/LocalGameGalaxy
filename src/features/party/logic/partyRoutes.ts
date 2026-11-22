@@ -2,9 +2,10 @@
  * Party lobby routing and share links [ID: LOGIC-PARTY-ROUTES]
  */
 import { parseGameUrlParams } from '../../../modules/sharing';
+import { roomKeyParam } from '../../../modules/sync/roomKeys';
 import type { PartyGameType, RoomDiceGame } from './universalPartyManager';
 
-const ROOM_DICE_GAMES: readonly RoomDiceGame[] = ['knister'];
+const ROOM_DICE_GAMES: readonly RoomDiceGame[] = ['knister', 'kniffel', 'qwixx'];
 
 /** Dice games that run in the party room with a sheet on every device. */
 export const isRoomDiceGame = (id: string | null | undefined): id is RoomDiceGame =>
@@ -109,18 +110,23 @@ export function getGameRoute({
   return '/games/guessart';
 }
 
-/** Invite link for the lobby; carries the companion server as `gameRelay` when it is active. */
+/**
+ * Invite link for the lobby; carries the room key in the fragment (never sent to a server,
+ * ADR 0009) and the companion server as `gameRelay` when it is active.
+ */
 export function buildPartyShareUrl({
   origin,
   pathname,
   roomId,
+  roomKey,
   relayUrl,
 }: {
   origin: string;
   pathname: string;
   roomId: string;
+  roomKey?: string | null;
   relayUrl?: string | null;
 }): string {
-  const url = `${origin}${pathname}#/party?room=${roomId}`;
+  const url = `${origin}${pathname}#/party?room=${roomId}${roomKeyParam(roomKey)}`;
   return relayUrl ? `${url}&gameRelay=${encodeURIComponent(relayUrl)}` : url;
 }

@@ -7,7 +7,7 @@
 import React from 'react';
 import type { TabletopAction } from '../../logic/tabletopReducer';
 import type { TabletopWidget } from '../../logic/types';
-import { flipActionFor, shakeActionFor } from '../../logic/tableGestures';
+import { flipActionFor, flipTopActionFor, shakeActionFor } from '../../logic/tableGestures';
 import { useZOrderShortcuts } from '../../hooks/useZOrderShortcuts';
 import { dealActions, handsInSeatOrder } from '../../logic/dealCards';
 import { WidgetContextMenu, type WidgetContextMenuPosition } from './WidgetContextMenu';
@@ -57,6 +57,7 @@ export const SurfaceContextMenu: React.FC<SurfaceContextMenuProps> = ({
       onZOrder={reorderWidget}
       onFlip={(id) => run(flipActionFor(widgets[id]))}
       onShake={(id) => run(shakeActionFor(widgets[id]))}
+      onFlipTop={(id) => run(flipTopActionFor(widgets[id]))}
       onDrawToHand={
         handHolderId
           ? (deckId) =>

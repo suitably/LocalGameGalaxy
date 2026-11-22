@@ -29,6 +29,7 @@ import type { CatalogSearchState } from '../useCatalogSearch';
 import { BatchImportDialog } from './BatchImportDialog';
 import { CatalogEntryCard } from './CatalogEntryCard';
 import { CatalogSearchBar } from './CatalogSearchBar';
+import { LibraryRescanButton } from './LibraryRescanButton';
 import { SongFilesDialog } from './SongFilesDialog';
 
 interface ScoreLibraryListProps {
@@ -126,6 +127,7 @@ export function ScoreLibraryList({ search, onPlay, onPlayKaraoke }: ScoreLibrary
       >
         {k('batch_open')}
       </Button>
+      <LibraryRescanButton onDone={reload} />
       <Link
         href={scoreSearchUrl('', search.filters.query)}
         target="_blank"

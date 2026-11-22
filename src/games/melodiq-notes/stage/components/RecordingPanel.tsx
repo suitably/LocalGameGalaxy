@@ -7,6 +7,7 @@ import type { StageSongState } from '../useStageSong';
 import { useYouTubeImport } from '../useYouTubeImport';
 import { YouTubeRecordingDialog } from './YouTubeRecordingDialog';
 import { MarksCheck } from './MarksCheck';
+import { SongChoiceDialog } from './SongChoiceDialog';
 import { OffsetControls } from './OffsetControls';
 import { UltraStarExport } from './UltraStarExport';
 import { ultraStarChoices } from '../logic/ultraStarExport';
@@ -34,6 +35,7 @@ export function RecordingPanel({ state }: { state: StageSongState }) {
     t(`games.melodiq_notes.stage.${key}`, opts);
   const fileRef = useRef<HTMLInputElement>(null);
   const [youTubeOpen, setYouTubeOpen] = useState(false);
+  const [choosing, setChoosing] = useState(false);
   const importer = useYouTubeImport(state);
   const { recording, align, marks, offset, pins } = state;
   const status = recordingStatus(!!recording, align, !!marks);
@@ -128,7 +130,9 @@ export function RecordingPanel({ state }: { state: StageSongState }) {
                 <Button
                   variant="outlined"
                   disabled={state.saved || running}
-                  onClick={() => void state.saveToServer()}
+                  onClick={() =>
+                    state.needsSaveTarget ? setChoosing(true) : void state.saveToServer()
+                  }
                 >
                   {state.saved ? k('saved') : k('save_to_library')}
                 </Button>
@@ -143,6 +147,17 @@ export function RecordingPanel({ state }: { state: StageSongState }) {
           </Section>
         )}
       </Stack>
+      {choosing && state.song && (
+        <SongChoiceDialog
+          mode="save"
+          score={state.song}
+          onCancel={() => setChoosing(false)}
+          onChoose={(target) => {
+            setChoosing(false);
+            void state.saveToServer(target);
+          }}
+        />
+      )}
       {youTubeOpen && (
         <YouTubeRecordingDialog
           open

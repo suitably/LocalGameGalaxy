@@ -9,7 +9,13 @@
  */
 import type { TabletopGameDefinition } from './types';
 import type { GameDelta } from './stateDelta';
-import { redactDelta, redactGame, restoreCards, type WidgetSecret } from './handPrivacy';
+import {
+  redactDelta,
+  redactGame,
+  restoreCards,
+  withGrantChanges,
+  type WidgetSecret,
+} from './handPrivacy';
 import {
   hasActiveHiddenZone,
   redactZoneWidgets,
@@ -90,7 +96,10 @@ export class PrivateHandChannel {
     return { state: { ...game, widgets }, sealed: await this.sealAll(secrets), hostKey };
   }
 
-  /** `gameBefore` lets a zone change resend the widgets whose visibility it changed. */
+  /**
+   * `gameBefore` lets a zone change or a view request (#557) resend the widgets whose visibility
+   * it changed.
+   */
   async outgoingDelta(
     delta: GameDelta,
     gameAfter: TabletopGameDefinition,
@@ -98,8 +107,10 @@ export class PrivateHandChannel {
   ) {
     const zones = this.hidesZones(gameAfter) || this.hidesZones(gameBefore ?? gameAfter);
     if (!this.privateHands && !zones) return { delta };
+    const granted =
+      gameBefore && this.privateHands ? withGrantChanges(delta, gameBefore, gameAfter) : delta;
     const full =
-      gameBefore && zones ? withZoneVisibilityChanges(delta, gameBefore, gameAfter) : delta;
+      gameBefore && zones ? withZoneVisibilityChanges(granted, gameBefore, gameAfter) : granted;
     const hand = this.privateHands ? redactDelta(full, gameAfter) : { delta: full, secrets: {} };
     const { widgets, secrets } = redactZoneWidgets(
       full.widgets,

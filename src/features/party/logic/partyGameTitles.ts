@@ -9,4 +9,6 @@ export const PARTY_GAME_TITLES: Record<PartyGameType, string> = {
   melodiq: 'Melodiq',
   tabletop: 'Tabletop Spiel',
   knister: 'Knister',
+  kniffel: 'Kniffel',
+  qwixx: 'Qwixx',
 };

@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  applyBarMarksToMusicXml,
-  type AlignProgress,
-  type AlignResult,
-  type ScoreSong,
-} from '../../../modules/music-score';
+import type { AlignProgress, AlignResult, ScoreSong } from '../../../modules/music-score';
 import { useAutoAlign } from './useAutoAlign';
 import { useStageMarks } from './useStageMarks';
 import { isCompanionEnabled, type CompanionSong } from '../../../lib/companion/songScoresApi';
@@ -17,6 +12,9 @@ import {
   type SongOrigin,
 } from './serverScoreLoad';
 import { musicXmlFile, saveToNotesLibrary } from './logic/notesLibrarySync';
+import type { SaveTarget } from './logic/songLink';
+import type { ScorePartSettings } from './logic/partSettings';
+import { useStageParts } from './useStageParts';
 import { alignRecordingInBrowser, createElementRecording } from './engine/browserRecording';
 import type { StageEngine } from './engine/StageEngine';
 import { defaultSeats } from './engine/players';
@@ -24,13 +22,7 @@ import { useExactRecordingUrl } from './useExactRecordingUrl';
 import { readInstrument, rememberSong } from './logic/lastSession';
 import type { StoredSheetMusic } from '../logic/db';
 import { loadStoredSong } from '../logic/deviceSong';
-import {
-  browserXml,
-  downloadText,
-  readMusicXmlText,
-  readScoreFile,
-  serializeXml,
-} from './loadScore';
+import { downloadAlignedScore, readMusicXmlText, readScoreFile } from './loadScore';
 
 export type { SongOrigin, RecordingSource };
 
@@ -71,11 +63,26 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
   // bumped whenever the song or the recording changes; async results for an older one are dropped
   const generation = useRef(0);
 
+  // a karaoke `.txt` on stage is stored already; only a new recording of it can be saved
+  const stored = useMemo(() => {
+    if (origin?.kind === 'notes') return { songId: origin.songId, scoreFile: origin.scoreFile };
+    return origin?.kind === 'karaoke' ? { songId: origin.songId, scoreFile: null } : null;
+  }, [origin]);
+
+  const parts = useStageParts(engine, song, stored);
+  const { seed: seedParts } = parts;
+
   const show = useCallback(
-    (next: ScoreSong, nextXml: string | null, nextOrigin: SongOrigin) => {
+    (
+      next: ScoreSong,
+      nextXml: string | null,
+      nextOrigin: SongOrigin,
+      partSettings?: ScorePartSettings,
+    ) => {
       generation.current++;
       openedFile.current = null;
       engine.loadSong(next, defaultSeats(next, readInstrument()));
+      seedParts(next, partSettings);
       rememberSong(nextOrigin);
       setSong(next);
       setXml(nextXml);
@@ -85,7 +92,7 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
       setAlign({ kind: 'none' });
       setSaved(false);
     },
-    [engine, clearMarks],
+    [engine, clearMarks, seedParts],
   );
 
   const replaceRecording = useCallback((next: RecordingSource | null) => {
@@ -150,9 +157,15 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     (fetchScore: () => Promise<ServerScoreLoad>) => {
       const startedAs = generation.current;
       return run(async () => {
-        const { loaded, origin: next, recording: rec, marks: stored } = await fetchScore();
+        const {
+          loaded,
+          origin: next,
+          recording: rec,
+          marks: stored,
+          parts: initial,
+        } = await fetchScore();
         if (startedAs !== generation.current) return;
-        show(loaded.song, loaded.xml, next);
+        show(loaded.song, loaded.xml, next, initial);
         replaceRecording(rec);
         // straight from the server: nothing to save until something changes
         setSaved(true);
@@ -223,48 +236,46 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     }
   }, [song, recording, applyAlignment]);
 
-  // a karaoke `.txt` on stage is stored already; only a new recording of it can be saved
-  const stored = useMemo(() => {
-    if (origin?.kind === 'notes') return { songId: origin.songId, scoreFile: origin.scoreFile };
-    return origin?.kind === 'karaoke' ? { songId: origin.songId, scoreFile: null } : null;
-  }, [origin]);
-
   /** Everything goes to the song folder (#568): the score if missing, a recording, the marks. */
-  const saveToServer = useCallback(async () => {
-    if (!song) return;
-    const savingAs = generation.current;
-    try {
-      const result = await saveToNotesLibrary({
-        stored,
-        title: song.title,
-        artist: song.artist,
-        scoreFile: openedFile.current,
-        xml,
-        recordingFile: recording?.file ?? null,
-        // marks for the song's mix name no recording
-        recordingName: recording && !recording.file && !recording.songMix ? recording.name : null,
-        marks,
-        offsetSec: offset,
-        marksMeta: { aligner, mode: marksMode, edited },
-      });
-      if (savingAs !== generation.current) return;
-      if (result.scoreFile) {
-        setOrigin({
-          kind: 'notes',
+  const saveToServer = useCallback(
+    async (target?: SaveTarget) => {
+      if (!song) return;
+      const savingAs = generation.current;
+      try {
+        const result = await saveToNotesLibrary({
+          stored,
           title: song.title,
-          songId: result.songId,
-          scoreFile: result.scoreFile,
+          artist: song.artist,
+          scoreFile: openedFile.current,
+          xml,
+          recordingFile: recording?.file ?? null,
+          // marks for the song's mix name no recording
+          recordingName: recording && !recording.file && !recording.songMix ? recording.name : null,
+          marks,
+          offsetSec: offset,
+          marksMeta: { aligner, mode: marksMode, edited },
+          target,
         });
+        if (savingAs !== generation.current) return;
+        if (result.scoreFile) {
+          setOrigin({
+            kind: 'notes',
+            title: song.title,
+            songId: result.songId,
+            scoreFile: result.scoreFile,
+          });
+        }
+        // the recording keeps playing from its object URL, but counts as stored now
+        if (recording?.file && result.recordingName) {
+          setRecording({ name: result.recordingName, url: recording.url, local: true });
+        }
+        setSaved(true);
+      } catch (e) {
+        setError(errorText(e));
       }
-      // the recording keeps playing from its object URL, but counts as stored now
-      if (recording?.file && result.recordingName) {
-        setRecording({ name: result.recordingName, url: recording.url, local: true });
-      }
-      setSaved(true);
-    } catch (e) {
-      setError(errorText(e));
-    }
-  }, [song, stored, xml, marks, offset, recording, aligner, marksMode, edited]);
+    },
+    [song, stored, xml, marks, offset, recording, aligner, marksMode, edited],
+  );
 
   // a stored score only needs marks or a recording; anything else needs its MusicXML to upload
   const canSaveToServer = !!song && isCompanionEnabled() && (!!stored || !!xml);
@@ -276,14 +287,7 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
   );
 
   const exportScore = useCallback(() => {
-    if (!song || !xml || !played) return;
-    const shifted = played.map((m) => ({ ...m, sec: m.sec + offset }));
-    const out = applyBarMarksToMusicXml(xml, song, shifted, browserXml, serializeXml);
-    downloadText(
-      `${song.title || 'score'}.musicxml`,
-      out,
-      'application/vnd.recordare.musicxml+xml',
-    );
+    if (song && xml && played) downloadAlignedScore(song, xml, played, offset);
   }, [song, xml, played, offset]);
 
   useAutoAlign({ loading, hasSong: !!song, recording, hasMarks: !!marks, align, alignNow });
@@ -314,6 +318,9 @@ export function useStageSong(engine: StageEngine, initial: { title: string; xml:
     alignNow,
     saveToServer,
     canSaveToServer,
+    /** The score is not on the server yet: saving asks which song it goes to (#563). */
+    needsSaveTarget: !stored,
+    parts,
     currentScoreFile,
     exportScore,
     nudge: bar.nudge,

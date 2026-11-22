@@ -17,6 +17,9 @@ import CastIcon from '@mui/icons-material/CastRounded';
 import PersonIcon from '@mui/icons-material/PersonRounded';
 import TvIcon from '@mui/icons-material/TvRounded';
 import DownloadIcon from '@mui/icons-material/DownloadRounded';
+import CodeIcon from '@mui/icons-material/CodeRounded';
+import CodeOffIcon from '@mui/icons-material/CodeOffRounded';
+import ArticleIcon from '@mui/icons-material/ArticleRounded';
 import { useHeaderLayout, type MenuItem } from '../../../context/HeaderLayoutContext';
 import { HEADER_MENU_ENTRIES, headerMenuKeys, type HeaderMenuKey } from '../logic/headerMenu';
 
@@ -34,6 +37,9 @@ const ICONS: Record<HeaderMenuKey, ReactNode> = {
   onOpenSaves: <SaveIcon />,
   onOpenTableSettings: <TableRestaurantIcon />,
   onExportJson: <DownloadIcon />,
+  onEnableLuaScripts: <CodeIcon />,
+  onDisableLuaScripts: <CodeOffIcon />,
+  onOpenLuaLog: <ArticleIcon />,
   onRestart: <ReplayIcon />,
 };
 
