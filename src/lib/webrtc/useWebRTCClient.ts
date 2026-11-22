@@ -51,6 +51,8 @@ export function useWebRTCClient(
   options: WebRTCClientOptions = {},
 ) {
   const optionsRef = useRef(options);
+  // Extra message listeners next to `options.onMessage` (e.g. a room transport).
+  const messageListenersRef = useRef(new Set<(message: unknown) => void>());
   useEffect(() => {
     optionsRef.current = options;
   }, [options]);
@@ -245,6 +247,7 @@ export function useWebRTCClient(
                   // Forward application-level messages directly
                   if (peerRef.current === peer) {
                     optionsRef.current.onMessage?.(parsed);
+                    for (const listener of [...messageListenersRef.current]) listener(parsed);
                   }
                 } catch (e) {
                   // Ignore non-json parts
@@ -500,6 +503,15 @@ export function useWebRTCClient(
     return false;
   }, []);
 
+  /** Registers a listener for every application message from the host; returns unsubscribe. */
+  const addMessageListener = useCallback((listener: (message: unknown) => void) => {
+    const listeners = messageListenersRef.current;
+    listeners.add(listener);
+    return () => {
+      listeners.delete(listener);
+    };
+  }, []);
+
   useEffect(() => {
     if (autoConnect) {
       const timeout = setTimeout(() => {
@@ -542,6 +554,7 @@ export function useWebRTCClient(
     statusClassName,
     isConnected,
     sendData,
+    addMessageListener,
     reconnect: connect,
     peer,
     resendIdentity,
