@@ -8,5 +8,6 @@ Agent-ready specs for **open** work. Each mirrors a GitHub issue in `suitably/Lo
 | [Classic card games: Cabo, Golf, Mau-Mau, Schwarzer Peter](CARD-CLASSICS.md)              | —     | done (PR #784)                                                                   |
 | [Card games onto the Spieltisch](CARD-GAMES-TO-SPIELTISCH.md)                             | —     | done (PRs #788–#792)                                                             |
 | [One game catalogue: hub, Spieltisch, party picker](GAME-CATALOG-RESTRUCTURE.md)          | —     | phases 0–4.2 done (4.3 optional); 5.1 next                                       |
+| [Stammtisch: saved party room with remote help](STAMMTISCH.md)                            | —     | draft, slice 1 next                                                              |
 
 Archived 2026-11-20 (issue closed or work verified in code): #356, #359, #360, #539, #647, the settings unification and SOLID-14, all in [archive](../archive/index.md).
