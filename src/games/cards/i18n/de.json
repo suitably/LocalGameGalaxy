@@ -1,0 +1,65 @@
+{
+  "games": {
+    "cards": {
+      "select_game": "Kartenspiel wählen",
+      "players_title": "Mitspieler",
+      "add_player_placeholder": "Neuer Spielername...",
+      "start_session": "Runde starten",
+      "round": "Runde",
+      "cards_count": "Karten",
+      "eliminated": "Ertrunken",
+      "swimming_status": "Schwimmt (0 Leben)",
+      "feuer": "Feuer",
+      "feuer_tooltip": "Feuer / 3 Asse (33 Punkte)",
+      "evaluate_round": "Runde auswerten",
+      "has_won": "hat gewonnen!",
+      "survived_all": "Hat alle Runden überstanden!",
+      "play_again": "Nochmal spielen",
+      "round_history": "Rundenhistorie",
+      "current_score": "Punktestand",
+      "reset_delta": "Auf 0 zurücksetzen",
+      "undo": "Rückgängig",
+      "restart": "Neu starten",
+      "restart_title": "Partie neu starten?",
+      "restart_message": "Alle Runden und Punkte dieser Partie werden gelöscht.",
+      "decrease_points": "Einen Punkt weniger für {{name}}",
+      "increase_points": "Einen Punkt mehr für {{name}}",
+      "phase_bidding": "Stichansage (Vorhersage)",
+      "phase_tricks": "Ergebnis (Gemachte Stiche)",
+      "total_bids": "Gesamtansage",
+      "bid_label": "Ansage",
+      "tricks_label": "Stiche",
+      "continue_to_tricks": "Ansagen fixieren & Runde spielen",
+      "complete_round": "Runde abschließen",
+      "score_table": "Punktetabelle",
+      "add_round_points": "Rundenpunkte eintragen",
+      "schwimmen": {
+        "title": "Schwimmen (31)",
+        "description": "3 Leben + Schwimmring! Verlierer der Runde verlieren Leben. Blitz (31) zieht allen anderen 1 Leben ab.",
+        "hint": "Markiere den Verlierer mit „-1 Leben“ oder tippe bei 31 auf „Blitz“.",
+        "lose_life_btn": "-1 Leben",
+        "marked_loser": "Verliert Leben",
+        "blitz_btn": "Blitz!",
+        "blitz_tooltip": "Blitz! (31) - Alle anderen aktiven Spieler verlieren 1 Leben",
+        "blitz_dialog_title": "Blitz / Feuer!",
+        "blitz_history": "Blitz von {{name}}! ({{others}} -1 Leben)",
+        "blitz_dialog_desc": "hat 31 / Blitz! Alle anderen aktiven Spieler verlieren sofort 1 Leben.",
+        "confirm_blitz": "Blitz ausführen",
+        "select_loser_btn": "Verlierer auswählen",
+        "deduct_lives_btn": "Runde abschließen",
+        "lives_deducted": "Leben abziehen",
+        "minus_life": "Leben abziehen",
+        "plus_life": "Leben hinzufügen",
+        "lost_life_desc": "verliert 1 Leben"
+      },
+      "ohell": {
+        "title": "Oh Hell / Wizard",
+        "description": "Stiche vorhersagen! Richtige Ansagen belohnen mit 20 Bonuspunkten + 10P pro Stich. Abweichungen kosten Punkte."
+      },
+      "universal": {
+        "title": "Universeller Punktezähler",
+        "description": "Freier Runden-Punktezähler für Rommé, Doppelkopf, Skat, Phase 10, Skyjo oder eigene Kartenspiele."
+      }
+    }
+  }
+}
