@@ -46,7 +46,7 @@ interface ScoreLibraryListProps {
 export function ScoreLibraryList({ search, onPlay, onPlayKaraoke }: ScoreLibraryListProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const [catalog, setCatalog] = useState<CatalogEntry[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<CatalogEntry | null>(null);

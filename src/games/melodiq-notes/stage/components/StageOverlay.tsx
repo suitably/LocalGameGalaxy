@@ -31,7 +31,7 @@ export function StageOverlay({ engine, onStart, onPractise }: StageOverlayProps)
   const { t } = useTranslation();
   const sectionName = useSectionName(engine);
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const { state, song, players, focus, mode } = engine;
 
   if (state === 'playing')

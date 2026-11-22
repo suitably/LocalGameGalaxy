@@ -39,7 +39,7 @@ export const MelodiqNotesGame: React.FC<{ roomId?: string | null }> = ({ roomId 
   const { t } = useTranslation();
   const navigate = useNavigate();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const { engine, unlockAudio } = useStage();
   const texts = useStageTexts();
   const [initial] = useState(initialExample);

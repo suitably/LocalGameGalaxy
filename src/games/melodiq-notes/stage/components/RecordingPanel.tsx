@@ -32,7 +32,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export function RecordingPanel({ state }: { state: StageSongState }) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const fileRef = useRef<HTMLInputElement>(null);
   const [youTubeOpen, setYouTubeOpen] = useState(false);
   const [choosing, setChoosing] = useState(false);

@@ -41,7 +41,7 @@ export function SeekBar({ engine }: { engine: StageEngine }) {
 export function FirstNoteButton({ engine }: { engine: StageEngine }) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const [leadIn, setLeadIn] = useState(() =>
     parseLeadIn(storage.get(STORAGE_KEYS.MELODIQ_NOTES_SEEK_LEAD_IN)),
   );

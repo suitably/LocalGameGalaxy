@@ -31,7 +31,7 @@ export function CatalogEntryCard({
 }: CatalogEntryCardProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const { entry, items } = match;
   const meta = [
     entry.genre,

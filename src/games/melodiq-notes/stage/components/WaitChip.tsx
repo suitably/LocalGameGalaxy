@@ -14,7 +14,7 @@ export function WaitChip({ engine }: { engine: StageEngine }) {
   const p = engine.waitingFor;
   if (!p || !p.pending.length) return null;
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const notes = p.pending;
   let what: string;
   if (p.instrument.view === 'keys')

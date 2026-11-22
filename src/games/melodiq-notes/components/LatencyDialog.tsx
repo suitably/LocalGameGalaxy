@@ -55,7 +55,7 @@ export const LatencyDialog: React.FC<LatencyDialogProps> = ({
 }) => {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.latency.${key}`, opts);
+    t(`games.melodiq_notes.latency.${key}`, opts ?? {});
   const running = calibration.state.kind === 'running' || calibration.state.kind === 'waiting';
   const { tapNow } = calibration;
 

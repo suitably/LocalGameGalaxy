@@ -6,7 +6,7 @@ import { playerResults } from '../engine/results';
 export function ResultsTable({ engine }: { engine: StageEngine }) {
   const { t, i18n } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   return (
     <Table size="small" sx={{ width: 'auto' }}>
       <TableHead>

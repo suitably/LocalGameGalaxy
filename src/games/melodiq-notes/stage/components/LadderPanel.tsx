@@ -27,7 +27,7 @@ export function LadderPanel({ engine, ladder, onPerform }: LadderPanelProps) {
   const { t } = useTranslation();
   const sectionName = useSectionName(engine);
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.ladder.${key}`, opts);
+    t(`games.melodiq_notes.stage.ladder.${key}`, opts ?? {});
   const { state } = ladder;
   if (!state) return null;
   const bar = sectionName(ladderBar(state.ladder));

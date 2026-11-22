@@ -30,7 +30,7 @@ type PickerTab = 'server' | 'device';
 export function SongPicker({ open, onClose, state }: SongPickerProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const [tab, setTab] = useState<PickerTab>(() => (isCompanionEnabled() ? 'server' : 'device'));
   const search = useCatalogSearch();
   // a phone gets the whole screen for search, filters and results

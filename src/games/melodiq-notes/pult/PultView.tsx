@@ -40,7 +40,7 @@ export const PultView: React.FC<{ roomId: string; wantedPart: string | null }> =
 }) => {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.pult.${key}`, opts);
+    t(`games.melodiq_notes.pult.${key}`, opts ?? {});
   usePageTitle(t('games.melodiq_notes.title'));
   useWakeLock(true);
   const name = useMemo(() => getOrCreatePlayerName(), []);

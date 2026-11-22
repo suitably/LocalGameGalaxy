@@ -19,7 +19,7 @@ interface RecordingSearchProps {
 export function RecordingSearch({ song, disabled, onReplaced }: RecordingSearchProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const [open, setOpen] = useState(false);
   const [url, setUrl] = useState<string | null>(null);
   const { run, start } = useRecordingReplace(song, onReplaced);

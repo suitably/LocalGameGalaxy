@@ -102,7 +102,7 @@ export const DrawPotParticipant: React.FC = () => {
           </Alert>
         )}
 
-        {status && <Alert severity={status.severity}>{t(status.key, status.params)}</Alert>}
+        {status && <Alert severity={status.severity}>{t(status.key, status.params ?? {})}</Alert>}
 
         <MyDrawsList
           draws={s.revealing ? s.draws.filter((d) => d.at !== s.revealing?.at) : s.draws}

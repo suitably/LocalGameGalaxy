@@ -26,7 +26,7 @@ interface RecordingReviewDialogProps {
 export function RecordingReviewDialog({ review, onResolve }: RecordingReviewDialogProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const phone = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
   return (
     <NotesDialogFrame

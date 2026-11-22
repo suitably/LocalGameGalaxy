@@ -32,7 +32,7 @@ export function YouTubeRecordingDialog({
 }: YouTubeRecordingDialogProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   // mounted only while open, so every opening starts from the song on stage
   const [title, setTitle] = useState(() => state.song?.title ?? '');
   const [artist, setArtist] = useState(() => state.song?.artist ?? '');

@@ -79,7 +79,7 @@ interface CatalogSearchBarProps {
 export function CatalogSearchBar({ search, facets, resultCount }: CatalogSearchBarProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const { filters: f, update, reset } = search;
   return (
     <Stack spacing={1}>

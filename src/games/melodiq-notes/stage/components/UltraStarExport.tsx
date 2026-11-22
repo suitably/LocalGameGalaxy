@@ -9,7 +9,7 @@ import type { StageSongState } from '../useStageSong';
 export function UltraStarExport({ state }: { state: StageSongState }) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const { song, played: marks, offset, recording } = state;
   const { parts, duet } = ultraStarChoices(song);
   const [picked, setPicked] = useState('');
