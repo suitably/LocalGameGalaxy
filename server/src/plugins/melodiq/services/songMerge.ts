@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { marksPathFor } from '../../../utils/scoreFiles';
 import { copySongFiles } from './songFileCopy';
+import { withScoreParts } from './partSettings';
 import { SONG_META_FILE, mergeSongMeta, songMetaOf, writeSongMeta } from './songFolder';
 import type { Song } from '../../../core/types';
 
@@ -23,14 +24,18 @@ export function mergeRefusal(source: Song, target: Song): string | null {
  */
 export async function mergeSongInto(source: Song, target: Song): Promise<Map<string, string>> {
   const names = await copySongFiles(source.folderScores, source.recordings, target.folder);
-  const meta = await songMetaOf(target);
+  const current = await songMetaOf(target);
   const labels: Record<string, string> = {};
+  let meta = current;
   for (const [file, name] of names) {
     const label = source.labels[file];
-    if (label && !meta.labels[name]) labels[name] = label;
+    if (label && !current.labels[name]) labels[name] = label;
+    const parts = source.partSettings[file];
+    if (parts && !current.parts[name]) meta = withScoreParts(meta, name, parts);
   }
-  if (Object.keys(labels).length)
+  if (Object.keys(labels).length || meta !== current) {
     await writeSongMeta(target.folder, mergeSongMeta(meta, { labels }));
+  }
   for (const score of source.folderScores) {
     await fs.promises.rm(score.path, { force: true });
     await fs.promises.rm(marksPathFor(score.path), { force: true });

@@ -3,6 +3,7 @@ import {
   drumLaneOf,
   drumLaneOfVoice,
   type InstrumentKind,
+  type ScorePart,
   type ScoreSong,
 } from '../../../../modules/music-score';
 import { buildChart, pitchRange } from '../logic/charts';
@@ -102,9 +103,15 @@ export function createPlayers(
 export const playersFor = (e: StageEngine, song: ScoreSong) =>
   createPlayers(song, e.seats, e.sections.length, e.startBeat, e.drumOptions);
 
+/** A stage song may carry hidden parts the synth plays as backing (#564, `stageView`). */
+export type StageScoreSong = ScoreSong & { backing?: ScorePart[] };
+
+export const backingOf = (song: ScoreSong): ScorePart[] => (song as StageScoreSong).backing ?? [];
+
 /**
  * Count-in clicks before `fromBeat` plus the notes from there on the synth plays for the band mode.
  * A drummer's display-only percussion still sounds with the band ('others' too), since nobody plays it.
+ * Hidden parts in `backing` have no player, so they sound in both `all` and `others`.
  */
 export function buildBandEvents(
   song: ScoreSong,
@@ -124,7 +131,7 @@ export function buildBandEvents(
       .filter((s) => s.inst === 'drums' && !seatDrumOptions(s, drums).judgePercussion)
       .map((s) => s.partId),
   );
-  for (const part of song.parts) {
+  for (const part of [...song.parts, ...backingOf(song)]) {
     const onlyPercussion = mode === 'others' && played.has(part.id);
     if (onlyPercussion && !(part.isDrum && percussionOnly.has(part.id))) continue;
     for (const n of part.notes) {

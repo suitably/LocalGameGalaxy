@@ -6,7 +6,7 @@
  */
 import { companionRequest as request, companionUrl, jsonBody } from './companionHttp';
 import { getHelperToken } from './companionSettings';
-import type { CompanionSong, StoredBarMarks } from './songScoresApi';
+import type { CompanionSong, ScorePartSettings, StoredBarMarks } from './songScoresApi';
 
 export interface StoredSongFile {
   file: string;
@@ -62,6 +62,13 @@ export async function getSongMarks(songId: string, file: string): Promise<Stored
 
 export const saveSongMarks = (songId: string, file: string, marks: StoredBarMarks) =>
   request<{ success: true }>(marksPath(songId, file), jsonBody('PUT', marks));
+
+/** Replaces the hidden and renamed parts of a score in `song.json` (#564). */
+export const saveScoreParts = (songId: string, file: string, parts: ScorePartSettings) =>
+  request<CompanionSong>(
+    `${songPath(songId)}/scores/${encodeURIComponent(file)}/parts`,
+    jsonBody('PUT', { parts }),
+  );
 
 /** Removes the whole song folder (the UI offers it only for songs without karaoke `.txt`). */
 export const deleteLibrarySong = (songId: string) =>

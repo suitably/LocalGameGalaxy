@@ -26,6 +26,7 @@ import {
   songMetaOf,
   writeSongMeta,
 } from '../services/songFolder';
+import { parsePartSettings, withScoreParts } from '../services/partSettings';
 import { mergeRefusal, mergeSongInto } from '../services/songMerge';
 import { toClientSong } from './songs';
 import type { HonoEnv, Song } from '../../../core/types';
@@ -211,8 +212,9 @@ songFilesRouter.delete('/api/songs/:id/files/:file', async (c) => {
     if (score) {
       await fs.promises.rm(marksPathFor(filePath), { force: true });
       const meta = await readSongMeta(song.folder);
-      if (meta?.labels[file]) {
-        await writeSongMeta(song.folder, mergeSongMeta(meta, { labels: { [file]: '' } }));
+      if (meta && (meta.labels[file] || meta.parts[file])) {
+        const cleared = mergeSongMeta(meta, { labels: { [file]: '' } });
+        await writeSongMeta(song.folder, withScoreParts(cleared, file, {}));
       }
     }
     await refreshed(song);
@@ -234,6 +236,25 @@ songFilesRouter.get('/api/songs/:id/scores/:file/marks', async (c) => {
     return c.json(JSON.parse(await fs.promises.readFile(score.marksPath, 'utf-8')));
   } catch (e: unknown) {
     return c.json({ error: `Failed to read marks: ${errorText(e)}` }, 500);
+  }
+});
+
+// PUT /api/songs/:id/scores/:file/parts — hidden and renamed parts of a score in `song.json`
+// ({ parts: { <part id>: { hidden?, playback?, name? } } }, replaces the score's settings; #564)
+songFilesRouter.put('/api/songs/:id/scores/:file/parts', async (c) => {
+  const found = findSong(c);
+  if (!found.ok) return found.response;
+  const song = found.value;
+  const score = scoreOf(song, c.req.param('file'));
+  if (!score) return c.json({ error: 'Score not found' }, 404);
+  const body = (await c.req.json().catch(() => null)) as { parts?: unknown } | null;
+  const parts = parsePartSettings(body?.parts);
+  if (typeof parts === 'string') return c.json({ error: parts }, 400);
+  try {
+    await writeSongMeta(song.folder, withScoreParts(await songMetaOf(song), score.file, parts));
+    return c.json(client(c, await refreshed(song)));
+  } catch (e: unknown) {
+    return c.json({ error: `Failed to store part settings: ${errorText(e)}` }, 500);
   }
 });
 

@@ -72,3 +72,11 @@ State machine, authorization and sealed reveal are tested (`logic/__tests__/hand
 - [ ] With 3 phones + host on an HTTPS origin: A asks B for specific cards and for N random cards; only A sees the faces (C and the TV keep backs), the faces revert after A closes the result; extending, reducing and withdrawing a pending ask updates B's notice; two requesters to B are answered separately.
 - [ ] Offers: a chosen-card offer that is taken moves the cards face up into the receiver's hand only; a rejected random offer leaves them with the giver, who sees the rejection.
 - [ ] Spectators have no request button; in local pass-and-play nothing shows over the handover cover; dialog and notices fit a 390 px phone.
+
+## #563 / #564 — Melodiq Notes: scores per song, labels, hidden and renamed parts
+
+Server routes (`POST /api/songs/:id/files` with `label`, `POST /api/songs/:id/merge`, `POST /api/notes/library/rescan`, `PUT /api/songs/:id/scores/:file/parts`) are covered by `server/test/song_library_links.test.js`; client logic by unit tests.
+
+- [ ] With a companion server: "Save to Notes library" pre-selects the same-named song; a given name appears as the score label; "New song" creates a separate folder.
+- [ ] "Move into another song…" moves scores, marks and labels into a Melodiq song and the source entry disappears; "Re-scan library" shows a folder added on disk without a restart.
+- [ ] On the stage, a hidden part gets no player, is not offered on a joined phone and lowers the track count; "Synth backing" makes it audible in band mode Others/All (muted by default); a renamed part shows its name on stage and pult; both survive reloading the score.

@@ -1,9 +1,11 @@
 import {
+  applyBarMarksToMusicXml,
   extractGpif,
   extractMxl,
   parseGuitarPro,
   parseMidi,
   parseMusicXml,
+  type BarMark,
   type ScoreSong,
 } from '../../../modules/music-score';
 
@@ -41,4 +43,16 @@ export function downloadText(name: string, text: string, type: string) {
   a.download = name;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Downloads the MusicXML with the recording's tempo from its bar marks (shifted by the offset). */
+export function downloadAlignedScore(
+  song: ScoreSong,
+  xml: string,
+  played: BarMark[],
+  offset: number,
+) {
+  const shifted = played.map((m) => ({ ...m, sec: m.sec + offset }));
+  const out = applyBarMarksToMusicXml(xml, song, shifted, browserXml, serializeXml);
+  downloadText(`${song.title || 'score'}.musicxml`, out, 'application/vnd.recordare.musicxml+xml');
 }

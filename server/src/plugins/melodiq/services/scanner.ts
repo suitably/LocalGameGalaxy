@@ -220,6 +220,7 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
     folderScores,
     recordings,
     labels: meta?.labels ?? {},
+    partSettings: meta?.parts ?? {},
     searchString:
       `${headers['TITLE']} ${headers['ARTIST']} ${headers['GENRE']} ${headers['LANGUAGE']}`.toLowerCase(),
   };

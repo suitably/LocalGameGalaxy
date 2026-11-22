@@ -4,12 +4,13 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-test('Notes library: labelled upload, moving a song into another, re-scan (#563)', async (t) => {
+test('Notes library: labelled upload, moving a song, re-scan (#563), part settings (#564)', async (t) => {
   const notesDir = fs.mkdtempSync(path.join(os.tmpdir(), 'melodiq-notes-links-'));
   process.env.NOTES_DIR = notesDir;
   const { serverConfig } = require('../dist/config.js');
   const { createGalaxyServer } = require('../dist/core/app.js');
   const { getSongCache, initialScan } = require('../dist/plugins/melodiq/services/scanner.js');
+  const { parsePartSettings } = require('../dist/plugins/melodiq/services/partSettings.js');
 
   const library = fs.mkdtempSync(path.join(os.tmpdir(), 'melodiq-links-'));
   const songDir = path.join(library, 'Band - Song');
@@ -37,6 +38,7 @@ test('Notes library: labelled upload, moving a song into another, re-scan (#563)
       title: 'Song',
       artist: 'Band',
       labels: { 'Lead.musicxml': 'Beginner' },
+      parts: { 'Lead.musicxml': { P2: { hidden: true, playback: 'synth' } } },
     }),
   );
   serverConfig.directories.push(library);
@@ -104,6 +106,9 @@ test('Notes library: labelled upload, moving a song into another, re-scan (#563)
       assert.strictEqual(marks.audio, 'Take.webm');
       const meta = JSON.parse(fs.readFileSync(path.join(songDir, 'song.json'), 'utf-8'));
       assert.strictEqual(meta.labels['Lead (2).musicxml'], 'Beginner');
+      assert.deepStrictEqual(meta.parts['Lead (2).musicxml'], {
+        P2: { hidden: true, playback: 'synth' },
+      });
       assert.ok(!fs.existsSync(draftDir), 'the emptied folder is removed');
       assert.ok(!getSongCache().some((s) => s.id === 'draft1'));
     },
@@ -119,4 +124,47 @@ test('Notes library: labelled upload, moving a song into another, re-scan (#563)
     assert.ok(body.migration, 'the master token also runs the Notes migration');
     assert.ok(getSongCache().some((s) => s.title === 'Piece'));
   });
+
+  await t.test('parsePartSettings keeps only what differs from the default (#564)', () => {
+    assert.deepStrictEqual(
+      parsePartSettings({
+        P1: { hidden: true, playback: 'synth', name: ' Lead ' },
+        P2: { hidden: false, playback: 'synth' },
+        P3: { name: '' },
+      }),
+      { P1: { hidden: true, playback: 'synth', name: 'Lead' } },
+    );
+    assert.strictEqual(typeof parsePartSettings({ P1: { hidden: 'yes' } }), 'string');
+    assert.strictEqual(typeof parsePartSettings({ P1: { playback: 'loud' } }), 'string');
+    assert.strictEqual(typeof parsePartSettings([]), 'string');
+  });
+
+  await t.test(
+    "PUT parts stores a score's part settings; deleting the score drops them",
+    async () => {
+      const id = karaoke().id;
+      const put = (file, parts) =>
+        app.request(`/api/songs/${id}/scores/${encodeURIComponent(file)}/parts`, {
+          method: 'PUT',
+          headers: json,
+          body: JSON.stringify({ parts }),
+        });
+      const res = await put('Lead.musicxml', { P1: { hidden: true }, P2: { name: 'Keys' } });
+      assert.strictEqual(res.status, 200);
+      const body = await res.json();
+      assert.deepStrictEqual(body.scores.find((s) => s.file === 'Lead.musicxml').parts, {
+        P1: { hidden: true },
+        P2: { name: 'Keys' },
+      });
+      assert.strictEqual((await put('Missing.musicxml', {})).status, 404);
+      assert.strictEqual((await put('Lead.musicxml', { P1: { hidden: 1 } })).status, 400);
+      const del = await app.request(`/api/songs/${id}/files/Lead.musicxml`, {
+        method: 'DELETE',
+        headers: auth,
+      });
+      assert.strictEqual(del.status, 200);
+      const meta = JSON.parse(fs.readFileSync(path.join(songDir, 'song.json'), 'utf-8'));
+      assert.strictEqual(meta.parts['Lead.musicxml'], undefined);
+    },
+  );
 });

@@ -17,7 +17,22 @@ export interface SongScore {
   hasMarks: boolean;
   /** Free text shown instead of the file name (`song.json`), or null. */
   label?: string | null;
+  /** Hidden and renamed parts (`song.json`, #564); absent on older servers. */
+  parts?: ScorePartSettings;
 }
+
+/** How one part of a score shows on the Notes stage (#564); defaults are left out. */
+export interface PartSetting {
+  /** Left out of seats, the pult part list and the part count. */
+  hidden?: true;
+  /** A hidden part the synth plays as backing (default: muted). */
+  playback?: 'synth';
+  /** Display name instead of the part name in the score. */
+  name?: string;
+}
+
+/** Part settings of one score, by part id. */
+export type ScorePartSettings = Record<string, PartSetting>;
 
 export interface SongRecording {
   file: string;
