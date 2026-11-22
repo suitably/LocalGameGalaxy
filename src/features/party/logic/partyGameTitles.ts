@@ -1,14 +1,16 @@
+/**
+ * Title of the game a party room plays, from the catalogue (ADR-0011) [ID: LOGIC-PARTY-GAME-TITLE]
+ */
+import type { TFunction } from 'i18next';
+import { partyEntry } from '../../../lib/catalog/views';
 import type { PartyGameType } from './universalPartyManager';
 
-/** Product names of the party games (the same in every language). */
-export const PARTY_GAME_TITLES: Record<PartyGameType, string> = {
-  guessart: 'GuessArt',
-  garticphone: 'Gartic Phone',
-  storyteller: 'Storyteller',
-  'melodiq-notes': 'Melodiq Notes',
-  melodiq: 'Melodiq',
-  tabletop: 'Tabletop Spiel',
-  knister: 'Knister',
-  kniffel: 'Kniffel',
-  qwixx: 'Qwixx',
-};
+export function partyGameTitle(
+  t: TFunction,
+  gameType: PartyGameType | null | undefined,
+  gameId?: string | null,
+): string {
+  const entry = partyEntry(gameType, gameId);
+  if (entry) return t(entry.titleKey, entry.title);
+  return gameType === 'tabletop' ? t('games.tabletop.title', 'Spieltisch') : (gameType ?? '');
+}

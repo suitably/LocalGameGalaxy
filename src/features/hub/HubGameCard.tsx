@@ -73,7 +73,7 @@ export const HubGameCard: React.FC<HubGameCardProps> = ({ game, area, onOpen }) 
               {t(game.titleKey)}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {t(game.descriptionKey)}
+              {t(game.descKey)}
             </Typography>
           </Box>
         </Box>

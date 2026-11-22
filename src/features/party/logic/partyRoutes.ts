@@ -3,9 +3,12 @@
  */
 import { parseGameUrlParams } from '../../../modules/sharing';
 import { roomKeyParam } from '../../../modules/sync/roomKeys';
+import { launchablePartyTypes } from '../../../lib/catalog/views';
 import type { PartyGameType, RoomDiceGame } from './universalPartyManager';
 
-const ROOM_DICE_GAMES: readonly RoomDiceGame[] = ['knister', 'kniffel', 'qwixx'];
+/** Wire values of the room dice games; the catalogue test checks they match the dice entries. */
+// game-list-ok
+export const ROOM_DICE_GAMES: readonly RoomDiceGame[] = ['knister', 'kniffel', 'qwixx'];
 
 /** Dice games that run in the party room with a sheet on every device. */
 export const isRoomDiceGame = (id: string | null | undefined): id is RoomDiceGame =>
@@ -23,16 +26,6 @@ export function resolveLobbyEntry(
   return fromUrl ? { kind: 'join', roomId: fromUrl.toUpperCase().trim() } : { kind: 'create' };
 }
 
-/** Party games the lobby can preselect via `launch=` (tabletop additionally needs `gameId`). */
-const LAUNCHABLE_GAMES: readonly PartyGameType[] = [
-  'guessart',
-  'garticphone',
-  'storyteller',
-  'melodiq-notes',
-  'melodiq',
-  ...ROOM_DICE_GAMES,
-];
-
 export type PendingLaunch = { gameType: PartyGameType; gameId?: string };
 
 /**
@@ -46,7 +39,7 @@ export function resolvePendingLaunch(
   const launch = params.get('launch');
   const gameId = params.get('gameId');
   if (launch === 'tabletop') return gameId ? { gameType: 'tabletop', gameId } : null;
-  return LAUNCHABLE_GAMES.includes(launch as PartyGameType)
+  return launchablePartyTypes().includes(launch as PartyGameType)
     ? { gameType: launch as PartyGameType }
     : null;
 }

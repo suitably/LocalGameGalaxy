@@ -225,7 +225,7 @@ Order (each step its own PR):
 1. ~~**Tokens in code**~~ — done for dark (`src/themeTokens.ts` holds dark, light and piece tokens; `src/theme.ts` builds a dark-only MUI theme, no `colorSchemes`/CSS variables yet, because MUI would follow the system mode and keep its own `localStorage` key). Original plan: rewrite `src/theme.ts` with MUI `colorSchemes` (`dark` + `light`) and CSS variables (`cssVariables: true`), the piece palette as a custom palette key, typography (§3), `shape.borderRadius: 4`, component overrides (§6). Update `index.css`, `index.html` and the PWA manifest in `vite.config.ts` to `bg.canvas`.
 2. ~~**Fonts**~~ — done: add both `@fontsource-variable` packages, import in `src/main.tsx`.
 3. ~~**Mode setting**~~ — done (§9, #499): `STORAGE_KEYS.COLOR_MODE`, Settings → General → Appearance, `colorSchemes` with `lightTokens`.
-4. ~~**Hub**~~ — done: tiles and filter use the areas (`src/lib/areas.ts`, `src/features/hub/HubGameCard.tsx`, `HubAreaFilter.tsx`). The unused gradient fields in `src/lib/gameRegistry.tsx` go with suitably/LocalGameGalaxy#498.
+4. ~~**Hub**~~ — done: tiles and filter use the areas (`src/lib/areas.ts`, `src/features/hub/HubGameCard.tsx`, `HubAreaFilter.tsx`). Areas are set per catalogue entry (`area` in `src/games/<id>/definition.tsx`, ADR-0011).
 5. **Games:** done for every file that stays within its component budget (codemod for `sx` props, hand edits elsewhere, stage canvas via `STAGE` in `src/games/melodiq-notes/stage/render/common.ts`). The 35 files that must be decomposed first are tracked in suitably/LocalGameGalaxy#491–#498; light mode in #499; epic #490.
 6. ~~Logo, word mark and app icons~~ — done (§8). Remaining: area icons in the hub (with step 4).
 

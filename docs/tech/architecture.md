@@ -48,7 +48,7 @@ src/
 ├── features/        # hub/, party/ (Universal Party lobby), settings/
 ├── games/           # 15 game folders — one self-contained domain each (see game-catalog)
 ├── hooks/           # useWakeLock, useScreenOrientation, usePWAInstall, useServerUrlAutoConnect, usePrefersReducedMotion
-├── lib/             # storage.ts, gameRegistry.tsx, github.ts, companion/, push/, notifications/, webrtc/, utils/, uuid.ts, disambiguateName.ts
+├── lib/             # storage.ts, catalog/ (game catalogue), gameRegistry.tsx (routes), github.ts, companion/, push/, notifications/, webrtc/, utils/, uuid.ts, disambiguateName.ts
 ├── modules/         # shared cross-game modules (§3.2)
 └── types/
 server/              # optional companion server (separate npm package, Hono)
@@ -66,7 +66,7 @@ android/             # Capacitor Android project
 
 ### 3.1 Game modules (`src/games/*`)
 
-Each game is self-contained: entry component, internal state (reducer, hook or state machine), `logic/` with pure functions and tests. Games are registered by hand in `src/lib/gameRegistry.tsx` (lazy import, route, category, i18n keys; the hub colours games by area, see `src/lib/areas.ts`). **Cross-game imports are forbidden** (`npm run check:architecture`).
+Each game is self-contained: entry component, internal state (reducer, hook or state machine), `logic/` with pure functions and tests. Each game declares its catalogue entry in `src/games/<id>/definition.tsx` (lazy page, route, area, modes, listing, party launch, i18n keys); `src/lib/catalog/entries.ts` collects them and `src/lib/catalog/views.ts` derives every list a screen shows (hub, Spieltisch, party picker) — [ADR-0011](../adr/0011-one-game-catalogue.md). `src/lib/gameRegistry.tsx` only registers the routes. **Cross-game imports are forbidden** (`npm run check:architecture`).
 
 The full per-game table (route, size, storage, sync, i18n source, shared modules, tests) is in **[game-catalog.md](game-catalog.md)**. Short characterisation:
 

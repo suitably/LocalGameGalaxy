@@ -97,7 +97,6 @@
   "src/games/wordle/logic/wordleStorage.ts": 1,
   "src/hooks/useScreenOrientation.ts": 4,
   "src/hooks/useWakeLock.ts": 3,
-  "src/lib/gameRegistry.tsx": 17,
   "src/lib/storage.test.ts": 1,
   "src/lib/storage.ts": 3,
   "src/lib/utils/turnAssignment.ts": 4,

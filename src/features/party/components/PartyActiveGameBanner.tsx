@@ -8,7 +8,7 @@ import PhoneIphoneRoundedIcon from '@mui/icons-material/PhoneIphoneRounded';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import type { PartyLobbyController } from '../hooks/usePartyLobbyController';
-import { PARTY_GAME_TITLES } from '../logic/partyGameTitles';
+import { partyGameTitle } from '../logic/partyGameTitles';
 import { CONTROLLER_TARGET } from '../../../lib/touchTarget';
 
 export const PartyActiveGameBanner: React.FC<{ lobby: PartyLobbyController }> = ({ lobby }) => {
@@ -60,7 +60,7 @@ export const PartyActiveGameBanner: React.FC<{ lobby: PartyLobbyController }> = 
                   sx={{ fontWeight: 800, height: 22 }}
                 />
                 <Typography variant="h6" fontWeight={800}>
-                  {PARTY_GAME_TITLES[roomState?.activeGame ?? 'guessart']}
+                  {partyGameTitle(t, roomState?.activeGame, roomState?.tabletopGameId)}
                 </Typography>
               </Box>
               <Typography variant="body2" color="text.secondary">

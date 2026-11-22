@@ -21,7 +21,7 @@ sources:
 
 # Scripted card games
 
-The free tabletop ([tabletop-engine](tabletop-engine.md)) moves widgets and knows no rules. Scripted card games are first-party TypeScript rule scripts: the app deals, accepts only legal moves, keeps the turn order and scores. They live in `src/games/tabletop/scripted/` and are listed on the Spieltisch under "Kartenspiele" (`CARD_GAMES` in `logic/tableCatalog.ts`). [ADR-0005](../adr/0005-tabletop-scripting-for-imported-games.md) is unchanged: imported third-party content still runs only as declarative routines; these scripts are app code, not content.
+The free tabletop ([tabletop-engine](tabletop-engine.md)) moves widgets and knows no rules. Scripted card games are first-party TypeScript rule scripts: the app deals, accepts only legal moves, keeps the turn order and scores. They live in `src/games/tabletop/scripted/` and are listed on the Spieltisch under "Kartenspiele" (catalogue entries with `listing: 'cards'` in `src/games/tabletop/catalog.ts`). [ADR-0005](../adr/0005-tabletop-scripting-for-imported-games.md) is unchanged: imported third-party content still runs only as declarative routines; these scripts are app code, not content.
 
 ## 1. How a game is played
 
@@ -51,7 +51,7 @@ Texts are `Text`: a plain string or `{ key, params, seat }`, resolved under `gam
 
 **Slots.** Because the script decides per viewer, a slot can be open for everyone, known only to one seat or face down for all, and sealing stays correct (Golf grids, Cabo cards, a hand to draw from blind). `SlotGrid` draws them: other seats' slots small in their `SeatBadges`, the viewer's own slots large above the hand; slots in `slotTargets` are highlighted and send `{ kind: 'slot' }` on tap. Slot moves are tried optimistically on a device and checked on the host like buttons.
 
-Adding a game: one script file, an entry in `scriptRegistry.ts` and `CARD_GAMES`, strings (`games.<id>`, `rules.<id>` and the script's keys) in both locales, tests. `__tests__/playthrough.ts` plays any script with random legal moves found through its view.
+Adding a game: one script file, an entry in `scriptRegistry.ts` and a `cardGame(…)` line in `src/games/tabletop/catalog.ts`, strings (`games.<id>`, `rules.<id>` and the script's keys) in both locales, tests. `__tests__/playthrough.ts` plays any script with random legal moves found through its view.
 
 ## 3. Session, sync, storage
 

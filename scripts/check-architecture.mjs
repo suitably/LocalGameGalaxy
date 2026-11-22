@@ -20,6 +20,7 @@
  *    src/components: per-file count in scripts/back-icon-baselines.json, may only go down
  * 10. [CRITICAL] IconButton without aria-label/title/Tooltip: per-file count ratchet in
  *    scripts/icon-button-label-baselines.json, may only go down
+ * 11. [CRITICAL] No hand-kept game lists outside the catalogue (ADR-0011, scripts/lib/game-lists.mjs)
  *
  * Usage:
  *   node scripts/check-architecture.mjs           # Full audit with summary
@@ -47,6 +48,7 @@ import {
   isSetHeaderHiddenAllowed,
 } from './lib/header-rules.mjs';
 import { compareToBaseline, lowerBaseline, sortCounts } from './lib/lint-budget.mjs';
+import { catalogIds, findGameLists, isGameListCheckedFile } from './lib/game-lists.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -154,7 +156,9 @@ const violations = {
   trackedServerMedia: [],
   appBarInGames: [],
   headerHiddenCalls: [],
+  gameLists: [],
 };
+const CATALOG_IDS = catalogIds(ROOT_DIR);
 /** Back-icon imports / unlabeled IconButtons per file (only files with at least one). */
 const backIconCounts = {};
 const iconButtonCounts = {};
@@ -276,6 +280,13 @@ for (const filePath of allFiles) {
     if (n > 0) iconButtonCounts[posixPath] = n;
   }
 
+  // Check 11: hand-kept game lists outside the catalogue
+  if (isGameListCheckedFile(posixPath)) {
+    for (const line of findGameLists(content, CATALOG_IDS)) {
+      violations.gameLists.push({ file: posixPath, line });
+    }
+  }
+
   // Check 4: Large components (> COMPONENT_MAX_LINES for React UI .tsx files; enforced by check:budget)
   if (filePath.endsWith('.tsx') && !relativePath.includes('test')) {
     const nonCommentLines = lines.filter((l) => {
@@ -388,6 +399,19 @@ if (violations.appBarInGames.length > 0) {
   console.log('');
 } else {
   console.log(`${GREEN}✔ No AppBar in games (GlobalHeader is the only top bar)${RESET}`);
+}
+
+// Report hand-kept game lists
+if (violations.gameLists.length > 0) {
+  hasErrors = true;
+  console.log(`${RED}${BOLD}✖ Hand-Kept Game List (${violations.gameLists.length})${RESET}`);
+  console.log(
+    `  Rule: games are listed only in src/lib/catalog/entries.ts; derive lists with src/lib/catalog/views.ts (ADR-0011). A wire-format list kept in step by a test may carry \`game-list-ok\` on the line before.`,
+  );
+  for (const v of violations.gameLists) console.log(`  ${RED}•${RESET} ${v.file}:${v.line}`);
+  console.log('');
+} else {
+  console.log(`${GREEN}✔ No hand-kept game lists outside the catalogue${RESET}`);
 }
 
 // Report setHeaderHidden calls outside the allowlist

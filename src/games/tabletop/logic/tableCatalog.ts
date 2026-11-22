@@ -1,13 +1,15 @@
 /**
  * Games on the "Spieltisch" and how they can be played [ID: LOGIC-TABLETOP-TABLE-CATALOG]
  *
- * Two modes, named by whether the device is shared (it is usually a phone in both):
- * - `shared_device`: one device for everyone, passed around (pass and play);
+ * The games themselves come from the catalogue (ADR-0011); this file only maps them to the
+ * Spieltisch's two play modes, named by whether the device is shared (usually a phone in both):
+ * - `shared_device`: one device for everyone, passed around (pass and play, or solo);
  * - `own_devices`: a party session that everyone joins with their own device.
  */
 import type { AreaId } from '../../../lib/areas';
+import type { CatalogEntry, Mode, SpieltischSection } from '../../../lib/catalog/types';
+import { entriesIn, entryColor } from '../../../lib/catalog/views';
 import type { TabletopPlayMode } from './types';
-import { piecePalette } from '../../../themeTokens';
 
 export type PlayMode = 'shared_device' | 'own_devices';
 
@@ -25,7 +27,6 @@ export interface TableGameEntry {
   modes: PlayMode[];
 }
 
-/** Our modes for a tabletop game's `supportedModes` (solo counts as one device). */
 export function playModesOf(supported: TabletopPlayMode[] | undefined): PlayMode[] {
   const modes = new Set<PlayMode>();
   for (const mode of supported ?? []) {
@@ -34,114 +35,31 @@ export function playModesOf(supported: TabletopPlayMode[] | undefined): PlayMode
   return modes.size > 0 ? [...modes] : ['shared_device', 'own_devices'];
 }
 
-export const TABLETOP_STARTERS: TableGameEntry[] = [
-  {
-    id: 'standard-cards',
-    kind: 'tabletop',
-    titleKey: 'games.tabletop.standard_cards_title',
-    title: 'Standard Kartendeck (52)',
-    descKey: 'games.tabletop.standard_cards_desc',
-    icon: 'cards',
-    color: piecePalette.blue,
-    modes: ['shared_device', 'own_devices'],
-  },
-  {
-    id: 'liars-dice',
-    kind: 'tabletop',
-    titleKey: 'games.tabletop.liars_dice_title',
-    title: "Liar's Dice / Perudo",
-    descKey: 'games.tabletop.liars_dice_desc',
-    icon: 'dice',
-    color: piecePalette.orange,
-    // Cups are hands: pass and play keeps them hidden between players.
-    modes: ['shared_device', 'own_devices'],
-  },
-  {
-    id: 'checkers',
-    kind: 'tabletop',
-    titleKey: 'games.tabletop.checkers_title',
-    title: 'Dame / Checkers',
-    descKey: 'games.tabletop.checkers_desc',
-    icon: 'puzzle',
-    color: piecePalette.green,
-    modes: ['shared_device', 'own_devices'],
-  },
-];
+/** Catalogue modes as Spieltisch play modes (async play is not offered here). */
+export function tableModesOf(modes: readonly Mode[]): PlayMode[] {
+  const out: PlayMode[] = [];
+  if (modes.some((m) => m === 'solo' || m === 'pass_and_play')) out.push('shared_device');
+  if (modes.includes('party_room')) out.push('own_devices');
+  return out;
+}
 
-/** Card games with enforced rules (`scripted/`): the app deals, checks moves and scores. */
-const cardGame = (id: string, title: string, color: string): TableGameEntry => ({
-  id,
-  kind: 'tabletop',
-  titleKey: `games.tabletop.scripted.games.${id}.title`,
-  title,
-  descKey: `games.tabletop.scripted.games.${id}.desc`,
-  icon: 'cards',
-  color,
-  modes: ['shared_device', 'own_devices'],
-});
+export function toTableEntry(entry: CatalogEntry): TableGameEntry {
+  return {
+    id: entry.id,
+    kind: entry.launch.type === 'tabletop' ? 'tabletop' : 'route',
+    route: entry.launch.type === 'route' ? entry.launch.route : undefined,
+    titleKey: entry.titleKey,
+    title: entry.title,
+    descKey: entry.descKey,
+    icon: entry.area,
+    color: entryColor(entry),
+    modes: tableModesOf(entry.modes),
+  };
+}
 
-export const CARD_GAMES: TableGameEntry[] = [
-  cardGame('schwimmen', 'Schwimmen', piecePalette.teal),
-  cardGame('durak', 'Durak', piecePalette.red),
-  cardGame('arschloch', 'Arschloch', piecePalette.purple),
-  cardGame('skat', 'Skat', piecePalette.blue),
-  cardGame('maumau', 'Mau-Mau', piecePalette.orange),
-  cardGame('schwarzer-peter', 'Schwarzer Peter', piecePalette.green),
-  cardGame('golf', 'Golf', piecePalette.teal),
-  cardGame('cabo', 'Cabo', piecePalette.purple),
-];
-
-/** Dice games with their own score sheets; with own devices through the party room (#467). */
-export const DICE_GAMES: TableGameEntry[] = [
-  {
-    id: 'kniffel',
-    kind: 'route',
-    route: '/games/kniffel',
-    titleKey: 'games.kniffel.title',
-    title: 'Kniffel',
-    descKey: 'games.kniffel.description',
-    icon: 'dice',
-    color: piecePalette.red,
-    modes: ['shared_device', 'own_devices'],
-  },
-  {
-    id: 'knister',
-    kind: 'route',
-    route: '/games/knister',
-    titleKey: 'games.knister.title',
-    title: 'Knister',
-    descKey: 'games.knister.description',
-    icon: 'puzzle',
-    color: piecePalette.orange,
-    modes: ['shared_device', 'own_devices'],
-  },
-  {
-    id: 'qwixx',
-    kind: 'route',
-    route: '/games/qwixx',
-    titleKey: 'games.qwixx.title',
-    title: 'Qwixx',
-    descKey: 'games.qwixx.description',
-    icon: 'dice',
-    color: piecePalette.orange,
-    modes: ['shared_device', 'own_devices'],
-  },
-];
-
-/** Score trackers for games played with real cards: no cards on screen, only the scores. */
-export const SCORE_TRACKERS: TableGameEntry[] = [
-  {
-    id: 'cards',
-    kind: 'route',
-    route: '/games/cards',
-    titleKey: 'games.cards.title',
-    title: 'Kartenspiel-Zähler',
-    descKey: 'games.cards.description',
-    icon: 'cards',
-    color: piecePalette.purple,
-    modes: ['shared_device'],
-  },
-];
+/** One Spieltisch section, in catalogue order. */
+export const spieltischSection = (section: SpieltischSection): TableGameEntry[] =>
+  entriesIn(section).map(toTableEntry);
 
 /** Where a game in a mode opens; `own_devices` goes through the party lobby. */
 export function routeFor(
