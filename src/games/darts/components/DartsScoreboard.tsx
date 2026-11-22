@@ -138,10 +138,8 @@ export function DartsScoreboard({ state }: Props) {
               <TableHead>
                 <TableRow>
                   <TableCell>{t('games.darts.player')}</TableCell>
-                  <TableCell align="right">{t('games.darts.score_label', 'Score')}</TableCell>
-                  <TableCell align="right">
-                    {t('games.darts.last_turn_label', 'Last Turn')}
-                  </TableCell>
+                  <TableCell align="right">{t('games.darts.score_label')}</TableCell>
+                  <TableCell align="right">{t('games.darts.last_turn_label')}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>

@@ -22,7 +22,9 @@
       "setup_reset_title": "Spiel zurücksetzen?",
       "setup_reset_desc": "Diese Änderung startet das laufende Spiel neu. Alle bisherigen Würfe gehen verloren.",
       "setup_reset_confirm": "Zurücksetzen",
-      "restart_desc": "Bist du sicher? Der aktuelle Spielstand geht verloren."
+      "restart_desc": "Bist du sicher? Der aktuelle Spielstand geht verloren.",
+      "score_label": "Punkte",
+      "last_turn_label": "Letzter Zug"
     }
   }
 }
