@@ -1479,7 +1479,13 @@
           "pass": "Schieben",
           "knock": "Klopfen",
           "fire": "{{name}} hat 31 – alle anderen verlieren ein Leben",
-          "tie": "Gleichstand – niemand verliert ein Leben"
+          "tie": "Gleichstand – niemand verliert ein Leben",
+          "option": {
+            "passOnce": "Nur einmal schieben",
+            "passOnceHint": "Jeder darf pro Runde nur einmal schieben.",
+            "firstSwims": "Nur der Erste schwimmt",
+            "firstSwimsHint": "Nur wer als Erstes sein letztes Leben verliert, schwimmt noch. Alle danach sind sofort raus."
+          }
         },
         "durak": {
           "attacker": "greift an",
@@ -1541,7 +1547,7 @@
           "trickTo": "Stich für {{name}}"
         },
         "rules": {
-          "schwimmen": "<p>32 Karten. Jeder hat drei Karten, drei liegen offen in der Mitte. Der Geber wählt zu Beginn eines von zwei Blättern; das andere kommt in die Mitte.</p><p><b>Dein Zug:</b> eine Karte tauschen, alle drei tauschen, schieben oder klopfen. Nach dem Klopfen sind alle anderen noch einmal dran. Schieben alle, kommen drei neue Karten in die Mitte.</p><p><b>Wertung:</b> Summe einer Farbe (Ass 11, Bilder 10). Drei Gleiche zählen 30,5. Wer 31 oder drei Asse hat, beendet die Runde sofort – alle anderen verlieren ein Leben. Sonst verliert das niedrigste Blatt.</p><p>Jeder hat drei Leben, danach „schwimmt“ man, beim nächsten Verlust ist man raus. Der Letzte gewinnt.</p>",
+          "schwimmen": "<p>32 Karten. Jeder hat drei Karten, drei liegen offen in der Mitte. Der Geber wählt zu Beginn eines von zwei Blättern; das andere kommt in die Mitte.</p><p><b>Dein Zug:</b> eine Karte tauschen, alle drei tauschen, schieben oder klopfen. Nach dem Klopfen sind alle anderen noch einmal dran. Schieben alle, kommen drei neue Karten in die Mitte.</p><p><b>Wertung:</b> Summe einer Farbe (Ass 11, Bilder 10). Drei Gleiche zählen 30,5. Wer 31 oder drei Asse hat, beendet die Runde sofort – alle anderen verlieren ein Leben. Sonst verliert das niedrigste Blatt.</p><p>Jeder hat drei Leben, danach „schwimmt“ man, beim nächsten Verlust ist man raus. Der Letzte gewinnt.</p><p><b>Hausregeln:</b> Mit „Nur einmal schieben“ darf jeder pro Runde nur einmal schieben. Mit „Nur der Erste schwimmt“ schwimmt nur, wer als Erstes kein Leben mehr hat – alle danach sind sofort raus.</p>",
           "durak": "<p>36 Karten (6 bis Ass), sechs auf der Hand. Die unterste Karte des Stapels zeigt Trumpf. In der ersten Runde greift der niedrigste Trumpf an.</p><p><b>Angriff:</b> eine oder mehrere Karten gleichen Werts. <b>Verteidigung:</b> jede Karte mit einer höheren derselben Farbe oder mit Trumpf schlagen – oder alles aufnehmen.</p><p>Ist alles geschlagen, dürfen die anderen Karten nachlegen, deren Wert schon auf dem Tisch liegt (höchstens sechs Angriffskarten, nie mehr als der Verteidiger Karten hatte). Danach ziehen alle auf sechs nach. Wer abwehrt, greift als Nächster an; wer aufnimmt, setzt aus.</p><p>Wer am Ende noch Karten hat, ist der Durak.</p>",
           "arschloch": "<p>Alle Karten werden verteilt (32 bis vier Spieler, sonst 52). Wer ausspielt, legt eine oder mehrere Karten gleichen Werts. Die anderen legen gleich viele höhere Karten oder passen – wer passt, setzt bis zum Ende des Stichs aus. Wer zuletzt gelegt hat, spielt neu aus.</p><p>Wer zuerst keine Karten mehr hat, ist Präsident, der Letzte das Arschloch. Vor der nächsten Runde gibt das Arschloch seine besten Karten an den Präsidenten (zwei ab vier Spielern, sonst eine), der beliebige zurückgibt; ab vier Spielern tauschen auch die Vizes eine Karte. Das Arschloch spielt aus.</p>",
           "skat": "<p>Drei Spieler, 32 Karten, je zehn auf der Hand, zwei im Skat. Mittelhand reizt Vorhand, danach Hinterhand den Gewinner. Wer das Reizen gewinnt, nimmt den Skat auf und drückt zwei Karten – oder spielt Hand – und sagt Farbe, Grand oder Null an.</p><p>Farbe bedienen ist Pflicht; die Buben sind die höchsten Trümpfe (außer bei Null). Der Alleinspieler braucht 61 Augen, bei Null darf er keinen Stich machen.</p><p><b>Wert:</b> Spitzen + 1 (+ Hand, Schneider, Schwarz) × Grundwert (Karo 9, Herz 10, Pik 11, Kreuz 12, Grand 24); Null 23, Hand 35, Ouvert 46, Ouvert Hand 59. Verlorene Spiele zählen doppelt minus. Passen alle, gibt der Nächste. Ohne Ramsch und ohne Schneider-/Schwarz-Ansage.</p>",
