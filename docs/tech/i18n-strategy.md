@@ -1,15 +1,15 @@
 ---
 type: Reference
 title: 'i18n strategy (de/en)'
-description: 'How translations are loaded (i18next HTTP backend + per-game resource bundles), where a string must be added, the 17 top-level namespaces, interpolation/plural conventions, and the parity ratchet in the hygiene check.'
+description: 'How translations are loaded (i18next HTTP backend for the shell + per-game JSON bundles registered with registerGameBundle), where a string must be added, the 17 top-level namespaces, interpolation/plural conventions, and the parity ratchet in the hygiene check.'
 tags: [i18n, localization, react-i18next, translation]
 status: stable
 generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-11-16
-  method: 'read src/i18n.ts, src/games/*/i18n/index.ts, public/locales/*/translation.json top-level keys, scripts/check-repo-hygiene.mjs (parity check); 2026-11-16: Sudoku and Wordle bundle status re-checked with grep'
+  at: 2026-11-22
+  method: '2026-11-22: per-game JSON bundles via src/lib/i18n/gameBundle.ts (ADR-0011 §7), parity check over them; read src/i18n.ts, src/games/*/i18n/index.ts, public/locales/*/translation.json top-level keys, scripts/check-repo-hygiene.mjs (parity check); 2026-11-16: Sudoku and Wordle bundle status re-checked with grep'
 sources:
   - 'src/i18n.ts'
   - 'public/locales/'
@@ -40,14 +40,16 @@ sources:
 - Initial language: `storage.get(STORAGE_KEYS.LANGUAGE)` (`lgg_language`), then the legacy key `language`, then `navigator.language` (`de*` → `de`, else `en`). Changes are written back to both keys.
 - `i18next-http-backend` loads `/locales/{{lng}}/{{ns}}.json`; `fallbackLng: 'en'`, `preload: ['en', 'de']`, default namespace `translation`, `useSuspense: false`.
 
-## 3. Two places where strings live
+## 3. Where strings live (ADR-0011 §7)
 
-| Source                                    | Who uses it                                                                                                                                                                      | How it is loaded                                                                                                                                  |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `public/locales/{en,de}/translation.json` | app shell, hub, settings, party, connection, notifications, and the games darts, guessart, storyteller, melodiq-notes, werewolf, imposter, tabletop, garticphone, sudoku, wordle | HTTP backend at start-up                                                                                                                          |
-| `src/games/<id>/i18n/index.ts`            | cards, kniffel, knister, melodiq, qwixx                                                                                                                                          | the game calls its `init<Game>I18n()` which runs `i18next.addResourceBundle(lang, 'translation', …, deep=true, overwrite=true)` for `en` and `de` |
+| Source                                    | Holds                                                                                                                      | How it is loaded                                                                                                                                                                                                            |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public/locales/{en,de}/translation.json` | app shell, hub, settings, party, connection, notifications, shared modules, every game's `games.<id>.title`/`.description` | HTTP backend at start-up                                                                                                                                                                                                    |
+| `src/games/<id>/i18n/{de,en}.json`        | everything else of that game, under the same key paths `t()` uses                                                          | `src/games/<id>/i18n/index.ts` exports `init<Game>I18n()`, which calls `registerGameBundle` (`src/lib/i18n/gameBundle.ts`: deep merge into `translation` once i18next is initialised); called from the game's entry modules |
 
-Rule: add a string **where its game already keeps its strings**, in both languages. Do not move a game between the two systems as a side effect.
+Games on per-game bundles so far: cards, kniffel, knister, melodiq, qwixx (migration status: [GAME-CATALOG-RESTRUCTURE §7](../tasks/GAME-CATALOG-RESTRUCTURE.md#7-progress)). Games not yet migrated keep their strings in `public/locales`; add a string where its game keeps its strings today.
+
+`init<Game>I18n()` must run before the game renders: call it at module level in the game's barrel (`index.ts`, which the catalogue's `lazy()` page loads) and in any module outside the game folder that imports the game's components directly.
 
 ## 4. Namespaces in `translation.json`
 
@@ -66,16 +68,16 @@ function MyComponent() {
 
 ### Parity gate
 
-`npm run check:hygiene` (pre-commit and CI) flattens both `public/locales` files and fails on **new** keys missing in either language; known gaps are listed in `scripts/i18n-parity-baseline.json` (currently empty) and must be removed from it when fixed. Per-game bundles in `src/games/*/i18n/` are **not** covered by this check.
+`npm run check:hygiene` (pre-commit and CI) flattens both `public/locales` files and every `src/games/<id>/i18n/{de,en}.json` pair and fails on **new** keys missing in either language; known gaps are listed in `scripts/i18n-parity-baseline.json` (currently empty) and must be removed from it when fixed.
 
 ## 5. Adding new translation keys
 
 1. Find where the surrounding component's strings live (§3).
-2. Add the key to **both** `en` and `de` in that place (`public/locales/*/translation.json`, or both objects of the game's `i18n/index.ts`).
+2. Add the key to **both** `en` and `de` in that place (`public/locales/*/translation.json`, or the game's `i18n/de.json` and `i18n/en.json`).
 3. Use it via `t('namespace.key')`. A default value as second argument (`t('connection.party_id', 'Party ID')`) is used in a few places as fallback; it does not replace the entries.
-4. Run `npm run check:hygiene` for the `public/locales` parity check.
+4. Run `npm run check:hygiene` for the parity check.
 
-New game: the hub renders `games.<id>.title` / `.description` before any game bundle is initialised, so these two keys always go into `public/locales/*/translation.json` — also for games that keep the rest of their strings in a bundle (qwixx, cards, kniffel do this).
+New game: the hub renders `games.<id>.title` / `.description` before any game bundle is initialised, so these two keys always go into `public/locales/*/translation.json`, never into the game's bundle.
 
 ## 6. Interpolation and Pluralization
 

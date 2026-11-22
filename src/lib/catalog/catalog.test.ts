@@ -14,9 +14,8 @@ const load = async () => ({
 });
 
 const LOCALES = [deLocale, enLocale] as Record<string, unknown>[];
-/** Sources of the per-game bundles (`src/games/<id>/i18n/index.ts`). */
-const BUNDLES = import.meta.glob<string>('../../games/*/i18n/index.ts', {
-  query: '?raw',
+/** Per-game bundles (`src/games/<id>/i18n/{de,en}.json`). */
+const BUNDLES = import.meta.glob<Record<string, unknown>>('../../games/*/i18n/*.json', {
   import: 'default',
   eager: true,
 });
@@ -24,12 +23,14 @@ const BUNDLES = import.meta.glob<string>('../../games/*/i18n/index.ts', {
 const lookup = (tree: Record<string, unknown>, key: string): unknown =>
   key.split('.').reduce<unknown>((node, part) => (node as Record<string, unknown>)?.[part], tree);
 
-/** A key is translated in both public locales, or the game's own bundle names it. */
+/** A key is translated in both public locales, or in both files of the game's own bundle. */
 function translated(key: string): boolean {
   if (LOCALES.every((tree) => typeof lookup(tree, key) === 'string')) return true;
-  const [, gameId, ...rest] = key.split('.');
-  const bundle = BUNDLES[`../../games/${gameId}/i18n/index.ts`];
-  return bundle !== undefined && bundle.includes(`${rest.at(-1)}:`);
+  const gameId = key.split('.')[1];
+  return ['de', 'en'].every((lang) => {
+    const bundle = BUNDLES[`../../games/${gameId}/i18n/${lang}.json`];
+    return bundle !== undefined && typeof lookup(bundle, key) === 'string';
+  });
 }
 
 describe('game catalogue', { timeout: 30000 }, () => {

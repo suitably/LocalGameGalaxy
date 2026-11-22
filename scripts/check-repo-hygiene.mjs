@@ -8,13 +8,18 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 
 const errors = [];
 const warnings = [];
-const files = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+const files = execFileSync('git', ['ls-files', '-z'], {
+  encoding: 'utf8',
+  maxBuffer: 64 * 1024 * 1024,
+})
   .split('\0')
   .filter((f) => f && existsSync(f)); // skip files deleted in the working tree
 
 const isText = (f) => /\.(ts|tsx|js|jsx|mjs|cjs|json|md|ya?ml|css|html|yml)$/.test(f);
 const read = (f) => readFileSync(f, 'utf8');
-const textFiles = files.filter((f) => isText(f) && !f.includes('package-lock.json') && !f.startsWith('dev-dist/'));
+const textFiles = files.filter(
+  (f) => isText(f) && !f.includes('package-lock.json') && !f.startsWith('dev-dist/'),
+);
 
 // 1. Leftover merge/patch artifacts & keystores
 for (const f of files) {
@@ -32,7 +37,9 @@ for (const f of textFiles) {
 }
 
 // 3. JSON validity (package.json, locales, baselines, etc.; tsconfig allows comments -> skipped)
-for (const f of files.filter((x) => x.endsWith('.json') && !/tsconfig|\.vscode|package-lock/.test(x))) {
+for (const f of files.filter(
+  (x) => x.endsWith('.json') && !/tsconfig|\.vscode|package-lock/.test(x),
+)) {
   try {
     JSON.parse(read(f));
   } catch (e) {
@@ -43,19 +50,42 @@ for (const f of files.filter((x) => x.endsWith('.json') && !/tsconfig|\.vscode|p
 // 4. i18n key parity de <-> en (ratchet: known gaps live in scripts/i18n-parity-baseline.json)
 const flatten = (o, p = '') =>
   Object.entries(o).flatMap(([k, v]) =>
-    v && typeof v === 'object' ? flatten(v, `${p}${k}.`) : [`${p}${k}`]);
+    v && typeof v === 'object' ? flatten(v, `${p}${k}.`) : [`${p}${k}`],
+  );
+// Per-game bundles (src/games/<id>/i18n/{de,en}.json) are checked the same way, prefixed by file.
+const parityGaps = (deFile, enFile, prefix = '') => {
+  const de = new Set(flatten(JSON.parse(read(deFile))));
+  const en = new Set(flatten(JSON.parse(read(enFile))));
+  return [
+    ...[...de].filter((k) => !en.has(k)).map((k) => `${prefix}en:${k}`),
+    ...[...en].filter((k) => !de.has(k)).map((k) => `${prefix}de:${k}`),
+  ];
+};
 try {
-  const de = new Set(flatten(JSON.parse(read('public/locales/de/translation.json'))));
-  const en = new Set(flatten(JSON.parse(read('public/locales/en/translation.json'))));
+  const bundleDirs = [
+    ...new Set(
+      files
+        .filter((f) => /^src\/games\/[^/]+\/i18n\/(de|en)\.json$/.test(f))
+        .map((f) => f.replace(/(de|en)\.json$/, '')),
+    ),
+  ];
   const gaps = [
-    ...[...de].filter((k) => !en.has(k)).map((k) => `en:${k}`),
-    ...[...en].filter((k) => !de.has(k)).map((k) => `de:${k}`),
+    ...parityGaps('public/locales/de/translation.json', 'public/locales/en/translation.json'),
+    ...bundleDirs.flatMap((d) =>
+      existsSync(`${d}de.json`) && existsSync(`${d}en.json`)
+        ? parityGaps(`${d}de.json`, `${d}en.json`, d)
+        : [`${d}: needs both de.json and en.json`],
+    ),
   ];
   const baseline = new Set(JSON.parse(read('scripts/i18n-parity-baseline.json')));
   const fresh = gaps.filter((g) => !baseline.has(g));
   const fixed = [...baseline].filter((g) => !gaps.includes(g));
-  if (fresh.length) errors.push(`i18n: ${fresh.length} new missing key(s), e.g. ${fresh.slice(0, 3).join(', ')}`);
-  if (fixed.length) errors.push(`i18n: ${fixed.length} baseline gap(s) fixed - remove from scripts/i18n-parity-baseline.json`);
+  if (fresh.length)
+    errors.push(`i18n: ${fresh.length} new missing key(s), e.g. ${fresh.slice(0, 3).join(', ')}`);
+  if (fixed.length)
+    errors.push(
+      `i18n: ${fixed.length} baseline gap(s) fixed - remove from scripts/i18n-parity-baseline.json`,
+    );
   if (baseline.size) warnings.push(`i18n: ${baseline.size} known parity gap(s) in baseline`);
 } catch (e) {
   errors.push(`i18n parity check failed: ${e.message}`);
@@ -78,7 +108,8 @@ const secretPatterns = [
 ];
 for (const f of textFiles.filter((x) => !/^docs\//.test(x) && !/\.example\./.test(x))) {
   const c = read(f);
-  for (const [re, label] of secretPatterns) if (re.test(c)) errors.push(`Possible ${label} in ${f}`);
+  for (const [re, label] of secretPatterns)
+    if (re.test(c)) errors.push(`Possible ${label} in ${f}`);
 }
 
 // 7. Workflow hygiene: no tabs, explicit permissions, timeouts
@@ -86,14 +117,17 @@ for (const f of files.filter((x) => /^\.github\/workflows\/.*\.ya?ml$/.test(x)))
   const c = read(f);
   if (/\t/.test(c)) errors.push(`Tab character in ${f} (YAML requires spaces)`);
   for (const m of c.matchAll(/^\s*(?:-\s+)?uses:\s*([^\s#]+)/gm)) {
-    if (!m[1].startsWith('./') && !/@[0-9a-f]{40}$/.test(m[1])) errors.push(`Action not pinned to a commit SHA in ${f}: ${m[1]}`);
+    if (!m[1].startsWith('./') && !/@[0-9a-f]{40}$/.test(m[1]))
+      errors.push(`Action not pinned to a commit SHA in ${f}: ${m[1]}`);
   }
   if (!/^permissions:/m.test(c)) errors.push(`Workflow ${f} has no top-level permissions block`);
   if (/node-version:\s*['"]?\d+/m.test(c)) {
     errors.push(`Hardcoded node-version in ${f} - use 'node-version-file: .nvmrc' instead`);
   }
   if (/curl\s+[^\n|]+\|\s*(?:bash|sh)|bash\s*<\(\s*curl/i.test(c)) {
-    errors.push(`Disallowed curl | bash pattern detected in ${f} - use a pinned GitHub action instead`);
+    errors.push(
+      `Disallowed curl | bash pattern detected in ${f} - use a pinned GitHub action instead`,
+    );
   }
 }
 
@@ -113,4 +147,6 @@ if (errors.length) {
   console.error(`\n${errors.length} precheck error(s).`);
   process.exit(1);
 }
-console.log(`✔ Repository prechecks passed (${files.length} files, ${warnings.length} warning(s)).`);
+console.log(
+  `✔ Repository prechecks passed (${files.length} files, ${warnings.length} warning(s)).`,
+);
