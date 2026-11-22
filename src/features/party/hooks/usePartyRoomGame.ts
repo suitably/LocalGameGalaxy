@@ -5,11 +5,12 @@
  * reducer over the room transport (`useRoomReducer`), guests following the host to the lobby,
  * the header back arrow to the lobby, and the host dealing once the players are known.
  */
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useHeaderLayout } from '../../../context/HeaderLayoutContext';
 import { useWakeLock } from '../../../hooks/useWakeLock';
 import { useRoomReducer } from '../../../modules/room-game';
+import { universalPartyManager } from '../logic/universalPartyManager';
 import { useFollowPartyLobby } from './useFollowPartyLobby';
 import { usePartyRoomPlayers, type RoomPlayer } from './usePartyRoomPlayers';
 
@@ -25,6 +26,12 @@ interface Options<S, A> {
   start: (hostId: string, players: RoomPlayer[]) => A;
 }
 
+/** A resumed state names the new host where the game keeps one (`hostId`: deal, restart). */
+function withHost<S>(state: S, hostId: string): S {
+  const s = state as S & { hostId?: unknown };
+  return typeof s?.hostId === 'string' ? { ...s, hostId } : state;
+}
+
 export function usePartyRoomGame<S, A>({
   gameKey,
   roomId,
@@ -37,7 +44,14 @@ export function usePartyRoomGame<S, A>({
   const navigate = useNavigate();
   useFollowPartyLobby(roomId);
   useWakeLock(true);
-  const room = usePartyRoomPlayers(roomId);
+  const room = usePartyRoomPlayers(roomId, { liveHost: true });
+  // In a Stammtisch every device keeps the running game, so it can be resumed on another day.
+  const [resumeTag] = useState(() => {
+    const party = universalPartyManager.getRoomState();
+    return party?.roomId === roomId && party.stammtisch ? String(party.statusAt ?? 0) : undefined;
+  });
+  const myId = room.myId;
+  const adoptState = useCallback((state: S) => withHost(state, myId), [myId]);
   const game = useRoomReducer<S, A>({
     gameKey,
     roomId,
@@ -46,6 +60,8 @@ export function usePartyRoomGame<S, A>({
     reducer,
     authorize,
     initialState,
+    resumeTag,
+    adoptState,
   });
   const { state, dispatch } = game;
 

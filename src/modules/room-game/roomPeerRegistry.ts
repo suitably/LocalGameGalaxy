@@ -27,6 +27,14 @@ export function retainRoomPeer<P extends { stop(): void }>(
   return peer;
 }
 
+/** Removes the kept peer for `key` from the registry and returns it (the caller stops it). */
+export function takeRoomPeer<P extends { stop(): void }>(key: string): P | null {
+  const found = peers.get(key);
+  if (!found) return null;
+  peers.delete(key);
+  return found.peer as P;
+}
+
 /** Stops and forgets every kept peer of a room (its game ended or a new one starts). */
 export function releaseRoomPeers(roomId: string): void {
   for (const [key, entry] of peers) {
