@@ -36,7 +36,11 @@
     "sections": {
       "tools": "Helfer"
     },
-    "empty": "Keine Spiele für diese Auswahl."
+    "empty": "Keine Spiele für diese Auswahl.",
+    "stammtisch": {
+      "desc": "Euer fester Raum: tippen und dabei sein.",
+      "open": "Hingehen"
+    }
   },
   "games": {
     "darts": {
@@ -2701,7 +2705,24 @@
     "chooseAndStart": "Spiel wählen & starten",
     "partyModeChip": "Party-Modus",
     "werewolf_desc": "Jede Rolle geheim auf dem eigenen Handy, der Host erzählt.",
-    "imposter_desc": "Jeder sieht sein Wort geheim auf dem eigenen Handy – wer hat nur den Hinweis?"
+    "imposter_desc": "Jeder sieht sein Wort geheim auf dem eigenen Handy – wer hat nur den Hinweis?",
+    "stammtisch": {
+      "title": "Stammtisch",
+      "desc": "Fester Raum mit gleichem Code: Alle können jederzeit wiederkommen.",
+      "save": "Als Stammtisch speichern",
+      "saveHere": "Auf diesem Gerät speichern",
+      "saveTitle": "Als Stammtisch speichern",
+      "saveDesc": "Der Raum behält seinen Code. Wer ihn speichert, kommt mit einem Tipp vom Startbildschirm zurück.",
+      "nameLabel": "Name",
+      "waiting": "Warte auf die anderen …",
+      "autoOpen": "Beim Start öffnen",
+      "autoOpenHint": "Die App startet direkt in diesem Raum",
+      "claimHost": "Leitung übernehmen",
+      "forget": "Vergessen",
+      "forgetTitle": "Stammtisch vergessen?",
+      "forgetDesc": "Der Stammtisch verschwindet von diesem Gerät. Über einen Einladungslink kannst du wieder beitreten.",
+      "away": "nicht da"
+    }
   },
   "gartic": {
     "waitingHeader": "Warte auf die anderen Spieler...",

@@ -57,6 +57,11 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
                     <Typography variant="body2" fontWeight={isMe ? 800 : 600} component="span">
                       {p.name} {isMe ? `(${t('common.you', 'Du')})` : ''}
                     </Typography>
+                    {lobby.stammtisch.isAway(p.id) && (
+                      <Typography variant="caption" color="text.secondary" component="span">
+                        {t('party.stammtisch.away')}
+                      </Typography>
+                    )}
                     {p.isHost && <StarsRoundedIcon sx={{ color: 'warning.main', fontSize: 18 }} />}
                     {p.spectator && (
                       <Tooltip title={t('party.spectatorBadge', 'Zuschauer')}>
@@ -107,6 +112,7 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
                       : theme.palette.background.default,
                   boxShadow: 'none',
                   cursor: isMe ? 'pointer' : 'default',
+                  opacity: lobby.stammtisch.isAway(p.id) ? 0.55 : 1,
                   transition: transitionOf(['background-color', 'border-color', 'box-shadow']),
                   '&:hover': isMe
                     ? {

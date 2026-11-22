@@ -1,5 +1,5 @@
 /**
- * The hub: party room first, then every game grouped by area, tools last (ADR-0011) [ID: COMP-HUB]
+ * The hub: saved Stammtisch rooms and the party room first, then every game grouped by area, tools last (ADR-0011) [ID: COMP-HUB]
  */
 import React, { useState } from 'react';
 import { Typography, Box, useTheme } from '@mui/material';
@@ -14,6 +14,7 @@ import nexumiaBannerInk from '../../assets/nexumia-banner-ink.svg';
 import { HubAreaFilter, type AreaFilter } from './HubAreaFilter';
 import { HubPartyRoom } from './HubPartyRoom';
 import { HubSection } from './HubSection';
+import { HubStammtische } from './HubStammtische';
 import { hubSections } from './hubSections';
 import { useHubOpen } from './useHubOpen';
 
@@ -65,6 +66,8 @@ export const Hub: React.FC = () => {
 
       {/* PWA Mobile Fullscreen Install Callout */}
       <PWAInstallBanner />
+
+      <HubStammtische />
 
       <HubPartyRoom onOpen={() => navigate(routeOf('party') ?? '/party')} />
 

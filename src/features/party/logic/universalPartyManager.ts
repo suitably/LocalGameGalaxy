@@ -7,6 +7,7 @@ import {
   createdState,
   hearingSince,
   joinedState,
+  AWAY_AFTER_MS,
   shouldTakeOverHost,
   takeOverHost,
 } from './partySession';
@@ -54,6 +55,8 @@ export interface PartyRoomState {
   players: PartyPlayer[];
   /** Player id → when they left or were removed; keeps stale rosters from adding them back. */
   left?: Record<string, number>;
+  /** Name of the Stammtisch when the room is a saved, persistent one (`logic/stammtisch.ts`). */
+  stammtisch?: string;
   updatedAt: number;
 }
 
@@ -79,6 +82,8 @@ class UniversalPartyManager {
   private listeningSince = 0;
   /** Since when this device hears the room without an outage, and when it last heard it. */
   private hearing = { since: 0, last: 0 };
+  /** Ids heard within `AWAY_AFTER_MS` at the last check; a change notifies the listeners. */
+  private presentKey = '';
   /** `statusAt` of the game whose room peers are kept (#657); a change ends that game here. */
   private gameStatusAt: number | undefined;
 
@@ -94,6 +99,55 @@ class UniversalPartyManager {
       sessionStorageSafe.set(STORAGE_KEYS.PARTY_MY_PLAYER_ID, this.myPlayerId);
     }
     return this.myPlayerId;
+  }
+
+  /**
+   * Uses `id` as this device's player id from now on (a saved Stammtisch keeps one per room, so a
+   * member returns as the same player). Leaves nothing behind in another room: callers open the
+   * Stammtisch right after.
+   */
+  public adoptPlayerId(id: string): void {
+    if (!id || id === this.getMyPlayerId()) return;
+    this.myPlayerId = id;
+    sessionStorageSafe.set(STORAGE_KEYS.PARTY_MY_PLAYER_ID, id);
+  }
+
+  /** Whether a player was heard within `AWAY_AFTER_MS`; this device always counts as present. */
+  public isPresent(playerId: string): boolean {
+    if (playerId === this.getMyPlayerId()) return true;
+    const seen = this.lastSeen.get(playerId);
+    return seen !== undefined && Date.now() - seen < AWAY_AFTER_MS;
+  }
+
+  /** Marks the current room as a Stammtisch with this name (published to every member). */
+  public markStammtisch(roomId: string, name: string): void {
+    const state = this.currentRoomState;
+    if (!state || state.roomId !== roomId || state.stammtisch === name) return;
+    this.publishPartyState({ ...state, stammtisch: name, updatedAt: Date.now() });
+  }
+
+  /** Takes over hosting a Stammtisch from the lobby (any member may; the higher epoch wins). */
+  public claimHost(roomId: string): void {
+    const state = this.currentRoomState;
+    const myId = this.getMyPlayerId();
+    if (!state || state.roomId !== roomId || !state.stammtisch || state.hostId === myId) return;
+    if (state.status !== 'lobby') return;
+    sessionStorageSafe.set(`${STORAGE_PREFIXES.PARTY_HOST_ID}${roomId}`, myId);
+    this.publishPartyState(takeOverHost(state, myId, Date.now()));
+  }
+
+  /** Notifies the listeners when someone came or went (presence pings, `AWAY_AFTER_MS`). */
+  private checkPresence(): void {
+    const state = this.currentRoomState;
+    if (!state) return;
+    const key = state.players
+      .filter((p) => this.isPresent(p.id))
+      .map((p) => p.id)
+      .sort()
+      .join(',');
+    if (key === this.presentKey) return;
+    this.presentKey = key;
+    this.notifyListeners();
   }
 
   public getRoomState(): PartyRoomState | null {
@@ -290,6 +344,7 @@ class UniversalPartyManager {
           this.publishPartyState(this.currentRoomState);
         }
       }
+      this.checkPresence();
       return;
     }
 
@@ -352,6 +407,7 @@ class UniversalPartyManager {
       this.subscribeToParty(roomId);
       this.sync?.publish({ type: 'PARTY_PRESENCE', roomId, player });
       this.checkHostTakeover(roomId);
+      this.checkPresence();
     };
 
     // Send immediately and recurring every 3 seconds for snappy updates

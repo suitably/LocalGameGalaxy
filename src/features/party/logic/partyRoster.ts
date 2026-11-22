@@ -169,6 +169,8 @@ export function mergeIncomingState(
   return {
     ...incoming,
     ...game,
+    // A room stays a Stammtisch: a copy from a device that does not know it yet keeps the name.
+    stammtisch: incoming.stammtisch ?? current.stammtisch,
     hostId,
     hostEpoch,
     left,
@@ -289,9 +291,15 @@ export interface RoomPlayer {
 }
 
 /** Seated players in seat order; spectators are left out. */
-export function roomPlayersOf(state: PartyRoomState | null): RoomPlayer[] {
+export function roomPlayersOf(
+  state: PartyRoomState | null,
+  isPresent: (playerId: string) => boolean = () => true,
+): RoomPlayer[] {
   if (!state) return [];
+  // In a Stammtisch the roster keeps every member; only those here now take part.
+  const here = (p: PartyPlayer) => !state.stammtisch || isPresent(p.id);
   return seatedPlayers(state.players)
+    .filter(here)
     .map((p) => ({
       id: p.id,
       name: p.name,
