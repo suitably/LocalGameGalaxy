@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '../../../../context/TitleContext';
 import { useTabletopHeader } from '../../hooks/useTabletopHeader';
 import { RulesDialog } from '../../components/surface/RulesDialog';
-import { CARD_GAMES } from '../../logic/tableCatalog';
+import { findEntry } from '../../../../lib/catalog/views';
 import { exportGameAsJson } from '../../logic/tabletopExporter';
 import { getScript } from '../logic/scriptRegistry';
 import { scriptedGameDefinition } from '../logic/scriptExport';
@@ -35,7 +35,7 @@ export function useScriptedHeader({
 }: ScriptedHeaderOptions): ReactNode {
   const { t } = useTranslation();
   const [rulesOpen, setRulesOpen] = useState(false);
-  const entry = CARD_GAMES.find((g) => g.id === scriptId);
+  const entry = findEntry(scriptId);
   const title = entry ? t(entry.titleKey, entry.title) : scriptId;
   const ruleText = t(`games.tabletop.scripted.rules.${scriptId}`);
   usePageTitle(title);

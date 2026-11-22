@@ -9,11 +9,8 @@ import { GameManagerDialog } from '../manager/GameManagerDialog';
 import type { TabletopGameSummary } from '../../logic/types';
 import { listTabletopGames } from '../../logic/tabletopStorage';
 import {
-  CARD_GAMES,
-  DICE_GAMES,
-  SCORE_TRACKERS,
-  TABLETOP_STARTERS,
   playModesOf,
+  spieltischSection,
   routeFor,
   type PlayMode,
   type TableGameEntry,
@@ -118,10 +115,13 @@ export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) 
             </Button>
           </Box>
 
-          {section(t('games.tabletop.starter_games', 'Klassiker'), TABLETOP_STARTERS)}
-          {section(t('games.tabletop.card_games', 'Kartenspiele'), CARD_GAMES)}
-          {section(t('games.tabletop.dice_games', 'Würfelspiele'), DICE_GAMES)}
-          {section(t('games.tabletop.score_trackers', 'Punktezähler'), SCORE_TRACKERS)}
+          {section(t('games.tabletop.starter_games', 'Klassiker'), spieltischSection('starters'))}
+          {section(t('games.tabletop.card_games', 'Kartenspiele'), spieltischSection('cards'))}
+          {section(t('games.tabletop.dice_games', 'Würfelspiele'), spieltischSection('dice'))}
+          {section(
+            t('games.tabletop.score_trackers', 'Punktezähler'),
+            spieltischSection('trackers'),
+          )}
           {section(t('games.tabletop.custom_games', 'Eigene & Importierte Spiele'), custom)}
         </Paper>
       </Container>

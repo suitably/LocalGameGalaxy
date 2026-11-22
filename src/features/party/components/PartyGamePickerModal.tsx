@@ -10,24 +10,18 @@ import {
   Box,
   Grid,
 } from '@mui/material';
-import DrawIcon from '@mui/icons-material/DrawRounded';
-import MicIcon from '@mui/icons-material/MicRounded';
-import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
-import AutoStoriesIcon from '@mui/icons-material/AutoStoriesRounded';
-import PhoneForwardedIcon from '@mui/icons-material/PhoneForwardedRounded';
 import StyleIcon from '@mui/icons-material/StyleRounded';
-import CasinoIcon from '@mui/icons-material/CasinoRounded';
-import GridOnIcon from '@mui/icons-material/GridOnRounded';
 import FolderOpenIcon from '@mui/icons-material/FolderOpenRounded';
 import { useTranslation } from 'react-i18next';
 import { listTabletopGames } from '../../../games/tabletop/logic/tabletopStorage';
 import type { TabletopGameSummary } from '../../../games/tabletop/logic/types';
-import { CARD_GAMES, DICE_GAMES } from '../../../games/tabletop/logic/tableCatalog';
+import { partyPickerEntries, type PartyPickerTab } from '../../../lib/catalog/views';
+import type { CatalogEntry } from '../../../lib/catalog/types';
 import type { PartyGameType } from '../logic/universalPartyManager';
-import { isRoomDiceGame } from '../logic/partyRoutes';
 import { EmptyState } from '../../../components/common/EmptyState';
 import { ListSkeleton } from '../../../components/common/ListSkeleton';
 import { PartyPickerCard } from './PartyPickerCard';
+import { PartyCatalogCard } from './PartyCatalogCard';
 
 interface PartyGamePickerModalProps {
   open: boolean;
@@ -64,43 +58,20 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
     };
   }, [open, tabIndex]);
 
-  const BUILTIN_TABLETOP = [
-    {
-      id: 'standard-cards',
-      title: t('games.tabletop.standard_cards_title', 'Standard Kartendeck (52)'),
-      desc: t(
-        'games.tabletop.standard_cards_desc',
-        'Mau-Mau, Skat, Poker oder Rommé mit geteiltem Tisch und Smartphone-Handkarten.',
-      ),
-      icon: <StyleIcon sx={{ fontSize: 36, color: 'secondary.main' }} />,
-    },
-    {
-      id: 'liars-dice',
-      title: t('games.tabletop.liars_dice_title', "Liar's Dice / Perudo"),
-      desc: t(
-        'games.tabletop.liars_dice_desc',
-        'Bluff-Würfelspiel mit 3D-Würfeln und verdeckten Bechern auf jedem Handy.',
-      ),
-      icon: <CasinoIcon sx={{ fontSize: 36, color: 'warning.main' }} />,
-    },
-    {
-      id: 'checkers',
-      title: t('games.tabletop.checkers_title', 'Dame / Checkers'),
-      desc: t('games.tabletop.checkers_desc', 'Klassisches Brettspiel auf 8x8 Spielfeld.'),
-      icon: <GridOnIcon sx={{ fontSize: 36, color: 'success.main' }} />,
-    },
-    ...CARD_GAMES.map((g) => ({
-      id: g.id,
-      title: t(g.titleKey, g.title),
-      desc: g.descKey ? t(g.descKey) : '',
-      icon: <StyleIcon sx={{ fontSize: 36, color: 'primary.main' }} />,
-    })),
-  ];
-
   const pick = (gameType: PartyGameType, id?: string) => () => {
     onSelectGame(gameType, id);
     onClose();
   };
+  const pickEntry = (entry: CatalogEntry) =>
+    entry.launch.type === 'tabletop'
+      ? pick('tabletop', entry.id)
+      : pick(entry.party?.gameType ?? 'tabletop');
+  const catalogTab = (tab: PartyPickerTab) =>
+    grid(
+      partyPickerEntries(tab).map((entry) => (
+        <PartyCatalogCard key={entry.id} entry={entry} onClick={pickEntry(entry)} />
+      )),
+    );
   const grid = (cards: React.ReactNode[]) => (
     <Grid container spacing={2}>
       {cards.map((card, i) => (
@@ -131,74 +102,8 @@ export const PartyGamePickerModal: React.FC<PartyGamePickerModalProps> = ({
       </Box>
 
       <DialogContent sx={{ p: 2.5 }}>
-        {tabIndex === 0 &&
-          grid([
-            <PartyPickerCard
-              icon={<PhoneForwardedIcon sx={{ fontSize: 36, color: 'piece.pink' }} />}
-              title="Gartic Phone"
-              desc={t(
-                'party.gartic_desc',
-                'Stille Post mit Zeichnen und Raten auf allen Handys gleichzeitig.',
-              )}
-              onClick={pick('garticphone')}
-            />,
-            <PartyPickerCard
-              icon={<DrawIcon sx={{ fontSize: 36, color: 'secondary.main' }} />}
-              title="GuessArt"
-              desc={t(
-                'party.guessart_desc',
-                'Montagsmaler mit Pass-and-Play oder Peer-Synchronisation.',
-              )}
-              onClick={pick('guessart')}
-            />,
-            <PartyPickerCard
-              icon={<AutoStoriesIcon sx={{ fontSize: 36, color: 'piece.green' }} />}
-              title="Storyteller"
-              desc={t(
-                'party.storyteller_desc',
-                'Schreibt gemeinsam eine Geschichte, einer nach dem anderen.',
-              )}
-              onClick={pick('storyteller')}
-            />,
-            <PartyPickerCard
-              icon={<MusicNoteIcon sx={{ fontSize: 36, color: 'primary.main' }} />}
-              title="Melodiq Notes"
-              desc={t(
-                'party.melodiq_notes_desc',
-                'Jeder spielt seine Stimme auf dem eigenen Gerät, die Bühne zeigt die Band.',
-              )}
-              onClick={pick('melodiq-notes')}
-            />,
-            <PartyPickerCard
-              icon={<MicIcon sx={{ fontSize: 36, color: 'secondary.main' }} />}
-              title="Melodiq"
-              desc={t(
-                'party.melodiq_desc',
-                'Karaoke auf dem Fernseher, die Handys der Gäste sind die Mikrofone.',
-              )}
-              onClick={pick('melodiq')}
-            />,
-          ])}
-
-        {tabIndex === 1 &&
-          grid([
-            ...BUILTIN_TABLETOP.map((g) => (
-              <PartyPickerCard
-                icon={g.icon}
-                title={g.title}
-                desc={g.desc}
-                onClick={pick('tabletop', g.id)}
-              />
-            )),
-            ...DICE_GAMES.filter((g) => isRoomDiceGame(g.id)).map((g) => (
-              <PartyPickerCard
-                icon={g.icon}
-                title={t(g.titleKey, g.title)}
-                desc={g.descKey ? t(g.descKey, g.desc ?? '') : (g.desc ?? '')}
-                onClick={pick(g.id as PartyGameType)}
-              />
-            )),
-          ])}
+        {tabIndex === 0 && catalogTab('party')}
+        {tabIndex === 1 && catalogTab('table')}
 
         {tabIndex === 2 &&
           (loadingCustom ? (

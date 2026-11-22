@@ -2,16 +2,13 @@ import React, { useState } from 'react';
 import { Typography, Box, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { gameRegistry } from '../../lib/gameRegistry';
-import { areaOfCategory, areasFor } from '../../lib/areas';
+import { hubEntries } from '../../lib/catalog/views';
+import { areaById, areasFor } from '../../lib/areas';
 import { PWAInstallBanner } from '../../components/pwa';
-import { DICE_GAMES, SCORE_TRACKERS } from '../../games/tabletop/logic/tableCatalog';
 import nexumiaBanner from '../../assets/nexumia-banner.svg';
 import nexumiaBannerInk from '../../assets/nexumia-banner-ink.svg';
 import { HubAreaFilter, type AreaFilter } from './HubAreaFilter';
 import { HubGameCard } from './HubGameCard';
-
-const TABLE_GAME_IDS = new Set([...DICE_GAMES, ...SCORE_TRACKERS].map((g) => g.id));
 
 export const Hub: React.FC = () => {
   const { t } = useTranslation();
@@ -20,13 +17,10 @@ export const Hub: React.FC = () => {
   const isLight = useTheme().palette.mode === 'light';
   const [selectedArea, setSelectedArea] = useState<AreaFilter>('all');
 
-  // Dice games live on the Spieltisch (tabletop lobby), not in the hub; their routes stay.
-  const hubGames = gameRegistry.getGamesByCategory('all').filter((g) => !TABLE_GAME_IDS.has(g.id));
-  const areaOf = (g: (typeof hubGames)[number]) =>
-    areaOfCategory(g.category === 'all' ? 'party' : g.category);
+  const hubGames = hubEntries();
   const displayedGames =
-    selectedArea === 'all' ? hubGames : hubGames.filter((g) => areaOf(g).id === selectedArea);
-  const areas = areasFor(hubGames.flatMap((g) => (g.category === 'all' ? [] : [g.category])));
+    selectedArea === 'all' ? hubGames : hubGames.filter((g) => g.area === selectedArea);
+  const areas = areasFor(hubGames);
 
   return (
     <Box sx={{ width: '100%', animation: 'fadeIn 0.4s ease-out' }}>
@@ -78,7 +72,7 @@ export const Hub: React.FC = () => {
           <HubGameCard
             key={game.id}
             game={game}
-            area={areaOf(game)}
+            area={areaById(game.area)}
             onOpen={() => navigate(`/${game.route}`)}
           />
         ))}

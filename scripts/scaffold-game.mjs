@@ -9,16 +9,15 @@
  *   src/games/<id>/logic/types.ts                 domain types
  *   src/games/<id>/logic/<camel>Engine.ts         pure game rules
  *   src/games/<id>/logic/<camel>Engine.test.ts    Vitest tests for the rules
+ *   src/games/<id>/definition.tsx                 catalogue entry (ADR-0011)
  * and patches by text insertion:
  *   src/lib/storage.ts                            STORAGE_KEYS.<ID>_GAME_STATE
- *   src/lib/gameRegistry.tsx                      lazy import + `definitions` entry (+ icon import)
+ *   src/lib/catalog/entries.ts                    import + `ROUTE_GAMES` line
  *   public/locales/{de,en}/translation.json       games.<id>.title / description / UI strings
- *
- * There is no gameManifest.ts: the registry is a hand-written array (open question Q7).
  *
  * Usage:
  *   node scripts/scaffold-game.mjs --id=<id> --title="<DE title>" [--title-en="<EN title>"]
- *     [--description="<DE>"] [--description-en="<EN>"] [--category=<category>] [--icon=<MuiIconName>]
+ *     [--description="<DE>"] [--description-en="<EN>"] [--area=<area>] [--modes=<m1,m2>] [--icon=<MuiIconName>]
  *     [--dry-run]
  *
  * `--icon` is the MUI icon base name without suffix (`@mui/icons-material/<Name>Rounded`).
@@ -30,7 +29,8 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-const CATEGORIES = ['dice', 'drawing', 'music', 'social_deduction', 'cards', 'party', 'puzzle'];
+const AREAS = ['party', 'music', 'cards', 'dice', 'puzzle'];
+const MODES = ['solo', 'pass_and_play', 'party_room', 'async'];
 
 const args = process.argv.slice(2).reduce((acc, arg) => {
   if (arg.startsWith('--')) {
@@ -43,7 +43,7 @@ const args = process.argv.slice(2).reduce((acc, arg) => {
 
 const usage =
   'Usage: node scripts/scaffold-game.mjs --id=<id> --title="<DE title>" [--title-en=...] ' +
-  '[--description=...] [--description-en=...] [--category=<cat>] [--icon=<MuiIcon>] [--dry-run]';
+  '[--description=...] [--description-en=...] [--area=<area>] [--modes=<m1,m2>] [--icon=<MuiIcon>] [--dry-run]';
 
 function fail(message) {
   console.error(`Error: ${message}`);
@@ -61,9 +61,12 @@ if (!/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(gameId)) {
     'game id must be lower-case alphanumeric with single dashes (e.g. "yatzy" or "battle-ship").',
   );
 }
-const category = typeof args.category === 'string' ? args.category : 'party';
-if (!CATEGORIES.includes(category)) {
-  fail(`category must be one of: ${CATEGORIES.join(', ')}.`);
+const area = typeof args.area === 'string' ? args.area : 'party';
+if (!AREAS.includes(area)) fail(`area must be one of: ${AREAS.join(', ')}.`);
+const modes = (typeof args.modes === 'string' ? args.modes : 'pass_and_play').split(',');
+if (modes.some((m) => !MODES.includes(m))) fail(`modes must be from: ${MODES.join(', ')}.`);
+if (modes.includes('party_room')) {
+  fail('party_room needs a PartyGameType and a room route; add it by hand after scaffolding.');
 }
 const iconName = typeof args.icon === 'string' ? args.icon : 'SportsEsports';
 if (!/^[A-Z][A-Za-z0-9]*$/.test(iconName)) fail('--icon must be a PascalCase MUI icon name.');
@@ -88,7 +91,7 @@ const storageKeyValue = `${gameId.replace(/-/g, '_')}_game_state`;
 
 const rel = (p) => path.relative(ROOT_DIR, p).split(path.sep).join('/');
 const targetDir = path.join(ROOT_DIR, 'src', 'games', gameId);
-const registryPath = path.join(ROOT_DIR, 'src', 'lib', 'gameRegistry.tsx');
+const entriesPath = path.join(ROOT_DIR, 'src', 'lib', 'catalog', 'entries.ts');
 const storagePath = path.join(ROOT_DIR, 'src', 'lib', 'storage.ts');
 const localePaths = {
   de: path.join(ROOT_DIR, 'public', 'locales', 'de', 'translation.json'),
@@ -269,41 +272,46 @@ const patches = []; // { file, content }
   patches.push({ file: storagePath, content: c });
 }
 
-// gameRegistry.tsx: icon import, lazy import, definitions entry.
+// definition.tsx: the catalogue entry; entries.ts: collect it (ADR-0011).
+files['definition.tsx'] = `/**
+ * Catalogue entry of ${titleEn} (ADR-0011) [ID: CATALOG-${gameId.toUpperCase()}]
+ *
+ * Importing this file pulls in no page code; the page loads lazily.
+ */
+import ${iconName}Icon from '@mui/icons-material/${iconName}Rounded';
+import { defineGame, lazyNamed } from '../../lib/catalog/defineGame';
+
+const Page = lazyNamed(() => import('./index'), '${pascal}Game');
+
+export const definition = defineGame({
+  id: '${gameId}',
+  route: 'games/${gameId}',
+  i18n: 'games.${i18nId}',
+  title: ${JSON.stringify(titleDe)},
+  kind: 'game',
+  area: '${area}',
+  modes: [${modes.map((m) => `'${m}'`).join(', ')}],
+  listing: 'hub',
+  icon: <${iconName}Icon sx={{ fontSize: 72, mb: 2 }} />,
+  component: <Page />,
+});
+`;
 {
-  let c = fs.readFileSync(registryPath, 'utf8');
-  if (c.includes(`id: '${gameId}',`)) fail(`${gameId} is already in gameRegistry.tsx.`);
-  const iconImport = `import ${iconName}Icon from '@mui/icons-material/${iconName}Rounded';\n`;
-  if (!c.includes(iconImport)) {
-    c = insertOnce(
-      c,
-      "import { SongsProvider } from '../games/melodiq';\n",
-      `${iconImport}import { SongsProvider } from '../games/melodiq';\n`,
-      'gameRegistry.tsx icon import',
-    );
-  }
+  let c = fs.readFileSync(entriesPath, 'utf8');
+  if (c.includes(`games/${gameId}/definition'`)) fail(`${gameId} is already in entries.ts.`);
   c = insertOnce(
     c,
-    '\nclass GameRegistry {\n',
-    `const ${pascal}Game = lazy(() => import('../games/${gameId}').then(pick('${pascal}Game')));\n\nclass GameRegistry {\n`,
-    'gameRegistry.tsx lazy import',
+    "import { TABLETOP_ENTRIES } from '../../games/tabletop/catalog';\n",
+    `import { definition as ${camel} } from '../../games/${gameId}/definition';\nimport { TABLETOP_ENTRIES } from '../../games/tabletop/catalog';\n`,
+    'entries.ts import',
   );
   c = insertOnce(
     c,
-    '  ];\n\n  private games: GameDefinition[] = this.definitions.map(withGameSettings);',
-    `    {
-      id: '${gameId}',
-      route: 'games/${gameId}',
-      titleKey: 'games.${i18nId}.title',
-      descriptionKey: 'games.${i18nId}.description',
-      icon: <${iconName}Icon sx={{ fontSize: 72, mb: 2 }} />,
-      category: '${category}',
-      component: <${pascal}Game />,
-    },
-  ];\n\n  private games: GameDefinition[] = this.definitions.map(withGameSettings);`,
-    'gameRegistry.tsx entry',
+    '];\n\n/** Every entry:',
+    `  ${camel},\n];\n\n/** Every entry:`,
+    'entries.ts ROUTE_GAMES line',
   );
-  patches.push({ file: registryPath, content: c });
+  patches.push({ file: entriesPath, content: c });
 }
 
 // Locales: hub title/description plus the UI strings of the scaffolded component.
@@ -335,8 +343,8 @@ for (const [lang, file] of Object.entries(localePaths)) {
     .join(',\n');
   c = insertOnce(
     c,
-    '  "games": {\n',
-    `  "games": {\n    "${i18nId}": {\n${body}\n    },\n`,
+    '\n  "games": {\n',
+    `\n  "games": {\n    "${i18nId}": {\n${body}\n    },\n`,
     rel(file),
   );
   JSON.parse(c); // must stay valid JSON
@@ -361,7 +369,7 @@ for (const [rf, content] of Object.entries(files)) {
 }
 for (const { file, content } of patches) fs.writeFileSync(file, content);
 
-console.log(`Scaffolded ${titleEn} (${gameId}), category ${category}.`);
+console.log(`Scaffolded ${titleEn} (${gameId}), area ${area}.`);
 console.log(`Created:\n${created.map((f) => `  ${f}`).join('\n')}`);
 console.log(`Modified:\n${modified.map((f) => `  ${f}`).join('\n')}`);
 console.log(
