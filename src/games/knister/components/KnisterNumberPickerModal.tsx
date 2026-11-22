@@ -70,11 +70,10 @@ export const KnisterNumberPickerModal: React.FC<KnisterNumberPickerModalProps> =
       >
         <Box>
           <Typography variant="h6" fontWeight={800} color="warning.light">
-            {t('games.knister.pick_number_title', 'Zahl eintragen')}
+            {t('games.knister.pick_number_title')}
           </Typography>
           <Typography variant="caption" color="text.secondary">
             {t('games.knister.cell_coordinates', {
-              defaultValue: `Zeile ${targetCell.row + 1}, Spalte ${targetCell.col + 1}`,
               row: targetCell.row + 1,
               col: targetCell.col + 1,
             })}
@@ -84,7 +83,7 @@ export const KnisterNumberPickerModal: React.FC<KnisterNumberPickerModalProps> =
         <IconButton
           onClick={onClose}
           size="small"
-          aria-label={t('common.close', 'Schließen')}
+          aria-label={t('common.close')}
           sx={{ color: 'text.secondary' }}
         >
           <CloseIcon />
@@ -177,14 +176,14 @@ export const KnisterNumberPickerModal: React.FC<KnisterNumberPickerModalProps> =
               },
             }}
           >
-            {t('common.cancel', 'Abbrechen')}
+            {t('common.cancel')}
           </ButtonBase>
         </Box>
       </DialogContent>
 
       <DialogActions sx={{ px: 1, pb: 0.5, justifyContent: 'center' }}>
         <Typography variant="caption" color="text.secondary" textAlign="center">
-          {t('games.knister.tap_number_hint', 'Tippe auf eine Zahl, um sie sofort zu platzieren')}
+          {t('games.knister.tap_number_hint')}
         </Typography>
       </DialogActions>
     </Dialog>

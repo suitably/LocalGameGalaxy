@@ -39,7 +39,7 @@ export const KnisterToolbar: React.FC<KnisterToolbarProps> = ({
       }}
     >
       <LocalPlayersButton onClick={onPlayers} />
-      <Tooltip title={t('games.knister.show_dice_tooltip', 'Virtuelle Würfel ein-/ausblenden')}>
+      <Tooltip title={t('games.knister.show_dice_tooltip')}>
         <Button
           variant={showDice ? 'contained' : 'outlined'}
           size="small"
@@ -53,13 +53,10 @@ export const KnisterToolbar: React.FC<KnisterToolbarProps> = ({
         </Button>
       </Tooltip>
 
-      <Tooltip
-        title={t('games.knister.undo_tooltip', 'Letzten Eintrag rückgängig machen')}
-        describeChild
-      >
+      <Tooltip title={t('games.knister.undo_tooltip')} describeChild>
         <span>
           <IconButton
-            aria-label={t('games.knister.undo_tooltip', 'Letzten Eintrag rückgängig machen')}
+            aria-label={t('games.knister.undo_tooltip')}
             onClick={onUndo}
             disabled={!canUndo}
             color="inherit"
@@ -76,13 +73,13 @@ export const KnisterToolbar: React.FC<KnisterToolbarProps> = ({
         </span>
       </Tooltip>
 
-      <Tooltip title={t('games.knister.show_legend', 'Punkteübersicht')}>
+      <Tooltip title={t('games.knister.show_legend')}>
         <Button
           variant="outlined"
           size="small"
           startIcon={<HelpOutlineIcon />}
           onClick={onOpenLegend}
-          aria-label={t('games.knister.show_legend', 'Punkteübersicht')}
+          aria-label={t('games.knister.show_legend')}
           sx={{
             borderRadius: 3,
             textTransform: 'none',
@@ -94,16 +91,16 @@ export const KnisterToolbar: React.FC<KnisterToolbarProps> = ({
           }}
         >
           <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-            {t('games.knister.show_legend', 'Punkteübersicht')}
+            {t('games.knister.show_legend')}
           </Box>
         </Button>
       </Tooltip>
 
-      <Tooltip title={t('games.knister.new_game', 'Neues Spiel')}>
+      <Tooltip title={t('games.knister.new_game')}>
         <IconButton
           onClick={onReset}
           color="inherit"
-          aria-label={t('games.knister.new_game', 'Neues Spiel')}
+          aria-label={t('games.knister.new_game')}
           sx={{ width: 44, height: 44 }}
         >
           <ReplayIcon />

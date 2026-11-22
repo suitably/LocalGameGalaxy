@@ -74,7 +74,7 @@ export const KnisterCombinationsLegend: React.FC<KnisterCombinationsLegendProps>
       }}
     >
       <DialogTitle sx={{ fontWeight: 800, fontSize: '1.25rem' }}>
-        {t('games.knister.legend_title', 'Knister Punkteübersicht')}
+        {t('games.knister.legend_title')}
       </DialogTitle>
 
       <DialogContent sx={{ px: { xs: 1.5, sm: 3 } }}>
@@ -89,25 +89,17 @@ export const KnisterCombinationsLegend: React.FC<KnisterCombinationsLegendProps>
           }}
         >
           <Typography variant="body2" sx={{ color: 'primary.text', fontWeight: 600 }}>
-            ★{' '}
-            {t(
-              'games.knister.diagonal_bonus_hint',
-              'Wichtig: Die beiden Diagonalen zählen jeweils DOPPELT (2x Punkte)!',
-            )}
+            ★ {t('games.knister.diagonal_bonus_hint')}
           </Typography>
         </Box>
 
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: 'bold' }}>
-                {t('games.knister.combination', 'Kombination')}
-              </TableCell>
-              <TableCell sx={{ fontWeight: 'bold' }}>
-                {t('games.knister.example', 'Beispiel')}
-              </TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>{t('games.knister.combination')}</TableCell>
+              <TableCell sx={{ fontWeight: 'bold' }}>{t('games.knister.example')}</TableCell>
               <TableCell align="right" sx={{ fontWeight: 'bold' }}>
-                {t('games.knister.points', 'Punkte')}
+                {t('games.knister.points')}
               </TableCell>
             </TableRow>
           </TableHead>
@@ -134,7 +126,7 @@ export const KnisterCombinationsLegend: React.FC<KnisterCombinationsLegendProps>
 
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose} variant="contained" fullWidth sx={{ borderRadius: 999 }}>
-          {t('common.close', 'Schließen')}
+          {t('common.close')}
         </Button>
       </DialogActions>
     </Dialog>

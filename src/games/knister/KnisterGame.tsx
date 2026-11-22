@@ -22,7 +22,7 @@ initKnisterI18n();
 
 export const KnisterGame: React.FC = () => {
   const { t } = useTranslation();
-  usePageTitle(t('games.knister.title', 'Knister'));
+  usePageTitle(t('games.knister.title'));
   useWakeLock(true);
 
   const game = useKnisterGameState();
@@ -125,12 +125,9 @@ export const KnisterGame: React.FC = () => {
 
       <ConfirmDialog
         open={game.resetDialogOpen}
-        title={t('games.knister.new_game', 'Neues Spiel')}
-        message={t(
-          'games.knister.new_game_confirm',
-          'Möchtest du wirklich eine neue Runde starten? Der aktuelle Spielstand geht verloren.',
-        )}
-        confirmText={t('games.knister.new_game', 'Neustart')}
+        title={t('games.knister.new_game')}
+        message={t('games.knister.new_game_confirm')}
+        confirmText={t('games.knister.new_game')}
         confirmColor="warning"
         onConfirm={game.handleNewGame}
         onCancel={() => game.setResetDialogOpen(false)}

@@ -64,15 +64,14 @@ export const KnisterNumberBar: React.FC<KnisterNumberBarProps> = ({
           >
             {selectedNumber !== null
               ? t('games.knister.selected_number_prompt', {
-                  defaultValue: `Zahl ${selectedNumber} gewählt – Feld antippen!`,
                   num: selectedNumber,
                 })
-              : t('games.knister.select_number_bar_title', 'Zahl für eigenes Würfeln wählen:')}
+              : t('games.knister.select_number_bar_title')}
           </Typography>
         </Box>
 
         {selectedNumber !== null && (
-          <Tooltip title={t('games.knister.clear_selection', 'Auswahl aufheben')}>
+          <Tooltip title={t('games.knister.clear_selection')}>
             <IconButton
               size="small"
               onClick={() => onSelectNumber(null)}

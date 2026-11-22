@@ -155,7 +155,7 @@ export const KnisterBoard: React.FC<KnisterBoardProps> = ({
         }}
       >
         <Typography variant="subtitle2" color="text.secondary">
-          {t('games.knister.total_score', 'Gesamtpunkte:')}
+          {t('games.knister.total_score')}
         </Typography>
         <Typography
           variant="h6"

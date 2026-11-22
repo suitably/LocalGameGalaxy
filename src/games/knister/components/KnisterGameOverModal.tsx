@@ -65,11 +65,11 @@ export const KnisterGameOverModal: React.FC<KnisterGameOverModalProps> = ({
       <DialogTitle>
         <EmojiEventsIcon sx={{ fontSize: 56, color: 'warning.main', mb: 1 }} />
         <Typography variant="h5" sx={{ fontWeight: 800 }}>
-          {t('games.knister.game_over_title', 'Spiel beendet!')}
+          {t('games.knister.game_over_title')}
         </Typography>
         {isNewHighScore && (
           <Typography variant="subtitle2" sx={{ color: 'success.main', fontWeight: 700, mt: 0.5 }}>
-            {t('games.knister.new_high_score', 'Neuer Highscore!')}
+            {t('games.knister.new_high_score')}
           </Typography>
         )}
       </DialogTitle>
@@ -117,8 +117,7 @@ export const KnisterGameOverModal: React.FC<KnisterGameOverModalProps> = ({
         <Divider sx={{ my: 2 }} />
 
         <Typography variant="body2" color="text.secondary">
-          {t('games.knister.high_score_label', 'Aktueller Highscore')}:{' '}
-          <strong>{highScore} Punkte</strong>
+          {t('games.knister.high_score_label')}: <strong>{highScore} Punkte</strong>
         </Typography>
       </DialogContent>
 
@@ -132,10 +131,10 @@ export const KnisterGameOverModal: React.FC<KnisterGameOverModalProps> = ({
           onClick={onNewGame}
           sx={{ borderRadius: 999, fontWeight: 700 }}
         >
-          {t('games.knister.play_again', 'Nochmal spielen')}
+          {t('games.knister.play_again')}
         </Button>
         <Button onClick={onClose} variant="text" fullWidth sx={{ color: 'text.secondary' }}>
-          {t('common.close', 'Schließen')}
+          {t('common.close')}
         </Button>
       </DialogActions>
     </Dialog>

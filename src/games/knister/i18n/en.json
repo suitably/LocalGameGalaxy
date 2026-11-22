@@ -52,7 +52,8 @@
         "straight_without_seven": "Straight without 7",
         "five_of_a_kind": "Five of a kind",
         "incomplete": "Incomplete"
-      }
+      },
+      "rolling": "Rolling..."
     }
   }
 }

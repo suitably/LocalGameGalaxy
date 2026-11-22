@@ -93,7 +93,7 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
               display="block"
               sx={{ fontWeight: 700, fontSize: '0.75rem' }}
             >
-              {t('games.knister.sum', 'SUMME')}
+              {t('games.knister.sum')}
             </Typography>
             <Typography
               variant="h6"
@@ -112,10 +112,8 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
         {/* Round Tracker & Roll Button */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 }, ml: 'auto' }}>
           <Chip
-            label={
-              isPhone ? `${rollCount}/25` : `${t('games.knister.round', 'Wurf')}: ${rollCount}/25`
-            }
-            aria-label={`${t('games.knister.round', 'Wurf')}: ${rollCount}/25`}
+            label={isPhone ? `${rollCount}/25` : `${t('games.knister.round')}: ${rollCount}/25`}
+            aria-label={`${t('games.knister.round')}: ${rollCount}/25`}
             color={rollCount >= 25 ? 'error' : 'default'}
             variant="outlined"
             size="small"
@@ -138,12 +136,12 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
             }}
           >
             {animating
-              ? t('games.knister.rolling', 'Würfeln...')
+              ? t('games.knister.rolling')
               : currentRoll !== null
-                ? t('games.knister.place_number_prompt', 'Eintragen!')
+                ? t('games.knister.place_number_prompt')
                 : rollCount >= 25
-                  ? t('games.knister.game_over', 'Beendet')
-                  : t('games.knister.roll_dice', 'Würfeln')}
+                  ? t('games.knister.game_over')
+                  : t('games.knister.roll_dice')}
           </Button>
         </Box>
       </Box>
@@ -167,7 +165,7 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
             color="text.secondary"
             sx={{ mr: 0.5, flexShrink: 0, fontWeight: 700 }}
           >
-            {t('games.knister.history', 'Verlauf')}:
+            {t('games.knister.history')}:
           </Typography>
           {rollHistory.slice(0, 10).map((h, idx) => (
             <Chip
