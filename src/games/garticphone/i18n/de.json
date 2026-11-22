@@ -1,0 +1,26 @@
+{
+  "games": {
+    "garticphone": {
+      "inviteHelp": "Freunde verbinden: Scanne den QR-Code mit weiteren Smartphones oder teile den Link."
+    }
+  },
+  "gartic": {
+    "waitingHeader": "Warte auf die anderen Spieler...",
+    "waitingProgress": "{{done}} von {{total}} Spielern fertig",
+    "playerDone": "Fertig",
+    "playerWriting": "Schreibt...",
+    "playerDrawing": "Zeichnet...",
+    "playerGuessing": "Rät...",
+    "phasePrompt": "Satz schreiben",
+    "phaseDrawing": "Zeichnen",
+    "phaseGuessing": "Raten",
+    "phaseReveal": "Album-Show",
+    "albumHeader": "Album",
+    "hostControlsShow": "Der Host steuert die Album-Show",
+    "inviteHelp": "Freunde verbinden: Scanne den QR-Code mit weiteren Smartphones oder teile den Link.",
+    "spectatorTaskPrompt": "{{name}} schreibt einen Satz",
+    "spectatorTaskDrawing": "{{name}} zeichnet",
+    "spectatorTaskGuessing": "{{name}} beschreibt die Zeichnung",
+    "spectatorWorking": "Noch nicht abgeschickt …"
+  }
+}

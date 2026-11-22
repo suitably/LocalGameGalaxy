@@ -1,0 +1,26 @@
+{
+  "games": {
+    "garticphone": {
+      "inviteHelp": "Invite friends: Scan the QR code with other smartphones or share the link."
+    }
+  },
+  "gartic": {
+    "waitingHeader": "Waiting for other players...",
+    "waitingProgress": "{{done}} of {{total}} players ready",
+    "playerDone": "Ready",
+    "playerWriting": "Writing...",
+    "playerDrawing": "Drawing...",
+    "playerGuessing": "Guessing...",
+    "phasePrompt": "Write sentence",
+    "phaseDrawing": "Drawing",
+    "phaseGuessing": "Guessing",
+    "phaseReveal": "Album Show",
+    "albumHeader": "Album",
+    "hostControlsShow": "The host controls the album show",
+    "inviteHelp": "Invite friends: Scan the QR code with other smartphones or share the link.",
+    "spectatorTaskPrompt": "{{name}} is writing a sentence",
+    "spectatorTaskDrawing": "{{name}} is drawing",
+    "spectatorTaskGuessing": "{{name}} is describing the drawing",
+    "spectatorWorking": "Not sent yet …"
+  }
+}
