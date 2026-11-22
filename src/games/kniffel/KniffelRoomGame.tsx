@@ -40,7 +40,7 @@ const noop = () => {};
 
 export const KniffelRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
   const { t } = useTranslation();
-  usePageTitle(t('games.kniffel.title', 'Kniffel'));
+  usePageTitle(t('games.kniffel.title'));
   const { room, state, dispatch, synced } = usePartyRoomGame({
     gameKey: 'kniffel',
     roomId,
@@ -61,7 +61,7 @@ export const KniffelRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
   const active = state.players[state.activePlayerIndex];
   const myTurn = active?.id === room.myId && !state.isGameOver;
   const status = state.isGameOver
-    ? t('games.kniffel.game_over', 'Spiel beendet!')
+    ? t('games.kniffel.game_over')
     : myTurn
       ? t('games.kniffel.room_your_turn')
       : t('games.kniffel.room_turn_of', { name: active?.name ?? '' });
@@ -109,7 +109,7 @@ export const KniffelRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
             onClick={() => dispatch({ type: 'NEW_GAME' })}
             sx={{ minHeight: 44 }}
           >
-            {t('games.kniffel.play_again', 'Nochmal spielen')}
+            {t('games.kniffel.play_again')}
           </Button>
         </Box>
       )}

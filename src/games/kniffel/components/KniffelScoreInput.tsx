@@ -135,10 +135,10 @@ export const KniffelScoreInput: React.FC<KniffelScoreInputProps> = ({
             size="large"
             onClick={() => onConfirm(calculatedScore)}
           >
-            {calculatedScore} {t('games.kniffel.points', 'Punkte eintragen')}
+            {calculatedScore} {t('games.kniffel.points')}
           </Button>
           <Button variant="outlined" color="error" onClick={() => onConfirm(0)}>
-            {t('games.kniffel.strike', 'Streichen (0)')}
+            {t('games.kniffel.strike')}
           </Button>
         </>
       ) : (
@@ -147,7 +147,7 @@ export const KniffelScoreInput: React.FC<KniffelScoreInputProps> = ({
         </Box>
       )}
       <Button variant="text" onClick={onCancel} sx={{ mt: 1 }}>
-        {t('common.cancel', 'Abbrechen')}
+        {t('common.cancel')}
       </Button>
     </Box>
   );

@@ -149,8 +149,8 @@ export const KniffelBonusRow: React.FC<BonusRowProps> = ({ players, canScore, on
   return (
     <Box sx={rowSx}>
       <KniffelLabelCell
-        label={t('games.kniffel.cat.kniffel_bonus', 'Kniffel-Bonus')}
-        hint={t('games.kniffel.hint.kniffel_bonus', 'Jeder weitere · 50')}
+        label={t('games.kniffel.cat.kniffel_bonus')}
+        hint={t('games.kniffel.hint.kniffel_bonus')}
       />
       {players.map((p, idx) => {
         const count = p.scores.kniffel_bonus;

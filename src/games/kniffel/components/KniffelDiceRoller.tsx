@@ -49,7 +49,7 @@ export const KniffelDiceRoller: React.FC<KniffelDiceRollerProps> = ({
   };
 
   const isRollDisabled = disabled || animating || rollCount >= 3;
-  const rollLabel = `${t('games.kniffel.roll', 'Würfeln')} (${rollCount}/3)`;
+  const rollLabel = `${t('games.kniffel.roll')} (${rollCount}/3)`;
 
   return (
     <Paper
@@ -111,11 +111,11 @@ export const KniffelDiceRoller: React.FC<KniffelDiceRollerProps> = ({
         sx={{ fontWeight: 'bold', px: { xs: 1.5, sm: 3 }, py: 1, minHeight: 48, borderRadius: 2 }}
       >
         {animating ? (
-          t('games.kniffel.rolling', 'Würfelt...')
+          t('games.kniffel.rolling')
         ) : (
           <>
             <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' }, mr: 0.5 }}>
-              {t('games.kniffel.roll', 'Würfeln')}
+              {t('games.kniffel.roll')}
             </Box>
             <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
               ({rollCount}/3)

@@ -125,19 +125,19 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
         })}
       </Box>
 
-      <KniffelSectionLabel label={t('games.kniffel.upper_section', 'Oberer Teil')} />
+      <KniffelSectionLabel label={t('games.kniffel.upper_section')} />
       {renderRows(UPPER_ROWS)}
-      <KniffelSumRow label={t('games.kniffel.subtotal', 'Zwischensumme')} values={upperSums} />
+      <KniffelSumRow label={t('games.kniffel.subtotal')} values={upperSums} />
       <KniffelSumRow
-        label={t('games.kniffel.bonus', 'Bonus ab 63')}
+        label={t('games.kniffel.bonus')}
         values={upperBonus.map((b) => (b ? '+35' : '0'))}
       />
       <KniffelSumRow
-        label={t('games.kniffel.upper_total', 'Summe oben')}
+        label={t('games.kniffel.upper_total')}
         values={upperSums.map((sum, i) => sum + upperBonus[i])}
       />
 
-      <KniffelSectionLabel label={t('games.kniffel.lower_section', 'Unterer Teil')} />
+      <KniffelSectionLabel label={t('games.kniffel.lower_section')} />
       {renderRows(LOWER_ROWS)}
       <KniffelBonusRow
         players={players}
@@ -145,7 +145,7 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
         onClick={board.handleBonusClick}
       />
       <KniffelSumRow
-        label={t('games.kniffel.lower_total', 'Summe unten')}
+        label={t('games.kniffel.lower_total')}
         values={players.map((p) => getLowerSectionSum(asMap(p.scores)))}
       />
 

@@ -21,7 +21,7 @@ initKniffelI18n();
 
 export const KniffelGame: React.FC = () => {
   const { t } = useTranslation();
-  usePageTitle(t('games.kniffel.title', 'Kniffel'));
+  usePageTitle(t('games.kniffel.title'));
 
   const [state, dispatch] = useReducer(kniffelReducer, INITIAL_KNIFFEL_STATE, (initial) => {
     const saved = storage.getJson<KniffelState | null>(STORAGE_KEYS.KNIFFEL_CURRENT_GAME, null);
@@ -81,7 +81,7 @@ export const KniffelGame: React.FC = () => {
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <LocalPlayersButton onClick={turns.openPlayers} />
-          <Tooltip title={t('games.kniffel.show_dice_tooltip', 'Virtuelle Würfel ein-/ausblenden')}>
+          <Tooltip title={t('games.kniffel.show_dice_tooltip')}>
             <Button
               variant={showDice ? 'contained' : 'outlined'}
               size="small"
@@ -91,19 +91,14 @@ export const KniffelGame: React.FC = () => {
               onClick={() => setShowDice((prev) => !prev)}
               sx={{ borderRadius: 999, fontWeight: 700, textTransform: 'none', minHeight: 44 }}
             >
-              {showDice
-                ? t('games.kniffel.hide_dice', 'Würfel ausblenden')
-                : t('games.kniffel.show_dice', 'Würfel anzeigen')}
+              {showDice ? t('games.kniffel.hide_dice') : t('games.kniffel.show_dice')}
             </Button>
           </Tooltip>
 
-          <Tooltip
-            title={t('games.kniffel.undo_tooltip', 'Letzten Eintrag rückgängig machen')}
-            describeChild
-          >
+          <Tooltip title={t('games.kniffel.undo_tooltip')} describeChild>
             <span>
               <IconButton
-                aria-label={t('games.kniffel.undo_tooltip', 'Letzten Eintrag rückgängig machen')}
+                aria-label={t('games.kniffel.undo_tooltip')}
                 onClick={() => dispatch({ type: 'UNDO_MOVE' })}
                 disabled={!state.moveHistory || state.moveHistory.length === 0 || state.isGameOver}
                 color="inherit"
@@ -119,11 +114,11 @@ export const KniffelGame: React.FC = () => {
             </span>
           </Tooltip>
 
-          <Tooltip title={t('games.kniffel.new_game', 'Neues Spiel')}>
+          <Tooltip title={t('games.kniffel.new_game')}>
             <IconButton
               onClick={() => setResetDialogOpen(true)}
               color="inherit"
-              aria-label={t('games.kniffel.new_game', 'Neues Spiel')}
+              aria-label={t('games.kniffel.new_game')}
               sx={{ width: 44, height: 44 }}
             >
               <ReplayIcon />
@@ -160,7 +155,7 @@ export const KniffelGame: React.FC = () => {
       {state.isGameOver && (
         <Box sx={{ mt: 3, textAlign: 'center' }}>
           <Typography variant="h5" color="primary" fontWeight="bold">
-            {t('games.kniffel.game_over', 'Spiel beendet!')}
+            {t('games.kniffel.game_over')}
           </Typography>
           <Button
             variant="contained"
@@ -168,7 +163,7 @@ export const KniffelGame: React.FC = () => {
             onClick={() => dispatch({ type: 'NEW_GAME' })}
             sx={{ mt: 2 }}
           >
-            {t('games.kniffel.play_again', 'Nochmal spielen')}
+            {t('games.kniffel.play_again')}
           </Button>
         </Box>
       )}
@@ -178,12 +173,9 @@ export const KniffelGame: React.FC = () => {
       {/* Reset confirmation modal */}
       <ConfirmDialog
         open={resetDialogOpen}
-        title={t('games.kniffel.new_game', 'Neues Spiel')}
-        message={t(
-          'games.kniffel.new_game_confirm',
-          'Möchtest du wirklich eine neue Runde starten? Der aktuelle Spielstand geht verloren.',
-        )}
-        confirmText={t('games.kniffel.new_game', 'Neustart')}
+        title={t('games.kniffel.new_game')}
+        message={t('games.kniffel.new_game_confirm')}
+        confirmText={t('games.kniffel.new_game')}
         onConfirm={() => {
           dispatch({ type: 'NEW_GAME' });
           setResetDialogOpen(false);
