@@ -17,6 +17,7 @@ import {
   PartyRoomScoreboard,
 } from '../../features/party/components/PartyRoomScoreboard';
 import { PartyHelpNotice } from '../../features/party/components/PartyHelpNotice';
+import { RoomMarkers } from '../../features/party/components/RoomMarkers';
 import { initKniffelI18n } from './i18n';
 import {
   INITIAL_KNIFFEL_ROOM,
@@ -75,6 +76,11 @@ export const KniffelRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
   return (
     <GameLayout maxWidth="md">
       <PartyHelpNotice roomId={roomId} myId={room.myId} players={room.players} />
+      <RoomMarkers
+        roomId={roomId}
+        myId={room.myId}
+        to={active && active.id !== room.myId && !state.isGameOver ? active.id : 'all'}
+      />
       <PartyRoomScoreboard
         myId={room.myId}
         entries={state.players.map((p) => ({
