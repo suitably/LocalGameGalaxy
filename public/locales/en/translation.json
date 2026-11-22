@@ -895,7 +895,8 @@
         "playing": "Playing – your device judges your notes, the stage shows them.",
         "waiting": "Waiting for the stage to start.",
         "loading_part": "Loading your part from the stage…",
-        "network": "Network round trip {{ms}} ms – only the clock sync uses the network, your notes are judged on this device."
+        "network": "Network round trip {{ms}} ms – only the clock sync uses the network, your notes are judged on this device.",
+        "leaderboard_you": "You"
       },
       "latency": {
         "button": "Latency {{ms}} ms",
@@ -911,6 +912,11 @@
         "tap_done": "Done: {{ms}} ms (±{{spread}} ms)",
         "tap_few_taps": "Too few taps on the clicks – try again.",
         "tap_uneven": "The taps were too uneven – try again and tap steadily."
+      },
+      "judgement_palette": {
+        "title": "Judgements",
+        "colorblind": "Colour-blind palette",
+        "hint": "Every judgement has its own shape (★ perfect, ● good, ✕ miss, ▲ different note). The colour-blind palette also switches to colours that stay apart with red-green colour blindness."
       }
     },
     "kniffel": {

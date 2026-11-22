@@ -31,3 +31,11 @@ Only browser contexts were tested (`npm run e2e:multiplayer`). Decisions for the
 
 - [ ] Play one full round of each party game from the lobby on real phones (Gartic Phone, GuessArt, Storyteller, Imposter/Werewolf if in the lobby, tabletop, Melodiq with phones as microphones) and note any failure in a new issue.
 - [ ] Start Melodiq from the hub and pair a phone via the QR code (hub pairing screen kept by ADR-0008).
+
+## #699 — Melodiq Notes leaderboard on the pults, colour-blind palette
+
+Results model, stage leaderboard (#760), pult leaderboard and the palette are in code with tests.
+
+- [ ] Play a song in perform mode with phones joined: at the end each phone shows the leaderboard with its own row marked; loading another song clears it; a phone joining between songs still sees it.
+- [ ] The judgement glyphs (★ ● ✓ ✕ ▲) render (no empty boxes) on Android WebView, a TV browser and iOS.
+- [ ] With the colour-blind palette on, check the colours on a TV (yellow "good" on the dark stage) and that the ✕ under missed notes does not collide with ledger lines or syllables.

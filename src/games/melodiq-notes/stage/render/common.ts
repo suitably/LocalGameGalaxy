@@ -19,7 +19,10 @@ export interface StageTexts {
 }
 
 export const HEADER_H = 28;
-/** Stage colours, derived from the design tokens. The stage is always dark (DESIGN.md §9). */
+/**
+ * Stage colours, derived from the design tokens. The stage is always dark (DESIGN.md §9).
+ * Judgement colours follow the device's palette setting (`logic/judgementStyle.ts`).
+ */
 export const STAGE = {
   bgTop: t.bg.surface,
   bgBottom: t.bg.canvas,
@@ -27,10 +30,6 @@ export const STAGE = {
   ink: t.text.primary,
   muted: t.text.secondary,
   dim: t.border.strong,
-  perfect: t.primary.main,
-  good: t.accent.main,
-  hit: t.success,
-  miss: t.error,
 } as const;
 
 export const MISS_COLOR = STAGE.dim;

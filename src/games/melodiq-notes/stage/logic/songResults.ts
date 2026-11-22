@@ -36,6 +36,23 @@ export interface RankedResult extends SongResult {
   rank: number;
 }
 
+/** What a leaderboard shows of a ranked result: the stage's table and the pults' (#699). */
+export type LeaderboardRow = Pick<RankedResult, 'rank' | 'player' | 'seat' | 'inst' | 'score'>;
+
+export const toLeaderboardRow = ({
+  rank,
+  player,
+  seat,
+  inst,
+  score,
+}: RankedResult): LeaderboardRow => ({
+  rank,
+  player,
+  seat,
+  inst,
+  score,
+});
+
 /** The engine fields a finished run is read from (`StageEngine` fits). */
 export interface FinishedRun {
   mode: StageMode;
@@ -145,6 +162,20 @@ export function parseResults(raw: unknown): SongResult[] {
   });
 }
 
+let version = 0;
+const listeners = new Set<() => void>();
+
+/** Calls `fn` whenever `saveResults` stored something new; returns the unsubscribe. */
+export function subscribeResults(fn: () => void) {
+  listeners.add(fn);
+  return () => {
+    listeners.delete(fn);
+  };
+}
+
+/** Grows with every stored change (for `useSyncExternalStore`). */
+export const getResultsVersion = () => version;
+
 export const readResults = (): SongResult[] =>
   parseResults(storage.getJson<unknown>(STORAGE_KEYS.MELODIQ_NOTES_RESULTS, []));
 
@@ -153,6 +184,10 @@ export function saveResults(runs: SongResult[]): SongResult[] {
   const stored = readResults();
   if (!runs.length) return stored;
   const next = mergeResults(stored, runs);
-  if (next !== stored) storage.setJson(STORAGE_KEYS.MELODIQ_NOTES_RESULTS, next);
+  if (next !== stored) {
+    storage.setJson(STORAGE_KEYS.MELODIQ_NOTES_RESULTS, next);
+    version++;
+    listeners.forEach((fn) => fn());
+  }
   return next;
 }

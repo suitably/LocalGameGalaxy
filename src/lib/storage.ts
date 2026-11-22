@@ -105,6 +105,8 @@ export const STORAGE_KEYS = {
   MELODIQ_NOTES_INSTRUMENT: 'melodiq_notes_instrument',
   /** Best result per player and song (`SongResult[]` JSON, #699). */
   MELODIQ_NOTES_RESULTS: 'melodiq_notes_results',
+  /** Colours of the judgements on the stage ('standard' | 'colorblind', #699). */
+  MELODIQ_NOTES_JUDGEMENT_PALETTE: 'melodiq_notes_judgement_palette',
 
   // Werewolf game state
   WEREWOLF_STATE: 'werewolf-game-state',

@@ -3,7 +3,8 @@
  *
  * Opened from the stage's invite link (`?pult=<room>&part=<part>`). Shows the falling notes of
  * this player's part on the stage's clock, their own score, the input source and the latency
- * calibration. The judgements go to the stage, which shows every player in split screen.
+ * calibration. The judgements go to the stage, which shows every player in split screen. Between
+ * songs it shows the stage's leaderboard of the song (#699).
  */
 import React, { useCallback, useMemo } from 'react';
 import {
@@ -28,6 +29,7 @@ import { useStageInput } from '../stage/useStageInput';
 import { useStageTexts } from '../stage/useStage';
 import { LatencyControl } from '../components/LatencyControl';
 import { usePult } from './usePult';
+import { PultLeaderboard } from './components/PultLeaderboard';
 import { useFollowPartyLobby } from '../../../features/party/hooks/useFollowPartyLobby';
 
 const noop = () => {};
@@ -77,6 +79,7 @@ export const PultView: React.FC<{ roomId: string; wantedPart: string | null }> =
           />
         </Stack>
         {status}
+        <PultLeaderboard state={state} name={name} />
         {state.song && (
           <TextField
             select

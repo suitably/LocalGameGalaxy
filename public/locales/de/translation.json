@@ -895,7 +895,8 @@
         "playing": "Läuft – dein Gerät bewertet deine Noten, die Bühne zeigt sie.",
         "waiting": "Warte, bis die Bühne startet.",
         "loading_part": "Lade deine Stimme von der Bühne…",
-        "network": "Netzwerk-Laufzeit {{ms}} ms – das Netz dient nur dem Uhrenabgleich, deine Noten werden auf diesem Gerät bewertet."
+        "network": "Netzwerk-Laufzeit {{ms}} ms – das Netz dient nur dem Uhrenabgleich, deine Noten werden auf diesem Gerät bewertet.",
+        "leaderboard_you": "Du"
       },
       "latency": {
         "button": "Latenz {{ms}} ms",
@@ -911,6 +912,11 @@
         "tap_done": "Fertig: {{ms}} ms (±{{spread}} ms)",
         "tap_few_taps": "Zu wenige Anschläge auf den Klicks – bitte noch einmal.",
         "tap_uneven": "Die Anschläge waren zu ungleichmäßig – noch einmal und gleichmäßig klopfen."
+      },
+      "judgement_palette": {
+        "title": "Bewertungen",
+        "colorblind": "Farbenblind-Palette",
+        "hint": "Jede Bewertung hat ihre eigene Form (★ perfekt, ● gut, ✕ daneben, ▲ andere Note). Die Farbenblind-Palette wechselt zusätzlich auf Farben, die auch bei Rot-Grün-Schwäche unterscheidbar bleiben."
       }
     },
     "kniffel": {

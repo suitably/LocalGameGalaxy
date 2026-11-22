@@ -1,6 +1,6 @@
 import type { InstrumentKind } from '../../../../modules/music-score';
 import type { InstrumentCategory } from '../../types';
-import { darkTokens, piecePalette } from '../../../../themeTokens';
+import { piecePalette } from '../../../../themeTokens';
 
 export type StageView = 'keys' | 'strings' | 'drums' | 'pitch';
 
@@ -50,9 +50,3 @@ export const DRUM_LANE_META = [
   { id: 'tom', key: 'K', code: 'KeyK', color: piecePalette.green },
   { id: 'kick', key: '␣', code: 'Space', color: piecePalette.orange },
 ] as const;
-
-export const JUDGEMENT_COLORS = {
-  perfect: darkTokens.primary.main,
-  good: darkTokens.accent.main,
-  miss: darkTokens.error,
-} as const;

@@ -12,6 +12,7 @@ import {
   STAGE,
 } from './common';
 import type { HitPoint, ViewContext } from './view';
+import { JUDGEMENT_GLYPHS, judgementColors } from '../logic/judgementStyle';
 
 const DIATONIC = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6];
 const SHARP = [0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0];
@@ -32,8 +33,8 @@ interface Scroll {
 }
 
 function noteColor(v: ViewContext, n: StageNote) {
-  if (n.judged === 'miss') return STAGE.miss;
-  if (n.judged) return STAGE.hit;
+  if (n.judged === 'miss') return judgementColors().miss;
+  if (n.judged) return judgementColors().hit;
   return n.t - v.beat < 0.6 ? v.p.instrument.color : STAGE.ink;
 }
 
@@ -83,6 +84,7 @@ function drawStaff(v: ViewContext, top: number, height: number, s: Scroll, point
     for (let l = baseStep - 2; l >= step; l -= 2) line(g, x - sp, yOf(l), x + sp, yOf(l));
     for (let l = baseStep + 10; l <= step; l += 2) line(g, x - sp, yOf(l), x + sp, yOf(l));
     drawNoteSymbol(g, n, x, y, sp, step < baseStep + 4, noteColor(v, n), isDrum && n.lane <= 1);
+    missMark(g, n, x, bottomY + sp * 2.6, sp);
     if (!isDrum && SHARP[pc(n.pitch + written)]) {
       g.font = `${Math.round(sp * 1.4)}px "Noto Music", serif`;
       g.fillText('♯', x - sp * 1.9, y + sp * 0.45);
@@ -182,8 +184,19 @@ function drawTab(v: ViewContext, top: number, height: number, s: Scroll, points:
     g.textAlign = 'center';
     g.fillText(label, x, y + sp * 0.3);
     g.textAlign = 'left';
+    missMark(g, n, x, t0 - sp * 0.9, sp);
   });
   g.globalAlpha = 1;
+}
+
+/** A missed note also gets the miss glyph, so it differs from a hit by shape, not colour alone. */
+function missMark(g: Ctx, n: StageNote, x: number, y: number, sp: number) {
+  if (n.judged !== 'miss') return;
+  g.fillStyle = judgementColors().miss;
+  g.font = `700 ${Math.round(sp * 1.1)}px ${FONT_BODY}`;
+  g.textAlign = 'center';
+  g.fillText(JUDGEMENT_GLYPHS.miss, x, y);
+  g.textAlign = 'left';
 }
 
 function line(g: Ctx, x1: number, y1: number, x2: number, y2: number) {
