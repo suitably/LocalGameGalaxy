@@ -21,7 +21,7 @@ import { useWordleHeaderActions } from './hooks/useWordleHeaderActions';
 
 export const WordleGame: React.FC = () => {
   const { t } = useTranslation();
-  usePageTitle(t('games.wordle.title', 'Wordle'));
+  usePageTitle(t('games.wordle.title', 'Wortraten'));
 
   const {
     state,

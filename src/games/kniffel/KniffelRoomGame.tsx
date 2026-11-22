@@ -48,7 +48,7 @@ const noop = () => {};
 
 export const KniffelRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
   const { t } = useTranslation();
-  usePageTitle(t('games.kniffel.title', 'Kniffel'));
+  usePageTitle(t('games.kniffel.title', 'Fünf Würfel'));
   const { room, state, dispatch, synced, canAct, actingFor } = usePartyRoomGame({
     gameKey: 'kniffel',
     roomId,

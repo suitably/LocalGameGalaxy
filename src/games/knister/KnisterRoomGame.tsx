@@ -43,7 +43,7 @@ const needsStart = (state: KnisterRoomState) => state.players.length === 0;
 
 export const KnisterRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
   const { t } = useTranslation();
-  usePageTitle(t('games.knister.title', 'Knister'));
+  usePageTitle(t('games.knister.title', 'Würfelgitter'));
   const { room, state, dispatch, dispatchFor, helpable, synced } = usePartyRoomGame({
     gameKey: 'knister',
     roomId,

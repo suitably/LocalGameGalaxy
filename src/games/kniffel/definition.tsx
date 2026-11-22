@@ -12,7 +12,7 @@ export const definition = defineGame({
   id: 'kniffel',
   route: 'games/kniffel',
   i18n: 'games.kniffel',
-  title: 'Kniffel',
+  title: 'Fünf Würfel',
   kind: 'game',
   area: 'dice',
   color: 'red',

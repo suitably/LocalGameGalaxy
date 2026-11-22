@@ -48,7 +48,7 @@ const noop = () => {};
 
 export const QwixxRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
   const { t } = useTranslation();
-  usePageTitle(t('games.qwixx.title', 'Qwixx'));
+  usePageTitle(t('games.qwixx.title', 'Farbreihen'));
   const { room, state, dispatch, synced, actingFor } = usePartyRoomGame({
     gameKey: 'qwixx',
     roomId,

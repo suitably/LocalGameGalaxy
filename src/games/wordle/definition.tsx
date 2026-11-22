@@ -12,7 +12,7 @@ export const definition = defineGame({
   id: 'wordle',
   route: 'games/wordle',
   i18n: 'games.wordle',
-  title: 'Wordle',
+  title: 'Wortraten',
   kind: 'game',
   area: 'puzzle',
   modes: ['solo'],

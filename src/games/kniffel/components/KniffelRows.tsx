@@ -160,7 +160,7 @@ export const KniffelBonusRow: React.FC<BonusRowProps> = ({
   return (
     <Box sx={rowSx}>
       <KniffelLabelCell
-        label={t('games.kniffel.cat.kniffel_bonus', 'Kniffel-Bonus')}
+        label={t('games.kniffel.cat.kniffel_bonus', 'Fünferpasch-Bonus')}
         hint={t('games.kniffel.hint.kniffel_bonus', { points })}
       />
       {players.map((p, idx) => {

@@ -20,6 +20,8 @@ sources:
 
 Games live in `src/games/<id>/`; each declares its catalogue entry in `src/games/<id>/definition.tsx` (lazy page, route, area, modes, listing, party launch, i18n keys), the Spieltisch presets and rule scripts in `src/games/tabletop/catalog.ts`. [`src/lib/catalog/entries.ts`](../../src/lib/catalog/entries.ts) collects them in display order and [`src/lib/catalog/views.ts`](../../src/lib/catalog/views.ts) derives the hub tiles, the Spieltisch sections and the party picker tabs ([ADR-0011](../adr/0011-one-game-catalogue.md)); `src/lib/gameRegistry.tsx` only registers the routes. `src/lib/catalog/catalog.test.ts` pins what each screen lists. New games start from `node scripts/scaffold-game.mjs` ([scripts/README.md](../../scripts/README.md)), which writes `definition.tsx` and patches `entries.ts`, `STORAGE_KEYS` and both locale files.
 
+**Display names (maintainer decision 2026-11-22):** the app shows generic names instead of trademarked game names; ids, routes, folders, i18n keys and storage keys keep the old ids. Current names (de / en): `kniffel` Fünf Würfel / Five Dice (category and bonus: Fünferpasch / Five of a Kind), `knister` Würfelgitter / Dice Grid, `qwixx` Farbreihen / Color Rows (sheets Klassisch / Classic, XL), `wordle` Wortraten / Word Guess, `garticphone` Zeichen-Stille-Post / Drawing Telephone, Spieltisch script `cabo` Tiefstapler / Lowball (the call is "Klopfen" / "Knock"). Docs and code keep using the ids.
+
 Numbers below are a snapshot (2026-10-18). Re-derive them before relying on them — commands at the end.
 
 ## 1. Registry and size

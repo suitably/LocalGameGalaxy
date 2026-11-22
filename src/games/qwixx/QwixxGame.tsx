@@ -21,7 +21,7 @@ initQwixxI18n();
 
 export const QwixxGame: React.FC = () => {
   const { t } = useTranslation();
-  usePageTitle(t('games.qwixx.title', 'Qwixx'));
+  usePageTitle(t('games.qwixx.title', 'Farbreihen'));
   useWakeLock(true);
 
   const game = useQwixxState();

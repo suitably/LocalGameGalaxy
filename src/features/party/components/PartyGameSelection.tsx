@@ -70,7 +70,7 @@ export const PartyGameSelection: React.FC<{ lobby: PartyLobbyController }> = ({ 
               <Typography variant="body2" color="text.secondary">
                 {t(
                   'party.gameSelectionDesc',
-                  'Wähle zwischen Party-Klassikern (Gartic Phone, GuessArt), Würfelspielen und synchronisierten Tabletop-Karten- & Brettspielen.',
+                  'Wähle zwischen Party-Klassikern (Zeichen-Stille-Post, GuessArt), Würfelspielen und synchronisierten Tabletop-Karten- & Brettspielen.',
                 )}
               </Typography>
             </Box>

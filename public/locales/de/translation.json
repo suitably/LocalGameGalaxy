@@ -70,7 +70,7 @@
       "restart_desc": "Bist du sicher? Der aktuelle Spielstand geht verloren."
     },
     "wordle": {
-      "title": "Wordle",
+      "title": "Wortraten",
       "description": "Errate das 5-Buchstaben-Wort in 6 Versuchen. Spiele das Tagesrätsel oder fordere Freunde heraus."
     },
     "sudoku": {
@@ -444,7 +444,7 @@
       }
     },
     "qwixx": {
-      "title": "Qwixx",
+      "title": "Farbreihen",
       "description": "Taktischer Würfel-Klassiker. Kreuze Zahlen von links nach rechts an, schließe Reihen ab und sammle die meisten Punkte!"
     },
     "guessart": {
@@ -456,13 +456,13 @@
       "description": "Schreibt gemeinsam eine Geschichte – Zug um Zug mit modularen Spielregeln wie Blind Mode, Time Attack und Word Roulette!"
     },
     "garticphone": {
-      "title": "Gartic Phone",
+      "title": "Zeichen-Stille-Post",
       "description": "Das geniale Flüsterpost-Zeichenspiel! Satz schreiben ➔ Zeichnen ➔ Raten ➔ Zeichnen ➔ Animierte Album-Show!",
       "inviteHelp": "Freunde verbinden: Scanne den QR-Code mit weiteren Smartphones oder teile den Link."
     },
     "party": {
       "title": "Party-Modus",
-      "description": "Gemeinsame Mehrspieler-Lobby für synchronisierte Spiele: Gartic Phone & mehr!"
+      "description": "Gemeinsame Mehrspieler-Lobby für synchronisierte Spiele: Zeichen-Stille-Post & mehr!"
     },
     "melodiq": {
       "title": "Melodiq",
@@ -1029,7 +1029,7 @@
       }
     },
     "kniffel": {
-      "title": "Kniffel",
+      "title": "Fünf Würfel",
       "description": "Der Klassiker unter den Würfelspielen. Sammle Punkte durch geschicktes Kombinieren von 5 Würfeln.",
       "roll": "Würfeln",
       "rolling": "Würfelt...",
@@ -1057,9 +1057,9 @@
         "full_house": "Full House",
         "small_straight": "Kleine Straße",
         "large_straight": "Große Straße",
-        "kniffel": "Kniffel",
+        "kniffel": "Fünferpasch",
         "chance": "Chance",
-        "kniffel_bonus": "Kniffel-Bonus"
+        "kniffel_bonus": "Fünferpasch-Bonus"
       },
       "hint": {
         "ones": "Summe aller Einsen",
@@ -1079,7 +1079,7 @@
       }
     },
     "knister": {
-      "title": "Knister",
+      "title": "Würfelgitter",
       "description": "Das beliebte 5x5 Würfel-Bingo! Bilde Paare, Straßen und Full Houses auf deinem Raster."
     },
     "cards": {
@@ -1564,8 +1564,8 @@
             "desc": "Sechs Karten im Raster, Paare in einer Spalte zählen null. Neun Löcher, wenigste Punkte gewinnt – für 2 bis 6 Spieler."
           },
           "cabo": {
-            "title": "Cabo",
-            "desc": "Vier verdeckte Karten, merken, tauschen, spicken – wer die wenigsten Punkte hat, ruft Cabo. Für 2 bis 6 Spieler."
+            "title": "Tiefstapler",
+            "desc": "Vier verdeckte Karten, merken, tauschen, spicken – wer die wenigsten Punkte hat, klopft. Für 2 bis 6 Spieler."
           }
         },
         "turn": "{{name}} ist dran",
@@ -1685,7 +1685,7 @@
           "maumau": "<p>32 Karten, jeder bekommt fünf. Die aufgedeckte Startkarte hat keine Wirkung.</p><p><b>Dein Zug:</b> lege eine Karte mit gleicher Farbe oder gleichem Wert wie die oberste Karte. Kannst oder willst du nicht, ziehst du eine Karte; passt sie, darfst du nur sie legen, sonst passt du.</p><p><b>Sonderkarten:</b> 7 – der Nächste zieht zwei Karten oder antwortet mit einer 7 (dann vier usw.). 8 – der Nächste setzt aus. Bube – auf alles außer einen Buben, du wünschst dir eine Farbe für die nächste Karte.</p><p>Wer zuerst keine Karte mehr hat, gewinnt die Runde. Gezählt werden die gewonnenen Runden.</p><p><b>Spieltisch-Einstellungen:</b> „8 setzt aus“, „8 auf 8 gibt weiter“ (wer aussetzen soll, legt eine 8 und der Nächste setzt aus), „Gezogene Karte sofort legen“ und „Weiterspielen für Rangliste“ (nach dem ersten Sieg spielen die anderen die Plätze aus).</p>",
           "schwarzer-peter": "<p>52 Karten ohne den Kreuz-Buben; der Pik-Bube ist der Schwarze Peter. Alle Karten werden verteilt, Paare (gleicher Wert, gleiche Farbe: rot oder schwarz) werden sofort abgelegt.</p><p><b>Dein Zug:</b> ziehe verdeckt eine Karte vom nächsten Spieler im Uhrzeigersinn, der noch Karten hat. Seine Karten werden vorher gemischt. Passt sie zu einer deiner Karten, legst du das Paar ab.</p><p>Wer keine Karten mehr hat, ist fertig. Wer am Ende den Schwarzen Peter hält, verliert die Runde.</p>",
           "golf": "<p>52 Karten und zwei Joker, ab fünf Spielern zwei Decks. Jeder hat sechs verdeckte Karten in zwei Reihen zu drei und deckt zu Beginn zwei davon auf. Verdeckte Karten kennt auch ihr Besitzer nicht.</p><p><b>Dein Zug:</b> ziehe vom Stapel oder nimm die oberste Karte der Ablage. Tausche sie gegen eine deiner Karten (die alte kommt offen auf die Ablage) oder – nur wenn vom Stapel gezogen – lege sie ab und decke eine verdeckte Karte auf.</p><p>Hat jemand alle sechs Karten offen, ist jeder andere noch einmal dran.</p><p><b>Wertung:</b> Ass 1, 2–10 Augenzahl, Bube und Dame 10, König 0, Joker −2. Zwei gleiche Werte in einer Spalte zählen 0 (Joker nie). Nach neun Löchern gewinnt die niedrigste Summe.</p>",
-          "cabo": "<p>52 Karten und zwei Joker. Jeder hat vier verdeckte Karten und sieht sich zu Beginn jeder Runde die rechten zwei an – danach musst du sie dir merken.</p><p><b>Dein Zug:</b> ziehe vom Stapel oder nimm die oberste Karte der Ablage – oder rufe <b>Cabo</b>. Tausche die gezogene Karte gegen eine deiner Karten (die alte kommt auf die Ablage) oder lege sie ab, wenn sie vom Stapel kam.</p><p><b>Abgelegte Sonderkarten (nur vom Stapel):</b> 7/8 – schau eine eigene Karte an. 9/10 – schau eine Karte eines Mitspielers an. Bube/Dame – tausche blind eine eigene Karte mit einer eines Mitspielers. Du darfst die Fähigkeit auslassen.</p><p>Nach Cabo ist jeder andere noch einmal dran. <b>Punkte:</b> Ass 1, 2–10 Augenzahl, Bube 11, Dame 12, roter König 0, schwarzer König 13, Joker 0. Wer Cabo ruft und nicht allein die wenigsten Punkte hat, bekommt 10 dazu. Genau 100 Punkte fallen auf 50 zurück. Über 100 endet das Spiel, die niedrigste Summe gewinnt.</p>"
+          "cabo": "<p>52 Karten und zwei Joker. Jeder hat vier verdeckte Karten und sieht sich zu Beginn jeder Runde die rechten zwei an – danach musst du sie dir merken.</p><p><b>Dein Zug:</b> ziehe vom Stapel oder nimm die oberste Karte der Ablage – oder rufe <b>Tiefstapler</b>. Tausche die gezogene Karte gegen eine deiner Karten (die alte kommt auf die Ablage) oder lege sie ab, wenn sie vom Stapel kam.</p><p><b>Abgelegte Sonderkarten (nur vom Stapel):</b> 7/8 – schau eine eigene Karte an. 9/10 – schau eine Karte eines Mitspielers an. Bube/Dame – tausche blind eine eigene Karte mit einer eines Mitspielers. Du darfst die Fähigkeit auslassen.</p><p>Nach Tiefstapler ist jeder andere noch einmal dran. <b>Punkte:</b> Ass 1, 2–10 Augenzahl, Bube 11, Dame 12, roter König 0, schwarzer König 13, Joker 0. Wer Tiefstapler ruft und nicht allein die wenigsten Punkte hat, bekommt 10 dazu. Genau 100 Punkte fallen auf 50 zurück. Über 100 endet das Spiel, die niedrigste Summe gewinnt.</p>"
         },
         "maumau": {
           "wins_one": "{{count}} Sieg",
@@ -1753,12 +1753,12 @@
         },
         "cabo": {
           "total": "{{points}} Pkt.",
-          "called": "Cabo!",
+          "called": "Klopf!",
           "peek": "{{name}} schaut sich die rechten zwei Karten an",
           "seen": "Gemerkt",
           "drawStock": "Vom Stapel ziehen",
           "takeDiscard": "Ablage nehmen",
-          "call": "Cabo rufen",
+          "call": "Klopfen",
           "place": "{{name}} tauscht die gezogene Karte ein oder legt sie ab",
           "discard": "Ablegen",
           "discardFor": {
@@ -1777,9 +1777,9 @@
           "endTurn": "Zug beenden",
           "drawn": "Gezogen",
           "drew": "Gezogen: {{card}}",
-          "lastLap": "{{name}} hat Cabo gerufen – letzte Runde",
+          "lastLap": "{{name}} hat geklopft – letzte Runde",
           "won": "{{name}} gewinnt mit den wenigsten Punkten",
-          "penalty": "{{name}} hat Cabo gerufen, war aber nicht allein vorn: +{{points}}",
+          "penalty": "{{name}} hat geklopft, war aber nicht allein vorn: +{{points}}",
           "reset": "{{name}} hatte genau 100 – zurück auf {{points}}",
           "option": {
             "memoryAid": "Gedächtnisstütze",
@@ -2123,7 +2123,7 @@
   },
   "server": {
     "title": "Nexumia Server Verbindung",
-    "desc": "Verbinde dich mit einem Nexumia Server, um deine Melodiq Karaoke-Songbibliothek zu streamen, Songs herunterzuladen und KI-Stimmtrennung zu nutzen. Partyspiele (GuessArt, Gartic Phone, Werwolf, Qwixx) laufen serverlos und benötigen diesen Server nicht.",
+    "desc": "Verbinde dich mit einem Nexumia Server, um deine Melodiq Karaoke-Songbibliothek zu streamen, Songs herunterzuladen und KI-Stimmtrennung zu nutzen. Partyspiele (GuessArt, Zeichen-Stille-Post, Werwolf, Farbreihen) laufen serverlos und benötigen diesen Server nicht.",
     "enable": "Server-Verbindung aktivieren",
     "url": "Server-URL",
     "token": "Sicherheitstoken",
@@ -2458,7 +2458,7 @@
     "liveDesc": "Alle spielen gleichzeitig: Mitspieler in die Lobby einladen, der Host startet.",
     "overDaysDesc": "Über Tage spielen: Mitspieler unten eintragen und jedem einen eigenen Link schicken.",
     "garticShortDesc": "Live Multiplayer: Satz schreiben ➔ Zeichnen ➔ Raten ➔ Album-Show!",
-    "playGartic": "Gartic Phone spielen",
+    "playGartic": "Zeichen-Stille-Post spielen",
     "roomCode": "Raum-Code",
     "readyToStart": "Bereit!",
     "needMinPlayers": "Mind. 2 Spieler nötig",
@@ -2627,7 +2627,7 @@
   },
   "party": {
     "hubBannerTitle": "Party-Modus (Mehrspieler-Lobby)",
-    "hubBannerSubtitle": "1 Raum für den ganzen Abend: Freunde verbinden & gemeinsam Gartic Phone spielen!",
+    "hubBannerSubtitle": "1 Raum für den ganzen Abend: Freunde verbinden & gemeinsam Zeichen-Stille-Post spielen!",
     "openLobby": "Lobby öffnen ➔",
     "lobbyTitle": "Party-Lobby",
     "room": "Party-Raum",
@@ -2645,7 +2645,7 @@
     "hostSelectPrompt": "Wähle ein Spiel aus, um es für alle Spieler zu starten:",
     "guestWaitingPrompt": "Der Host wählt gerade das nächste Spiel aus...",
     "garticDesc": "Das Flüsterpost-Zeichenspiel! Satz schreiben ➔ Zeichnen ➔ Raten ➔ Zeichnen ➔ Finale Auflösung!",
-    "launchGartic": "Gartic Phone starten",
+    "launchGartic": "Zeichen-Stille-Post starten",
     "needMin2": "Mind. 2 Spieler nötig",
     "ready": "Bereit",
     "backToLobby": "Zurück zur Party-Lobby",
@@ -2669,7 +2669,7 @@
     "confirmEndGameTitle": "Spiel beenden?",
     "confirmEndGameDesc": "Möchtest du das aktuelle Spiel für alle verbundenen Spieler abbrechen und zur Party-Lobby zurückkehren?",
     "confirmEndTitle": "Spiel wirklich beenden?",
-    "confirmEndDesc": "Das aktuelle Gartic Phone Spiel wird für alle verbundenen Spieler abgebrochen und alle kehren zur Party-Lobby zurück.",
+    "confirmEndDesc": "Das aktuelle Zeichen-Stille-Post Spiel wird für alle verbundenen Spieler abgebrochen und alle kehren zur Party-Lobby zurück.",
     "shareLobby": "Lobby teilen",
     "shareLobbyTooltip": "Lobby teilen / Freunde einladen",
     "shareLobbyDesc": "Teile diesen Link oder scanne den QR-Code, um weitere Freunde ins Spiel einzuladen:",
@@ -2701,7 +2701,7 @@
     "spectatorWatching": "Du schaust zu",
     "spectatorPickHint": "Wähle, wessen Sicht du sehen willst",
     "gameSelectionTitle": "Spielauswahl",
-    "gameSelectionDesc": "Wähle zwischen Party-Klassikern (Gartic Phone, GuessArt), Würfelspielen und synchronisierten Tabletop-Karten- & Brettspielen.",
+    "gameSelectionDesc": "Wähle zwischen Party-Klassikern (Zeichen-Stille-Post, GuessArt), Würfelspielen und synchronisierten Tabletop-Karten- & Brettspielen.",
     "chooseAndStart": "Spiel wählen & starten",
     "partyModeChip": "Party-Modus",
     "werewolf_desc": "Jede Rolle geheim auf dem eigenen Handy, der Host erzählt.",

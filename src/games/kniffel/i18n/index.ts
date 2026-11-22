@@ -13,7 +13,7 @@ export const initKniffelI18n = () => {
       {
         games: {
           kniffel: {
-            title: 'Kniffel',
+            title: 'Fünf Würfel',
             description:
               'Der Klassiker unter den Würfelspielen. Sammle Punkte durch geschicktes Kombinieren von 5 Würfeln.',
             roll: 'Würfeln',
@@ -38,10 +38,10 @@ export const initKniffelI18n = () => {
             room_turn_of: '{{name}} ist dran',
             room_playing_for: 'Du spielst für {{name}}',
             rules_label: 'Regeln',
-            rules_kniffel: 'Kniffel',
+            rules_kniffel: 'Standard',
             rules_international: 'International',
             rules_hint:
-              'International: weitere Kniffel zählen 100 und als Joker für Full House und Straßen.',
+              'International: weitere Fünferpasche zählen 100 und als Joker für Full House und Straßen.',
             points: 'Punkte eintragen',
             strike: 'Streichen (0)',
             cat: {
@@ -56,9 +56,9 @@ export const initKniffelI18n = () => {
               full_house: 'Full House',
               small_straight: 'Kleine Straße',
               large_straight: 'Große Straße',
-              kniffel: 'Kniffel',
+              kniffel: 'Fünferpasch',
               chance: 'Chance',
-              kniffel_bonus: 'Kniffel-Bonus',
+              kniffel_bonus: 'Fünferpasch-Bonus',
             },
             hint: {
               ones: 'Summe aller Einsen',
@@ -88,7 +88,7 @@ export const initKniffelI18n = () => {
       {
         games: {
           kniffel: {
-            title: 'Yahtzee',
+            title: 'Five Dice',
             description: 'The classic dice game. Score points by cleverly combining 5 dice.',
             roll: 'Roll',
             show_dice: 'Show dice',
@@ -112,7 +112,7 @@ export const initKniffelI18n = () => {
             room_turn_of: "It's {{name}}'s turn",
             room_playing_for: 'You are playing for {{name}}',
             rules_label: 'Rules',
-            rules_kniffel: 'Kniffel',
+            rules_kniffel: 'Standard',
             rules_international: 'International',
             rules_hint:
               'International: further five of a kinds score 100 and are jokers for Full House and straights.',
@@ -130,9 +130,9 @@ export const initKniffelI18n = () => {
               full_house: 'Full House',
               small_straight: 'Small Straight',
               large_straight: 'Large Straight',
-              kniffel: 'Yahtzee',
+              kniffel: 'Five of a Kind',
               chance: 'Chance',
-              kniffel_bonus: 'Yahtzee Bonus',
+              kniffel_bonus: 'Five of a Kind Bonus',
             },
             hint: {
               ones: 'Sum of all Ones',

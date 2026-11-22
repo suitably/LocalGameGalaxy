@@ -4,7 +4,7 @@ export const qwixxTranslations = {
   en: {
     games: {
       qwixx: {
-        title: 'Qwixx',
+        title: 'Color Rows',
         description:
           'Tactical dice-rolling score sheet game. Cross numbers, lock rows, and maximize your score!',
         roll: 'Roll',
@@ -77,7 +77,7 @@ export const qwixxTranslations = {
         double_banner_title: 'Double Numbers Mode:',
         double_banner_desc:
           'Golden-bordered 2× boxes count as 2 crosses (XX) immediately when crossed!',
-        longo_title: 'Qwixx Longo (D8 Dice 1–8, Numbers 2–16):',
+        longo_title: 'Color Rows XL (D8 Dice 1–8, Numbers 2–16):',
         longo_desc:
           'Requires 6 crosses to lock (+1 bonus). White dice sum = Lucky Number ➔ Free cross in row with fewest crosses!',
         longo_short_desc: 'White dice sum = Lucky Number ➔ Free cross in row with fewest crosses',
@@ -168,7 +168,7 @@ export const qwixxTranslations = {
         },
         sheets: {
           classic: {
-            name: 'Qwixx Classic',
+            name: 'Color Rows Classic',
             badge: 'Original',
             desc: 'Standard layout with 4 rows (Red & Yellow ascending 2-12, Green & Blue descending 12-2).',
           },
@@ -213,7 +213,7 @@ export const qwixxTranslations = {
             desc: 'Special icons trigger chain actions, instant free crosses, or shields against penalty misses.',
           },
           longo: {
-            name: 'Qwixx Longo',
+            name: 'Color Rows XL',
             badge: '8-Sided D8',
             desc: 'Official Longo block with 15 numbers (2–16), 8-sided D8 dice, and 2 individual Lucky Numbers.',
           },
@@ -229,7 +229,7 @@ export const qwixxTranslations = {
   de: {
     games: {
       qwixx: {
-        title: 'Qwixx',
+        title: 'Farbreihen',
         description:
           'Taktisches Würfelspiel auf dem Wertungszettel. Kreuze Zahlen an, schließe Reihen ab und maximiere deine Punktzahl!',
         roll: 'Würfeln',
@@ -267,7 +267,7 @@ export const qwixxTranslations = {
         play_this_sheet: 'Diesen Block spielen',
         opponents: 'Mitspieler',
         tap_to_view: 'Tippen für Details',
-        sheet: 'Qwixx-Zettel',
+        sheet: 'Farbreihen-Zettel',
         new_game: 'Neues Spiel',
         room_connecting: 'Verbinde mit dem Host …',
         room_your_roll: 'Du würfelst',
@@ -302,7 +302,7 @@ export const qwixxTranslations = {
         double_banner_title: 'Doppelzahlen-Modus:',
         double_banner_desc:
           'Die golden umrandeten 2×-Felder zählen beim Ankreuzen sofort als 2 Kreuze (XX) für die Reihe!',
-        longo_title: 'Qwixx Longo (D8-Würfel 1–8, Zahlen 2–16):',
+        longo_title: 'Farbreihen XL (D8-Würfel 1–8, Zahlen 2–16):',
         longo_desc:
           'Ab 6 Kreuzen sperrbar (+1 Bonus). Weiße Würfelsumme = Glückszahl ➔ Freies Kreuz in der Reihe mit den wenigsten Kreuzen!',
         longo_short_desc: 'Weiße Summe = Glückszahl ➔ Freies Kreuz in Reihe mit wenigsten Kreuzen',
@@ -394,7 +394,7 @@ export const qwixxTranslations = {
         },
         sheets: {
           classic: {
-            name: 'Qwixx Klassisch',
+            name: 'Farbreihen Klassisch',
             badge: 'Original',
             desc: 'Klassischer Standard-Block mit 4 Farbreihen (Rot & Gelb aufsteigend 2–12, Grün & Blau absteigend 12–2).',
           },
@@ -439,7 +439,7 @@ export const qwixxTranslations = {
             desc: 'Spezialsymbole gewähren Kettenreaktionen, Gratis-Kreuze oder Schutz vor Fehlwürfen.',
           },
           longo: {
-            name: 'Qwixx Longo',
+            name: 'Farbreihen XL',
             badge: '8-Seitig D8',
             desc: 'Offizieller Longo-Block mit 15 Zahlen (2–16), 8-seitigen D8-Würfeln und 2 persönlichen Glückszahlen.',
           },
