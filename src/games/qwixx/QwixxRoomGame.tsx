@@ -29,6 +29,8 @@ import {
 import { QwixxDiceRoller } from './components/QwixxDiceRoller';
 import { QwixxRoomPlayer } from './components/QwixxRoomPlayer';
 import { useQwixxRoomStatus } from './useQwixxRoomStatus';
+import { PartyHelpNotice } from '../../features/party/components/PartyHelpNotice';
+import { RoomMarkers } from '../../features/party/components/RoomMarkers';
 
 initQwixxI18n();
 
@@ -39,12 +41,15 @@ const start = (hostId: string, players: RoomPlayer[]): QwixxRoomAction => ({
   players,
 });
 const needsStart = (state: QwixxRoomState) => state.players.length === 0;
+/** Whose action is awaited: the roller, until they rolled (a helper may roll for them). */
+const actorOf = (state: QwixxRoomState) =>
+  state.rolled || state.isGameOver ? null : (state.players[state.rollerIndex]?.id ?? null);
 const noop = () => {};
 
 export const QwixxRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
   const { t } = useTranslation();
   usePageTitle(t('games.qwixx.title', 'Qwixx'));
-  const { room, state, dispatch, synced } = usePartyRoomGame({
+  const { room, state, dispatch, synced, actingFor } = usePartyRoomGame({
     gameKey: 'qwixx',
     roomId,
     reducer: qwixxRoomReducer,
@@ -52,8 +57,11 @@ export const QwixxRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
     initialState: INITIAL_QWIXX_ROOM,
     needsStart,
     start,
+    actorOf,
   });
-  const status = useQwixxRoomStatus(state, room.myId);
+  const ownStatus = useQwixxRoomStatus(state, room.myId);
+  const rollingFor = state.players.find((p) => p.id === actingFor);
+  const status = rollingFor ? t('party.help.rollingFor', { name: rollingFor.name }) : ownStatus;
 
   if (!synced || state.players.length === 0)
     return (
@@ -65,6 +73,8 @@ export const QwixxRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
   const isPlayer = state.players.some((p) => p.id === room.myId);
   return (
     <GameLayout maxWidth="md">
+      <PartyHelpNotice roomId={roomId} myId={room.myId} players={room.players} />
+      <RoomMarkers roomId={roomId} myId={room.myId} to={actingFor ?? 'all'} />
       <PartyRoomScoreboard
         myId={room.myId}
         entries={state.players.map((p) => ({
@@ -85,6 +95,7 @@ export const QwixxRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
           myId={room.myId}
           state={state}
           dispatch={dispatch}
+          rollForOther={actingFor !== null}
         />
       ) : (
         <QwixxDiceRoller

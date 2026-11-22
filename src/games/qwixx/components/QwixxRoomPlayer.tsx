@@ -28,9 +28,17 @@ interface Props {
   myId: string;
   state: QwixxRoomState;
   dispatch: (action: QwixxRoomAction) => void;
+  /** This device may roll for the current roller (they allowed help). */
+  rollForOther?: boolean;
 }
 
-export const QwixxRoomPlayer: React.FC<Props> = ({ roomId, myId, state, dispatch }) => {
+export const QwixxRoomPlayer: React.FC<Props> = ({
+  roomId,
+  myId,
+  state,
+  dispatch,
+  rollForOther = false,
+}) => {
   const { t } = useTranslation();
   const roomPrefix = `${STORAGE_PREFIXES.QWIXX_ROOM_SHEET}${roomId}_`;
   const sheetKey = `${roomPrefix}${state.gameId}`;
@@ -66,7 +74,7 @@ export const QwixxRoomPlayer: React.FC<Props> = ({ roomId, myId, state, dispatch
   }, [reported, summary, myId, dispatch]);
 
   const myRoll = state.players[state.rollerIndex]?.id === myId;
-  const canRoll = myRoll && !state.rolled && !state.isGameOver;
+  const canRoll = (myRoll || rollForOther) && !state.rolled && !state.isGameOver;
   const removedDice = useMemo(
     () => [...new Set([...game.removedDice, ...closedRows(state)])],
     [game.removedDice, state],
@@ -108,6 +116,7 @@ export const QwixxRoomPlayer: React.FC<Props> = ({ roomId, myId, state, dispatch
             variant="contained"
             size="large"
             onClick={() => dispatch({ type: 'DONE', playerId: myId })}
+            data-room-target="qwixx.done"
             sx={{ minHeight: 48, minWidth: 200, fontWeight: 800, borderRadius: 999 }}
           >
             {t('games.qwixx.room_done')}

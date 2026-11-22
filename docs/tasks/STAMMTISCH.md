@@ -91,10 +91,10 @@ sources:
 
 ## 6. Progress
 
-| Slice | State                                                                                                          |
-| ----- | -------------------------------------------------------------------------------------------------------------- |
-| 1     | done                                                                                                           |
-| 2     | done                                                                                                           |
-| 3     | done (Kniffel; Knister/Qwixx accept helper actions on the host but have no UI to pick whose sheet to play yet) |
-| 4     | done (Kniffel targets; Knister/Qwixx not tagged yet)                                                           |
-| 5     | done (party room; the single-device game keeps the house rules)                                                |
+| Slice | State                                                                                             |
+| ----- | ------------------------------------------------------------------------------------------------- |
+| 1     | done                                                                                              |
+| 2     | done                                                                                              |
+| 3     | done (Kniffel turn, Knister sheet picker, Qwixx roll only: its sheets stay on the owner's device) |
+| 4     | done (Kniffel, Knister, Qwixx targets)                                                            |
+| 5     | done (party room; the single-device game keeps the house rules)                                   |
