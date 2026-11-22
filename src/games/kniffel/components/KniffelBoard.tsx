@@ -1,12 +1,13 @@
 import React from 'react';
 import { Box, Paper, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import type { KniffelPlayer, KniffelCategory, KniffelScores } from '../logic/types';
+import type { KniffelPlayer, KniffelCategory, KniffelRules, KniffelScores } from '../logic/types';
 import {
   getUpperSectionSum,
   getUpperSectionBonus,
   getLowerSectionSum,
   getTotalScore,
+  kniffelBonusPoints,
 } from '../logic/kniffelScoring';
 import { LOWER_ROWS, UPPER_ROWS, canScoreKniffelBonus } from '../logic/kniffelRows';
 import { pieceTint } from '../../../lib/pieceTint';
@@ -30,6 +31,8 @@ interface KniffelBoardProps {
   onSwitchPlayer: (index: number) => void;
   disabled?: boolean;
   showDice: boolean;
+  /** Scoring rules (bonus points per further Kniffel); default the house rules. */
+  rules?: KniffelRules;
 }
 
 type ScoreMap = Record<string, number | null>;
@@ -44,6 +47,7 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
   onSwitchPlayer,
   disabled = false,
   showDice,
+  rules = 'kniffel',
 }) => {
   const { t } = useTranslation();
   const board = useKniffelBoardState({
@@ -119,7 +123,7 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
                 {p.name}
               </Typography>
               <Typography variant="h6" sx={scoreNumberSx}>
-                {getTotalScore(asMap(p.scores))}
+                {getTotalScore(asMap(p.scores), rules)}
               </Typography>
             </Box>
           );
@@ -142,12 +146,13 @@ export const KniffelBoard: React.FC<KniffelBoardProps> = ({
       {renderRows(LOWER_ROWS)}
       <KniffelBonusRow
         players={players}
+        points={kniffelBonusPoints(rules)}
         canScore={canScoreBonus}
         onClick={board.handleBonusClick}
       />
       <KniffelSumRow
         label={t('games.kniffel.lower_total', 'Summe unten')}
-        values={players.map((p) => getLowerSectionSum(asMap(p.scores)))}
+        values={players.map((p) => getLowerSectionSum(asMap(p.scores), rules))}
       />
 
       <KniffelScoreModal

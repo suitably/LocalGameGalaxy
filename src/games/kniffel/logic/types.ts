@@ -14,6 +14,13 @@ export type KniffelCategory =
   | 'chance'
   | 'kniffel_bonus';
 
+/**
+ * `kniffel`: house rules of this app (each further Kniffel 50). `international`: each further
+ * five of a kind 100 (only after a scored 50), and it counts as a joker for Full House and the
+ * straights once the Kniffel box is filled. The forced upper-box order is not enforced.
+ */
+export type KniffelRules = 'kniffel' | 'international';
+
 export interface KniffelScores {
   ones: number | null;
   twos: number | null;

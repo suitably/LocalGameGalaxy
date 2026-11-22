@@ -1075,7 +1075,7 @@
         "large_straight": "5 in Folge · 40",
         "kniffel": "5 gleiche · 50",
         "chance": "Alle Augen zählen",
-        "kniffel_bonus": "Jeder weitere · 50"
+        "kniffel_bonus": "Jeder weitere · {{points}}"
       }
     },
     "knister": {
