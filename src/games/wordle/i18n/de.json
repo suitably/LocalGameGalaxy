@@ -1,0 +1,63 @@
+{
+  "wordle": {
+    "mode": {
+      "daily": "Tagesrätsel",
+      "practice": "Üben"
+    },
+    "not_enough_letters": "Nicht genügend Buchstaben!",
+    "congratulations": "Hervorragend! Wort erraten!",
+    "game_over": "Leider nicht geschafft!",
+    "new_word": "Neues Wort",
+    "play_again": "Nochmal spielen",
+    "copied_to_clipboard": "In die Zwischenablage kopiert!",
+    "duel": {
+      "title": "Freund herausfordern",
+      "desc": "Wähle ein beliebiges 5-Buchstaben-Wort. Dein Freund muss es erraten!",
+      "input_label": "Geheimes Wort (5 Buchstaben)",
+      "active_banner": "Du spielst ein Duell-Wort eines Freundes!",
+      "btn_tooltip": "Freund herausfordern"
+    },
+    "stats": {
+      "btn_tooltip": "Statistiken",
+      "played": "Gespielt",
+      "win_rate": "Gewonnen",
+      "current_streak": "Serie",
+      "max_streak": "Rekord",
+      "distribution": "Verteilung der Versuche"
+    },
+    "modal": {
+      "title_won": "Gewonnen!",
+      "title_lost": "Schade!",
+      "title_stats": "Statistiken",
+      "target_was": "Das gesuchte Wort war:"
+    },
+    "help": {
+      "title": "Spielregeln",
+      "p1": "Errate das 5-Buchstaben-Wort in 6 Versuchen.",
+      "p2": "Nach jedem Versuch färben sich die Kacheln:",
+      "green": "Grün: Buchstabe ist an der richtigen Stelle.",
+      "yellow": "Gelb: Buchstabe kommt im Wort vor, aber an anderer Stelle.",
+      "gray": "Grau: Buchstabe kommt nicht im Wort vor."
+    },
+    "history": {
+      "title": "Historie (Tagesrätsel)",
+      "empty": "Noch keine Tagesrätsel gespielt.",
+      "target_word": "Gesuchtes Wort:",
+      "btn_tooltip": "Verlauf"
+    },
+    "not_in_dictionary": "Nicht im Wörterbuch!",
+    "settings": {
+      "dictionary_only": "Nur Wörterbuch-Wörter",
+      "dictionary_only_hint": "Tipps müssen ein bekanntes Wort sein. Ungültige Wörter kosten keinen Versuch."
+    },
+    "key_enter": "Eingabe",
+    "key_delete": "Löschen",
+    "letter_state": {
+      "correct": "richtige Stelle",
+      "present": "andere Stelle",
+      "absent": "nicht im Wort",
+      "tbd": "Eingabe",
+      "empty": "leer"
+    }
+  }
+}

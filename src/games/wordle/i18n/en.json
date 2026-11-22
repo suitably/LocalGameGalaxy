@@ -1,0 +1,63 @@
+{
+  "wordle": {
+    "mode": {
+      "daily": "Daily Challenge",
+      "practice": "Practice"
+    },
+    "not_enough_letters": "Not enough letters!",
+    "congratulations": "Splendid! Word guessed!",
+    "game_over": "Game over! Better luck next time.",
+    "new_word": "New Word",
+    "play_again": "Play Again",
+    "copied_to_clipboard": "Copied to clipboard!",
+    "duel": {
+      "title": "Challenge a Friend",
+      "desc": "Choose any 5-letter word for your friend to guess!",
+      "input_label": "Secret Word (5 letters)",
+      "active_banner": "You are solving a challenge from a friend!",
+      "btn_tooltip": "Challenge Friend"
+    },
+    "stats": {
+      "btn_tooltip": "Statistics",
+      "played": "Played",
+      "win_rate": "Win %",
+      "current_streak": "Streak",
+      "max_streak": "Max Streak",
+      "distribution": "Guess Distribution"
+    },
+    "modal": {
+      "title_won": "Victory!",
+      "title_lost": "Game Over!",
+      "title_stats": "Statistics",
+      "target_was": "The word was:"
+    },
+    "help": {
+      "title": "How to Play",
+      "p1": "Guess the 5-letter word in 6 tries.",
+      "p2": "After each guess, the color of the tiles will change:",
+      "green": "Green: Letter is in the word and in the correct spot.",
+      "yellow": "Yellow: Letter is in the word but in the wrong spot.",
+      "gray": "Gray: Letter is not in the word in any spot."
+    },
+    "history": {
+      "title": "History (Daily Challenge)",
+      "empty": "No daily challenges played yet.",
+      "target_word": "Target Word:",
+      "btn_tooltip": "History"
+    },
+    "not_in_dictionary": "Not in word list!",
+    "settings": {
+      "dictionary_only": "Only dictionary words",
+      "dictionary_only_hint": "Guesses must be a known word. Invalid words do not use up an attempt."
+    },
+    "key_enter": "Enter",
+    "key_delete": "Delete",
+    "letter_state": {
+      "correct": "correct spot",
+      "present": "wrong spot",
+      "absent": "not in word",
+      "tbd": "typed",
+      "empty": "empty"
+    }
+  }
+}
