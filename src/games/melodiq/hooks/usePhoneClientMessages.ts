@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { storage } from '../../../lib/storage';
-import { parseFeedbackResult } from '../logic/feedbackRpc';
 import { parseAssignedTrack } from '../gameplay/logic/trackChoice';
 import { reportTrackAssignment } from '../gameplay/hooks/usePhoneTrackChoice';
 import { ApiChunkBuffer } from '../logic/apiChunkBuffer';
@@ -176,11 +175,6 @@ export const usePhoneClientMessages = ({
         case 'host.settings.state':
           setHostSettings((data as unknown as HostSettingsReply).settings);
           break;
-        case 'host.feedback.result': {
-          const result = parseFeedbackResult(data);
-          if (result) emit(`melodiq_feedback_result_${result.reqId}`, result);
-          break;
-        }
         case 'songInfo': {
           const assignment = parseAssignedTrack(data);
           if (assignment) reportTrackAssignment(assignment);

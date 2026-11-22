@@ -88,12 +88,14 @@ Admin phones adjust a few host settings without mounting the desktop `<Settings>
 - Host: `HostSettingsRpcBridge.tsx` (mounted next to `PhoneQueueBridge`) accepts the messages only from devices whose stored role is `admin` (`getRoleForDevice`), applies the patch through `updateSetting` (host storage) and replies to the sender.
 - Phone: `usePhoneClientMessages.ts` keeps the reported `hostSettings`; `RemoteHostSettingsModal.tsx` (opened from the header action "Host settings", shown only for `clientRole === 'admin'`) sends the requests via `sendClientData`.
 
-### 2.8 Feedback via host (phone to host RPC)
+### 2.8 Feedback via host (phone to host, room events)
 
-While a phone is connected to a host, feedback is not sent with the phone's own PAT but over the data channel (#145):
+While a phone is connected to a host, feedback is not sent with the phone's own PAT but as room events (#145, #815; step 2 of #813):
 
-- Phone: `hooks/useFeedbackRelay.ts` (called in `PhoneClientEngine`) registers a relay in `src/lib/feedbackRelay.ts`; `submitFeedback` (`src/lib/github.ts`) tries it first and sends `{ type: 'host.feedback.submit', reqId, title, body }`. The reply `host.feedback.result` (`success`, `issueUrl`, `error`, `code`) is routed by `usePhoneClientMessages` and shown by the normal `FeedbackForm`. The feedback dialog opens without a local PAT while the relay is active.
-- Host: `FeedbackRpcBridge.tsx` validates/caps the request (`logic/feedbackRpc.ts`, one request per phone per 10 s, any connected phone) and creates the issue with the host's PAT (`submitFeedbackWithLocalPat`). Without a host PAT it answers `code: 'no_token'`.
+- Wiring (shared with later Melodiq room features): `hooks/useMelodiqRoomTransport.ts`. Host: `useMelodiqRoomTransport()` returns `{ transport, roomId, selfId } | null` from `createHostPeerTransport(manager)` (party id as `roomId`). Phone: `PhoneClientEngine` builds `usePhoneRoomTransport({ link, roomId, selfId, isConnected })` (`createClientPeerTransport` around `useWebRTCClient`'s `sendData` / `addMessageListener`) and shares it via `PhoneRoomTransportProvider`; `selfId` is the profile `deviceId` the host sees from `identify`. Use with `useRoomEvents({ gameKey: MELODIQ_GAME_KEY, roomId, transport })` (channel `melodiq_<roomId>_live`).
+- Events (`logic/feedbackRpc.ts`): `{ type: 'feedback.submit', from, reqId, title, body }` phone to host; `{ type: 'feedback.result', from, to, reqId, success, issueUrl?, error?, code? }` host to that phone. The host transport overwrites `from` with the sender's device id; receivers ignore events whose `to` is not their id.
+- Phone: `hooks/useFeedbackRelay.ts` registers a relay in `src/lib/feedbackRelay.ts`; `submitFeedback` (`src/lib/github.ts`) tries it first and resolves on the `feedback.result` with the matching `reqId` (20 s timeout). The result is shown by the normal `FeedbackForm`. The feedback dialog opens without a local PAT while the relay is active.
+- Host: `HostFeedbackBridge.tsx` / `hooks/useHostFeedback.ts` run `handleFeedbackEvent` (guards and caps, one request per `from` per 10 s, any connected phone) and create the issue with the host's PAT (`submitFeedbackWithLocalPat`). Without a host PAT it answers `code: 'no_token'`.
 - Fallback: on `no_token`, error or timeout, `submitFeedback` uses the phone's own PAT if it has one, then the server proxy as before.
 
 ### 2.9 Timing: one song clock, everything else follows

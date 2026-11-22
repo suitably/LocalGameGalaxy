@@ -6,6 +6,7 @@ import { usePhoneClientMessages } from './hooks/usePhoneClientMessages';
 import { RemoteHostSettingsModal } from './components/RemoteHostSettingsModal';
 import type { HostSettings } from './types';
 import { useFeedbackRelay } from './hooks/useFeedbackRelay';
+import { PhoneRoomTransportProvider, usePhoneRoomTransport } from './hooks/useMelodiqRoomTransport';
 import { usePhoneMicStreaming } from './hooks/usePhoneMicStreaming';
 import { loadClientProfile, resolveTrackerUrls, type ClientProfile } from './logic/clientProfile';
 import { parseGameUrlParams } from '../../modules/sharing';
@@ -140,11 +141,12 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     updateClientProfile,
   });
 
-  const { isConnected, statusMessage, sendData, resendIdentity } = useWebRTCClient(
-    partyId,
-    trackerUrls,
-    { autoConnect: true, onMessage: handleMessage, getIdentity },
-  );
+  const { isConnected, statusMessage, sendData, addMessageListener, resendIdentity } =
+    useWebRTCClient(partyId, trackerUrls, {
+      autoConnect: true,
+      onMessage: handleMessage,
+      getIdentity,
+    });
 
   // Signal connection state for melodiqFetch waitForConnection()
   useEffect(() => {
@@ -168,8 +170,16 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [isConnected, sendData]);
 
+  // Room events (feedback, …) over the host link; the id is the one the host sees from `identify`
+  const roomTransport = usePhoneRoomTransport({
+    link: { send: sendData, onMessage: addMessageListener },
+    roomId: partyId ?? '',
+    selfId: clientProfile.deviceId,
+    isConnected,
+  });
+
   // Route feedback through the host (its PAT) while connected
-  useFeedbackRelay(isConnected, sendData);
+  useFeedbackRelay(roomTransport);
 
   // Forward events from UI components (like useQueue) to the host
   useEffect(() => {
@@ -229,7 +239,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
   return (
     <ClientEngineContext.Provider value={value}>
       {!isConnected && <ConnectionOverlay message={statusMessage} />}
-      {children}
+      <PhoneRoomTransportProvider value={roomTransport}>{children}</PhoneRoomTransportProvider>
       {clientRole === 'admin' && <RemoteHostSettingsModal />}
     </ClientEngineContext.Provider>
   );
