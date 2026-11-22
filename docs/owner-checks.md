@@ -109,3 +109,11 @@ Grouping, filtering, store selection and the companion routes are tested (`test/
 - [ ] On a phone and a TV: the tabs All / Artists / Albums / Favourites / Playlists, search across tabs, the favourite heart and add-to-playlist work.
 - [ ] With two API keys on the companion: a shared playlist is visible but read-only for the other user, a private one is invisible; legacy `playlists.json` lists appear once after the update (the old `/api/playlists` routes are gone, so older app versions lose playlist sync).
 - [ ] With a local folder instead of the server, favourites and playlists stay on the device.
+
+## #467 — one table session for all table games
+
+Slice 3 (Spieltisch with mode picker) was already on `main`; slices 4 (dice games on one device), 5 (Kniffel/Qwixx with everyone on their own device) and 7 (390 × 844 layout pass with browser screenshots) are in code with tests. Two-page Playwright runs in one browser covered lobby, start, follow, roll and status.
+
+- [ ] From the party lobby with 3 real phones over MQTT: Kniffel and Qwixx — the right player rolls and scores, Qwixx "Fertig" passes the roll on, a row closed by one player locks on every sheet, the game end shows everywhere; a phone reloaded mid-game keeps its Qwixx sheet.
+- [ ] One device: Knister with 3 players (cover after each placement, a typed-in number becomes everyone's roll), Kniffel cover after each score, Qwixx with 2+ names ("fertig", cover, new game clears all sheets).
+- [ ] Lobby on a 360 px Android phone and an iPhone with a notch: leave and "fertig" buttons clear the home indicator.

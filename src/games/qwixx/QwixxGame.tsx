@@ -13,7 +13,7 @@ import { QwixxSheetChips } from './components/QwixxSheetChips';
 import { useQwixxState } from './useQwixxState';
 import { useQwixxHeaderActions } from './useQwixxHeaderActions';
 import { useQwixxLocalTable } from './useQwixxLocalTable';
-import { QwixxTableBar } from './components/QwixxTableBar';
+import { QwixxTableBar, QwixxTableSwitch } from './components/QwixxTableBar';
 import { LocalPlayersDialog } from '../../modules/pass-and-play';
 
 // Initialize i18n bundles at module load time to prevent setState side-effects during render
@@ -71,6 +71,8 @@ export const QwixxGame: React.FC = () => {
           />
         }
       />
+
+      <QwixxTableSwitch table={table} />
 
       <ConfirmDialog
         open={resetDialogOpen}

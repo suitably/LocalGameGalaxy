@@ -1,5 +1,5 @@
 /**
- * Scoreboard and "<name> fertig" for several sheets on one device [ID: GAME-QWIXX-TABLE-BAR]
+ * Scoreboard, cover and "<name> fertig" for several sheets on one device [ID: GAME-QWIXX-TABLE-BAR]
  */
 import React from 'react';
 import { Box, Chip, Stack } from '@mui/material';
@@ -11,7 +11,6 @@ type LocalTable = ReturnType<typeof useQwixxLocalTable>;
 export const QwixxTableBar: React.FC<{ table: LocalTable }> = ({ table }) => {
   const { scores, activeId, players, handover } = table;
   if (scores.length < 2) return null;
-  const current = scores.find((s) => s.id === activeId);
   const pick = (id: string) => {
     handover.startSwitch();
     handover.retarget(id);
@@ -26,22 +25,10 @@ export const QwixxTableBar: React.FC<{ table: LocalTable }> = ({ table }) => {
             color={s.id === activeId ? 'primary' : 'default'}
             variant={s.id === activeId ? 'filled' : 'outlined'}
             onClick={s.id === activeId ? undefined : () => pick(s.id)}
-            sx={{ minHeight: 36, fontWeight: 700 }}
+            sx={{ minHeight: 44, fontWeight: 700 }}
           />
         ))}
       </Stack>
-      <Box
-        sx={{
-          position: 'sticky',
-          bottom: 'max(12px, env(safe-area-inset-bottom))',
-          display: 'flex',
-          justifyContent: 'center',
-          mt: 2,
-          zIndex: 2,
-        }}
-      >
-        <SwitchPlayerButton onClick={handover.startSwitch} currentName={current?.name} />
-      </Box>
       {handover.coveredFor && (
         <HandoverCover
           player={handover.coveredFor}
@@ -52,5 +39,26 @@ export const QwixxTableBar: React.FC<{ table: LocalTable }> = ({ table }) => {
         />
       )}
     </>
+  );
+};
+
+/** "<name> fertig" at the end of the sheet, kept in reach of the thumb while scrolling. */
+export const QwixxTableSwitch: React.FC<{ table: LocalTable }> = ({ table }) => {
+  const { scores, activeId, handover } = table;
+  if (scores.length < 2) return null;
+  const current = scores.find((s) => s.id === activeId);
+  return (
+    <Box
+      sx={{
+        position: 'sticky',
+        bottom: 'max(12px, env(safe-area-inset-bottom))',
+        display: 'flex',
+        justifyContent: 'center',
+        mt: 2,
+        zIndex: 2,
+      }}
+    >
+      <SwitchPlayerButton onClick={handover.startSwitch} currentName={current?.name} />
+    </Box>
   );
 };

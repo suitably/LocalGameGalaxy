@@ -47,7 +47,7 @@ export const KnisterToolbar: React.FC<KnisterToolbarProps> = ({
           startIcon={<CasinoIcon />}
           aria-pressed={showDice}
           onClick={onToggleDice}
-          sx={{ borderRadius: 3, fontWeight: 700, textTransform: 'none' }}
+          sx={{ borderRadius: 3, fontWeight: 700, textTransform: 'none', minHeight: 44 }}
         >
           {showDice ? t('games.knister.hide_dice') : t('games.knister.show_dice')}
         </Button>
@@ -63,8 +63,13 @@ export const KnisterToolbar: React.FC<KnisterToolbarProps> = ({
             onClick={onUndo}
             disabled={!canUndo}
             color="inherit"
-            size="small"
-            sx={{ border: 1, borderColor: 'divider', '&.Mui-disabled': { opacity: 0.35 } }}
+            sx={{
+              width: 44,
+              height: 44,
+              border: 1,
+              borderColor: 'divider',
+              '&.Mui-disabled': { opacity: 0.35 },
+            }}
           >
             <UndoIcon fontSize="small" />
           </IconButton>
@@ -77,14 +82,30 @@ export const KnisterToolbar: React.FC<KnisterToolbarProps> = ({
           size="small"
           startIcon={<HelpOutlineIcon />}
           onClick={onOpenLegend}
-          sx={{ borderRadius: 3, textTransform: 'none', borderColor: 'divider' }}
+          aria-label={t('games.knister.show_legend', 'Punkteübersicht')}
+          sx={{
+            borderRadius: 3,
+            textTransform: 'none',
+            borderColor: 'divider',
+            minWidth: 44,
+            minHeight: 44,
+            // Phones: icon only, so the toolbar stays on one row.
+            '& .MuiButton-startIcon': { mx: { xs: 0, sm: undefined } },
+          }}
         >
-          {t('games.knister.show_legend', 'Punkteübersicht')}
+          <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+            {t('games.knister.show_legend', 'Punkteübersicht')}
+          </Box>
         </Button>
       </Tooltip>
 
       <Tooltip title={t('games.knister.new_game', 'Neues Spiel')}>
-        <IconButton onClick={onReset} color="inherit" size="small">
+        <IconButton
+          onClick={onReset}
+          color="inherit"
+          aria-label={t('games.knister.new_game', 'Neues Spiel')}
+          sx={{ width: 44, height: 44 }}
+        >
           <ReplayIcon />
         </IconButton>
       </Tooltip>

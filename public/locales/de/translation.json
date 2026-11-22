@@ -1735,6 +1735,7 @@
     "addPlayer": "Hinzufügen"
   },
   "common": {
+    "add": "Hinzufügen",
     "retry": "Erneut versuchen",
     "start": "Spiel starten",
     "back": "Zurück",
@@ -2581,6 +2582,8 @@
     "spectatorWatching": "Du schaust zu",
     "spectatorPickHint": "Wähle, wessen Sicht du sehen willst",
     "gameSelectionTitle": "Spielauswahl",
+    "gameSelectionDesc": "Wähle zwischen Party-Klassikern (Gartic Phone, GuessArt), Würfelspielen und synchronisierten Tabletop-Karten- & Brettspielen.",
+    "chooseAndStart": "Spiel wählen & starten",
     "partyModeChip": "Party-Modus"
   },
   "gartic": {

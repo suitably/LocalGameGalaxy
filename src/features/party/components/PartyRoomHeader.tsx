@@ -36,7 +36,8 @@ export const PartyRoomHeader: React.FC<{ lobby: PartyLobbyController }> = ({ lob
           {amIHost && (
             <Tooltip title={t('party.editRoomCode', 'Eigenen Raum-Code festlegen')}>
               <IconButton
-                size="small"
+                aria-label={t('party.editRoomCode', 'Eigenen Raum-Code festlegen')}
+                sx={{ width: 44, height: 44 }}
                 onClick={() => {
                   setCustomRoomInput(roomId);
                   setEditRoomOpen(true);
@@ -53,14 +54,19 @@ export const PartyRoomHeader: React.FC<{ lobby: PartyLobbyController }> = ({ lob
               color="primary"
               startIcon={<ShareRoundedIcon />}
               onClick={() => setShowQr(true)}
-              sx={{ fontWeight: 700, borderRadius: 2, height: 32 }}
+              sx={{ fontWeight: 700, borderRadius: 2, minHeight: 44 }}
             >
               {t('party.shareLobby', 'Lobby teilen')}
             </Button>
           </Tooltip>
           {!amIHost && (
             <Tooltip title={t('party.leave', 'Party verlassen')}>
-              <IconButton size="small" color="error" onClick={leaveParty}>
+              <IconButton
+                color="error"
+                onClick={leaveParty}
+                aria-label={t('party.leave', 'Party verlassen')}
+                sx={{ width: 44, height: 44 }}
+              >
                 <LogoutRoundedIcon fontSize="small" />
               </IconButton>
             </Tooltip>

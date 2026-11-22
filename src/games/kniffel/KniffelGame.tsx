@@ -89,7 +89,7 @@ export const KniffelGame: React.FC = () => {
               startIcon={<CasinoIcon />}
               aria-pressed={showDice}
               onClick={() => setShowDice((prev) => !prev)}
-              sx={{ borderRadius: 999, fontWeight: 700, textTransform: 'none' }}
+              sx={{ borderRadius: 999, fontWeight: 700, textTransform: 'none', minHeight: 44 }}
             >
               {showDice
                 ? t('games.kniffel.hide_dice', 'Würfel ausblenden')
@@ -107,8 +107,9 @@ export const KniffelGame: React.FC = () => {
                 onClick={() => dispatch({ type: 'UNDO_MOVE' })}
                 disabled={!state.moveHistory || state.moveHistory.length === 0 || state.isGameOver}
                 color="inherit"
-                size="small"
                 sx={{
+                  width: 44,
+                  height: 44,
                   border: (theme) => `1px solid ${alpha(theme.palette.text.primary, 0.15)}`,
                   '&.Mui-disabled': { opacity: 0.35 },
                 }}
@@ -119,7 +120,12 @@ export const KniffelGame: React.FC = () => {
           </Tooltip>
 
           <Tooltip title={t('games.kniffel.new_game', 'Neues Spiel')}>
-            <IconButton onClick={() => setResetDialogOpen(true)} color="inherit" size="small">
+            <IconButton
+              onClick={() => setResetDialogOpen(true)}
+              color="inherit"
+              aria-label={t('games.kniffel.new_game', 'Neues Spiel')}
+              sx={{ width: 44, height: 44 }}
+            >
               <ReplayIcon />
             </IconButton>
           </Tooltip>

@@ -68,8 +68,10 @@ export const PartyGameSelection: React.FC<{ lobby: PartyLobbyController }> = ({ 
                 />
               </Box>
               <Typography variant="body2" color="text.secondary">
-                Wähle zwischen Party-Klassikern (Gartic Phone, GuessArt) und synchronisierten
-                Tabletop-Karten- & Brettspielen.
+                {t(
+                  'party.gameSelectionDesc',
+                  'Wähle zwischen Party-Klassikern (Gartic Phone, GuessArt), Würfelspielen und synchronisierten Tabletop-Karten- & Brettspielen.',
+                )}
               </Typography>
             </Box>
 
@@ -87,7 +89,7 @@ export const PartyGameSelection: React.FC<{ lobby: PartyLobbyController }> = ({ 
                   boxShadow: (theme) => `0 4px 14px ${alpha(theme.palette.secondary.main, 0.35)}`,
                 }}
               >
-                Spiel wählen & starten
+                {t('party.chooseAndStart', 'Spiel wählen & starten')}
               </Button>
             ) : (
               <Chip
@@ -97,7 +99,13 @@ export const PartyGameSelection: React.FC<{ lobby: PartyLobbyController }> = ({ 
                 )}
                 variant="outlined"
                 color="primary"
-                sx={{ fontWeight: 'bold', py: 1 }}
+                sx={{
+                  fontWeight: 'bold',
+                  height: 'auto',
+                  minHeight: 44,
+                  py: 1,
+                  '& .MuiChip-label': { whiteSpace: 'normal', textAlign: 'center' },
+                }}
               />
             )}
           </Card>

@@ -1735,6 +1735,7 @@
     "addPlayer": "Add"
   },
   "common": {
+    "add": "Add",
     "retry": "Retry",
     "start": "Start Game",
     "back": "Back",
@@ -2581,6 +2582,8 @@
     "spectatorWatching": "You are watching",
     "spectatorPickHint": "Pick whose view to follow",
     "gameSelectionTitle": "Game selection",
+    "gameSelectionDesc": "Choose between party classics (Gartic Phone, GuessArt), dice games and synced tabletop card and board games.",
+    "chooseAndStart": "Choose game & start",
     "partyModeChip": "Party mode"
   },
   "gartic": {
