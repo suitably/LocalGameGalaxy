@@ -28,6 +28,7 @@ function sanitizeScriptEntry(raw: unknown): ScriptEntry | undefined {
     xmlUi: optString(raw.xmlUi),
     tags: tags.length > 0 ? tags : undefined,
     gmNotes: optString(raw.gmNotes),
+    description: optString(raw.description),
   };
   return Object.values(entry).some((v) => v !== undefined) ? entry : undefined;
 }
@@ -42,7 +43,24 @@ export function sanitizeScripts(raw: unknown): GameScripts | undefined {
     if (entry) objects[guid] = entry;
   }
   if (!global && Object.keys(objects).length === 0) return undefined;
-  return { ...(global ? { global } : {}), objects };
+  return { ...(global ? { global } : {}), objects, ...sanitizeRuntimeMeta(raw) };
+}
+
+const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+
+/** Lua runtime fields of the sidecar (#705): projection bounds, seat colours, notes. */
+function sanitizeRuntimeMeta(raw: Record<string, unknown>): Partial<GameScripts> {
+  const out: Partial<GameScripts> = {};
+  const p = isRecord(raw.projection) ? raw.projection : undefined;
+  if (p && finite(p.minX) && finite(p.maxZ) && finite(p.margin) && finite(p.scale) && p.scale > 0) {
+    out.projection = { minX: p.minX, maxZ: p.maxZ, scale: p.scale, margin: p.margin };
+  }
+  if (Array.isArray(raw.seatColors)) {
+    out.seatColors = raw.seatColors.map((c) => (typeof c === 'string' ? c : ''));
+  }
+  const notes = optString(raw.notes);
+  if (notes) out.notes = notes;
+  return out;
 }
 
 const countOf = (v: unknown) => (typeof v === 'number' && v >= 0 ? Math.floor(v) : 0);

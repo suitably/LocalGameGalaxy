@@ -78,3 +78,23 @@ export function applyLuaTranslation(
   if (lua.coverage.total === 0 && lua.untranslated.length === 0) return {};
   return { buttons: lua.coverage, untranslated: lua.untranslated };
 }
+
+/**
+ * Adds what the Lua runtime needs at play time (#705): the world bounds of the import's
+ * projection and the TTS colour of each seat index.
+ */
+export function withRuntimeMeta(
+  scripts: GameScripts | undefined,
+  bounds: { minX: number; maxZ: number; scale: number; margin: number },
+  seats: { byColor: Map<string, number> },
+): GameScripts | undefined {
+  if (!scripts) return undefined;
+  const colors: string[] = [];
+  for (const [color, seat] of seats.byColor) colors[seat] = color;
+  const { minX, maxZ, scale, margin } = bounds;
+  return {
+    ...scripts,
+    projection: { minX, maxZ, scale, margin },
+    ...(colors.length > 0 ? { seatColors: Array.from(colors, (c) => c ?? '') } : {}),
+  };
+}
