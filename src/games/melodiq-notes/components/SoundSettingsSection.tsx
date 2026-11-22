@@ -52,7 +52,7 @@ export const SoundSettingsSection: React.FC<SoundSettingsSectionProps> = ({
             onClick={handleTestSound}
             sx={{ borderRadius: 2 }}
           >
-            {t('games.melodiq_notes.test_sound', 'Probe anhören')}
+            {t('games.melodiq_notes.test_sound')}
           </Button>
         </Box>
       </Stack>

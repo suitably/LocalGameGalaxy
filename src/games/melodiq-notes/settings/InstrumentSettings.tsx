@@ -46,7 +46,7 @@ export const InstrumentSettings: React.FC<{ onReset?: () => void }> = ({ onReset
   return (
     <Box>
       <Typography variant="subtitle1" fontWeight={700}>
-        {t('games.melodiq_notes.instruments', 'Instrumente')}
+        {t('games.melodiq_notes.instruments')}
       </Typography>
       <Stack divider={<Divider />}>
         {INSTRUMENT_LIST.map((inst) => (
@@ -70,7 +70,7 @@ export const InstrumentSettings: React.FC<{ onReset?: () => void }> = ({ onReset
         onClick={() => setConfirmOpen(true)}
         sx={{ mt: 2 }}
       >
-        {t('games.melodiq_notes.reset_foss', 'Auf FOSS-Standard zurücksetzen')}
+        {t('games.melodiq_notes.reset_foss')}
       </Button>
       <ConfirmDialog
         open={confirmOpen}

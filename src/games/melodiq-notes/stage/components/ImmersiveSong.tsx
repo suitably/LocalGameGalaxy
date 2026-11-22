@@ -15,9 +15,9 @@ export function ImmersiveSong({ title, onPick }: { title: string; onPick: () => 
   const goHome = useHomeNavigation(null, false);
   return (
     <>
-      <Tooltip title={t('common.home', 'Home')}>
+      <Tooltip title={t('common.home')}>
         <IconButton
-          aria-label={t('common.home', 'Home')}
+          aria-label={t('common.home')}
           onClick={goHome}
           sx={{ width: TOUCH_TARGET, height: TOUCH_TARGET }}
         >

@@ -112,7 +112,7 @@ export function useMelodiqNotesHeader({
 
   // 2. The recording behind the song sits next to it; mode, input and players are on the stage
   const { label, icon, onOpen } = recording;
-  const backLabel = t('party.backToLobby', 'Zurück zur Party-Lobby');
+  const backLabel = t('party.backToLobby');
   useEffect(() => {
     setMenuItems([
       { label, icon, action: onOpen, showAlways: true },
