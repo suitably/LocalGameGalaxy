@@ -18,7 +18,7 @@ export const useStorytellerLobby = () => {
     togglePlayerRemote,
     hasMinPlayers,
   } = useLobbyPlayers({
-    storageKey: STORAGE_KEYS.STORYTELLER_LOBBY_PLAYERS,
+    migrateFrom: [STORAGE_KEYS.STORYTELLER_LOBBY_PLAYERS],
     defaultPlayers: [{ name: 'Spieler 1' }, { name: 'Spieler 2' }],
     minPlayers: 2,
   });

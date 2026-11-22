@@ -1,0 +1,1 @@
+- **One player list for all games on one device**: Imposter, the card game tracker, Spieltisch games on one device, GuessArt and Storyteller now share the same saved player names, so a group enters its names once. The first game opened takes over its previously saved names; the old lists stay stored.

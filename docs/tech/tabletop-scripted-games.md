@@ -34,7 +34,7 @@ The free tabletop ([tabletop-engine](tabletop-engine.md)) moves widgets and know
 
 **Party room.** The host opens the game on its device and sees `RoomSetup`: the roster, the switch "this device only shows the table" (on by default when the other players are enough for the game) and the start button. A device with a seat shows that player's hand and buttons. A device without a seat — the host as table, or anyone who joined as spectator — shows the public table in the TV theme: seats, table cards, status, round result, no hand. The intended setup: cast or mirror the table device to the TV, every player uses their own phone. If the host wants to play on the device that is mirrored, a second device has to be the table (join as spectator).
 
-**One device.** `LocalScriptedGame` asks for the names (`useLobbyPlayers`, `STORAGE_KEYS.TABLETOP_CARD_PLAYERS`) and covers the screen with `HandoverCover` (`modules/pass-and-play`) whenever another seat has to act.
+**One device.** `LocalScriptedGame` asks for the names (`useLobbyPlayers`, the shared `STORAGE_KEYS.LOBBY_PLAYERS`; `TABLETOP_CARD_PLAYERS` is read once as migration) and covers the screen with `HandoverCover` (`modules/pass-and-play`) whenever another seat has to act.
 
 ## 2. Script contract (`logic/scriptTypes.ts`)
 

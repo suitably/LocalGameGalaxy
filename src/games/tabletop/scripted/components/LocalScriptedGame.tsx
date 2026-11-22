@@ -33,7 +33,7 @@ export const LocalScriptedGame: React.FC<{ scriptId: string }> = ({ scriptId }) 
   useEffect(() => saveSession(SCOPE, state), [state]);
 
   const lobby = useLobbyPlayers({
-    storageKey: STORAGE_KEYS.TABLETOP_CARD_PLAYERS,
+    migrateFrom: [STORAGE_KEYS.TABLETOP_CARD_PLAYERS],
     defaultPlayers: ['Spieler 1', 'Spieler 2', 'Spieler 3'],
     minPlayers: script.minPlayers,
     maxPlayers: script.maxPlayers,

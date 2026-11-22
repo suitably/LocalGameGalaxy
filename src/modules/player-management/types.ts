@@ -6,11 +6,10 @@ export interface LobbyPlayerItem {
   isRemote?: boolean;
 }
 
+/** An old per-game roster key; `remoteAfterFirst` marks every player but the first as remote. */
+export type RosterMigrationSource = string | { key: string; remoteAfterFirst?: boolean };
+
 export interface UseLobbyPlayersOptions {
-  /**
-   * LocalStorage key to persist player names across reloads.
-   */
-  storageKey: string;
   /**
    * Initial default players if no saved players exist.
    * Can be strings or LobbyPlayerItem objects.
@@ -25,9 +24,10 @@ export interface UseLobbyPlayersOptions {
    */
   maxPlayers?: number;
   /**
-   * Optional legacy storage keys to migrate from if storageKey is empty.
+   * The game's old roster keys, read once (in order) while the shared roster
+   * (`STORAGE_KEYS.LOBBY_PLAYERS`) does not exist yet. Never written or deleted.
    */
-  legacyStorageKeys?: string[];
+  migrateFrom?: RosterMigrationSource[];
 }
 
 export interface UseLobbyPlayersResult {
@@ -37,6 +37,8 @@ export interface UseLobbyPlayersResult {
   togglePlayerRemote: (name: string) => void;
   setPlayers: React.Dispatch<React.SetStateAction<LobbyPlayerItem[]>>;
   hasMinPlayers: boolean;
+  /** `minPlayers ≤ players ≤ maxPlayers`; the shared roster can hold more than this game allows. */
+  hasValidCount: boolean;
   canAddMore: boolean;
   minPlayers: number;
   maxPlayers?: number;

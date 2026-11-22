@@ -24,9 +24,9 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
     players: lobbyPlayers,
     addPlayer,
     removePlayer,
-    hasMinPlayers,
+    hasValidCount,
   } = useLobbyPlayers({
-    storageKey: STORAGE_KEYS.CARDS_LOBBY_PLAYERS,
+    migrateFrom: [STORAGE_KEYS.CARDS_LOBBY_PLAYERS],
     defaultPlayers: ['Spieler 1', 'Spieler 2', 'Spieler 3'],
     minPlayers: 2,
     maxPlayers: 10,
@@ -111,7 +111,7 @@ export const CardsLobby: React.FC<CardsLobbyProps> = ({ onStartGame }) => {
             lobbyPlayers.map((p) => p.name),
           )
         }
-        disabled={!hasMinPlayers}
+        disabled={!hasValidCount}
         sx={{
           py: 1.5,
           fontWeight: 800,

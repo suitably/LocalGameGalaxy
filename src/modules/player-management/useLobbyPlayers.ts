@@ -1,51 +1,30 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { storage } from '../../lib/storage';
-import type {
-  LobbyPlayerItem,
-  UseLobbyPlayersOptions,
-  UseLobbyPlayersResult,
-} from './types';
-import {
-  addPlayerToLobby,
-  normalizePlayerItem,
-  removePlayerFromLobby,
-  togglePlayerRemoteInLobby,
-} from './playerLogic';
+import { storage, STORAGE_KEYS } from '../../lib/storage';
+import type { LobbyPlayerItem, UseLobbyPlayersOptions, UseLobbyPlayersResult } from './types';
+import { addPlayerToLobby, removePlayerFromLobby, togglePlayerRemoteInLobby } from './playerLogic';
+import { readLobbyRoster } from './lobbyRoster';
 
-export const useLobbyPlayers = (options: UseLobbyPlayersOptions): UseLobbyPlayersResult => {
+const readJson = (key: string): unknown => storage.getJson<unknown>(key, null);
+
+/**
+ * The one local player list of every pass-and-play lobby on this device. All games read and
+ * write `STORAGE_KEYS.LOBBY_PLAYERS`; a game's old key is only read once as migration.
+ */
+export const useLobbyPlayers = (options: UseLobbyPlayersOptions = {}): UseLobbyPlayersResult => {
   const {
-    storageKey,
     defaultPlayers = [{ name: 'Spieler 1' }, { name: 'Spieler 2' }],
     minPlayers = 2,
     maxPlayers,
-    legacyStorageKeys = [],
+    migrateFrom = [],
   } = options;
 
-  const [players, setPlayers] = useState<LobbyPlayerItem[]>(() => {
-    // 1. Primary storage check
-    const raw = storage.getJson<unknown>(storageKey, null);
-    if (Array.isArray(raw) && raw.length > 0) {
-      return raw.map((p) => normalizePlayerItem(p as string | LobbyPlayerItem));
-    }
+  const [players, setPlayers] = useState<LobbyPlayerItem[]>(() =>
+    readLobbyRoster(readJson, STORAGE_KEYS.LOBBY_PLAYERS, migrateFrom, defaultPlayers),
+  );
 
-    // 2. Legacy fallback check
-    for (const legacyKey of legacyStorageKeys) {
-      const legacyRaw = storage.getJson<unknown>(legacyKey, null);
-      if (Array.isArray(legacyRaw) && legacyRaw.length > 0) {
-        return legacyRaw.map((p, idx) =>
-          normalizePlayerItem(p as string | LobbyPlayerItem, idx > 0),
-        );
-      }
-    }
-
-    // 3. Default fallback
-    return defaultPlayers.map((p) => normalizePlayerItem(p));
-  });
-
-  // Persist whenever players or storageKey changes
   useEffect(() => {
-    storage.setJson(storageKey, players);
-  }, [players, storageKey]);
+    storage.setJson(STORAGE_KEYS.LOBBY_PLAYERS, players);
+  }, [players]);
 
   const addPlayer = useCallback(
     (name: string, isRemote = false): boolean => {
@@ -69,6 +48,9 @@ export const useLobbyPlayers = (options: UseLobbyPlayersOptions): UseLobbyPlayer
 
   const hasMinPlayers = useMemo(() => players.length >= minPlayers, [players.length, minPlayers]);
 
+  const hasValidCount =
+    players.length >= minPlayers && (maxPlayers === undefined || players.length <= maxPlayers);
+
   const canAddMore = useMemo(
     () => maxPlayers === undefined || players.length < maxPlayers,
     [players.length, maxPlayers],
@@ -81,6 +63,7 @@ export const useLobbyPlayers = (options: UseLobbyPlayersOptions): UseLobbyPlayer
     togglePlayerRemote,
     setPlayers,
     hasMinPlayers,
+    hasValidCount,
     canAddMore,
     minPlayers,
     maxPlayers,

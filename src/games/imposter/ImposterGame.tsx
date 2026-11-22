@@ -27,7 +27,7 @@ export const ImposterGame: React.FC = () => {
     addPlayer,
     removePlayer,
   } = useLobbyPlayers({
-    storageKey: STORAGE_KEYS.IMPOSTER_SETUP_PLAYERS,
+    migrateFrom: [STORAGE_KEYS.IMPOSTER_SETUP_PLAYERS],
     defaultPlayers: ['Spieler 1', 'Spieler 2', 'Spieler 3'],
     minPlayers: 3,
     maxPlayers: 20,

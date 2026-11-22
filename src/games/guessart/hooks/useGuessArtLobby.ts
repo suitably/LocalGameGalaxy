@@ -18,12 +18,14 @@ export const useGuessArtLobby = () => {
     togglePlayerRemote,
     hasMinPlayers,
   } = useLobbyPlayers({
-    storageKey: STORAGE_KEYS.GUESSART_LOBBY_PLAYERS,
     defaultPlayers: [
       { name: 'Player 1', isRemote: false },
       { name: 'Player 2', isRemote: false },
     ],
-    legacyStorageKeys: [STORAGE_KEYS.GUESSART_LOBBY_PLAYERS_LEGACY],
+    migrateFrom: [
+      STORAGE_KEYS.GUESSART_LOBBY_PLAYERS,
+      { key: STORAGE_KEYS.GUESSART_LOBBY_PLAYERS_LEGACY, remoteAfterFirst: true },
+    ],
     minPlayers: 2,
   });
 

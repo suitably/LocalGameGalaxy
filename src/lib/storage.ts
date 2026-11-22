@@ -120,6 +120,7 @@ export const STORAGE_KEYS = {
 
   // Imposter game settings
   IMPOSTER_SETTINGS: 'imposter-setup-settings',
+  /** Pre-phase-5 roster, read once as migration into `LOBBY_PLAYERS` (never written). */
   IMPOSTER_SETUP_PLAYERS: 'imposter-setup-players',
   IMPOSTER_SEEN_INFO: 'imposter-has-seen-info',
 
@@ -147,8 +148,9 @@ export const STORAGE_KEYS = {
   WORDLE_DICTIONARY_ONLY: 'galaxy_wordle_dictionary_only',
 
   // Cards
+  /** Pre-phase-5 roster, read once as migration into `LOBBY_PLAYERS` (never written). */
   CARDS_LOBBY_PLAYERS: 'cards_lobby_players',
-  /** Player names for scripted card games on one device (Spieltisch). */
+  /** Pre-phase-5 Spieltisch roster, read once as migration into `LOBBY_PLAYERS` (never written). */
   TABLETOP_CARD_PLAYERS: 'tabletop_card_players',
   /** '1' = run the Lua scripts of imported Workshop games on this host (experimental, #705). */
   TABLETOP_LUA_RUNTIME: 'tabletop_lua_runtime',
@@ -168,13 +170,21 @@ export const STORAGE_KEYS = {
 
   // GuessArt
   GUESSART_SEEN_INFO: 'guessart_seen_info',
+  /** Pre-phase-5 roster, read once as migration into `LOBBY_PLAYERS` (never written). */
   GUESSART_LOBBY_PLAYERS: 'guessart_lobby_players_v2',
-  /** Pre-v2 roster key, only read as a migration source by `useLobbyPlayers`. */
+  /** Pre-v2 roster key (all but the first player remote), read once as migration. */
   GUESSART_LOBBY_PLAYERS_LEGACY: 'guessart_lobby_players',
 
   // Storyteller
+  /** Pre-phase-5 roster, read once as migration into `LOBBY_PLAYERS` (never written). */
   STORYTELLER_LOBBY_PLAYERS: 'storyteller_lobby_players',
   STORYTELLER_LOBBY_MODIFIERS: 'storyteller_lobby_modifiers',
+
+  /**
+   * The one local player list every pass-and-play lobby shares (`useLobbyPlayers`, phase 5 of
+   * GAME-CATALOG-RESTRUCTURE). The per-game roster keys above are only read once as migration.
+   */
+  LOBBY_PLAYERS: 'lobby_players',
 
   // Universal Party
   PARTY_MY_PLAYER_ID: 'party_my_player_id',
