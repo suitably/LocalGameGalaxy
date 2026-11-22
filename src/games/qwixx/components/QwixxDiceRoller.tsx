@@ -126,7 +126,7 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
             {renderDie('white1', dice.white1)}
             {renderDie('white2', dice.white2)}
             <Typography
-              aria-label={t('games.qwixx.white_sum', 'White Sum (All)')}
+              aria-label={t('games.qwixx.white_sum')}
               fontWeight="bold"
               color="primary"
               sx={{
@@ -157,7 +157,7 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
             }}
           >
             <Typography variant="caption" color="text.secondary" display="block">
-              {t('games.qwixx.white_sum', 'White Sum (All)')}
+              {t('games.qwixx.white_sum')}
             </Typography>
             <Typography variant="h6" fontWeight="bold" color="primary" sx={{ lineHeight: 1.2 }}>
               {whiteSum}
@@ -168,7 +168,7 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
             variant="contained"
             color="primary"
             startIcon={<CasinoIcon />}
-            aria-label={t('games.qwixx.roll', 'Roll')}
+            aria-label={t('games.qwixx.roll')}
             onClick={handleRollClick}
             disabled={disabled || isRolling || animating}
             sx={{
@@ -182,7 +182,7 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
             }}
           >
             <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-              {animating ? t('games.qwixx.rolling', 'Rolling...') : t('games.qwixx.roll', 'Roll')}
+              {animating ? t('games.qwixx.rolling') : t('games.qwixx.roll')}
             </Box>
           </Button>
         </Box>

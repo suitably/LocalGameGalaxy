@@ -105,12 +105,12 @@ export const QwixxBonusLegend: React.FC<{ shields?: number }> = ({ shields }) =>
           }}
         >
           <AutoAwesomeIcon sx={{ fontSize: '1.1rem' }} />
-          {t('games.qwixx.bonus_legend_title', 'Bonus-Symbole & Effekte')}
+          {t('games.qwixx.bonus_legend_title')}
         </Typography>
         {shields !== undefined && (
           <Chip
             icon={<ShieldIcon sx={{ color: 'primary.main !important' }} />}
-            label={`${t('games.qwixx.active_shields', 'Aktive Schutzschilde')}: ${shields}`}
+            label={`${t('games.qwixx.active_shields')}: ${shields}`}
             size="small"
             variant="outlined"
             sx={{
@@ -131,11 +131,8 @@ export const QwixxBonusLegend: React.FC<{ shields?: number }> = ({ shields }) =>
       >
         <LegendItem
           icon={<ShieldIcon sx={{ color: 'primary.text', fontSize: '1.4rem' }} />}
-          title={t('games.qwixx.bonus_shield_title', 'Schutzschild')}
-          description={t(
-            'games.qwixx.bonus_shield_desc',
-            'Fängt den nächsten Fehlwurf automatisch ab (-5 Pkt vermieden).',
-          )}
+          title={t('games.qwixx.bonus_shield_title')}
+          description={t('games.qwixx.bonus_shield_desc')}
         />
         <LegendItem
           icon={
@@ -151,19 +148,13 @@ export const QwixxBonusLegend: React.FC<{ shields?: number }> = ({ shields }) =>
               <AddCircleIcon sx={{ fontSize: '1rem' }} />
             </Box>
           }
-          title={t('games.qwixx.bonus_self_title', 'Sofort-Kreuz')}
-          description={t(
-            'games.qwixx.bonus_self_desc',
-            'Setzt sofort das nächste freie Kreuz in dieser Reihe.',
-          )}
+          title={t('games.qwixx.bonus_self_title')}
+          description={t('games.qwixx.bonus_self_desc')}
         />
         <LegendItem
           icon={<PartnerDots />}
-          title={t('games.qwixx.bonus_partner_title', 'Partner-Kreuz')}
-          description={t(
-            'games.qwixx.bonus_partner_desc',
-            'Setzt sofort ein Kreuz in der Zielfarbe (Rot 8➔Gelb, Gelb 3➔Blau, Grün 5➔Rot, Blau 11➔Grün).',
-          )}
+          title={t('games.qwixx.bonus_partner_title')}
+          description={t('games.qwixx.bonus_partner_desc')}
         />
       </Box>
     </Paper>

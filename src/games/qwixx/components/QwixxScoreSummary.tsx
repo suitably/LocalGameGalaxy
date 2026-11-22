@@ -38,10 +38,10 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
   const { palette } = useTheme();
   const scores = calculateTotalScore(sheet);
   const labels: Record<RowColor, string> = {
-    red: t('games.qwixx.red', 'Red'),
-    yellow: t('games.qwixx.yellow', 'Yellow'),
-    green: t('games.qwixx.green', 'Green'),
-    blue: t('games.qwixx.blue', 'Blue'),
+    red: t('games.qwixx.red'),
+    yellow: t('games.qwixx.yellow'),
+    green: t('games.qwixx.green'),
+    blue: t('games.qwixx.blue'),
   };
 
   return (
@@ -71,7 +71,7 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
 
         {sheet.sheetType === 'longo' && sheet.luckyNumbers && (
           <Box
-            title={t('games.qwixx.lucky_numbers', 'Glückszahlen')}
+            title={t('games.qwixx.lucky_numbers')}
             sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 0.8 }, flexShrink: 0 }}
           >
             <LocalFloristIcon sx={{ fontSize: '1.1rem', color: 'secondary.main' }} />
@@ -83,7 +83,7 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
                 display: { xs: 'none', sm: 'inline' },
               }}
             >
-              {t('games.qwixx.lucky_numbers', 'Glückszahlen')}:
+              {t('games.qwixx.lucky_numbers')}:
             </Typography>
             {sheet.luckyNumbers.map((n, i) => (
               <Chip
@@ -130,7 +130,7 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
             <>
               <Operator>+</Operator>
               <QwixxScoreTile
-                label={t('games.qwixx.stairs', 'Treppe')}
+                label={t('games.qwixx.stairs')}
                 value={scores.stairsBonus}
                 color={palette.primary.main}
                 minWidth={52}
@@ -141,7 +141,7 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
 
           <Operator>-</Operator>
           <QwixxScoreTile
-            label={t('games.qwixx.misses', 'Misses')}
+            label={t('games.qwixx.misses')}
             value={scores.missesPenalty}
             color={palette.error.main}
           />
@@ -157,7 +157,7 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
               textAlign: 'center',
               minWidth: { xs: 52, sm: 70 },
             }}
-            aria-label={t('games.qwixx.total', 'TOTAL')}
+            aria-label={t('games.qwixx.total')}
           >
             <Typography
               variant="caption"
@@ -167,7 +167,7 @@ export const QwixxScoreSummary: React.FC<QwixxScoreSummaryProps> = ({
                 fontWeight: 'bold',
               }}
             >
-              {t('games.qwixx.total', 'TOTAL')}
+              {t('games.qwixx.total')}
             </Typography>
             <Typography
               variant="h5"

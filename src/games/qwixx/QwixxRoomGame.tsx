@@ -43,7 +43,7 @@ const noop = () => {};
 
 export const QwixxRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
   const { t } = useTranslation();
-  usePageTitle(t('games.qwixx.title', 'Qwixx'));
+  usePageTitle(t('games.qwixx.title'));
   const { room, state, dispatch, synced } = usePartyRoomGame({
     gameKey: 'qwixx',
     roomId,
@@ -104,7 +104,7 @@ export const QwixxRoomGame: React.FC<{ roomId: string }> = ({ roomId }) => {
             onClick={() => dispatch({ type: 'NEW_GAME', gameId: generateUUID() })}
             sx={{ minHeight: 44 }}
           >
-            {t('games.qwixx.new_game', 'Neues Spiel')}
+            {t('games.qwixx.new_game')}
           </Button>
         </Box>
       )}

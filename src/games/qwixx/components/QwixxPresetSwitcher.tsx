@@ -20,7 +20,7 @@ export const QwixxPresetSwitcher: React.FC<QwixxPresetSwitcherProps> = ({
     <Box sx={{ my: 0.75, width: '100%' }} onClick={(e) => e.stopPropagation()}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
         <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 'bold' }}>
-          {t('games.qwixx.select_preset', 'Block-Layout:')}
+          {t('games.qwixx.select_preset')}
         </Typography>
         <Button
           size="small"
@@ -40,7 +40,7 @@ export const QwixxPresetSwitcher: React.FC<QwixxPresetSwitcherProps> = ({
             fontWeight: 'bold',
           }}
         >
-          {t('games.qwixx.random_block_in_mode', 'Zufall')}
+          {t('games.qwixx.random_block_in_mode')}
         </Button>
       </Box>
       <ToggleButtonGroup

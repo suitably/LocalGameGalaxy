@@ -24,7 +24,7 @@ export const QwixxSheetChips: React.FC<QwixxSheetChipsProps> = ({
   onPickRandomSheet,
 }) => {
   const { t } = useTranslation();
-  const randomLabel = t('games.qwixx.random_mode', 'Zufall');
+  const randomLabel = t('games.qwixx.random_mode');
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>

@@ -132,14 +132,14 @@ export const QwixxSheetCard: React.FC<QwixxSheetCardProps> = ({
             {isCurrent && (
               <Chip
                 size="small"
-                label={t('games.qwixx.active_badge', 'Aktiv')}
+                label={t('games.qwixx.active_badge')}
                 color="success"
                 variant="outlined"
                 icon={<CheckCircleIcon />}
                 sx={{ height: 22, fontSize: '0.75rem', ...hideOnPhone }}
               />
             )}
-            <Tooltip title={t('games.qwixx.view_rules', 'Regeln lesen')}>
+            <Tooltip title={t('games.qwixx.view_rules')}>
               <IconButton
                 size="small"
                 onClick={(e) => {
@@ -181,7 +181,7 @@ export const QwixxSheetCard: React.FC<QwixxSheetCardProps> = ({
               onClick={onReroll}
               sx={{ fontSize: '0.75rem', height: 26, textTransform: 'none', fontWeight: 'bold' }}
             >
-              {t('games.qwixx.reroll_layout', 'Neu mischen')}
+              {t('games.qwixx.reroll_layout')}
             </Button>
           </Box>
         )}
@@ -208,9 +208,7 @@ export const QwixxSheetCard: React.FC<QwixxSheetCardProps> = ({
           size="small"
           sx={{ mt: 'auto', borderRadius: 2, ...hideOnPhone }}
         >
-          {isCurrent
-            ? t('games.qwixx.active_badge', 'Aktiv')
-            : t('games.qwixx.apply_sheet', 'Block auswählen')}
+          {isCurrent ? t('games.qwixx.active_badge') : t('games.qwixx.apply_sheet')}
         </Button>
       </CardActionArea>
     </Card>

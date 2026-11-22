@@ -37,10 +37,10 @@ export const QwixxLockButton: React.FC<QwixxLockButtonProps> = ({
   // Always tappable: a row another player closed is closed here too, just without the bonus.
   const highlighted = isLocked || canLock;
   const label = isLocked
-    ? t('common.a11y.unlock_row', 'Unlock row')
+    ? t('common.a11y.unlock_row')
     : canLock
-      ? t('common.a11y.lock_row', 'Lock row')
-      : t('games.qwixx.close_row_by_other', 'Close row (closed by another player, no point)');
+      ? t('common.a11y.lock_row')
+      : t('games.qwixx.close_row_by_other');
   const lockedBorder = hasBonus ? `2px solid ${tone.ink}` : `2px dashed ${tone.ink}`;
 
   return (

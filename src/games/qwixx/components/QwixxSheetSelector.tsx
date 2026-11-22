@@ -58,17 +58,14 @@ export const QwixxSheetSelector: React.FC<QwixxSheetSelectorProps> = ({
                   fontWeight="bold"
                   sx={{ fontSize: { xs: '1.05rem', sm: undefined }, lineHeight: 1.3 }}
                 >
-                  {t('games.qwixx.select_sheet_title', 'Wähle deinen Qwixx-Block')}
+                  {t('games.qwixx.select_sheet_title')}
                 </Typography>
                 <Typography
                   variant="caption"
                   color="text.secondary"
                   sx={{ display: { xs: 'none', sm: 'block' } }}
                 >
-                  {t(
-                    'games.qwixx.select_sheet_subtitle',
-                    'Entdecke offizielle Editionen, alternative Layouts und Randomizer-Modi',
-                  )}
+                  {t('games.qwixx.select_sheet_subtitle')}
                 </Typography>
               </Box>
             </Box>
@@ -79,7 +76,7 @@ export const QwixxSheetSelector: React.FC<QwixxSheetSelectorProps> = ({
               size="small"
               startIcon={<CasinoIcon />}
               onClick={state.handleGlobalRandom}
-              aria-label={t('games.qwixx.random_block_button', 'Zufälliger Block')}
+              aria-label={t('games.qwixx.random_block_button')}
               sx={{
                 fontWeight: 'bold',
                 borderRadius: 2,
@@ -90,7 +87,7 @@ export const QwixxSheetSelector: React.FC<QwixxSheetSelectorProps> = ({
               }}
             >
               <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                {t('games.qwixx.random_block_button', 'Zufälliger Block')}
+                {t('games.qwixx.random_block_button')}
               </Box>
             </Button>
           </Box>
@@ -122,7 +119,7 @@ export const QwixxSheetSelector: React.FC<QwixxSheetSelectorProps> = ({
 
         <DialogActions sx={{ p: { xs: 1, sm: 2 } }}>
           <Button onClick={onClose} color="inherit">
-            {t('common.close', 'Schließen')}
+            {t('common.close')}
           </Button>
         </DialogActions>
       </Dialog>

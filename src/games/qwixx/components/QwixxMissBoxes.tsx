@@ -33,7 +33,7 @@ export const QwixxMissBoxes: React.FC<QwixxMissBoxesProps> = ({
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
       <Typography variant="body2" color="text.secondary" fontWeight="bold">
-        {t('games.qwixx.misses_label', 'Misses (-5):')}
+        {t('games.qwixx.misses_label')}
       </Typography>
       <Box sx={{ display: 'flex', gap: 0.75 }}>
         {Array.from({ length: MAX_MISSES }, (_, i) => i + 1).map((index) => {
@@ -42,7 +42,7 @@ export const QwixxMissBoxes: React.FC<QwixxMissBoxesProps> = ({
             <ButtonBase
               key={index}
               onClick={() => handleTap(index)}
-              aria-label={t('common.a11y.miss_box', { no: index, defaultValue: 'Miss {{no}}' })}
+              aria-label={t('common.a11y.miss_box', { no: index })}
               aria-pressed={isMissed}
               disabled={disabled}
               sx={{

@@ -62,7 +62,7 @@ export const QwixxRulesDialog: React.FC<QwixxRulesDialogProps> = ({
               {t(def.nameKey)}
             </Typography>
           </Box>
-          <IconButton onClick={onClose} size="small" aria-label={t('common.close', 'Schließen')}>
+          <IconButton onClick={onClose} size="small" aria-label={t('common.close')}>
             <CloseIcon />
           </IconButton>
         </Box>
@@ -117,7 +117,7 @@ export const QwixxRulesDialog: React.FC<QwixxRulesDialogProps> = ({
             fontWeight="bold"
             sx={{ display: 'block', mb: 0.5 }}
           >
-            {t('games.qwixx.preview_title', 'VORSCHAU DES WERTUNGSBLOCKS')}
+            {t('games.qwixx.preview_title')}
           </Typography>
           <QwixxMiniSheet sheetType={sheetType} presetIndex={currentPreset} />
         </Box>
@@ -137,12 +137,12 @@ export const QwixxRulesDialog: React.FC<QwixxRulesDialogProps> = ({
             <CheckCircleOutlineIcon color="success" sx={{ fontSize: 20, mt: 0.2 }} />
             <Box>
               <Typography variant="subtitle2" fontWeight="bold">
-                {t('games.qwixx.rules_crossing_title', 'Ankreuz- & Würfelregeln')}
+                {t('games.qwixx.rules_crossing_title')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {t(
                   `games.qwixx.rules.${sheetType}.crossing`,
-                  t('games.qwixx.rules.default.crossing', 'Kreuze von links nach rechts setzen.'),
+                  t('games.qwixx.rules.default.crossing'),
                 )}
               </Typography>
             </Box>
@@ -152,12 +152,12 @@ export const QwixxRulesDialog: React.FC<QwixxRulesDialogProps> = ({
             <EmojiEventsIcon sx={{ fontSize: 20, mt: 0.2, color: 'primary.text' }} />
             <Box>
               <Typography variant="subtitle2" fontWeight="bold">
-                {t('games.qwixx.rules_scoring_title', 'Wertung & Besonderheiten')}
+                {t('games.qwixx.rules_scoring_title')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {t(
                   `games.qwixx.rules.${sheetType}.scoring`,
-                  t('games.qwixx.rules.default.scoring', 'Punkte steigen mit Anzahl der Kreuze.'),
+                  t('games.qwixx.rules.default.scoring'),
                 )}
               </Typography>
             </Box>
@@ -167,13 +167,10 @@ export const QwixxRulesDialog: React.FC<QwixxRulesDialogProps> = ({
             <LightbulbIcon sx={{ fontSize: 20, mt: 0.2, color: 'secondary.main' }} />
             <Box>
               <Typography variant="subtitle2" fontWeight="bold">
-                {t('games.qwixx.rules_tips_title', 'Taktik-Tipp')}
+                {t('games.qwixx.rules_tips_title')}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {t(
-                  `games.qwixx.rules.${sheetType}.tip`,
-                  t('games.qwixx.rules.default.tip', 'Plane deine Kreuze vorausschauend.'),
-                )}
+                {t(`games.qwixx.rules.${sheetType}.tip`, t('games.qwixx.rules.default.tip'))}
               </Typography>
             </Box>
           </Box>
@@ -182,7 +179,7 @@ export const QwixxRulesDialog: React.FC<QwixxRulesDialogProps> = ({
 
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose} color="inherit">
-          {t('common.close', 'Schließen')}
+          {t('common.close')}
         </Button>
         {onSelectAndPlay && (
           <Button
@@ -193,7 +190,7 @@ export const QwixxRulesDialog: React.FC<QwixxRulesDialogProps> = ({
             variant="contained"
             color="primary"
           >
-            {t('games.qwixx.play_this_sheet', 'Diesen Block spielen')}
+            {t('games.qwixx.play_this_sheet')}
           </Button>
         )}
       </DialogActions>

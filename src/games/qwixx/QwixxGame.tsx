@@ -21,7 +21,7 @@ initQwixxI18n();
 
 export const QwixxGame: React.FC = () => {
   const { t } = useTranslation();
-  usePageTitle(t('games.qwixx.title', 'Qwixx'));
+  usePageTitle(t('games.qwixx.title'));
   useWakeLock(true);
 
   const game = useQwixxState();
@@ -76,9 +76,9 @@ export const QwixxGame: React.FC = () => {
 
       <ConfirmDialog
         open={resetDialogOpen}
-        title={t('games.qwixx.new_game', 'Neues Spiel')}
-        message={t('games.qwixx.reset_confirm', 'Möchtest du deinen Zettel wirklich zurücksetzen?')}
-        confirmText={t('games.qwixx.reset_action', 'Zettel zurücksetzen')}
+        title={t('games.qwixx.new_game')}
+        message={t('games.qwixx.reset_confirm')}
+        confirmText={t('games.qwixx.reset_action')}
         confirmColor="error"
         onCancel={() => setResetDialogOpen(false)}
         onConfirm={() => {

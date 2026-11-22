@@ -72,9 +72,7 @@ export const QwixxSheet: React.FC<QwixxSheetProps> = ({
           }}
         >
           <StarIcon sx={{ fontSize: '1rem' }} />
-          {isRedYellow
-            ? t('games.qwixx.bonus_red_yellow', 'Bonusreihe Rot-Gelb (zählt für beide Reihen)')
-            : t('games.qwixx.bonus_green_blue', 'Bonusreihe Grün-Blau (zählt für beide Reihen)')}
+          {isRedYellow ? t('games.qwixx.bonus_red_yellow') : t('games.qwixx.bonus_green_blue')}
         </Typography>
         <QwixxRow
           color={isRedYellow ? 'red' : 'green'}

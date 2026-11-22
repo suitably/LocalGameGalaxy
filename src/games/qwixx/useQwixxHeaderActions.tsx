@@ -26,20 +26,18 @@ export const useQwixxHeaderActions = ({
   useEffect(() => {
     setMenuItems([
       {
-        label: showDice
-          ? t('games.qwixx.hide_dice', 'Würfel')
-          : t('games.qwixx.show_dice', 'Würfel'),
+        label: showDice ? t('games.qwixx.hide_dice') : t('games.qwixx.show_dice'),
         icon: showDice ? <CasinoIcon /> : <CasinoOutlinedIcon />,
         action: onToggleDice,
         showAlways: true,
       },
       {
-        label: t('common.passAndPlay.players', 'Spieler'),
+        label: t('common.passAndPlay.players'),
         icon: <GroupRoundedIcon />,
         action: onPlayers,
       },
       {
-        label: t('games.qwixx.new_game', 'Neues Spiel'),
+        label: t('games.qwixx.new_game'),
         icon: <ReplayIcon />,
         action: onNewGame,
         showAlways: true,
