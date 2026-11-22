@@ -44,6 +44,7 @@ This bundle describes **one code base**: the GitHub repository `suitably/LocalGa
 | Why Dexie, BitTorrent signaling, Capacitor, audio-separator                  | [adr/index.md](adr/index.md)                                                                                           |
 | Open, agent-ready refactoring tasks                                          | [tasks/index.md](tasks/index.md)                                                                                       |
 | **Known contradictions, broken things, decisions pending**                   | [open-questions.md](open-questions.md)                                                                                 |
+| Manual checks only the maintainer can run (devices, accounts, upstream)      | [owner-checks.md](owner-checks.md)                                                                                     |
 | Dated audits and evaluations                                                 | [reports/index.md](reports/index.md)                                                                                   |
 | Edit this knowledge base (front matter, links, log, archive)                 | [workflows/knowledge-base-maintenance.md](workflows/knowledge-base-maintenance.md)                                     |
 | Split a task across subagents to save tokens                                 | [workflows/multi-agent-token-strategy.md](workflows/multi-agent-token-strategy.md)                                     |
