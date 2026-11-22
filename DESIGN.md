@@ -201,7 +201,7 @@ Each area is the couch in its piece colour with the area symbol on the (taller) 
 | Party  | `area-party.svg`  | `piece.pink`   | Speech bubble    | `party`, `drawing`, `social_deduction` |
 | Rätsel | `area-puzzle.svg` | `piece.purple` | 2×2 tiles        | `puzzle`                               |
 
-The mapping lives in `src/lib/areas.ts`; the hub filters by area.
+Areas are listed in `src/lib/areas.ts`; each catalogue entry names its area (ADR-0011). The hub groups its tiles into one section per area, tools last, and filters by area and by "with own phones".
 
 - **Area lock-up** (hub section headers, area pages): area couch + small "Nexumia" caption above the area name in the display face.
 - **Area label** (filters, chips, game cards): pill in the piece colour, ink symbol (20px) + ink area name, 600–700 weight. Labels are UI, not logos: no couch inside.

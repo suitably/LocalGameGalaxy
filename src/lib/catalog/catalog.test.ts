@@ -79,22 +79,35 @@ describe('game catalogue', { timeout: 30000 }, () => {
 
   // Characterisation (phase 0 of docs/tasks/GAME-CATALOG-RESTRUCTURE.md): what each screen
   // lists. Change these only together with an intended change of the screen.
-  it('lists the hub tiles', async () => {
-    const { hubEntries } = await load();
-    expect(hubEntries().map((e) => e.id)).toEqual([
-      'darts',
+  it('lists the hub tiles: every game, places last; tools apart', async () => {
+    const { hubGames, hubTools } = await load();
+    expect(hubGames().map((e) => e.id)).toEqual([
+      'kniffel',
+      'knister',
+      'qwixx',
+      'garticphone',
       'guessart',
       'storyteller',
       'melodiq',
       'melodiq-notes',
       'werewolf',
       'imposter',
-      'party',
       'wordle',
       'sudoku',
+      'standard-cards',
+      'liars-dice',
+      'checkers',
+      'schwimmen',
+      'durak',
+      'arschloch',
+      'skat',
+      'maumau',
+      'schwarzer-peter',
+      'golf',
+      'cabo',
       'tabletop',
-      'drawpot',
     ]);
+    expect(hubTools().map((e) => e.id)).toEqual(['darts', 'cards', 'drawpot']);
   });
 
   it('lists the Spieltisch sections', async () => {
@@ -113,7 +126,7 @@ describe('game catalogue', { timeout: 30000 }, () => {
     ]);
     expect(ids('dice')).toEqual(['kniffel', 'knister', 'qwixx']);
     expect(ids('trackers')).toEqual(['cards']);
-    expect(ids('hidden')).toEqual(['garticphone']);
+    expect(ids('hidden')).toEqual(['party']);
   });
 
   it('lists the party picker tabs', async () => {

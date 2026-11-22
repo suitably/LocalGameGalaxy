@@ -17,7 +17,9 @@ export const definition = defineGame({
   area: 'party',
   color: 'pink',
   modes: ['party_room'],
-  listing: 'hidden',
+  listing: 'hub',
+  // No page of its own outside a room: the tile opens the party lobby with the game chosen.
+  opens: '/party?launch=garticphone',
   party: { gameType: 'garticphone', descKey: 'party.gartic_desc' },
   icon: <PhoneForwardedIcon sx={{ fontSize: 72, mb: 2 }} />,
   component: <Page />,

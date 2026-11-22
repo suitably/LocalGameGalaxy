@@ -24,7 +24,19 @@
       "music": "Music",
       "social_deduction": "Social Deduction",
       "party": "Party"
-    }
+    },
+    "party_room": {
+      "title": "Party room",
+      "desc": "One room for the whole evening: everyone joins with their own phone by QR code, the TV shows the game.",
+      "open": "Open room"
+    },
+    "filter": {
+      "own_devices": "With own phones"
+    },
+    "sections": {
+      "tools": "Helpers"
+    },
+    "empty": "No games match this selection."
   },
   "games": {
     "darts": {
@@ -1017,7 +1029,7 @@
     },
     "tabletop": {
       "title": "Game Table",
-      "description": "Card, board and dice games: one device passed around or everyone on their own phone, with hidden hands.",
+      "description": "Your own and imported games, the free table and every card, board and dice game in one place.",
       "subtitle": "Card, board and dice games – one device for everyone or everyone on their own.",
       "manage_games": "Manage Games",
       "starter_games": "Classics & Templates",

@@ -3,10 +3,11 @@ import { Box, Card, CardActionArea, Typography, useTheme } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { AreaSymbol } from '../../components/brand/AreaSymbol';
 import type { AreaDefinition } from '../../lib/areas';
-import type { GameDefinition } from '../../lib/gameRegistry';
+import type { CatalogEntry } from '../../lib/catalog/types';
 
 interface HubGameCardProps {
-  game: GameDefinition;
+  /** A catalogue entry; entries with a page bring their own icon, Spieltisch games show the area symbol. */
+  game: CatalogEntry & { icon?: React.ReactNode };
   area: AreaDefinition;
   onOpen: () => void;
 }
@@ -48,9 +49,11 @@ export const HubGameCard: React.FC<HubGameCardProps> = ({ game, area, onOpen }) 
               flexShrink: 0,
             }}
           >
-            {React.cloneElement(game.icon as React.ReactElement<{ sx?: Record<string, unknown> }>, {
-              sx: { fontSize: { xs: 32, sm: 36 }, color: ink },
-            })}
+            {React.isValidElement<{ sx?: Record<string, unknown> }>(game.icon) ? (
+              React.cloneElement(game.icon, { sx: { fontSize: { xs: 32, sm: 36 }, color: ink } })
+            ) : (
+              <AreaSymbol area={game.area} color={ink} cut={fill} size={34} />
+            )}
           </Box>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 0.5, sm: 1.5 } }}>
             <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75, color: fill }}>
@@ -70,7 +73,7 @@ export const HubGameCard: React.FC<HubGameCardProps> = ({ game, area, onOpen }) 
               </Typography>
             </Box>
             <Typography variant="h5" component="h2">
-              {t(game.titleKey)}
+              {t(game.titleKey, game.title)}
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {t(game.descKey)}

@@ -1,14 +1,25 @@
+/**
+ * The hub: party room first, then every game grouped by area, tools last (ADR-0011) [ID: COMP-HUB]
+ */
 import React, { useState } from 'react';
 import { Typography, Box, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { hubEntries } from '../../lib/catalog/views';
-import { areaById, areasFor } from '../../lib/areas';
+import { hubGames, hubTools, routeOf } from '../../lib/catalog/views';
+import { areasFor } from '../../lib/areas';
 import { PWAInstallBanner } from '../../components/pwa';
+import { PlayModeSheet } from '../../games/tabletop/components/views/PlayModeSheet';
 import nexumiaBanner from '../../assets/nexumia-banner.svg';
 import nexumiaBannerInk from '../../assets/nexumia-banner-ink.svg';
 import { HubAreaFilter, type AreaFilter } from './HubAreaFilter';
-import { HubGameCard } from './HubGameCard';
+import { HubPartyRoom } from './HubPartyRoom';
+import { HubSection } from './HubSection';
+import { hubSections } from './hubSections';
+import { useHubOpen } from './useHubOpen';
+
+const GAMES = hubGames();
+const TOOLS = hubTools();
+const AREAS_WITH_GAMES = areasFor([...GAMES, ...TOOLS]);
 
 export const Hub: React.FC = () => {
   const { t } = useTranslation();
@@ -16,11 +27,11 @@ export const Hub: React.FC = () => {
   // Colour marks sit on dark surfaces; light mode uses the ink lock-up (DESIGN.md §8.1).
   const isLight = useTheme().palette.mode === 'light';
   const [selectedArea, setSelectedArea] = useState<AreaFilter>('all');
-
-  const hubGames = hubEntries();
-  const displayedGames =
-    selectedArea === 'all' ? hubGames : hubGames.filter((g) => g.area === selectedArea);
-  const areas = areasFor(hubGames);
+  const [ownDevices, setOwnDevices] = useState(false);
+  const { open, choosing, choose, close } = useHubOpen();
+  const sections = hubSections(GAMES, TOOLS, selectedArea, ownDevices);
+  const heading = (s: (typeof sections)[number]) =>
+    s.area ? (selectedArea === 'all' ? t(s.area.labelKey) : undefined) : t('hub.sections.tools');
 
   return (
     <Box sx={{ width: '100%', animation: 'fadeIn 0.4s ease-out' }}>
@@ -55,28 +66,30 @@ export const Hub: React.FC = () => {
       {/* PWA Mobile Fullscreen Install Callout */}
       <PWAInstallBanner />
 
-      <HubAreaFilter areas={areas} selected={selectedArea} onSelect={setSelectedArea} />
+      <HubPartyRoom onOpen={() => navigate(routeOf('party') ?? '/party')} />
 
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: {
-            xs: '1fr',
-            sm: 'repeat(2, 1fr)',
-            md: 'repeat(3, 1fr)',
-          },
-          gap: { xs: 2.5, sm: 3, md: 4 },
-        }}
-      >
-        {displayedGames.map((game) => (
-          <HubGameCard
-            key={game.id}
-            game={game}
-            area={areaById(game.area)}
-            onOpen={() => navigate(`/${game.route}`)}
-          />
-        ))}
-      </Box>
+      <HubAreaFilter
+        areas={AREAS_WITH_GAMES}
+        selected={selectedArea}
+        onSelect={setSelectedArea}
+        ownDevices={ownDevices}
+        onToggleOwnDevices={() => setOwnDevices((v) => !v)}
+      />
+
+      {sections.map((s) => (
+        <HubSection key={s.key} title={heading(s)} entries={s.entries} onOpen={open} />
+      ))}
+      {sections.length === 0 && (
+        <Typography color="text.secondary" textAlign="center" sx={{ py: 4 }}>
+          {t('hub.empty')}
+        </Typography>
+      )}
+
+      <PlayModeSheet
+        gameTitle={choosing ? t(choosing.titleKey, choosing.title) : null}
+        onClose={close}
+        onChoose={choose}
+      />
 
       <style>
         {`
