@@ -14,7 +14,7 @@
  * replaced; a host that left the roster is.
  */
 import { markHost, resolveHostId, seatOf, upsertHost, upsertJoiningPlayer } from './partyRoster';
-import type { PartyPlayer, PartyRoomState } from './universalPartyManager';
+import type { PartyPlayer, PartyRoomState, PlayerHelpers } from './universalPartyManager';
 
 export const HOST_TIMEOUT_MS = 20_000;
 /** Longer than this without any message from the room means this device was cut off. */
@@ -58,7 +58,7 @@ export function createdState(
 /** State after this device joins (or renames itself in) a room; `known` is the last state seen. */
 export function joinedState(
   roomId: string,
-  { myId, name, spectator, isRoomCreator }: JoinOptions,
+  { myId, name, spectator, isRoomCreator, helpers }: JoinOptions,
   known: PartyRoomState | null,
   now: number,
 ): { state: PartyRoomState; player: PartyPlayer } {
@@ -76,6 +76,7 @@ export function joinedState(
     name,
     isHost: isRoomCreator || hostId === myId,
     spectator,
+    helpers,
     now,
   });
   return { player, state: { ...base, players, hostId, updatedAt: now } };
@@ -86,6 +87,8 @@ interface JoinOptions {
   name: string;
   spectator?: boolean;
   isRoomCreator: boolean;
+  /** New help grant; `undefined` keeps the known one, `null` removes it. */
+  helpers?: PlayerHelpers | null;
 }
 
 /**

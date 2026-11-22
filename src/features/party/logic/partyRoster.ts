@@ -5,7 +5,7 @@
  */
 import { ensureUniquePlayerName } from '../../../lib/disambiguateName';
 import { PIECE_ORDER, piecePalette } from '../../../themeTokens';
-import type { PartyPlayer, PartyRoomState } from './universalPartyManager';
+import type { PartyPlayer, PartyRoomState, PlayerHelpers } from './universalPartyManager';
 
 export const PLAYER_COLORS: readonly string[] = PIECE_ORDER.map((c) => piecePalette[c]);
 
@@ -210,7 +210,9 @@ export function addPresencePlayer(
   if (index >= 0) {
     const known = state.players[index];
     const unchanged =
-      player.name === known.name && Boolean(player.spectator) === Boolean(known.spectator);
+      player.name === known.name &&
+      Boolean(player.spectator) === Boolean(known.spectator) &&
+      player.helpers === known.helpers;
     if (changedAt(player) <= changedAt(known) || unchanged) return null;
     const players = [...state.players];
     const name = ensureUniquePlayerName(player.name, state.players, player.id);
@@ -218,6 +220,7 @@ export function addPresencePlayer(
       ...known,
       name,
       spectator: player.spectator,
+      helpers: player.helpers,
       slot: player.spectator ? undefined : known.slot,
       updatedAt: changedAt(player),
     };
@@ -257,13 +260,23 @@ export function upsertJoiningPlayer(
     name,
     isHost,
     spectator,
+    helpers,
     now,
-  }: { playerId: string; name: string; isHost: boolean; spectator?: boolean; now: number },
+  }: {
+    playerId: string;
+    name: string;
+    isHost: boolean;
+    spectator?: boolean;
+    /** `undefined` keeps the known grant, `null` removes it. */
+    helpers?: PlayerHelpers | null;
+    now: number;
+  },
 ): { players: PartyPlayer[]; player: PartyPlayer } {
   const index = players.findIndex((p) => p.id === playerId);
   const known = index >= 0 ? players[index] : null;
   // A rename keeps the role unless the caller picks one.
   const watching = spectator ?? known?.spectator;
+  const grant = helpers === undefined ? known?.helpers : (helpers ?? undefined);
   const player: PartyPlayer = {
     id: playerId,
     name: ensureUniquePlayerName(name || 'Spieler', players, playerId),
@@ -275,6 +288,7 @@ export function upsertJoiningPlayer(
     updatedAt: now,
     slot: watching ? undefined : known?.slot,
     ...(watching ? { spectator: true } : {}),
+    ...(grant ? { helpers: grant } : {}),
   };
   const next = [...players];
   if (index >= 0) next[index] = player;
@@ -288,6 +302,8 @@ export interface RoomPlayer {
   name: string;
   seat: number;
   isHost: boolean;
+  /** Who may play for this player (`logic/partyHelp.ts`). */
+  helpers?: PlayerHelpers;
 }
 
 /** Seated players in seat order; spectators are left out. */
@@ -305,6 +321,7 @@ export function roomPlayersOf(
       name: p.name,
       seat: seatOf(state.players, p.id),
       isHost: p.id === state.hostId,
+      ...(p.helpers ? { helpers: p.helpers } : {}),
     }))
     .sort((a, b) => a.seat - b.seat);
 }

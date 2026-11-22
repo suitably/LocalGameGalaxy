@@ -25,7 +25,12 @@ export interface PartyPlayer {
   slot?: number;
   /** Watches table games without a seat (`role=spectator`); gets no slot. */
   spectator?: boolean;
+  /** Who may play for this player (granted on the player's own device): everyone in the room. */
+  helpers?: PlayerHelpers;
 }
+
+/** `'all'`: every other player in the room may act for this player (`logic/partyHelp.ts`). */
+export type PlayerHelpers = 'all';
 
 /** Dice games played in the room, everyone on their own sheet (`modules/room-game`). */
 export type RoomDiceGame = 'knister' | 'kniffel' | 'qwixx';
@@ -218,7 +223,12 @@ class UniversalPartyManager {
     return { roomId, hostId, state };
   }
 
-  public joinParty(roomId: string, playerName: string, spectator?: boolean): PartyRoomState {
+  public joinParty(
+    roomId: string,
+    playerName: string,
+    spectator?: boolean,
+    helpers?: PlayerHelpers | null,
+  ): PartyRoomState {
     const pId = this.getMyPlayerId();
     const normalizedRoomId = roomId.toUpperCase().trim();
     const isRoomCreator = Boolean(
@@ -234,7 +244,7 @@ class UniversalPartyManager {
           );
     const { state: updatedState, player: playerEntry } = joinedState(
       normalizedRoomId,
-      { myId: pId, name: playerName, spectator, isRoomCreator },
+      { myId: pId, name: playerName, spectator, isRoomCreator, helpers },
       known,
       Date.now(),
     );
@@ -250,6 +260,13 @@ class UniversalPartyManager {
 
   public updatePlayerName(roomId: string, newName: string): PartyRoomState {
     return this.joinParty(roomId, newName);
+  }
+
+  /** Lets the others in the room play for this device's player (or stops it). */
+  public setHelpers(roomId: string, helpers: PlayerHelpers | null): PartyRoomState | null {
+    const myId = this.getMyPlayerId();
+    const me = this.currentRoomState?.players.find((p) => p.id === myId);
+    return me ? this.joinParty(roomId, me.name, me.spectator, helpers) : null;
   }
 
   /** Switches this device between playing (seat) and watching; keeps its name. */

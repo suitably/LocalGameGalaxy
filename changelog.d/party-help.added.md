@@ -1,0 +1,1 @@
+- **Play for someone else**: in the party lobby a player can allow others to play for them; in Kniffel anyone in the room can then roll and score that player's turn from their own device, and the helped player sees who played for them.

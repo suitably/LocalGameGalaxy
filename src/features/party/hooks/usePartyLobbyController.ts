@@ -163,6 +163,12 @@ export function usePartyLobbyController(initialRoomId?: string) {
     if (updated) setRoomState(updated);
   };
 
+  /** Lets the others in the room play for this device's player (`logic/partyHelp.ts`). */
+  const setAcceptHelp = (on: boolean) => {
+    const updated = universalPartyManager.setHelpers(roomId, on ? 'all' : null);
+    if (updated) setRoomState(updated);
+  };
+
   const handleSaveCustomRoom = () => {
     const cleaned = customRoomInput
       .toUpperCase()
@@ -238,6 +244,7 @@ export function usePartyLobbyController(initialRoomId?: string) {
     getGameRoute,
     handleSaveName,
     setWatching,
+    setAcceptHelp,
     handleSaveCustomRoom,
     handleCopyLink,
     handleLaunchGame,
