@@ -6,7 +6,7 @@
 import SportsEsportsIcon from '@mui/icons-material/SportsEsportsRounded';
 import { defineGame, lazyNamed } from '../../lib/catalog/defineGame';
 
-const Page = lazyNamed(() => import('./index'), 'WerewolfGame');
+const Page = lazyNamed(() => import('./index'), 'WerewolfEntry');
 
 export const definition = defineGame({
   id: 'werewolf',
@@ -15,7 +15,8 @@ export const definition = defineGame({
   title: 'Werwolf',
   kind: 'game',
   area: 'party',
-  modes: ['pass_and_play'],
+  modes: ['pass_and_play', 'party_room'],
+  party: { gameType: 'werewolf', descKey: 'party.werewolf_desc' },
   listing: 'hub',
   icon: <SportsEsportsIcon sx={{ fontSize: 72, mb: 2 }} />,
   component: <Page />,

@@ -9,8 +9,8 @@ generated:
   at: 2026-09-27T10:00:00Z
   by: previous-agent
 verified:
-  at: 2026-11-16
-  method: '2026-11-16: component tree in section 2 re-checked against src/games/werewolf/components with ls and grep; other sections not re-verified since the 2026-10-18 audit'
+  at: 2026-11-22
+  method: '2026-11-16: component tree in section 2 re-checked against src/games/werewolf/components with ls and grep; other sections not re-verified since the 2026-10-18 audit; 2026-11-22: section 6a written from the party-room code'
 ---
 
 # Werewolf Game Module Architecture
@@ -145,6 +145,18 @@ The `useTTS` hook in `src/games/werewolf/hooks/` provides narrator voice during 
 - Reads `narratorText` from each role's `RoleDefinition`.
 - Queues speech utterances to play sequentially as each role's turn begins.
 - Respects user settings (enable/disable TTS, voice selection).
+
+---
+
+## 6a. Party room (roles on own phones)
+
+`WerewolfEntry.tsx` opens `WerewolfRoomGame.tsx` when the URL carries `?room=` (party picker, `launch=werewolf`), else the pass-and-play game.
+
+- **Sync:** `useWerewolfRoom` → `useSealedPartyGame` → `SealedRoomPeer` (`src/modules/room-game/sealed/`, channel `werewolf-sealed_<room>`). The host keeps the only state; each device receives only its own view (`logic/werewolfRoomView.ts`): its role, its pack (wolves), its lover, its seer findings, and during its night turn the table without roles (the witch also sees the wolves' victim). Game over reveals every role.
+- **Rules:** `logic/werewolfRoom.ts` wraps `GameState` and delegates to `gameReducer` (`START_GAME`, `NIGHT_ACTION`, `NEXT_PHASE`, `KILL_PLAYER`, `HUNTER_SHOT`). The room layer adds: role-card confirmation (`SEEN`; the last one starts night 1), the night order (`getNightRolesToAct` filtered to roles with phone turns) with one step per called role (`NIGHT_ACTION` / `NIGHT_SKIP`, only from that role's living players; any wolf decides for the pack), votes on every living phone (most votes → `KILL_PLAYER`, a tie kills nobody), the hunter shooting from their own phone, a win check at dawn, and spending the witch's poison (the engine does not).
+- **Roles:** `ROOM_ROLES` = villager, werewolf, seer, witch, hunter, cupid, guardian, little girl, wise, angel. Other roles and custom roles stay pass-and-play only (their views read roles from the table or need more than one turn per night).
+- **Narrator:** the host device speaks (`useTTS`): nightfall, each called role, the morning with the deaths, the vote, the hunter. With "this device only narrates" the host gets no role and shows the table (a TV or game master).
+- **Setup:** `components/room/RoomSetup.tsx` reuses `useWerewolfSetup` (with `allowedRoles`), `RoleSelectionGrid` (`only`) and `WerewolfCountStepper`; the settings are shared with pass-and-play (`WEREWOLF_SETTINGS`).
 
 ---
 

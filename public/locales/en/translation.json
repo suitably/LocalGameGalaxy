@@ -317,7 +317,38 @@
       "winner_label": "Winner: {{winner}}",
       "werewolves_win": "The Werewolves Win!",
       "villagers_win": "The Villagers Win!",
-      "play_again": "Play Again"
+      "play_again": "Play Again",
+      "room": {
+        "connecting": "Connecting to the party room …",
+        "waiting_setup": "The host picks the roles and starts the game.",
+        "players_one": "{{count}} player",
+        "players_other": "{{count}} players",
+        "narrator_only": "This device only narrates (no role)",
+        "too_few": "At least {{count}} players are needed.",
+        "card_hidden": "Your role is face down. Look at it where nobody can read along.",
+        "hide_role": "Hide role",
+        "seen": "Got it",
+        "seen_waiting": "{{count}} of {{total}} have read their role.",
+        "pack": "Your pack: {{names}}",
+        "pack_decides": "Agree silently – the first choice counts.",
+        "lovers": "You are in love with {{names}}.",
+        "insight": "{{name}} is: {{role}}",
+        "night_title": "Night {{round}}",
+        "sleep": "Close your eyes and wait.",
+        "dead_hint": "You are dead – stay silent.",
+        "narrate_night": "Night falls. Everyone close your eyes.",
+        "narrate_call": "{{role}}, wake up.",
+        "narrate_day": "Morning. Tonight died: {{names}}.",
+        "narrate_day_none": "Morning. Nobody died tonight.",
+        "narrate_vote": "Time to vote. Everyone votes on their phone.",
+        "narrate_hunter": "{{name}} was the hunter and takes a last shot.",
+        "discuss_hint": "Discuss who the werewolves are, then vote.",
+        "start_vote": "Start voting",
+        "your_vote": "Your vote: {{name}}",
+        "voted_waiting": "{{count}} of {{total}} have voted.",
+        "roles_title": "All roles",
+        "table_hint": "This device shows the table"
+      }
     },
     "imposter": {
       "title": "Imposter",
@@ -2663,6 +2694,7 @@
     "gameSelectionDesc": "Choose between party classics (Gartic Phone, GuessArt), dice games and synced tabletop card and board games.",
     "chooseAndStart": "Choose game & start",
     "partyModeChip": "Party mode",
+    "werewolf_desc": "Every role secretly on its own phone, the host narrates.",
     "imposter_desc": "Everyone sees their word secretly on their own phone – who only has the hint?"
   },
   "gartic": {

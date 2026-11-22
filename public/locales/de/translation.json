@@ -317,7 +317,38 @@
       "winner_label": "Gewinner: {{winner}}",
       "werewolves_win": "Die Werwölfe gewinnen!",
       "villagers_win": "Die Dorfbewohner gewinnen!",
-      "play_again": "Nochmal spielen"
+      "play_again": "Nochmal spielen",
+      "room": {
+        "connecting": "Verbinde mit dem Partyraum …",
+        "waiting_setup": "Der Host wählt die Rollen und startet das Spiel.",
+        "players_one": "{{count}} Spieler",
+        "players_other": "{{count}} Spieler",
+        "narrator_only": "Dieses Gerät erzählt nur (keine Rolle)",
+        "too_few": "Es braucht mindestens {{count}} Spieler.",
+        "card_hidden": "Deine Rolle liegt verdeckt. Schau sie dir an, wo niemand mitliest.",
+        "hide_role": "Rolle verdecken",
+        "seen": "Verstanden",
+        "seen_waiting": "{{count}} von {{total}} haben ihre Rolle gelesen.",
+        "pack": "Dein Rudel: {{names}}",
+        "pack_decides": "Einigt euch lautlos – die erste Wahl zählt.",
+        "lovers": "Du bist verliebt in {{names}}.",
+        "insight": "{{name}} ist: {{role}}",
+        "night_title": "Nacht {{round}}",
+        "sleep": "Augen zu und warten.",
+        "dead_hint": "Du bist tot – bleib still.",
+        "narrate_night": "Die Nacht bricht herein. Alle schließen die Augen.",
+        "narrate_call": "{{role}}, wach auf.",
+        "narrate_day": "Es wird Morgen. Heute Nacht starb: {{names}}.",
+        "narrate_day_none": "Es wird Morgen. Heute Nacht ist niemand gestorben.",
+        "narrate_vote": "Zeit für die Abstimmung. Alle stimmen auf ihrem Handy ab.",
+        "narrate_hunter": "{{name}} war der Jäger und gibt einen letzten Schuss ab.",
+        "discuss_hint": "Diskutiert, wer die Werwölfe sind, dann stimmt ab.",
+        "start_vote": "Abstimmung starten",
+        "your_vote": "Deine Stimme: {{name}}",
+        "voted_waiting": "{{count}} von {{total}} haben abgestimmt.",
+        "roles_title": "Alle Rollen",
+        "table_hint": "Dieses Gerät zeigt den Tisch"
+      }
     },
     "imposter": {
       "title": "Imposter",
@@ -2663,6 +2694,7 @@
     "gameSelectionDesc": "Wähle zwischen Party-Klassikern (Gartic Phone, GuessArt), Würfelspielen und synchronisierten Tabletop-Karten- & Brettspielen.",
     "chooseAndStart": "Spiel wählen & starten",
     "partyModeChip": "Party-Modus",
+    "werewolf_desc": "Jede Rolle geheim auf dem eigenen Handy, der Host erzählt.",
     "imposter_desc": "Jeder sieht sein Wort geheim auf dem eigenen Handy – wer hat nur den Hinweis?"
   },
   "gartic": {

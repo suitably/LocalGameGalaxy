@@ -1,0 +1,1 @@
+- **Werewolf in the party room**: every player gets their role on their own phone, wolves, seer, witch, cupid and guardian act on their phones when the narrator calls them, everyone votes on their own device and the hunter shoots from theirs; the host's device narrates by voice and can stay out of the game as narrator only. No phone receives anyone else's role.
