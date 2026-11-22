@@ -31,7 +31,7 @@ export const TargetSelectionDialog: React.FC<TargetSelectionDialogProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>{t('games.tabletop.choose_target', 'Ablageziel wählen')}</DialogTitle>
+      <DialogTitle>{t('games.tabletop.choose_target')}</DialogTitle>
       <DialogContent dividers sx={{ p: 1 }}>
         <List disablePadding>
           {targets.map((target) => (
@@ -55,7 +55,7 @@ export const TargetSelectionDialog: React.FC<TargetSelectionDialogProps> = ({
         </List>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t('common.cancel', 'Abbrechen')}</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
       </DialogActions>
     </Dialog>
   );

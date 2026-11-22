@@ -37,17 +37,10 @@ export const TableGameCard: React.FC<{
         )}
         <Box display="flex" gap={0.5} flexWrap="wrap">
           {modes.includes('shared_device') && (
-            <Chip
-              size="small"
-              label={t('games.tabletop.mode_shared_device', 'Ein Gerät für alle')}
-            />
+            <Chip size="small" label={t('games.tabletop.mode_shared_device')} />
           )}
           {modes.includes('own_devices') && (
-            <Chip
-              size="small"
-              variant="outlined"
-              label={t('games.tabletop.mode_own_devices', 'Jeder am eigenen Gerät')}
-            />
+            <Chip size="small" variant="outlined" label={t('games.tabletop.mode_own_devices')} />
           )}
         </Box>
       </CardActionArea>

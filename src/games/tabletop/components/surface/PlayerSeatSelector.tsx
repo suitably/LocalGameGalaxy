@@ -47,7 +47,7 @@ export const PlayerSeatSelector: React.FC<PlayerSeatSelectorProps> = ({
       }}
     >
       <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 700, mr: 0.5 }}>
-        {t('games.tabletop.seat', 'Sitz')}:
+        {t('games.tabletop.seat')}:
       </Typography>
 
       {seats.map((seat) => {
@@ -103,12 +103,12 @@ export const PlayerSeatSelector: React.FC<PlayerSeatSelectorProps> = ({
         );
       })}
 
-      <Tooltip title={t('games.tabletop.spectatorSeat', 'Zuschauen (keine Hand, kein Ziehen)')}>
+      <Tooltip title={t('games.tabletop.spectatorSeat')}>
         <IconButton
           size="small"
           onClick={() => onSelectSeat(SPECTATOR_SEAT_ID)}
           aria-pressed={isSpectatorSeat(currentSeatId)}
-          aria-label={t('games.tabletop.spectator', 'Zuschauer')}
+          aria-label={t('games.tabletop.spectator')}
           sx={{
             p: 0.5,
             color: isSpectatorSeat(currentSeatId) ? 'text.primary' : 'text.secondary',
@@ -120,7 +120,7 @@ export const PlayerSeatSelector: React.FC<PlayerSeatSelectorProps> = ({
       </Tooltip>
 
       {onToggleHud && (
-        <Tooltip title={t('games.tabletop.playerHud', 'Spieler-Übersicht')}>
+        <Tooltip title={t('games.tabletop.playerHud')}>
           <IconButton
             size="small"
             onClick={onToggleHud}

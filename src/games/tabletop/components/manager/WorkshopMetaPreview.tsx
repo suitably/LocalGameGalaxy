@@ -60,7 +60,7 @@ export const WorkshopMetaPreview: React.FC<WorkshopMetaPreviewProps> = ({ meta }
           <Chip size="small" label={`${sizeMb} MB`} variant="outlined" />
           <Chip
             size="small"
-            label={t('games.tabletop.workshop_subs', '{{count}} Abos', {
+            label={t('games.tabletop.workshop_subs', {
               count: meta.subscriptions,
             })}
             variant="outlined"

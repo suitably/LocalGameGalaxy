@@ -121,21 +121,21 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
                 <>
                   <VisibilityIcon fontSize="small" sx={{ color: 'success.main' }} />
                   <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
-                    {zone.label || t('games.tabletop.zoneRevealed', 'Aufgedeckt')}
+                    {zone.label || t('games.tabletop.zoneRevealed')}
                   </Typography>
                 </>
               ) : isOwner ? (
                 <>
                   <VisibilityIcon fontSize="small" sx={{ color: 'secondary.main' }} />
                   <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
-                    {zone.label || t('games.tabletop.zoneOwnerView', 'Verdeckt (Deine Sicht)')}
+                    {zone.label || t('games.tabletop.zoneOwnerView')}
                   </Typography>
                 </>
               ) : (
                 <>
                   <VisibilityOffIcon fontSize="small" sx={{ color: 'warning.main' }} />
                   <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
-                    {zone.label || t('games.tabletop.zoneHidden', 'Verdeckter Bereich')}
+                    {zone.label || t('games.tabletop.zoneHidden')}
                   </Typography>
                 </>
               )}
@@ -175,9 +175,7 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
               )}
             </ListItemIcon>
             <ListItemText>
-              {activeZone.revealed
-                ? t('games.tabletop.hideZone', 'Wieder verbergen')
-                : t('games.tabletop.revealZone', 'Aufdecken (für alle zeigen)')}
+              {activeZone.revealed ? t('games.tabletop.hideZone') : t('games.tabletop.revealZone')}
             </ListItemText>
           </MenuItem>
         )}
@@ -192,7 +190,7 @@ export const HiddenZoneLayer: React.FC<HiddenZoneLayerProps> = ({
             <ListItemIcon sx={{ color: 'error.main' }}>
               <DeleteOutlineIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText>{t('games.tabletop.deleteZone', 'Bereich löschen')}</ListItemText>
+            <ListItemText>{t('games.tabletop.deleteZone')}</ListItemText>
           </MenuItem>
         )}
       </Menu>

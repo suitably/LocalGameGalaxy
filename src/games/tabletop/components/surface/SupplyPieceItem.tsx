@@ -23,7 +23,7 @@ export const SupplyPieceItem: React.FC<SupplyPieceItemProps> = ({
   const { t } = useTranslation();
 
   return (
-    <Tooltip title={t('games.tabletop.dragToPlace', 'Ziehen, um aufs Spielbrett zu legen')}>
+    <Tooltip title={t('games.tabletop.dragToPlace')}>
       <Box
         onPointerDown={onPointerDown}
         sx={{

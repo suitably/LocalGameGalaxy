@@ -19,12 +19,8 @@ interface ToggleProps {
 /** Eye button with a state label; its pointer-down never starts a zone drag. */
 export const ZoneRevealToggle: React.FC<ToggleProps> = ({ revealed, onToggle }) => {
   const { t } = useTranslation();
-  const label = revealed
-    ? t('games.tabletop.zoneVisibleToAll', 'Für alle sichtbar')
-    : t('games.tabletop.zoneOnlyYou', 'Nur du');
-  const action = revealed
-    ? t('games.tabletop.hideZone', 'Wieder verbergen')
-    : t('games.tabletop.revealZone', 'Aufdecken (für alle zeigen)');
+  const label = revealed ? t('games.tabletop.zoneVisibleToAll') : t('games.tabletop.zoneOnlyYou');
+  const action = revealed ? t('games.tabletop.hideZone') : t('games.tabletop.revealZone');
   return (
     <Button
       size="small"

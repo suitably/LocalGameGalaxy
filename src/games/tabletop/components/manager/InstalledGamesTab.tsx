@@ -76,22 +76,17 @@ export const InstalledGamesTab: React.FC<InstalledGamesTabProps> = ({
     <Stack spacing={3}>
       <Box display="flex" justifyContent="flex-end" alignItems="center" gap={1} flexWrap="wrap">
         <Button variant="outlined" startIcon={<CloudDownloadIcon />} onClick={onImportWorkshop}>
-          {t('games.tabletop.import_workshop', 'Steam Workshop importieren')}
+          {t('games.tabletop.import_workshop')}
         </Button>
         {supportsLocalFolder ? (
           <Button variant="outlined" startIcon={<FolderOpenIcon />} onClick={onOpenLocalFolder}>
-            {t('games.tabletop.open_local_folder', 'Lokalen Spielordner öffnen')}
+            {t('games.tabletop.open_local_folder')}
           </Button>
         ) : (
-          <Tooltip
-            title={t(
-              'games.tabletop.local_folder_not_supported',
-              'Dein Browser unterstützt keinen lokalen Ordner-Zugriff',
-            )}
-          >
+          <Tooltip title={t('games.tabletop.local_folder_not_supported')}>
             <span>
               <Button variant="outlined" disabled startIcon={<FolderOpenIcon />}>
-                {t('games.tabletop.open_local_folder', 'Lokalen Spielordner öffnen')}
+                {t('games.tabletop.open_local_folder')}
               </Button>
             </span>
           </Tooltip>
@@ -120,20 +115,17 @@ export const InstalledGamesTab: React.FC<InstalledGamesTabProps> = ({
         >
           <CloudOffIcon color="action" sx={{ fontSize: 40 }} />
           <Typography variant="body1" fontWeight={500}>
-            {t(
-              'games.tabletop.server_required',
-              'Verbinde den Tabletop-Companion-Server in den Einstellungen',
-            )}
+            {t('games.tabletop.server_required')}
           </Typography>
           <Button variant="contained" startIcon={<SettingsIcon />} onClick={handleOpenSettings}>
-            {t('games.tabletop.open_settings', 'Einstellungen öffnen')}
+            {t('games.tabletop.open_settings')}
           </Button>
         </Paper>
       ) : (
         <Box>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
             <Typography variant="subtitle1" fontWeight={700}>
-              {t('games.tabletop.server_games_title', 'Verfügbare Spiele ({{count}})', {
+              {t('games.tabletop.server_games_title', {
                 count: games.length,
               })}
             </Typography>
@@ -144,7 +136,7 @@ export const InstalledGamesTab: React.FC<InstalledGamesTabProps> = ({
               onClick={onRefresh}
               disabled={loading}
             >
-              {t('games.tabletop.refresh', 'Neu scannen')}
+              {t('games.tabletop.refresh')}
             </Button>
           </Box>
 
@@ -152,11 +144,8 @@ export const InstalledGamesTab: React.FC<InstalledGamesTabProps> = ({
             <ListSkeleton rows={3} rowHeight={72} />
           ) : games.length === 0 ? (
             <EmptyState
-              message={t(
-                'games.tabletop.no_games',
-                'Noch keine Spiele im Server-Verzeichnis gefunden.',
-              )}
-              actionLabel={t('games.tabletop.refresh', 'Neu scannen')}
+              message={t('games.tabletop.no_games')}
+              actionLabel={t('games.tabletop.refresh')}
               onAction={onRefresh}
             />
           ) : (

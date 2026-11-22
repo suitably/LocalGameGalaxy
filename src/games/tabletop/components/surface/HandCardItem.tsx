@@ -78,7 +78,7 @@ export const HandCardItem: React.FC<HandCardItemProps> = ({
       </Box>
 
       {card.deckId && onReturnToDeck && (
-        <Tooltip title={t('games.tabletop.returnToDeck', 'Zurück ins Deck')}>
+        <Tooltip title={t('games.tabletop.returnToDeck')}>
           <IconButton
             size="small"
             onClick={(e) => {

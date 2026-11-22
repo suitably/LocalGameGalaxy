@@ -79,9 +79,7 @@ export const GameManagerDialog: React.FC<GameManagerDialogProps> = ({
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-        <DialogTitle sx={{ pb: 1 }}>
-          {t('games.tabletop.manager_title', 'Tabletop Spiele verwalten')}
-        </DialogTitle>
+        <DialogTitle sx={{ pb: 1 }}>{t('games.tabletop.manager_title')}</DialogTitle>
 
         <DialogContent dividers sx={{ pt: 2.5 }}>
           {manager.notice && (
@@ -120,7 +118,7 @@ export const GameManagerDialog: React.FC<GameManagerDialogProps> = ({
 
         <DialogActions>
           <Button onClick={onClose} variant="outlined">
-            {t('common.close', 'Schließen')}
+            {t('common.close')}
           </Button>
         </DialogActions>
       </Dialog>

@@ -34,7 +34,7 @@ export const HandDockHeader: React.FC<HandDockHeaderProps> = ({
       <Box display="flex" alignItems="center" gap={0.75} mb={0.5} color="text.secondary">
         <VisibilityIcon sx={{ fontSize: 16 }} />
         <Typography variant="caption" sx={{ fontWeight: 600, letterSpacing: 0.5 }}>
-          {t('games.tabletop.spectator', 'Zuschauer')}
+          {t('games.tabletop.spectator')}
         </Typography>
       </Box>
     );
@@ -49,7 +49,7 @@ export const HandDockHeader: React.FC<HandDockHeaderProps> = ({
             clickable
             color={!showSupplies ? 'primary' : 'default'}
             onClick={() => onSelectTab('cards')}
-            label={`${t('games.tabletop.cards', 'Karten')} (${handCount})`}
+            label={`${t('games.tabletop.cards')} (${handCount})`}
             sx={chipSx}
           />
           <Chip
@@ -57,7 +57,7 @@ export const HandDockHeader: React.FC<HandDockHeaderProps> = ({
             clickable
             color={showSupplies ? 'primary' : 'default'}
             onClick={() => onSelectTab('supplies')}
-            label={`${t('games.tabletop.reserve', 'Vorrat')} (${supplyCount})`}
+            label={`${t('games.tabletop.reserve')} (${supplyCount})`}
             sx={chipSx}
           />
         </Box>
@@ -66,15 +66,15 @@ export const HandDockHeader: React.FC<HandDockHeaderProps> = ({
           variant="caption"
           sx={{ color: 'text.secondary', fontWeight: 600, letterSpacing: 0.5 }}
         >
-          {t('games.tabletop.yourHand', 'Deine Hand')} ({handCount})
+          {t('games.tabletop.yourHand')} ({handCount})
         </Typography>
       )}
       {onZoomHand && !showSupplies && (
-        <Tooltip title={t('games.tabletop.zoomHand', 'Ganze Hand vergrößern')}>
+        <Tooltip title={t('games.tabletop.zoomHand')}>
           <IconButton
             size="small"
             onClick={onZoomHand}
-            aria-label={t('games.tabletop.zoomHand', 'Ganze Hand vergrößern')}
+            aria-label={t('games.tabletop.zoomHand')}
             sx={{ p: 0.5 }}
           >
             <ZoomOutMapIcon sx={{ fontSize: 18 }} />

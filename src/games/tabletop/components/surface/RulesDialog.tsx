@@ -25,9 +25,7 @@ export const RulesDialog: React.FC<RulesDialogProps> = ({ open, onClose, ruleTex
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth scroll="paper">
-      <DialogTitle sx={{ fontWeight: 700 }}>
-        {t('games.tabletop.rulesDialogTitle', 'Spielregeln')}
-      </DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700 }}>{t('games.tabletop.rulesDialogTitle')}</DialogTitle>
       <DialogContent dividers sx={{ bgcolor: 'background.default' }}>
         {ruleText ? (
           <Box
@@ -87,14 +85,12 @@ export const RulesDialog: React.FC<RulesDialogProps> = ({ open, onClose, ruleTex
             }}
           />
         ) : (
-          <Typography color="text.secondary">
-            {t('games.tabletop.noRulesAvailable', 'Keine Regeln für dieses Spiel verfügbar.')}
-          </Typography>
+          <Typography color="text.secondary">{t('games.tabletop.noRulesAvailable')}</Typography>
         )}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} variant="contained" color="primary">
-          {t('common.close', 'Schließen')}
+          {t('common.close')}
         </Button>
       </DialogActions>
     </Dialog>

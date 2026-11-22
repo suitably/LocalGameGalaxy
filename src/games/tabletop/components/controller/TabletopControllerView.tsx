@@ -104,8 +104,8 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
             color="primary"
             label={
               isSpectator
-                ? t('games.tabletop.spectator', 'Zuschauer')
-                : t('games.tabletop.playerN', 'Spieler {{n}}', { n: (mySeat ?? 0) + 1 })
+                ? t('games.tabletop.spectator')
+                : t('games.tabletop.playerN', { n: (mySeat ?? 0) + 1 })
             }
           />
           <HandRequestsLayer
@@ -128,10 +128,10 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
           onChange={(_, next) => next && setViewMode(next)}
         >
           <ToggleButton value="hand">
-            <PanToolIcon sx={{ mr: 0.5, fontSize: 18 }} /> {t('games.tabletop.view_hand', 'Hand')}
+            <PanToolIcon sx={{ mr: 0.5, fontSize: 18 }} /> {t('games.tabletop.view_hand')}
           </ToggleButton>
           <ToggleButton value="board">
-            <MapIcon sx={{ mr: 0.5, fontSize: 18 }} /> {t('games.tabletop.view_board', 'Tisch')}
+            <MapIcon sx={{ mr: 0.5, fontSize: 18 }} /> {t('games.tabletop.view_board')}
           </ToggleButton>
           {myArea && (
             <ToggleButton value="area">
@@ -181,7 +181,7 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
                 }}
               >
                 <Typography variant="caption" color="text.secondary" textTransform="uppercase">
-                  {t('games.tabletop.current_table_card', 'Aktuelle Karte auf dem Tisch')}
+                  {t('games.tabletop.current_table_card')}
                 </Typography>
                 <Typography variant="h4" fontWeight={900} color="primary.text" sx={{ mt: 0.5 }}>
                   {topDiscardCard.frontContent.value}
@@ -189,10 +189,7 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
               </Box>
             ) : (
               <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-                {t(
-                  'games.tabletop.flick_hint',
-                  'Wische eine Karte nach oben, um sie auf den TV zu werfen!',
-                )}
+                {t('games.tabletop.flick_hint')}
               </Typography>
             )}
 

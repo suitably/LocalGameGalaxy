@@ -689,7 +689,8 @@
         "offerIncoming_other": "{{name}} bietet dir {{count}} Karten an",
         "offerAccept": "Nehmen",
         "offerRejected": "{{name}} hat deine Karten nicht genommen"
-      }
+      },
+      "description_label": "Beschreibung"
     }
   }
 }

@@ -55,7 +55,7 @@ export const TabletopPassAndPlay: React.FC<{
       ...seatPlayers,
       {
         id: SPECTATOR_SEAT_ID,
-        name: t('games.tabletop.spectator', 'Zuschauer'),
+        name: t('games.tabletop.spectator'),
         color: theme.palette.text.secondary,
       },
     ],

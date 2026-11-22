@@ -689,7 +689,8 @@
         "offerIncoming_other": "{{name}} offers you {{count}} cards",
         "offerAccept": "Take",
         "offerRejected": "{{name}} did not take your cards"
-      }
+      },
+      "description_label": "Description"
     }
   }
 }

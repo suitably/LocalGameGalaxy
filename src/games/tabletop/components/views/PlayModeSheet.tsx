@@ -68,20 +68,14 @@ export const PlayModeSheet: React.FC<{
         {option(
           'shared_device',
           <SwapHorizRoundedIcon />,
-          t('games.tabletop.mode_shared_device', 'Ein Gerät für alle'),
-          t(
-            'games.tabletop.mode_shared_device_hint',
-            'Reihum weitergeben – Handkarten bleiben beim Wechsel verdeckt.',
-          ),
+          t('games.tabletop.mode_shared_device'),
+          t('games.tabletop.mode_shared_device_hint'),
         )}
         {option(
           'own_devices',
           <QrCode2RoundedIcon />,
-          t('games.tabletop.mode_own_devices', 'Jeder am eigenen Gerät'),
-          t(
-            'games.tabletop.mode_own_devices_hint',
-            'Session öffnen, Mitspieler treten per QR-Code oder Link bei.',
-          ),
+          t('games.tabletop.mode_own_devices'),
+          t('games.tabletop.mode_own_devices_hint'),
         )}
       </Box>
     </Drawer>

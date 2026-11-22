@@ -64,20 +64,20 @@ export const GameCardItem: React.FC<GameCardItemProps> = ({
               {game.name}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {t('games.tabletop.by_author', 'von {{author}}', {
+              {t('games.tabletop.by_author', {
                 author: game.author || 'Community',
               })}{' '}
-              • {game.minPlayers}-{game.maxPlayers} {t('common.players', 'Spieler')}
+              • {game.minPlayers}-{game.maxPlayers} {t('common.players')}
             </Typography>
           </Box>
           <Box display="flex" gap={0.5}>
             {canPlayParty && (
-              <Tooltip title={t('games.tabletop.mode_party', 'Party-Modus')}>
+              <Tooltip title={t('games.tabletop.mode_party')}>
                 <Chip icon={<GroupsIcon />} size="small" color="primary" variant="outlined" />
               </Tooltip>
             )}
             {canPlayLocal && (
-              <Tooltip title={t('games.tabletop.mode_local', 'Lokal / Pass-and-Play')}>
+              <Tooltip title={t('games.tabletop.mode_local')}>
                 <Chip
                   icon={<PhoneIphoneIcon />}
                   size="small"
@@ -111,7 +111,7 @@ export const GameCardItem: React.FC<GameCardItemProps> = ({
             startIcon={<PlayArrowIcon />}
             onClick={handlePlayClick}
           >
-            {t('common.play', 'Spielen')}
+            {t('common.play')}
           </Button>
 
           <Menu
@@ -125,8 +125,7 @@ export const GameCardItem: React.FC<GameCardItemProps> = ({
                 onPlayParty(game.id);
               }}
             >
-              <GroupsIcon sx={{ mr: 1, fontSize: 20 }} />{' '}
-              {t('games.tabletop.play_party_choice', 'Im Party-Modus starten')}
+              <GroupsIcon sx={{ mr: 1, fontSize: 20 }} /> {t('games.tabletop.play_party_choice')}
             </MenuItem>
             <MenuItem
               onClick={() => {
@@ -135,7 +134,7 @@ export const GameCardItem: React.FC<GameCardItemProps> = ({
               }}
             >
               <PhoneIphoneIcon sx={{ mr: 1, fontSize: 20 }} />{' '}
-              {t('games.tabletop.play_local_choice', 'Lokal an diesem Gerät spielen')}
+              {t('games.tabletop.play_local_choice')}
             </MenuItem>
           </Menu>
 

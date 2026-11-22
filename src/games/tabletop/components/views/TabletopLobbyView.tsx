@@ -45,7 +45,7 @@ export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) 
     kind: 'tabletop',
     titleKey: '',
     title: g.name,
-    desc: t('games.tabletop.custom_game_meta', '{{min}}–{{max}} Spieler', {
+    desc: t('games.tabletop.custom_game_meta', {
       min: g.minPlayers,
       max: g.maxPlayers,
     }),
@@ -100,10 +100,7 @@ export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) 
           >
             <Box>
               <Typography variant="body2" color="text.secondary">
-                {t(
-                  'games.tabletop.subtitle',
-                  'Karten-, Brett- und Würfelspiele – auf einem Gerät für alle oder jeder am eigenen.',
-                )}
+                {t('games.tabletop.subtitle')}
               </Typography>
             </Box>
             <Button
@@ -111,18 +108,15 @@ export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) 
               startIcon={<SettingsIcon />}
               onClick={() => setManagerOpen(true)}
             >
-              {t('games.tabletop.manage_games', 'Spiele verwalten')}
+              {t('games.tabletop.manage_games')}
             </Button>
           </Box>
 
-          {section(t('games.tabletop.starter_games', 'Klassiker'), spieltischSection('starters'))}
-          {section(t('games.tabletop.card_games', 'Kartenspiele'), spieltischSection('cards'))}
-          {section(t('games.tabletop.dice_games', 'Würfelspiele'), spieltischSection('dice'))}
-          {section(
-            t('games.tabletop.score_trackers', 'Punktezähler'),
-            spieltischSection('trackers'),
-          )}
-          {section(t('games.tabletop.custom_games', 'Eigene & Importierte Spiele'), custom)}
+          {section(t('games.tabletop.starter_games'), spieltischSection('starters'))}
+          {section(t('games.tabletop.card_games'), spieltischSection('cards'))}
+          {section(t('games.tabletop.dice_games'), spieltischSection('dice'))}
+          {section(t('games.tabletop.score_trackers'), spieltischSection('trackers'))}
+          {section(t('games.tabletop.custom_games'), custom)}
         </Paper>
       </Container>
 

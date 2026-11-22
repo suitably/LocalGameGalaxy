@@ -55,8 +55,8 @@ export const TabletopToolbar: React.FC<TabletopToolbarProps> = ({
         <Tooltip
           title={
             isSelectionMode
-              ? t('games.tabletop.selectionModeActive', 'Auswahl-Modus beenden')
-              : t('games.tabletop.selectionMode', 'Mehrfachauswahl (Klick zum Auswählen)')
+              ? t('games.tabletop.selectionModeActive')
+              : t('games.tabletop.selectionMode')
           }
         >
           <IconButton
@@ -70,7 +70,7 @@ export const TabletopToolbar: React.FC<TabletopToolbarProps> = ({
       )}
 
       {onAddHiddenZone && (
-        <Tooltip title={t('games.tabletop.addHiddenZone', 'Verdeckten Bereich anlegen')}>
+        <Tooltip title={t('games.tabletop.addHiddenZone')}>
           <IconButton size="small" onClick={onAddHiddenZone}>
             <VisibilityOffIcon />
           </IconButton>

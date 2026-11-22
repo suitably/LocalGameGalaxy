@@ -61,18 +61,18 @@ export const CardZoomDialog: React.FC<CardZoomDialogProps> = ({
           <IconButton
             size="small"
             onClick={() => setPicked(null)}
-            aria-label={t('games.tabletop.backToHand', 'Zurück zur Hand')}
+            aria-label={t('games.tabletop.backToHand')}
           >
             <ArrowBackIcon />
           </IconButton>
         )}
         {card?.label ||
           (showHand
-            ? `${t('games.tabletop.yourHand', 'Deine Hand')} (${cards.length})`
-            : t('games.tabletop.cardZoom', 'Karte'))}
+            ? `${t('games.tabletop.yourHand')} (${cards.length})`
+            : t('games.tabletop.cardZoom'))}
         <IconButton
           onClick={close}
-          aria-label={t('common.close', 'Schließen')}
+          aria-label={t('common.close')}
           sx={{ position: 'absolute', right: 8, top: 8 }}
         >
           <CloseIcon />
@@ -116,7 +116,7 @@ export const CardZoomDialog: React.FC<CardZoomDialogProps> = ({
                 close();
               }}
             >
-              {t('games.tabletop.returnToDeck', 'Zurück ins Deck')}
+              {t('games.tabletop.returnToDeck')}
             </Button>
           )}
           {onPlay && (
@@ -128,7 +128,7 @@ export const CardZoomDialog: React.FC<CardZoomDialogProps> = ({
                 close();
               }}
             >
-              {t('games.tabletop.play_card', 'Auf Tisch legen')}
+              {t('games.tabletop.play_card')}
             </Button>
           )}
         </DialogActions>

@@ -52,12 +52,12 @@ export const CardHandDock: React.FC<CardHandDockProps> = ({
     >
       <Box display="flex" justifyContent="space-between" alignItems="center" gap={1}>
         <Typography variant="subtitle2" fontWeight={700} color="text.secondary">
-          {t('games.tabletop.my_hand', 'Meine Handkarten')} ({cards.length})
+          {t('games.tabletop.my_hand')} ({cards.length})
         </Typography>
 
         <Box display="flex" alignItems="center" gap={0.5}>
           {cards.length > 0 && (
-            <Tooltip title={t('games.tabletop.zoomHand', 'Ganze Hand vergrößern')}>
+            <Tooltip title={t('games.tabletop.zoomHand')}>
               <IconButton
                 size="small"
                 onClick={() =>
@@ -65,7 +65,7 @@ export const CardHandDock: React.FC<CardHandDockProps> = ({
                     selectedCardId ? { kind: 'card', cardId: selectedCardId } : { kind: 'hand' },
                   )
                 }
-                aria-label={t('games.tabletop.zoomHand', 'Ganze Hand vergrößern')}
+                aria-label={t('games.tabletop.zoomHand')}
               >
                 {selectedCardId ? <ZoomInIcon /> : <ZoomOutMapIcon />}
               </IconButton>
@@ -79,7 +79,7 @@ export const CardHandDock: React.FC<CardHandDockProps> = ({
               startIcon={<PlayArrowIcon />}
               onClick={onPlaySelected}
             >
-              {t('games.tabletop.play_card', 'Auf Tisch legen')}
+              {t('games.tabletop.play_card')}
             </Button>
           )}
         </Box>
@@ -88,10 +88,7 @@ export const CardHandDock: React.FC<CardHandDockProps> = ({
       {cards.length === 0 ? (
         <Box display="flex" justifyContent="center" alignItems="center" height={120}>
           <Typography variant="body2" color="text.secondary">
-            {t(
-              'games.tabletop.no_cards_in_hand',
-              'Keine Karten auf der Hand. Ziehe eine vom Stapel!',
-            )}
+            {t('games.tabletop.no_cards_in_hand')}
           </Typography>
         </Box>
       ) : (

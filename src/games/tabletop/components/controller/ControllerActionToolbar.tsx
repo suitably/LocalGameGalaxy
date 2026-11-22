@@ -46,7 +46,7 @@ export const ControllerActionToolbar: React.FC<ControllerActionToolbarProps> = (
           disabled={deck.cardIds.length === 0}
           sx={{ borderRadius: 3, fontWeight: 700 }}
         >
-          {deck.label || t('games.tabletop.draw', 'Ziehen')} ({deck.cardIds.length})
+          {deck.label || t('games.tabletop.draw')} ({deck.cardIds.length})
         </Button>
       ))}
 
@@ -60,7 +60,7 @@ export const ControllerActionToolbar: React.FC<ControllerActionToolbarProps> = (
           onClick={() => onRollDice(dice.map((d) => d.id))}
           sx={{ borderRadius: 3, fontWeight: 700 }}
         >
-          {t('games.tabletop.roll_dice', 'Würfeln')} ({dice.length})
+          {t('games.tabletop.roll_dice')} ({dice.length})
         </Button>
       )}
 

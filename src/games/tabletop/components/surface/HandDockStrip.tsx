@@ -105,7 +105,7 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
       {isSpectator ? (
         <Box display="flex" alignItems="center" justifyContent="center" flex={1}>
           <Typography variant="caption" sx={{ color: 'text.secondary', textAlign: 'center' }}>
-            {t('games.tabletop.spectatorHint', 'Du schaust zu und kannst keine Karten ziehen.')}
+            {t('games.tabletop.spectatorHint')}
           </Typography>
         </Box>
       ) : showSupplies ? (
@@ -123,7 +123,7 @@ export const HandDockStrip: React.FC<HandDockStripProps> = ({ state, dispatch })
       ) : handCards.length === 0 ? (
         <Box display="flex" alignItems="center" justifyContent="center" flex={1}>
           <Typography variant="caption" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>
-            {t('games.tabletop.handEmpty', 'Keine Karten auf der Hand')}
+            {t('games.tabletop.handEmpty')}
           </Typography>
         </Box>
       ) : (

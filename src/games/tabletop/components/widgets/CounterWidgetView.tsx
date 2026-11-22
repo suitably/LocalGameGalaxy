@@ -43,7 +43,7 @@ export const CounterWidgetView: React.FC<CounterWidgetViewProps> = ({
         onClick={onDecrement}
         color="primary"
         sx={{ p: 0.5, flexShrink: 0 }}
-        aria-label={t('games.tabletop.counterDecrement', 'Verringern')}
+        aria-label={t('games.tabletop.counterDecrement')}
       >
         <RemoveIcon fontSize="small" />
       </IconButton>
@@ -74,7 +74,7 @@ export const CounterWidgetView: React.FC<CounterWidgetViewProps> = ({
         onClick={onIncrement}
         color="primary"
         sx={{ p: 0.5, flexShrink: 0 }}
-        aria-label={t('games.tabletop.counterIncrement', 'Erhöhen')}
+        aria-label={t('games.tabletop.counterIncrement')}
       >
         <AddIcon fontSize="small" />
       </IconButton>

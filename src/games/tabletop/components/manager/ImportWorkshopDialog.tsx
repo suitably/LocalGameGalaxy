@@ -69,23 +69,23 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
   };
 
   const busyText: Partial<Record<typeof status, string>> = {
-    loading_meta: t('games.tabletop.workshop_loading_meta', 'Lade Mod-Informationen...'),
-    downloading: t('games.tabletop.workshop_downloading', 'Mod wird heruntergeladen...'),
-    parsing: t('games.tabletop.workshop_parsing', 'Spiel wird konvertiert...'),
+    loading_meta: t('games.tabletop.workshop_loading_meta'),
+    downloading: t('games.tabletop.workshop_downloading'),
+    parsing: t('games.tabletop.workshop_parsing'),
     storing: t('games.tabletop.workshop.storing'),
   };
   const isLoading = status in busyText || status === 'caching';
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{t('games.tabletop.import_workshop', 'Steam Workshop importieren')}</DialogTitle>
+      <DialogTitle>{t('games.tabletop.import_workshop')}</DialogTitle>
 
       <DialogContent dividers>
         <Stack spacing={2.5}>
           {/* URL Input */}
           <TextField
             fullWidth
-            label={t('games.tabletop.workshop_url_label', 'Steam Workshop URL')}
+            label={t('games.tabletop.workshop_url_label')}
             placeholder="https://steamcommunity.com/sharedfiles/filedetails/?id=..."
             value={url}
             onChange={(e) => setUrl(e.target.value)}
@@ -105,14 +105,14 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
                 disabled={!isValidWorkshopInput(url)}
                 startIcon={<CloudDownloadIcon />}
               >
-                {t('games.tabletop.workshop_load_info', 'Mod-Info laden')}
+                {t('games.tabletop.workshop_load_info')}
               </Button>
               <Button
                 variant="outlined"
                 onClick={() => fileInputRef.current?.click()}
                 startIcon={<UploadFileIcon />}
               >
-                {t('games.tabletop.workshop_upload_manual', 'Datei hochladen (.json, .vtt, .pcio)')}
+                {t('games.tabletop.workshop_upload_manual')}
               </Button>
               <input
                 ref={fileInputRef}
@@ -171,17 +171,12 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
               startIcon={<CloudDownloadIcon />}
               fullWidth
             >
-              {t('games.tabletop.workshop_import_via_server', 'Importieren & lokal speichern')}
+              {t('games.tabletop.workshop_import_via_server')}
             </Button>
           )}
 
           {status === 'meta_loaded' && !meta?.fileUrl && (
-            <Alert severity="warning">
-              {t(
-                'games.tabletop.workshop_no_file_url',
-                'Steam hat keine direkte Download-URL. Bitte lade die JSON-Datei manuell hoch.',
-              )}
-            </Alert>
+            <Alert severity="warning">{t('games.tabletop.workshop_no_file_url')}</Alert>
           )}
 
           {/* Success */}
@@ -198,11 +193,11 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
                     handleClose();
                   }}
                 >
-                  {t('games.tabletop.workshop_play_now', 'Jetzt spielen')}
+                  {t('games.tabletop.workshop_play_now')}
                 </Button>
               }
             >
-              {t('games.tabletop.workshop_success', '„{{name}}" erfolgreich importiert!', {
+              {t('games.tabletop.workshop_success', {
                 name: game.name,
               })}
             </Alert>
@@ -225,7 +220,7 @@ export const ImportWorkshopDialog: React.FC<ImportWorkshopDialogProps> = ({
 
       <DialogActions>
         <Button onClick={handleClose} variant="outlined">
-          {t('common.close', 'Schließen')}
+          {t('common.close')}
         </Button>
       </DialogActions>
     </Dialog>

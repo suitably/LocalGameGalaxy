@@ -49,7 +49,7 @@ export const GameCardActions: React.FC<GameCardActionsProps> = ({
   return (
     <>
       <Box display="flex" gap={0.5}>
-        <Tooltip title={t('common.edit', 'Bearbeiten')}>
+        <Tooltip title={t('common.edit')}>
           <IconButton size="small" onClick={() => onEdit(game.id)}>
             <EditIcon fontSize="small" />
           </IconButton>
@@ -76,10 +76,10 @@ export const GameCardActions: React.FC<GameCardActionsProps> = ({
             </Typography>
           )}
           <MenuItem disabled={shareBlocked} onClick={() => pick(onExportPcio)}>
-            {t('games.tabletop.export_pcio', 'Als .pcio (ZIP) exportieren')}
+            {t('games.tabletop.export_pcio')}
           </MenuItem>
           <MenuItem disabled={shareBlocked} onClick={() => pick(onExportJson)}>
-            {t('games.tabletop.export_json', 'Als .json exportieren')}
+            {t('games.tabletop.export_json')}
           </MenuItem>
           {onSaveToServer && (
             <MenuItem disabled={busy} onClick={() => pick(onSaveToServer)}>
@@ -88,7 +88,7 @@ export const GameCardActions: React.FC<GameCardActionsProps> = ({
           )}
         </Menu>
         {canDelete && (
-          <Tooltip title={t('common.delete', 'Löschen')}>
+          <Tooltip title={t('common.delete')}>
             <span>
               <IconButton
                 size="small"
@@ -104,13 +104,9 @@ export const GameCardActions: React.FC<GameCardActionsProps> = ({
       </Box>
       <ConfirmDialog
         open={deleteConfirmOpen}
-        title={t('games.tabletop.confirm_delete_title', 'Spiel löschen?')}
-        message={t(
-          'games.tabletop.confirm_delete_message',
-          'Möchtest du "{{name}}" wirklich unwiderruflich aus deinem Speicher löschen?',
-          { name: game.name },
-        )}
-        confirmText={t('common.delete', 'Löschen')}
+        title={t('games.tabletop.confirm_delete_title')}
+        message={t('games.tabletop.confirm_delete_message', { name: game.name })}
+        confirmText={t('common.delete')}
         confirmColor="error"
         onConfirm={() => {
           setDeleteConfirmOpen(false);

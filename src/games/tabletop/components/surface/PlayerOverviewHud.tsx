@@ -57,11 +57,11 @@ export const PlayerOverviewHud: React.FC<PlayerOverviewHudProps> = ({
         }}
       >
         <Typography variant="h6" fontWeight={800}>
-          {t('games.tabletop.playerOverview', 'Spieler-Übersicht')}
+          {t('games.tabletop.playerOverview')}
         </Typography>
         <Chip
           size="small"
-          label={`${seats.length} ${t('games.tabletop.seats', 'Plätze')}`}
+          label={`${seats.length} ${t('games.tabletop.seats')}`}
           sx={{
             bgcolor: (theme) => alpha(theme.palette.text.primary, 0.1),
             color: 'text.secondary',
@@ -117,7 +117,7 @@ export const PlayerOverviewHud: React.FC<PlayerOverviewHudProps> = ({
                       {isSelf && (
                         <Chip
                           size="small"
-                          label={t('games.tabletop.you', 'Du')}
+                          label={t('games.tabletop.you')}
                           sx={{
                             height: 18,
                             fontSize: '0.75rem',
@@ -131,7 +131,7 @@ export const PlayerOverviewHud: React.FC<PlayerOverviewHudProps> = ({
                       <Chip
                         size="small"
                         icon={<StarIcon sx={{ fontSize: '14px !important' }} />}
-                        label={t('games.tabletop.activeTurn', 'Am Zug')}
+                        label={t('games.tabletop.activeTurn')}
                         color="warning"
                         sx={{ height: 20, fontSize: '0.75rem' }}
                       />
@@ -150,8 +150,7 @@ export const PlayerOverviewHud: React.FC<PlayerOverviewHudProps> = ({
                   >
                     <StyleIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      {t('games.tabletop.handCards', 'Handkarten')}:{' '}
-                      <strong>{stats.handCardCount}</strong>
+                      {t('games.tabletop.handCards')}: <strong>{stats.handCardCount}</strong>
                     </Typography>
                   </Box>
 
@@ -162,7 +161,7 @@ export const PlayerOverviewHud: React.FC<PlayerOverviewHudProps> = ({
                         variant="caption"
                         sx={{ color: 'text.disabled', fontWeight: 700 }}
                       >
-                        {t('games.tabletop.supplyReserve', 'Vorrat')}:
+                        {t('games.tabletop.supplyReserve')}:
                       </Typography>
                       <Box display="flex" flexWrap="wrap" gap={0.8}>
                         {stats.supplies.map((s) => (
@@ -203,7 +202,7 @@ export const PlayerOverviewHud: React.FC<PlayerOverviewHudProps> = ({
         }}
       >
         <Button onClick={onClose} variant="outlined" color="inherit">
-          {t('common.close', 'Schließen')}
+          {t('common.close')}
         </Button>
       </DialogActions>
     </Dialog>

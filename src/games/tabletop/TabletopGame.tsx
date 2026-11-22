@@ -37,7 +37,7 @@ export function TabletopGame() {
   const { roomId, gameId, isLocal, isHost, isScreen, isSpectator, seat } =
     parseTabletopRoute(searchParams);
 
-  usePageTitle(t('games.tabletop.title', 'Virtueller Spieltisch'));
+  usePageTitle(t('games.tabletop.title'));
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

@@ -29,7 +29,9 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({ open, game, onCl
   const [author, setAuthor] = useState(game?.author || '');
   const [minPlayers, setMinPlayers] = useState(game?.minPlayers || 1);
   const [maxPlayers, setMaxPlayers] = useState(game?.maxPlayers || 4);
-  const [modes, setModes] = useState<TabletopPlayMode[]>(game?.supportedModes || ['party_multi_device', 'local_pass_and_play']);
+  const [modes, setModes] = useState<TabletopPlayMode[]>(
+    game?.supportedModes || ['party_multi_device', 'local_pass_and_play'],
+  );
   const [saving, setSaving] = useState(false);
 
   React.useEffect(() => {
@@ -74,18 +76,18 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({ open, game, onCl
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{t('games.tabletop.edit_title', 'Spiel bearbeiten')}</DialogTitle>
+      <DialogTitle>{t('games.tabletop.edit_title')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2.5} sx={{ mt: 1 }}>
           <TextField
-            label={t('games.tabletop.game_name', 'Spielname')}
+            label={t('games.tabletop.game_name')}
             value={name}
             onChange={(e) => setName(e.target.value)}
             fullWidth
             required
           />
           <TextField
-            label={t('games.tabletop.description', 'Beschreibung')}
+            label={t('games.tabletop.description_label')}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             fullWidth
@@ -93,21 +95,21 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({ open, game, onCl
             rows={2}
           />
           <TextField
-            label={t('games.tabletop.author', 'Autor / Urheber')}
+            label={t('games.tabletop.author')}
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
             fullWidth
           />
           <Box display="flex" gap={2}>
             <TextField
-              label={t('games.tabletop.min_players', 'Min. Spieler')}
+              label={t('games.tabletop.min_players')}
               type="number"
               value={minPlayers}
               onChange={(e) => setMinPlayers(Number(e.target.value))}
               fullWidth
             />
             <TextField
-              label={t('games.tabletop.max_players', 'Max. Spieler')}
+              label={t('games.tabletop.max_players')}
               type="number"
               value={maxPlayers}
               onChange={(e) => setMaxPlayers(Number(e.target.value))}
@@ -122,7 +124,7 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({ open, game, onCl
                   onChange={() => toggleMode('party_multi_device')}
                 />
               }
-              label={t('games.tabletop.mode_party', 'Party-Modus (Jeder auf seinem Smartphone)')}
+              label={t('games.tabletop.mode_party')}
             />
             <FormControlLabel
               control={
@@ -131,24 +133,23 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({ open, game, onCl
                   onChange={() => toggleMode('local_pass_and_play')}
                 />
               }
-              label={t('games.tabletop.mode_local', 'Lokal / Pass-and-Play (An 1 Gerät / Tablet)')}
+              label={t('games.tabletop.mode_local')}
             />
             <FormControlLabel
               control={
-                <Checkbox
-                  checked={modes.includes('solo')}
-                  onChange={() => toggleMode('solo')}
-                />
+                <Checkbox checked={modes.includes('solo')} onChange={() => toggleMode('solo')} />
               }
-              label={t('games.tabletop.mode_solo', 'Solo-Modus (Einzelspieler)')}
+              label={t('games.tabletop.mode_solo')}
             />
           </FormGroup>
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} color="inherit">{t('common.cancel', 'Abbrechen')}</Button>
+        <Button onClick={onClose} color="inherit">
+          {t('common.cancel')}
+        </Button>
         <Button onClick={handleSave} variant="contained" disabled={saving || !name.trim()}>
-          {t('common.save', 'Speichern')}
+          {t('common.save')}
         </Button>
       </DialogActions>
     </Dialog>
