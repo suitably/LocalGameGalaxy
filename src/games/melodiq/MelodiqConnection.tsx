@@ -82,21 +82,18 @@ export const MelodiqConnection: React.FC = () => {
                   sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 1 }}
                 >
                   <FolderOpenIcon fontSize="small" color="primary" />
-                  {t('melodiq.lite_mode', 'Lite-Modus')}
+                  {t('melodiq.lite_mode')}
                 </Typography>
                 <Button size="small" variant="outlined" onClick={localLibrary.selectFolder}>
                   {localLibrary.hasFolder
-                    ? t('melodiq.change_local_folder', 'Ordner wechseln')
-                    : t('melodiq.open_local_folder', 'Lokalen Ordner öffnen')}
+                    ? t('melodiq.change_local_folder')
+                    : t('melodiq.open_local_folder')}
                 </Button>
               </Box>
               <Typography variant="caption" color="text.secondary">
                 {localLibrary.hasFolder
                   ? `${localLibrary.folderName} (${localLibrary.localSongs.length} Songs)`
-                  : t(
-                      'melodiq.local_folder_desc',
-                      'Lade UltraStar-Songs direkt aus einem lokalen Ordner – komplett ohne Server.',
-                    )}
+                  : t('games.melodiq.local_folder_desc')}
               </Typography>
             </Paper>
           )}
@@ -122,10 +119,7 @@ export const MelodiqConnection: React.FC = () => {
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <QrCode2Icon fontSize="small" sx={{ color: 'primary.text' }} />
                     <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                      {t(
-                        'melodiq.settings_panel.show_scoreboard_qr',
-                        'Show QR Code on Score Screen',
-                      )}
+                      {t('melodiq.settings_panel.show_scoreboard_qr')}
                     </Typography>
                   </Box>
                   <Typography
@@ -133,10 +127,7 @@ export const MelodiqConnection: React.FC = () => {
                     color="text.secondary"
                     sx={{ display: 'block', mt: 0.5 }}
                   >
-                    {t(
-                      'melodiq.settings_panel.show_scoreboard_qr_desc',
-                      'Displays a QR code on the score overview screen so players can easily join or connect.',
-                    )}
+                    {t('melodiq.settings_panel.show_scoreboard_qr_desc')}
                   </Typography>
                 </Box>
               }

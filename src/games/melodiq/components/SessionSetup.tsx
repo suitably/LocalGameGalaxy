@@ -45,7 +45,7 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
     setSettingsProfileId(null);
   };
 
-  const botLabel = t('melodiq.setup.bot', 'Bot (Auto-Sing)');
+  const botLabel = t('melodiq.setup.bot');
   const availableProfiles = profiles.filter(
     (p) => !activePlayers.some((ap) => ap.profileId === p.id),
   );
@@ -53,13 +53,10 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
   return (
     <Box>
       <Typography variant="h6" gutterBottom>
-        {t('melodiq.setup.title', 'Session Setup')}
+        {t('melodiq.setup.title')}
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        {t(
-          'melodiq.setup.intro',
-          'Select who is playing today. Use the arrows to reorder priority/position.',
-        )}
+        {t('melodiq.setup.intro')}
       </Typography>
 
       <Button
@@ -68,17 +65,13 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
         sx={{ mb: 2, borderRadius: 999, px: 3 }}
         startIcon={<RefreshIcon />}
       >
-        {t('melodiq.setup.refresh_devices', 'Refresh Devices')}
+        {t('melodiq.setup.refresh_devices')}
       </Button>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {profiles.length === 0 && (
-          <Typography>{t('melodiq.setup.no_profiles', 'No profiles found.')}</Typography>
-        )}
+        {profiles.length === 0 && <Typography>{t('melodiq.setup.no_profiles')}</Typography>}
 
-        <Typography variant="subtitle2">
-          {t('melodiq.setup.active_roster', 'Active Roster (Ordered)')}
-        </Typography>
+        <Typography variant="subtitle2">{t('melodiq.setup.active_roster')}</Typography>
         {activePlayers.map((ap, index) => {
           const isBot = ap.profileId === BOT_ID;
           const profile = isBot
@@ -130,7 +123,7 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
         />
 
         <Typography variant="subtitle2" sx={{ mt: 2 }}>
-          {t('melodiq.setup.available_profiles', 'Available Profiles')}
+          {t('melodiq.setup.available_profiles')}
         </Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
           {availableProfiles.map((p) => (
@@ -158,9 +151,7 @@ export const SessionSetup: React.FC<SessionSetupProps> = ({
           )}
 
           {profiles.length === 0 && (
-            <Typography variant="caption">
-              {t('melodiq.setup.create_profiles', 'Create profiles above.')}
-            </Typography>
+            <Typography variant="caption">{t('melodiq.setup.create_profiles')}</Typography>
           )}
 
           {inactivePeers.map((peer) => (

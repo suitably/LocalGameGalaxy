@@ -121,7 +121,7 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
         <SettingSwitch
           checked={settings.hideBackgroundVideo}
           onChange={(checked) => onUpdateSetting('hideBackgroundVideo', checked)}
-          label={t('melodiq.settings_panel.hide_video', 'Hide Background Video')}
+          label={t('melodiq.settings_panel.hide_video')}
         />
 
         <YouTubeConsentSetting />
@@ -139,7 +139,7 @@ export const GameSettingsPanel: React.FC<GameSettingsPanelProps> = ({
         <SettingSwitch
           checked={settings.showScoreboardQrCode}
           onChange={(checked) => onUpdateSetting('showScoreboardQrCode', checked)}
-          label={t('melodiq.settings_panel.show_scoreboard_qr', 'Show QR Code on Score Screen')}
+          label={t('melodiq.settings_panel.show_scoreboard_qr')}
         />
 
         <Accordion sx={{ mt: 2, '&:before': { display: 'none' } }}>

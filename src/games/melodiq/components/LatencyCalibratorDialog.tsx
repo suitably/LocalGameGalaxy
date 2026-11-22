@@ -167,15 +167,12 @@ export const LatencyCalibratorDialog: React.FC<LatencyCalibratorDialogProps> = (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
         <SpeedIcon color="primary" />
-        {t('games.melodiq.settings.calibrate_latency', 'Audio Latency Calibrator')}
+        {t('melodiq.latency_dialog.title')}
       </DialogTitle>
 
       <DialogContent dividers>
         <Typography variant="body2" color="text.secondary" paragraph>
-          {t(
-            'games.melodiq.settings.latency_help',
-            'Test beeps will be played to measure round-trip audio and microphone processing delay. Ensure your microphone can hear your speakers.',
-          )}
+          {t('melodiq.latency_dialog.help')}
         </Typography>
 
         {error && (
@@ -188,7 +185,7 @@ export const LatencyCalibratorDialog: React.FC<LatencyCalibratorDialogProps> = (
           <Box sx={{ my: 3, textAlign: 'center' }}>
             <Typography variant="subtitle2" gutterBottom>
               <MicIcon sx={{ verticalAlign: 'middle', mr: 1, animation: 'pulse 1s infinite' }} />
-              {t('games.melodiq.settings.calibrating', 'Calibrating audio latency...')}
+              {t('melodiq.latency_dialog.calibrating')}
             </Typography>
             <LinearProgress
               variant="determinate"
@@ -205,7 +202,7 @@ export const LatencyCalibratorDialog: React.FC<LatencyCalibratorDialogProps> = (
               {detectedLatency} ms
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {t('games.melodiq.settings.detected_latency', 'Recommended Microphone Offset')}
+              {t('melodiq.latency_dialog.detected')}
             </Typography>
           </Box>
         )}
@@ -213,19 +210,17 @@ export const LatencyCalibratorDialog: React.FC<LatencyCalibratorDialogProps> = (
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
           {!isCalibrating && (
             <Button variant="outlined" startIcon={<SpeedIcon />} onClick={runCalibration}>
-              {detectedLatency !== null
-                ? t('common.retry', 'Recalibrate')
-                : t('games.melodiq.settings.start_test', 'Start Calibration')}
+              {detectedLatency !== null ? t('common.retry') : t('melodiq.latency_dialog.start')}
             </Button>
           )}
         </Box>
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>{t('common.cancel', 'Cancel')}</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
         {detectedLatency !== null && (
           <Button variant="contained" onClick={handleApply}>
-            {t('common.save', 'Apply')} ({detectedLatency} ms)
+            {t('common.save')} ({detectedLatency} ms)
           </Button>
         )}
       </DialogActions>

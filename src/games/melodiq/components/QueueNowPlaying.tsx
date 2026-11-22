@@ -37,7 +37,7 @@ export const QueueNowPlaying: React.FC<QueueNowPlayingProps> = ({
         variant="overline"
         sx={{ color: 'success.main', fontWeight: 'bold', letterSpacing: 1.5 }}
       >
-        {t('melodiq.queue_drawer.now_playing', 'Now Playing')}
+        {t('melodiq.queue_drawer.now_playing')}
       </Typography>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 0.5 }}>
         <Avatar

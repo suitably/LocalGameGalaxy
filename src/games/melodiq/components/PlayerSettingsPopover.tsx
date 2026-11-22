@@ -29,13 +29,13 @@ export const PlayerSettingsPopover: React.FC<PlayerSettingsPopoverProps> = ({
     >
       <Box sx={{ p: 2, minWidth: 250 }}>
         <Typography variant="subtitle2" gutterBottom>
-          {t('melodiq.setup.player_settings', 'Player Settings')}
+          {t('melodiq.setup.player_settings')}
         </Typography>
 
         {player && (
           <Box>
             <Typography variant="caption" gutterBottom sx={{ fontVariantNumeric: 'tabular-nums' }}>
-              {t('melodiq.setup.latency_compensation', 'Latency Compensation: {{ms}}ms', {
+              {t('melodiq.setup.latency_compensation', {
                 ms: player.latency || 0,
               })}
             </Typography>
@@ -49,7 +49,7 @@ export const PlayerSettingsPopover: React.FC<PlayerSettingsPopoverProps> = ({
               valueLabelDisplay="auto"
             />
             <Typography variant="caption" color="text.secondary" display="block">
-              {t('melodiq.setup.latency_hint', 'Compensates for input delay.')}
+              {t('melodiq.setup.latency_hint')}
             </Typography>
 
             <Divider sx={{ my: 1 }} />
@@ -62,17 +62,10 @@ export const PlayerSettingsPopover: React.FC<PlayerSettingsPopoverProps> = ({
                   onChange={(e) => onUpdate({ hidePitch: e.target.checked })}
                 />
               }
-              label={
-                <Typography variant="body2">
-                  {t('melodiq.setup.hide_pitch', 'Hide Pitch Curve')}
-                </Typography>
-              }
+              label={<Typography variant="body2">{t('melodiq.setup.hide_pitch')}</Typography>}
             />
             <Typography variant="caption" color="text.secondary" display="block">
-              {t(
-                'melodiq.setup.hide_pitch_hint',
-                'Blind Mode: Player sings and gets points, but their pitch curve is not shown on screen.',
-              )}
+              {t('melodiq.setup.hide_pitch_hint')}
             </Typography>
 
             <Divider sx={{ my: 1 }} />

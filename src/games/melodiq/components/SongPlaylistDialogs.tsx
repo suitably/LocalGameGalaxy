@@ -81,13 +81,13 @@ export const SongPlaylistDialogs: React.FC<SongPlaylistDialogsProps> = ({
       </Dialog>
 
       <Dialog open={createOpen} onClose={onCloseCreate} maxWidth="xs" fullWidth>
-        <DialogTitle>{t('melodiq.create_playlist', 'Create Playlist')}</DialogTitle>
+        <DialogTitle>{t('melodiq.create_playlist')}</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             fullWidth
             margin="dense"
-            label={t('melodiq.playlist_name', 'Playlist Name')}
+            label={t('melodiq.playlist_name')}
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
             onKeyDown={async (e) => {
@@ -100,7 +100,7 @@ export const SongPlaylistDialogs: React.FC<SongPlaylistDialogsProps> = ({
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
           <Button onClick={onCloseCreate} color="inherit">
-            {t('common.cancel', 'Abbrechen')}
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={onSubmit}
@@ -109,7 +109,7 @@ export const SongPlaylistDialogs: React.FC<SongPlaylistDialogsProps> = ({
             disabled={!name.trim()}
             sx={{ fontWeight: 700 }}
           >
-            {t('common.save', 'Speichern')}
+            {t('common.save')}
           </Button>
         </DialogActions>
       </Dialog>

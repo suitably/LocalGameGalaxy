@@ -100,7 +100,7 @@ export const MelodiqSearchBar: React.FC<MelodiqSearchBarProps> = ({
                     aria-label={t('melodiq.a11y.online_search')}
                     onClick={() => setIsOnlineSearch(!isOnlineSearch)}
                     color={isOnlineSearch ? 'primary' : 'default'}
-                    title={t('melodiq.search_online', 'Online suchen')}
+                    title={t('melodiq.search_online')}
                     size="small"
                   >
                     <PublicIcon fontSize="small" />

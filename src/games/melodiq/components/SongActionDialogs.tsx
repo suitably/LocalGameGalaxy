@@ -117,26 +117,20 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
 
       <ConfirmDialog
         open={a.confirmReSeparateOpen}
-        title={t('melodiq.re_separate_confirm_title', 'Gesangsspur erneut trennen?')}
-        message={t(
-          'melodiq.re_separate_confirm_desc',
-          'Für diesen Song existiert bereits eine getrennte Gesangsspur. Möchtest du die Vokaltrennung wirklich erneut starten?',
-        )}
-        confirmText={t('melodiq.re_separate_confirm_btn', 'Erneut starten')}
-        cancelText={t('common.cancel', 'Abbrechen')}
+        title={t('melodiq.re_separate_confirm_title')}
+        message={t('melodiq.re_separate_confirm_desc')}
+        confirmText={t('melodiq.re_separate_confirm_btn')}
+        cancelText={t('common.cancel')}
         onConfirm={a.executeSeparateVocals}
         onCancel={() => a.setConfirmReSeparateOpen(false)}
       />
 
       <ConfirmDialog
         open={a.fullSyncConfirmOpen}
-        title={t('melodiq.full_sync_confirm_title', 'KI Full-Sync starten?')}
-        message={t(
-          'melodiq.full_sync_confirm_desc',
-          'Der komplette Liedtext wird mithilfe von Whisper AI Wort für Wort auf die Vokal-/Audiospur synchronisiert. Dies dauert je nach Songlänge 1–3 Minuten.',
-        )}
-        confirmText={t('melodiq.start_sync', 'Sync starten')}
-        cancelText={t('common.cancel', 'Abbrechen')}
+        title={t('melodiq.full_sync_confirm_title')}
+        message={t('melodiq.full_sync_confirm_desc')}
+        confirmText={t('melodiq.start_sync')}
+        cancelText={t('common.cancel')}
         onConfirm={a.confirmFullSync}
         onCancel={() => a.setFullSyncConfirmOpen(false)}
       />

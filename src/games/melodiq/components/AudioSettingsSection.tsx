@@ -40,26 +40,20 @@ export const AudioSettingsSection: React.FC<AudioSettingsSectionProps> = ({
   return (
     <>
       <SettingToggleGroup
-        title={t('melodiq.settings_panel.audio_playback_mode', 'Audio Playback Mode')}
+        title={t('melodiq.settings_panel.audio_playback_mode')}
         value={mode}
         options={[
           {
             value: 'separated',
-            label: t('melodiq.settings_panel.mode_separated', 'Separated Stems'),
+            label: t('melodiq.settings_panel.mode_separated'),
           },
-          { value: 'original', label: t('melodiq.settings_panel.mode_original', 'Original Audio') },
+          { value: 'original', label: t('melodiq.settings_panel.mode_original') },
         ]}
         onChange={(val) => onUpdateSetting('audioPlaybackMode', val)}
         description={
           mode === 'separated'
-            ? t(
-                'melodiq.settings_panel.mode_separated_desc',
-                'Plays separated instrumental and vocal stems when available. Allows independent vocal volume control.',
-              )
-            : t(
-                'melodiq.settings_panel.mode_original_desc',
-                'Plays the untouched original audio track directly.',
-              )
+            ? t('melodiq.settings_panel.mode_separated_desc')
+            : t('melodiq.settings_panel.mode_original_desc')
         }
       />
 
@@ -67,9 +61,7 @@ export const AudioSettingsSection: React.FC<AudioSettingsSectionProps> = ({
       <Box sx={{ opacity: isOriginal ? 0.5 : 1 }}>
         {volumeSlider(
           t('melodiq.settings_panel.vocals_volume') +
-            (isOriginal
-              ? ` (${t('melodiq.settings_panel.disabled_in_original_mode', 'Separated stems only')})`
-              : ''),
+            (isOriginal ? ` (${t('melodiq.settings_panel.disabled_in_original_mode')})` : ''),
           volumes.vocals,
           isOriginal,
         )}
@@ -81,8 +73,7 @@ export const AudioSettingsSection: React.FC<AudioSettingsSectionProps> = ({
           sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}
         >
           <Typography gutterBottom sx={{ mb: 0, fontVariantNumeric: 'tabular-nums' }}>
-            {t('melodiq.settings_panel.mic_latency', 'Microphone Latency Offset')}:{' '}
-            {settings.micLatency ?? 0} ms
+            {t('melodiq.settings_panel.mic_latency')}: {settings.micLatency ?? 0} ms
           </Typography>
           <Button
             size="small"
@@ -90,7 +81,7 @@ export const AudioSettingsSection: React.FC<AudioSettingsSectionProps> = ({
             startIcon={<SpeedIcon />}
             onClick={() => setCalibratorOpen(true)}
           >
-            {t('melodiq.settings_panel.calibrate', 'Calibrate')}
+            {t('melodiq.settings_panel.calibrate')}
           </Button>
         </Box>
         <Slider
@@ -104,10 +95,7 @@ export const AudioSettingsSection: React.FC<AudioSettingsSectionProps> = ({
           sx={{ width: '100%' }}
         />
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-          {t(
-            'melodiq.settings_panel.mic_latency_desc',
-            'Compensates for microphone and audio hardware delay to align pitch detection with note bars.',
-          )}
+          {t('melodiq.settings_panel.mic_latency_desc')}
         </Typography>
       </Box>
 

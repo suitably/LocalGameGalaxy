@@ -588,6 +588,13 @@
     "vocals_already_separated": "Vocal track exists (can be run again)",
     "re_separate_confirm_title": "Separate vocals again?",
     "re_separate_confirm_desc": "A separated vocal track already exists for this song. Do you really want to restart the vocal separation?",
-    "re_separate_confirm_btn": "Separate again"
+    "re_separate_confirm_btn": "Separate again",
+    "latency_dialog": {
+      "title": "Audio Latency Calibrator",
+      "help": "Test beeps will be played to measure round-trip audio and microphone processing delay. Ensure your microphone can hear your speakers.",
+      "calibrating": "Calibrating audio latency...",
+      "detected": "Recommended Microphone Offset",
+      "start": "Start Calibration"
+    }
   }
 }

@@ -51,14 +51,10 @@ export const SessionPhoneRow: React.FC<SessionPhoneRowProps> = ({
         onChange={(e) => onRoleChange(e.target.value as ClientRole)}
         sx={{ height: 32 }}
       >
-        <MenuItem value="admin">{t('melodiq.setup.role_admin', 'Admin')}</MenuItem>
-        <MenuItem value="queue_manager">
-          {t('melodiq.setup.role_queue_manager', 'Queue Manager')}
-        </MenuItem>
-        <MenuItem value="queue_contributor">
-          {t('melodiq.setup.role_queue_contributor', 'Queue Contributor')}
-        </MenuItem>
-        <MenuItem value="singer">{t('melodiq.setup.role_singer', 'Singer')}</MenuItem>
+        <MenuItem value="admin">{t('melodiq.setup.role_admin')}</MenuItem>
+        <MenuItem value="queue_manager">{t('melodiq.setup.role_queue_manager')}</MenuItem>
+        <MenuItem value="queue_contributor">{t('melodiq.setup.role_queue_contributor')}</MenuItem>
+        <MenuItem value="singer">{t('melodiq.setup.role_singer')}</MenuItem>
       </Select>
       <IconButton aria-label={t('melodiq.a11y.remove')} color="error" onClick={onRemove}>
         <CloseIcon />

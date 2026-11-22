@@ -95,7 +95,7 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({
               startIcon={<DeleteSweepIcon />}
               sx={{ borderRadius: 999, textTransform: 'none', mr: 1 }}
             >
-              {t('melodiq.queue_drawer.clear', 'Clear')}
+              {t('melodiq.queue_drawer.clear')}
             </Button>
           )}
           <IconButton
@@ -133,7 +133,6 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({
           <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 1.5 }}>
             {t('melodiq.queue_drawer.up_next', {
               count: queue.length,
-              defaultValue: 'Up Next · {{count}}',
             })}
           </Typography>
         </Box>
@@ -141,11 +140,9 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({
         {queue.length === 0 ? (
           <Box sx={{ px: 2.5, py: 6, textAlign: 'center' }}>
             <PlaylistPlayIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
-            <Typography color="text.secondary">
-              {t('melodiq.queue_drawer.empty', 'Queue is empty')}
-            </Typography>
+            <Typography color="text.secondary">{t('melodiq.queue_drawer.empty')}</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              {t('melodiq.queue_drawer.empty_hint', 'Long-press a song to add it to the queue')}
+              {t('melodiq.queue_drawer.empty_hint')}
             </Typography>
           </Box>
         ) : (

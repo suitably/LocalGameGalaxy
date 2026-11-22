@@ -52,7 +52,7 @@ export function useSongActions({
     const trimmed = newPlaylistName.trim();
     if (!trimmed) return;
     await createPlaylist(trimmed);
-    setFeedbackMessage(t('melodiq.playlist_created', 'Playlist created!'));
+    setFeedbackMessage(t('melodiq.playlist_created'));
     setCreatePlaylistDialogOpen(false);
     setNewPlaylistName('');
   };
@@ -164,7 +164,7 @@ export function useSongActions({
     if (!song) return;
     setFullSyncConfirmOpen(false);
     await startSeparatorJob('full-sync', {
-      ok: t('melodiq.full_sync_started', 'KI Full-Sync (Whisper) im Hintergrund gestartet...'),
+      ok: t('melodiq.full_sync_started'),
       fail: t('melodiq.sync_error'),
     });
   };
@@ -172,8 +172,8 @@ export function useSongActions({
   const executeSeparateVocals = async () => {
     setConfirmReSeparateOpen(false);
     await startSeparatorJob('separate', {
-      ok: t('melodiq.separate_vocals_started', 'Vokaltrennung im Hintergrund gestartet...'),
-      fail: t('melodiq.separate_vocals_error', 'Fehler beim Starten der Vokaltrennung'),
+      ok: t('melodiq.separate_vocals_started'),
+      fail: t('melodiq.separate_vocals_error'),
     });
   };
 

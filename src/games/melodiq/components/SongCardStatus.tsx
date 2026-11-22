@@ -66,11 +66,7 @@ export const SongCardCorner: React.FC<SongCardStatusProps> = ({
   }
   if (!isDownloaded && !hasActiveJob && hasUsdbId && onActionClick) {
     return (
-      <ButtonBase
-        sx={cornerSx}
-        onClick={onActionClick}
-        aria-label={t('common.a11y.download', 'Download')}
-      >
+      <ButtonBase sx={cornerSx} onClick={onActionClick} aria-label={t('common.a11y.download')}>
         <CloudDownloadIcon sx={{ color: 'primary.text', fontSize: 20 }} />
       </ButtonBase>
     );
@@ -85,11 +81,10 @@ export const SongCardProgress: React.FC<
   const { t } = useTranslation();
   const isAiJob = activeJobType === 'full-sync' || activeJobType === 'separate';
   let label: string;
-  if (activeJobType === 'full-sync') label = t('melodiq.ai_sync_active', 'KI-Sync...');
-  else if (activeJobType === 'separate')
-    label = t('melodiq.vocal_separation_active', 'Vokaltrennung...');
-  else if (isDownloading) label = t('melodiq.downloading', 'Downloading...');
-  else label = t('melodiq.processing', 'Processing...');
+  if (activeJobType === 'full-sync') label = t('melodiq.ai_sync_active');
+  else if (activeJobType === 'separate') label = t('melodiq.vocal_separation_active');
+  else if (isDownloading) label = t('melodiq.downloading');
+  else label = t('melodiq.processing');
 
   return (
     <Box sx={{ mt: 1 }}>

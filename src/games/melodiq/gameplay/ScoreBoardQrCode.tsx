@@ -123,7 +123,7 @@ export const ScoreBoardQrCode: React.FC<ScoreBoardQrCodeProps> = ({
             mb: 0.5,
           }}
         >
-          {t('melodiq.join_session', 'Join Session')}
+          {t('melodiq.join_session')}
         </Typography>
         <Typography
           variant="caption"
@@ -137,14 +137,11 @@ export const ScoreBoardQrCode: React.FC<ScoreBoardQrCodeProps> = ({
             lineHeight: 1.25,
           }}
         >
-          {t(
-            'melodiq.scan_to_join_desc',
-            'Scan the QR code to connect your phone as a microphone or controller',
-          )}
+          {t('melodiq.scan_to_join_desc')}
         </Typography>
         {partyId && (
           <Chip
-            label={t('melodiq.party_id_badge', { partyId, defaultValue: `Party ID: ${partyId}` })}
+            label={t('melodiq.party_id_badge', { partyId })}
             size="small"
             sx={{
               height: 22,

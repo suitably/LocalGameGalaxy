@@ -21,11 +21,8 @@ export const LyricsSettingsSection: React.FC<LyricsSettingsSectionProps> = ({
   return (
     <>
       <SettingSlider
-        label={`${t('melodiq.settings_panel.lyrics_scale', 'Lyrics Size')}: ${Math.round(scale * 100)}%`}
-        description={t(
-          'melodiq.settings_panel.lyrics_scale_desc',
-          'Adjust the size of the lyrics on the main screen.',
-        )}
+        label={`${t('melodiq.settings_panel.lyrics_scale')}: ${Math.round(scale * 100)}%`}
+        description={t('melodiq.settings_panel.lyrics_scale_desc')}
         value={scale}
         onChange={(_, val) => onUpdateSetting('lyricsScale', val as number)}
         min={0.5}
@@ -38,64 +35,49 @@ export const LyricsSettingsSection: React.FC<LyricsSettingsSectionProps> = ({
       <SettingSwitch
         checked={settings.enableLyricsZoom ?? false}
         onChange={(checked) => onUpdateSetting('enableLyricsZoom', checked)}
-        label={t('melodiq.settings_panel.lyrics_zoom', 'Lyrics Zoom Animation')}
-        description={t(
-          'melodiq.settings_panel.lyrics_zoom_desc',
-          'Zoom and glow active lyric syllables during singing. Disable for simple color highlighting.',
-        )}
+        label={t('melodiq.settings_panel.lyrics_zoom')}
+        description={t('melodiq.settings_panel.lyrics_zoom_desc')}
       />
 
       <SettingToggleGroup
-        title={t('melodiq.settings_panel.lyrics_lines', 'Number of Lyrics Lines')}
+        title={t('melodiq.settings_panel.lyrics_lines')}
         value={settings.lyricsLines ?? 2}
         options={LINE_OPTIONS}
         onChange={(val) => onUpdateSetting('lyricsLines', val)}
-        description={t(
-          'melodiq.settings_panel.lyrics_lines_desc',
-          'Choose how many lines of lyrics to display.',
-        )}
+        description={t('melodiq.settings_panel.lyrics_lines_desc')}
       />
 
       <SettingToggleGroup
-        title={t('melodiq.settings_panel.lyrics_rows', 'Rows per Lyric')}
+        title={t('melodiq.settings_panel.lyrics_rows')}
         value={settings.lyricsRows ?? 2}
         options={[
-          { value: 1, label: t('melodiq.settings_panel.lyrics_rows_one', '1 row') },
-          { value: 2, label: t('melodiq.settings_panel.lyrics_rows_two', '2 rows') },
+          { value: 1, label: t('melodiq.settings_panel.lyrics_rows_one') },
+          { value: 2, label: t('melodiq.settings_panel.lyrics_rows_two') },
         ]}
         onChange={(val) => onUpdateSetting('lyricsRows', val)}
-        description={t(
-          'melodiq.settings_panel.lyrics_rows_desc',
-          'Lyrics are sized to fit automatically. With 2 rows, long lines wrap and the text stays larger. Very long lines wrap either way.',
-        )}
+        description={t('melodiq.settings_panel.lyrics_rows_desc')}
       />
 
       <SettingToggleGroup
-        title={t('melodiq.settings_panel.lyrics_min_size', 'Minimum Lyrics Size')}
+        title={t('melodiq.settings_panel.lyrics_min_size')}
         value={settings.lyricsMinFit ?? 0.6}
         options={LYRICS_MIN_FIT_OPTIONS.map((fit) => ({
           value: fit,
           label: `${Math.round(fit * 100)}%`,
         }))}
         onChange={(val) => onUpdateSetting('lyricsMinFit', val)}
-        description={t(
-          'melodiq.settings_panel.lyrics_min_size_desc',
-          'Lyrics shrink down to this size, then wrap. At 100% they never shrink.',
-        )}
+        description={t('melodiq.settings_panel.lyrics_min_size_desc')}
       />
 
       <SettingToggleGroup
-        title={t('melodiq.settings_panel.lyrics_position', 'Lyrics Position (No Singers)')}
+        title={t('melodiq.settings_panel.lyrics_position')}
         value={settings.lyricsPosition ?? 'bottom'}
         options={[
-          { value: 'bottom', label: t('melodiq.settings_panel.lyrics_position_bottom', 'Bottom') },
-          { value: 'center', label: t('melodiq.settings_panel.lyrics_position_center', 'Center') },
+          { value: 'bottom', label: t('melodiq.settings_panel.lyrics_position_bottom') },
+          { value: 'center', label: t('melodiq.settings_panel.lyrics_position_center') },
         ]}
         onChange={(val) => onUpdateSetting('lyricsPosition', val)}
-        description={t(
-          'melodiq.settings_panel.lyrics_position_desc',
-          'Choose whether lyrics appear at the bottom or in the center when no singers are active.',
-        )}
+        description={t('melodiq.settings_panel.lyrics_position_desc')}
       />
     </>
   );

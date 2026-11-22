@@ -138,7 +138,7 @@ export const SessionRosterRow: React.FC<SessionRosterRowProps> = ({
 
         {isBot ? (
           <Typography variant="caption" sx={{ minWidth: 150, textAlign: 'center' }}>
-            {t('melodiq.setup.auto_sing', 'Auto-Sing Enabled')}
+            {t('melodiq.setup.auto_sing')}
           </Typography>
         ) : (
           <>
@@ -154,7 +154,7 @@ export const SessionRosterRow: React.FC<SessionRosterRowProps> = ({
                 variant="standard"
               >
                 <MenuItem value="">
-                  <em>{t('melodiq.setup.no_device', 'No Device')}</em>
+                  <em>{t('melodiq.setup.no_device')}</em>
                 </MenuItem>
                 {loadingDevices && (
                   <MenuItem value="loading" disabled>
@@ -169,7 +169,7 @@ export const SessionRosterRow: React.FC<SessionRosterRowProps> = ({
                 <Divider />
                 {phones.length > 0 && (
                   <MenuItem disabled>
-                    <em>{t('melodiq.setup.phones', 'Phones')}</em>
+                    <em>{t('melodiq.setup.phones')}</em>
                   </MenuItem>
                 )}
                 {phones.map((p) => (

@@ -87,11 +87,11 @@ export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack, backLabe
         sx={{ p: { xs: 2, sm: 3 }, display: 'flex', flexDirection: 'column', gap: 2.5, flex: 1 }}
       >
         <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-          {t('melodiq.client_settings', 'Player Profile')}
+          {t('melodiq.client_settings')}
         </Typography>
 
         <TextField
-          label={t('melodiq.name', 'Your Name')}
+          label={t('melodiq.name')}
           value={name}
           onChange={(e) => setName(e.target.value)}
           variant="outlined"
@@ -100,7 +100,7 @@ export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack, backLabe
 
         <Box>
           <Typography gutterBottom color="text.secondary" sx={{ mb: 1 }}>
-            {t('melodiq.color', 'Your Color')}
+            {t('melodiq.color')}
           </Typography>
           <input
             type="range"
@@ -122,14 +122,14 @@ export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack, backLabe
         </Box>
 
         <FormControl fullWidth sx={{ mt: 2 }}>
-          <InputLabel>{t('melodiq.microphone', 'Microphone')}</InputLabel>
+          <InputLabel>{t('melodiq.microphone')}</InputLabel>
           <Select
             value={deviceId}
             onChange={(e) => setDeviceId(e.target.value)}
-            label={t('melodiq.microphone', 'Microphone')}
+            label={t('melodiq.microphone')}
           >
             <MenuItem value="">
-              <em>{t('melodiq.default_mic', 'Default Microphone')}</em>
+              <em>{t('melodiq.default_mic')}</em>
             </MenuItem>
             {devices.map((d) => (
               <MenuItem key={d.deviceId} value={d.deviceId}>
@@ -139,46 +139,40 @@ export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack, backLabe
           </Select>
           {permissionError && (
             <Typography variant="caption" color="error" sx={{ mt: 1 }}>
-              {t(
-                'melodiq.mic_permission_denied',
-                'Permission denied. Could not load microphone names.',
-              )}
+              {t('melodiq.mic_permission_denied')}
             </Typography>
           )}
         </FormControl>
 
         <FormControl fullWidth sx={{ mt: 2 }}>
-          <InputLabel>{t('melodiq.display_mode', 'Display Mode')}</InputLabel>
+          <InputLabel>{t('melodiq.display_mode')}</InputLabel>
           <Select
             value={displayMode}
             onChange={(e) => setDisplayMode(e.target.value as DisplayMode)}
-            label={t('melodiq.display_mode', 'Display Mode')}
+            label={t('melodiq.display_mode')}
           >
-            <MenuItem value="lyrics">{t('melodiq.display_lyrics_only', 'Only Lyrics')}</MenuItem>
-            <MenuItem value="self">{t('melodiq.display_self_pitch', 'My Pitch & Lyrics')}</MenuItem>
-            <MenuItem value="all">{t('melodiq.display_all_pitch', "Everyone's Pitch")}</MenuItem>
+            <MenuItem value="lyrics">{t('melodiq.display_lyrics_only')}</MenuItem>
+            <MenuItem value="self">{t('melodiq.display_self_pitch')}</MenuItem>
+            <MenuItem value="all">{t('melodiq.display_all_pitch')}</MenuItem>
           </Select>
         </FormControl>
 
         <Box sx={{ mt: 2, p: 2, bgcolor: 'action.disabledBackground', borderRadius: 2 }}>
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
-            {t('melodiq.settings_panel.sync_latency', 'Sync & Latency')}
+            {t('melodiq.settings_panel.sync_latency')}
           </Typography>
           <Typography
             variant="body2"
             color="text.secondary"
             sx={{ mb: 2, fontVariantNumeric: 'tabular-nums' }}
           >
-            {t('melodiq.settings_panel.latency_offset', 'Current Latency Offset: {{ms}}ms', {
+            {t('melodiq.settings_panel.latency_offset', {
               ms: latency,
             })}
           </Typography>
           {activeSongId ? (
             <Typography variant="caption" color="error">
-              {t(
-                'melodiq.settings_panel.calibrate_blocked',
-                'Cannot calibrate while a song is playing.',
-              )}
+              {t('melodiq.settings_panel.calibrate_blocked')}
             </Typography>
           ) : (
             <RemoteLatencyCalibrator
@@ -196,11 +190,11 @@ export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack, backLabe
         <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
           {onBack && (
             <Button variant="outlined" onClick={onBack} fullWidth>
-              {backLabel ?? t('common.cancel', 'Cancel')}
+              {backLabel ?? t('common.cancel')}
             </Button>
           )}
           <Button variant="contained" onClick={handleSave} fullWidth>
-            {t('common.save', 'Save')}
+            {t('common.save')}
           </Button>
         </Box>
       </Paper>

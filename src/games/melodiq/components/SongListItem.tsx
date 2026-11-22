@@ -133,7 +133,7 @@ export const SongListItem: React.FC<SongListItemProps> = ({
               fontSize: '0.75rem',
             }}
           >
-            {t('melodiq.local_song_badge', 'Lokal')}
+            {t('melodiq.local_song_badge')}
           </Typography>
         )}
         {song.duration && (
@@ -166,8 +166,8 @@ export const SongListItem: React.FC<SongListItemProps> = ({
               }
               label={`${downloadProgress !== undefined && downloadProgress > 0 ? `${downloadProgress}% ` : ''}${
                 activeJobType === 'full-sync'
-                  ? t('melodiq.ai_sync_active', 'KI-Sync')
-                  : t('melodiq.vocal_separation_active', 'Vokaltrennung')
+                  ? t('melodiq.ai_sync_active')
+                  : t('melodiq.vocal_separation_active')
               }`}
               size="small"
               color="secondary"

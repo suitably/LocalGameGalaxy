@@ -114,7 +114,7 @@ export const useMelodiqHeader = ({
 
       if (isClient && canEditHostSettings(clientRole)) {
         headerActions.push({
-          label: t('melodiq.remote_host.title', 'Host settings'),
+          label: t('melodiq.remote_host.title'),
           icon: <TuneIcon />,
           action: () => setHostSettingsOpen(true),
           showAlways: true,
@@ -123,7 +123,7 @@ export const useMelodiqHeader = ({
 
       if (partyRoom) {
         headerActions.push({
-          label: t('party.backToLobby', 'Zurück zur Party-Lobby'),
+          label: t('party.backToLobby'),
           icon: <GroupsIcon />,
           action: backToParty,
           showAlways: true,
@@ -132,13 +132,13 @@ export const useMelodiqHeader = ({
 
       if (!isClient) {
         headerActions.push({
-          label: t('melodiq.manage_playlists', 'Manage Playlists'),
+          label: t('melodiq.manage_playlists'),
           icon: <QueueMusicIcon />,
           action: () => callbacksRef.current.setCurrentView('Playlists'),
           showAlways: false,
         });
         headerActions.push({
-          label: t('common.a11y.connect_phones', 'Handys verbinden'),
+          label: t('common.a11y.connect_phones'),
           icon: <QrCodeIcon />,
           action: () => callbacksRef.current.setCurrentView('Connection'),
           showAlways: true,
@@ -146,7 +146,7 @@ export const useMelodiqHeader = ({
 
         if (callbacksRef.current.onOpenLocalFolder) {
           headerActions.push({
-            label: t('melodiq.local_folder', 'Lokaler Song-Ordner'),
+            label: t('melodiq.local_folder'),
             icon: <FolderOpenIcon />,
             action: () => callbacksRef.current.onOpenLocalFolder?.(),
             showAlways: false,
@@ -159,9 +159,7 @@ export const useMelodiqHeader = ({
     } else {
       // Sub views have no own top bar: the page title names the screen, the back arrow leaves it.
       const subViewTitle =
-        currentView === 'Connection'
-          ? t('common.a11y.connect_phones', 'Handys verbinden')
-          : t('melodiq.title');
+        currentView === 'Connection' ? t('common.a11y.connect_phones') : t('melodiq.title');
       setHeader(subViewTitle, [], homeAction, null, false, isClient);
       setCustomHeaderActions(null);
     }

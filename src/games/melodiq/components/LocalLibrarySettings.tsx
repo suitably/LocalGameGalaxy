@@ -37,29 +37,18 @@ export const LocalLibrarySettings: React.FC = () => {
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <FolderOpenIcon color="primary" />
-          <Typography variant="h6">{t('melodiq.local_folder', 'Lokaler Song-Ordner')}</Typography>
+          <Typography variant="h6">{t('melodiq.local_folder')}</Typography>
         </Box>
-        <Chip
-          label={t('melodiq.lite_mode', 'Lite-Modus')}
-          size="small"
-          color="success"
-          variant="outlined"
-        />
+        <Chip label={t('melodiq.lite_mode')} size="small" color="success" variant="outlined" />
       </Box>
 
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        {t(
-          'melodiq.local_folder_desc',
-          'Lade UltraStar-Songs direkt aus einem lokalen Ordner auf deiner Festplatte – komplett ohne Server.',
-        )}
+        {t('games.melodiq.local_folder_desc')}
       </Typography>
 
       {!isSupported && (
         <Alert severity="warning" sx={{ mb: 2 }}>
-          {t(
-            'melodiq.browser_unsupported_fs',
-            'Die File System Access API wird in diesem Browser nicht unterstützt. Bitte nutze Google Chrome, Microsoft Edge oder Opera für den Lite-Modus.',
-          )}
+          {t('games.melodiq.browser_unsupported_fs')}
         </Alert>
       )}
 
@@ -93,7 +82,7 @@ export const LocalLibrarySettings: React.FC = () => {
                     startIcon={<LockOpenIcon />}
                     onClick={requestFolderPermission}
                   >
-                    {t('melodiq.grant_folder_permission', 'Zugriff erlauben')}
+                    {t('melodiq.grant_folder_permission')}
                   </Button>
                 )}
               </Box>
@@ -101,9 +90,7 @@ export const LocalLibrarySettings: React.FC = () => {
               {isScanning && (
                 <Box sx={{ width: '100%', my: 1 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                    <Typography variant="caption">
-                      {t('melodiq.scanning_folder', 'Scanne Ordner...')}
-                    </Typography>
+                    <Typography variant="caption">{t('melodiq.scanning_folder')}</Typography>
                     <Typography variant="caption">{scanProgress?.foundSongs || 0} Songs</Typography>
                   </Box>
                   <LinearProgress />
@@ -118,7 +105,7 @@ export const LocalLibrarySettings: React.FC = () => {
                   onClick={selectFolder}
                   disabled={isScanning}
                 >
-                  {t('melodiq.change_local_folder', 'Ordner wechseln')}
+                  {t('melodiq.change_local_folder')}
                 </Button>
                 <Button
                   variant="outlined"
@@ -127,7 +114,7 @@ export const LocalLibrarySettings: React.FC = () => {
                   onClick={rescanFolder}
                   disabled={isScanning || permissionStatus !== 'granted'}
                 >
-                  {t('melodiq.rescan_local_folder', 'Neu scannen')}
+                  {t('melodiq.rescan_local_folder')}
                 </Button>
                 <Button
                   variant="outlined"
@@ -137,7 +124,7 @@ export const LocalLibrarySettings: React.FC = () => {
                   onClick={disconnectFolder}
                   disabled={isScanning}
                 >
-                  {t('melodiq.disconnect_local_folder', 'Ordner trennen')}
+                  {t('melodiq.disconnect_local_folder')}
                 </Button>
               </Box>
             </Box>
@@ -149,7 +136,7 @@ export const LocalLibrarySettings: React.FC = () => {
               onClick={selectFolder}
               disabled={isScanning}
             >
-              {t('melodiq.open_local_folder', 'Lokalen Ordner öffnen')}
+              {t('melodiq.open_local_folder')}
             </Button>
           )}
         </>

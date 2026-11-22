@@ -54,24 +54,18 @@ export const SongActionMenu: React.FC<SongActionMenuProps> = (props) => {
   const isAdmin = !isClient || clientRole === 'admin';
 
   const separateHint = isSeparating
-    ? `${t('melodiq.vocal_separation_running', 'Vokaltrennung läuft im Hintergrund...')} (${props.separationProgress}%)`
+    ? `${t('melodiq.vocal_separation_running')} (${props.separationProgress}%)`
     : hasVocals
-      ? t(
-          'melodiq.vocals_already_separated',
-          'Gesangsspur vorhanden (kann erneut ausgeführt werden)',
-        )
-      : t('melodiq.separate_vocals_desc', 'Audio mit KI in Gesang und Instrumental aufteilen');
+      ? t('melodiq.vocals_already_separated')
+      : t('melodiq.separate_vocals_desc');
 
   const syncHint = isSeparating
-    ? t('melodiq.vocal_separation_running', 'Vokaltrennung läuft im Hintergrund...')
+    ? t('melodiq.vocal_separation_running')
     : isSyncing
       ? t('melodiq.sync_in_progress')
       : !hasVocals
-        ? t(
-            'melodiq.vocals_required_desc',
-            'Erfordert getrennte Gesangsspur (zuerst Gesang trennen)',
-          )
-        : t('melodiq.full_sync_desc', 'Alle Wörter mit Whisper AI auf das Audio synchronisieren');
+        ? t('melodiq.vocals_required_desc')
+        : t('melodiq.full_sync_desc');
 
   return (
     <Dialog open={props.open} onClose={props.onClose}>
@@ -150,7 +144,7 @@ export const SongActionMenu: React.FC<SongActionMenuProps> = (props) => {
                   <MicIcon color={hasVocals ? 'action' : 'primary'} />
                 </ListItemIcon>
                 <ListItemText
-                  primary={t('melodiq.separate_vocals_title', 'Gesangsspur trennen (UVR AI)')}
+                  primary={t('melodiq.separate_vocals_title')}
                   secondary={separateHint}
                 />
               </ListItemButton>
@@ -158,10 +152,7 @@ export const SongActionMenu: React.FC<SongActionMenuProps> = (props) => {
                 <ListItemIcon>
                   <SyncIcon color={canSync ? 'inherit' : 'disabled'} />
                 </ListItemIcon>
-                <ListItemText
-                  primary={t('melodiq.full_sync_title', 'KI Full-Sync (Komplette Lyrics)')}
-                  secondary={syncHint}
-                />
+                <ListItemText primary={t('melodiq.full_sync_title')} secondary={syncHint} />
               </ListItemButton>
               {props.archiveUrl && (
                 <ListItemButton component="a" href={props.archiveUrl} download>

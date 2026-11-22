@@ -130,13 +130,10 @@ export const MelodiqPlaylists: React.FC<MelodiqPlaylistsProps> = ({ onSelectPlay
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         open={Boolean(playlistToDelete)}
-        title={t('melodiq.delete_playlist', 'Playlist löschen')}
-        message={t(
-          'melodiq.confirm_delete_playlist',
-          'Möchtest du diese Playlist wirklich löschen?',
-        )}
+        title={t('melodiq.delete_playlist')}
+        message={t('melodiq.confirm_delete_playlist')}
         confirmColor="error"
-        confirmText={t('common.delete', 'Löschen')}
+        confirmText={t('common.delete')}
         onConfirm={() => {
           if (playlistToDelete) {
             deletePlaylist(playlistToDelete);

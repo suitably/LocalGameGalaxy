@@ -51,18 +51,16 @@ export const RemoteHostSettingsModal: React.FC = () => {
       maxWidth="sm"
       scroll="paper"
     >
-      <DialogTitle>{t('melodiq.remote_host.title', 'Host settings')}</DialogTitle>
+      <DialogTitle>{t('melodiq.remote_host.title')}</DialogTitle>
       <DialogContent dividers>
         {!hostSettings ? (
-          <Typography color="text.secondary">
-            {t('melodiq.remote_host.loading', 'Loading host settings...')}
-          </Typography>
+          <Typography color="text.secondary">{t('melodiq.remote_host.loading')}</Typography>
         ) : (
           <HostSettingsForm settings={hostSettings} percent={percent} set={set} />
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => setHostSettingsOpen(false)}>{t('common.close', 'Close')}</Button>
+        <Button onClick={() => setHostSettingsOpen(false)}>{t('common.close')}</Button>
       </DialogActions>
     </Dialog>
   );
@@ -98,42 +96,42 @@ const HostSettingsForm: React.FC<FormProps> = ({ settings, percent, set }) => {
 
   return (
     <>
-      {volumeSlider('masterVolume', t('melodiq.remote_host.master_volume', 'Master volume'))}
-      {volumeSlider('songVolume', t('melodiq.remote_host.song_volume', 'Song volume'))}
-      {volumeSlider('vocalsVolume', t('melodiq.remote_host.vocals_volume', 'Vocals volume'))}
+      {volumeSlider('masterVolume', t('melodiq.remote_host.master_volume'))}
+      {volumeSlider('songVolume', t('melodiq.remote_host.song_volume'))}
+      {volumeSlider('vocalsVolume', t('melodiq.remote_host.vocals_volume'))}
 
       <SettingToggleGroup
-        title={t('melodiq.settings_panel.audio_playback_mode', 'Audio Playback Mode')}
+        title={t('melodiq.settings_panel.audio_playback_mode')}
         value={settings.audioPlaybackMode}
         options={[
           {
             value: 'separated',
-            label: t('melodiq.settings_panel.mode_separated', 'Separated Stems'),
+            label: t('melodiq.settings_panel.mode_separated'),
           },
-          { value: 'original', label: t('melodiq.settings_panel.mode_original', 'Original Audio') },
+          { value: 'original', label: t('melodiq.settings_panel.mode_original') },
         ]}
         onChange={(audioPlaybackMode) => set({ audioPlaybackMode })}
       />
 
       <SettingToggleGroup
-        title={t('melodiq.settings_panel.lyrics_lines', 'Number of Lyrics Lines')}
+        title={t('melodiq.settings_panel.lyrics_lines')}
         value={settings.lyricsLines}
         options={LINE_OPTIONS}
         onChange={(lyricsLines) => set({ lyricsLines })}
       />
 
       <SettingToggleGroup
-        title={t('melodiq.settings_panel.lyrics_rows', 'Rows per Lyric')}
+        title={t('melodiq.settings_panel.lyrics_rows')}
         value={settings.lyricsRows}
         options={[
-          { value: 1, label: t('melodiq.settings_panel.lyrics_rows_one', '1 row') },
-          { value: 2, label: t('melodiq.settings_panel.lyrics_rows_two', '2 rows') },
+          { value: 1, label: t('melodiq.settings_panel.lyrics_rows_one') },
+          { value: 2, label: t('melodiq.settings_panel.lyrics_rows_two') },
         ]}
         onChange={(lyricsRows) => set({ lyricsRows })}
       />
 
       <SettingToggleGroup
-        title={t('melodiq.settings_panel.lyrics_min_size', 'Minimum Lyrics Size')}
+        title={t('melodiq.settings_panel.lyrics_min_size')}
         value={settings.lyricsMinFit}
         options={LYRICS_MIN_FIT_OPTIONS.map((fit) => ({
           value: fit,
@@ -143,11 +141,11 @@ const HostSettingsForm: React.FC<FormProps> = ({ settings, percent, set }) => {
       />
 
       <SettingToggleGroup
-        title={t('melodiq.remote_host.lyrics_position', 'Lyrics position')}
+        title={t('melodiq.remote_host.lyrics_position')}
         value={settings.lyricsPosition}
         options={[
-          { value: 'bottom', label: t('melodiq.remote_host.position_bottom', 'Bottom') },
-          { value: 'center', label: t('melodiq.remote_host.position_center', 'Center') },
+          { value: 'bottom', label: t('melodiq.remote_host.position_bottom') },
+          { value: 'center', label: t('melodiq.remote_host.position_center') },
         ]}
         onChange={(lyricsPosition) => set({ lyricsPosition })}
       />
@@ -155,17 +153,17 @@ const HostSettingsForm: React.FC<FormProps> = ({ settings, percent, set }) => {
       <SettingSwitch
         checked={settings.enableLyricsZoom}
         onChange={(enableLyricsZoom) => set({ enableLyricsZoom })}
-        label={t('melodiq.settings_panel.lyrics_zoom', 'Lyrics Zoom Animation')}
+        label={t('melodiq.settings_panel.lyrics_zoom')}
       />
       <SettingSwitch
         checked={settings.showNoteLabels}
         onChange={(showNoteLabels) => set({ showNoteLabels })}
-        label={t('melodiq.remote_host.note_labels', 'Show note names')}
+        label={t('melodiq.remote_host.note_labels')}
       />
       <SettingSwitch
         checked={settings.showScoreboardQrCode}
         onChange={(showScoreboardQrCode) => set({ showScoreboardQrCode })}
-        label={t('melodiq.remote_host.scoreboard_qr', 'QR code on the scoreboard')}
+        label={t('melodiq.remote_host.scoreboard_qr')}
       />
     </>
   );

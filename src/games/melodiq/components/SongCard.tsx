@@ -142,7 +142,7 @@ export const SongCard: React.FC<SongCardProps> = ({
                 variant="caption"
                 sx={{ ...tagSx, bgcolor: 'primary.main', color: 'primary.contrastText' }}
               >
-                {t('melodiq.local_song_badge', 'Lokal')}
+                {t('melodiq.local_song_badge')}
               </Typography>
             )}
             {song.year && (

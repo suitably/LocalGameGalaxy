@@ -19,10 +19,7 @@ export const MelodiqGameplaySection: React.FC = () => {
       <Box>
         <SettingsResetButton
           onReset={() => resetSettings(DEFAULT_SETTINGS)}
-          confirmMessage={t(
-            'melodiq.settings.reset_confirm',
-            'Alle Spieleinstellungen auf Standardwerte zurücksetzen? Profile bleiben unberührt.',
-          )}
+          confirmMessage={t('melodiq.settings_panel.reset_confirm')}
         />
       </Box>
     </Box>

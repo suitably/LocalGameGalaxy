@@ -39,7 +39,7 @@ const RetryButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
   const { t } = useTranslation();
   return (
     <Button onClick={onClick} variant="outlined" sx={{ borderRadius: 999, px: 3, py: 1 }}>
-      {t('melodiq.retry_connection', 'Erneut versuchen')}
+      {t('melodiq.retry_connection')}
     </Button>
   );
 };
@@ -60,14 +60,9 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
     if (hasConnectionError) {
       return (
         <EmptyPanel wide={true}>
-          <Typography variant="h5">
-            {t('melodiq.client_connection_error', 'Konnte keine Songs vom Host laden')}
-          </Typography>
+          <Typography variant="h5">{t('melodiq.client_connection_error')}</Typography>
           <Typography sx={{ mt: 1, mb: 3, color: 'text.secondary' }}>
-            {t(
-              'melodiq.client_connection_error_desc',
-              'Bitte stelle sicher, dass der Host verbunden ist und Songs bereitstellt.',
-            )}
+            {t('games.melodiq.client_connection_error_desc')}
           </Typography>
           <RetryButton onClick={refreshSongs} />
         </EmptyPanel>
@@ -77,14 +72,9 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
     if (songsLength === 0 && !isOnlineSearch) {
       return (
         <EmptyPanel wide={false}>
-          <Typography variant="h5">
-            {t('melodiq.client_empty_library_title', 'Keine Songs vom Host verfügbar')}
-          </Typography>
+          <Typography variant="h5">{t('melodiq.client_empty_library_title')}</Typography>
           <Typography sx={{ mt: 1, mb: 3, color: 'text.secondary' }}>
-            {t(
-              'melodiq.client_empty_library_desc',
-              'Der Host hat momentan keine Songs in der Bibliothek geladen.',
-            )}
+            {t('games.melodiq.client_empty_library_desc')}
           </Typography>
           <RetryButton onClick={refreshSongs} />
         </EmptyPanel>
@@ -112,13 +102,10 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
             }}
           >
             <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
-              {t('melodiq.lite_mode', 'Lite-Modus (Serverlos)')}
+              {t('melodiq.lite_mode')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {t(
-                'melodiq.local_folder_desc',
-                'Lade UltraStar-Songs direkt aus einem lokalen Ordner auf deiner Festplatte – komplett ohne Server.',
-              )}
+              {t('games.melodiq.local_folder_desc')}
             </Typography>
 
             {localLibrary.hasFolder && localLibrary.permissionStatus === 'prompt' ? (
@@ -129,7 +116,7 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
                 onClick={localLibrary.requestFolderPermission}
                 sx={{ borderRadius: 999, px: 3, py: 1 }}
               >
-                {t('melodiq.grant_folder_permission', 'Zugriff auf {{name}} erlauben', {
+                {t('melodiq.grant_folder_permission', {
                   name: localLibrary.folderName,
                 })}
               </Button>
@@ -141,16 +128,13 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
                 onClick={localLibrary.selectFolder}
                 sx={{ borderRadius: 999, px: 3, py: 1 }}
               >
-                {t('melodiq.open_local_folder', 'Lokalen Ordner öffnen')}
+                {t('melodiq.open_local_folder')}
               </Button>
             )}
           </Box>
         ) : (
           <Alert severity="info" sx={{ mb: 3, textAlign: 'left' }}>
-            {t(
-              'melodiq.browser_unsupported_fs',
-              'Die File System Access API wird in diesem Browser nicht unterstützt. Bitte nutze Google Chrome, Microsoft Edge oder Opera für den Lite-Modus.',
-            )}
+            {t('games.melodiq.browser_unsupported_fs')}
           </Alert>
         )}
 
@@ -177,14 +161,9 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
   if (songsLength === 0 && !isOnlineSearch) {
     return (
       <EmptyPanel wide={false}>
-        <Typography variant="h5">
-          {t('melodiq.empty_library_title', 'Deine Bibliothek ist leer')}
-        </Typography>
+        <Typography variant="h5">{t('melodiq.empty_library_title')}</Typography>
         <Typography sx={{ mt: 1, mb: 3, color: 'text.secondary' }}>
-          {t(
-            'melodiq.empty_library_desc',
-            'Nutze das Suchfeld oder das Weltkugel-Symbol, um neue Songs online zu finden, oder öffne einen lokalen Song-Ordner.',
-          )}
+          {t('games.melodiq.empty_library_desc')}
         </Typography>
 
         {localLibrary.isSupported ? (
@@ -195,14 +174,11 @@ export const LibraryEmptyState: React.FC<LibraryEmptyStateProps> = ({
             onClick={localLibrary.selectFolder}
             sx={{ borderRadius: 999, px: 3, py: 1 }}
           >
-            {t('melodiq.open_local_folder', 'Lokalen Ordner öffnen')}
+            {t('melodiq.open_local_folder')}
           </Button>
         ) : (
           <Alert severity="info" sx={{ textAlign: 'left' }}>
-            {t(
-              'melodiq.browser_unsupported_fs',
-              'Die File System Access API wird in diesem Browser nicht unterstützt. Bitte nutze Google Chrome, Microsoft Edge oder Opera für den Lite-Modus.',
-            )}
+            {t('games.melodiq.browser_unsupported_fs')}
           </Alert>
         )}
       </EmptyPanel>

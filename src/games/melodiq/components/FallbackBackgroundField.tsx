@@ -19,13 +19,13 @@ export const FallbackBackgroundField: React.FC<FallbackBackgroundFieldProps> = (
         <TextField
           size="small"
           fullWidth
-          label={t('melodiq.settings_panel.fallback_background_url', 'Fallback Background URL')}
+          label={t('melodiq.settings_panel.fallback_background_url')}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="e.g. https://example.com/loop.mp4"
         />
         <Button variant="outlined" component="label" sx={{ height: 40, whiteSpace: 'nowrap' }}>
-          {t('melodiq.settings_panel.browse', 'Browse...')}
+          {t('melodiq.settings_panel.browse')}
           <input
             type="file"
             hidden
@@ -44,10 +44,7 @@ export const FallbackBackgroundField: React.FC<FallbackBackgroundFieldProps> = (
         </Button>
       </Box>
       <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
-        {t(
-          'melodiq.settings_panel.fallback_background_desc',
-          'Shown when a song has no video. Use a web link or select a local file (local files may reset after reload).',
-        )}
+        {t('melodiq.settings_panel.fallback_background_desc')}
       </Typography>
     </Box>
   );

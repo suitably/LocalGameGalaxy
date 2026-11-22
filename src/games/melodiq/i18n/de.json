@@ -588,6 +588,13 @@
     "vocals_already_separated": "Gesangsspur vorhanden (kann erneut ausgeführt werden)",
     "re_separate_confirm_title": "Gesangsspur erneut trennen?",
     "re_separate_confirm_desc": "Für diesen Song existiert bereits eine getrennte Gesangsspur. Möchtest du die Vokaltrennung wirklich erneut starten?",
-    "re_separate_confirm_btn": "Erneut trennen"
+    "re_separate_confirm_btn": "Erneut trennen",
+    "latency_dialog": {
+      "title": "Audio-Latenz kalibrieren",
+      "help": "Es werden Testtöne abgespielt, um die Verzögerung von Audio und Mikrofon-Verarbeitung zu messen. Achte darauf, dass dein Mikrofon die Lautsprecher hört.",
+      "calibrating": "Audio-Latenz wird kalibriert...",
+      "detected": "Empfohlener Mikrofon-Versatz",
+      "start": "Kalibrierung starten"
+    }
   }
 }

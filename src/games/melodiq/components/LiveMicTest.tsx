@@ -50,7 +50,7 @@ export const LiveMicTest: React.FC<{ deviceId: string }> = ({ deviceId }) => {
   return (
     <Box sx={{ mt: 3, p: 2, bgcolor: 'action.disabledBackground', borderRadius: 2 }}>
       <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-        {t('melodiq.settings_panel.live_test', 'Live Test')}
+        {t('melodiq.settings_panel.live_test')}
       </Typography>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
         <Box
