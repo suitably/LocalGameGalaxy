@@ -44,7 +44,7 @@ export const ModifierRouletteBar: React.FC<ModifierRouletteBarProps> = ({ evalua
             sx={{ color: isComplete ? 'success.main' : 'primary.main', fontSize: 20 }}
           />
           <Typography variant="caption" fontWeight={700} sx={{ color: 'text.primary' }}>
-            {t('storyteller.wordRouletteTitle', 'Word Roulette (Pflichtwörter)')}
+            {t('storyteller.wordRouletteTitle')}
           </Typography>
         </Stack>
 
@@ -53,7 +53,7 @@ export const ModifierRouletteBar: React.FC<ModifierRouletteBarProps> = ({ evalua
           fontWeight={600}
           sx={{ color: isComplete ? 'success.main' : 'primary.main' }}
         >
-          {matchedCount}/{evaluation.length} {t('storyteller.wordsMatched', 'eingebaut')}
+          {matchedCount}/{evaluation.length} {t('storyteller.wordsMatched')}
         </Typography>
       </Box>
 

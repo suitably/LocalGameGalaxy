@@ -56,15 +56,13 @@ export function useStoryHeader(options: StoryHeaderOptions): void {
   useEffect(() => {
     setMenuItems([
       {
-        label: t('storyteller.readStory', 'Geschichte lesen'),
+        label: t('storyteller.readStory'),
         icon: <MenuBookRoundedIcon />,
         action: () => callbacks.current.onOpenReader(),
         showAlways: true,
       },
       {
-        label: isCurrentTurnLocal
-          ? t('storyteller.markAsRemote', 'Als Remote markieren')
-          : t('storyteller.claimLocalTurn', 'Auf diesem Gerät schreiben'),
+        label: isCurrentTurnLocal ? t('storyteller.markAsRemote') : t('storyteller.claimLocalTurn'),
         icon: isCurrentTurnLocal ? (
           <PhonelinkRingRoundedIcon />
         ) : (
@@ -74,12 +72,12 @@ export function useStoryHeader(options: StoryHeaderOptions): void {
         showAlways: !isCurrentTurnLocal,
       },
       {
-        label: t('storyteller.shareLinksTitle', 'Mitspieler-Links'),
+        label: t('storyteller.shareLinksTitle'),
         icon: <ShareRoundedIcon />,
         action: () => callbacks.current.onOpenShare(),
       },
       {
-        label: t('storyteller.editStory', 'Geschichte bearbeiten'),
+        label: t('storyteller.editStory'),
         icon: <EditRoundedIcon />,
         action: () => callbacks.current.onOpenEdit(),
       },

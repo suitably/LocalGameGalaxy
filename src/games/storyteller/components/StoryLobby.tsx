@@ -63,10 +63,7 @@ export const StoryLobby: React.FC<StoryLobbyProps> = ({
       }}
     >
       <Typography variant="body2" color="text.secondary" textAlign="center">
-        {t(
-          'games.storyteller.description',
-          'Schreibt gemeinsam eine Geschichte – Zug um Zug mit modularen Spielregeln!',
-        )}
+        {t('games.storyteller.description')}
       </Typography>
 
       <StoryPlayModeCard />
@@ -77,9 +74,9 @@ export const StoryLobby: React.FC<StoryLobbyProps> = ({
         onAddPlayer={(name, isRemote) => Boolean(onAddPlayer(name, isRemote))}
         onRemovePlayer={onRemovePlayer}
         cardVariant="outlined"
-        title={t('storyteller.playersTitle', 'Spieler')}
+        title={t('storyteller.playersTitle')}
         description=""
-        placeholder={t('storyteller.playerNamePlaceholder', 'Name eingeben...')}
+        placeholder={t('storyteller.playerNamePlaceholder')}
         minPlayers={2}
       />
 
@@ -90,11 +87,8 @@ export const StoryLobby: React.FC<StoryLobbyProps> = ({
         <TextField
           size="small"
           fullWidth
-          label={t('storyteller.storyTitleOptional', 'Titel der Geschichte (optional)')}
-          placeholder={t(
-            'storyteller.storyTitlePlaceholder',
-            'z.B. Die geheimnisvolle Schatzkarte',
-          )}
+          label={t('storyteller.storyTitleOptional')}
+          placeholder={t('storyteller.storyTitlePlaceholder')}
           value={storyName}
           onChange={(e) => setStoryName(e.target.value)}
         />
@@ -107,7 +101,7 @@ export const StoryLobby: React.FC<StoryLobbyProps> = ({
           disabled={players.length < 2}
           startIcon={<PlayArrowRoundedIcon />}
         >
-          {t('storyteller.startStory', 'Geschichte beginnen')}
+          {t('storyteller.startStory')}
         </Button>
       </Stack>
 

@@ -68,6 +68,7 @@
     "playHereInsteadShort": "Play on this device",
     "spectatorNotTurn": "It is not {{name}}'s turn right now.",
     "spectatorNoLines": "No line written yet.",
-    "spectatorTurn": "Turn {{n}}"
+    "spectatorTurn": "Turn {{n}}",
+    "turnLinkCopied": "Turn link copied!"
   }
 }

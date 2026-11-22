@@ -27,18 +27,16 @@ export const StorySpectatorView: React.FC<{
       <Stack gap={1.5} sx={{ px: 1, pb: 2, maxWidth: 640, mx: 'auto' }}>
         <Typography variant="h6" fontWeight={800}>
           {writing
-            ? t('storyteller.roomWaiting', '{{name}} schreibt gerade …', { name })
-            : t('storyteller.spectatorNotTurn', '{{name}} ist gerade nicht dran.', { name })}
+            ? t('storyteller.roomWaiting', { name })
+            : t('storyteller.spectatorNotTurn', { name })}
         </Typography>
         {own.length === 0 && (
-          <Typography color="text.secondary">
-            {t('storyteller.spectatorNoLines', 'Noch keine Zeile geschrieben.')}
-          </Typography>
+          <Typography color="text.secondary">{t('storyteller.spectatorNoLines')}</Typography>
         )}
         {own.map((e) => (
           <Paper key={e.id} variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
             <Typography variant="caption" color="text.secondary">
-              {t('storyteller.spectatorTurn', 'Zug {{n}}', { n: e.turnNumber })}
+              {t('storyteller.spectatorTurn', { n: e.turnNumber })}
             </Typography>
             <Typography>{e.text}</Typography>
           </Paper>

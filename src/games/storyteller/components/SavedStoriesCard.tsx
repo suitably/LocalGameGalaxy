@@ -34,7 +34,7 @@ export const SavedStoriesCard: React.FC<SavedStoriesCardProps> = ({
     <Card variant="outlined">
       <CardContent sx={{ p: 2.5 }}>
         <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
-          {t('storyteller.savedStories', 'Gespeicherte Geschichten')}
+          {t('storyteller.savedStories')}
         </Typography>
 
         <List dense disablePadding>
@@ -54,14 +54,14 @@ export const SavedStoriesCard: React.FC<SavedStoriesCardProps> = ({
                 primary={
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Typography variant="body2" fontWeight={700}>
-                      {g.name || t('games.storyteller.title', 'Geschichtenschreiber')}
+                      {g.name || t('games.storyteller.title')}
                     </Typography>
                     <Chip
                       size="small"
                       label={
                         g.status === 'completed'
-                          ? t('storyteller.completed', 'Beendet')
-                          : `${t('storyteller.turnLabel', 'Zug')} ${g.turnNumber}`
+                          ? t('storyteller.completed')
+                          : `${t('storyteller.turnLabel')} ${g.turnNumber}`
                       }
                       color={g.status === 'completed' ? 'success' : 'info'}
                       sx={{ height: 20, fontSize: '0.75rem' }}
@@ -74,7 +74,7 @@ export const SavedStoriesCard: React.FC<SavedStoriesCardProps> = ({
                 <IconButton
                   size="small"
                   edge="end"
-                  aria-label={t('storyteller.deleteSavedAria', 'Geschichte löschen')}
+                  aria-label={t('storyteller.deleteSavedAria')}
                   onClick={(e) => {
                     e.stopPropagation();
                     setPendingDeleteId(g.id);
@@ -89,12 +89,9 @@ export const SavedStoriesCard: React.FC<SavedStoriesCardProps> = ({
       </CardContent>
       <ConfirmDialog
         open={pendingDeleteId !== null}
-        title={t('storyteller.deleteSavedTitle', 'Geschichte löschen?')}
-        message={t(
-          'storyteller.deleteSavedMessage',
-          'Die gespeicherte Geschichte wird endgültig gelöscht.',
-        )}
-        confirmText={t('common.delete', 'Löschen')}
+        title={t('storyteller.deleteSavedTitle')}
+        message={t('storyteller.deleteSavedMessage')}
+        confirmText={t('common.delete')}
         confirmColor="error"
         onCancel={() => setPendingDeleteId(null)}
         onConfirm={() => {

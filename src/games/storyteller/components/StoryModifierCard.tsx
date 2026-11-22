@@ -71,26 +71,20 @@ export const StoryModifierCard: React.FC<StoryModifierCardProps> = ({
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
           <TuneRoundedIcon sx={{ color: 'piece.pink' }} />
           <Typography variant="subtitle1" fontWeight={700}>
-            {t('storyteller.modifiersTitle', 'Modifikatoren (Baukasten)')}
+            {t('storyteller.modifiersTitle')}
           </Typography>
         </Stack>
 
         <Stack spacing={2}>
           <ModifierOption
-            title={t('storyteller.modBlindTitle', 'Blind Mode')}
-            description={t(
-              'storyteller.modBlindDesc',
-              'Spieler sehen nur die letzten 10 Wörter des vorherigen Spielers, nicht die ganze Geschichte.',
-            )}
+            title={t('storyteller.modBlindTitle')}
+            description={t('storyteller.modBlindDesc')}
             checked={modifiers.blindMode.enabled}
             onChange={(enabled) => onUpdateModifier('blindMode', { enabled })}
           />
           <ModifierOption
-            title={t('storyteller.modTimeTitle', 'Time Attack')}
-            description={t(
-              'storyteller.modTimeDesc',
-              'Ein Timer läuft pro Zug ab. Nach Ablauf der Zeit wird der Text automatisch übermittelt.',
-            )}
+            title={t('storyteller.modTimeTitle')}
+            description={t('storyteller.modTimeDesc')}
             checked={modifiers.timeAttack.enabled}
             onChange={(enabled) => onUpdateModifier('timeAttack', { enabled })}
             action={
@@ -113,11 +107,8 @@ export const StoryModifierCard: React.FC<StoryModifierCardProps> = ({
             }
           />
           <ModifierOption
-            title={t('storyteller.modRouletteTitle', 'Word Roulette')}
-            description={t(
-              'storyteller.modRouletteDesc',
-              'Das System zieht pro Zug 3 zufällige Pflichtwörter, die im Text vorkommen müssen, bevor man absenden kann.',
-            )}
+            title={t('storyteller.modRouletteTitle')}
+            description={t('storyteller.modRouletteDesc')}
             checked={modifiers.wordRoulette.enabled}
             onChange={(enabled) => onUpdateModifier('wordRoulette', { enabled })}
           />

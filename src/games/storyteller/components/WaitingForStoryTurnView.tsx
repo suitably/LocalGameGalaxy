@@ -40,7 +40,7 @@ export const WaitingForStoryTurnView: React.FC<WaitingForStoryTurnViewProps> = (
 
   const activePlayer = game.players[game.currentPlayerIndex] || {
     id: '',
-    name: t('storyteller.defaultPlayer', 'Spieler'),
+    name: t('storyteller.defaultPlayer'),
   };
 
   const handleCopyOrOpenShare = () => {
@@ -99,20 +99,17 @@ export const WaitingForStoryTurnView: React.FC<WaitingForStoryTurnViewProps> = (
             {roomId && (
               <Box mb={1}>
                 <Chip
-                  label={`${t('party.room', 'Raum')}: ${roomId}`}
+                  label={`${t('party.room')}: ${roomId}`}
                   color="primary"
                   sx={{ fontWeight: 'bold', fontSize: '0.85rem' }}
                 />
               </Box>
             )}
             <Typography variant="h6" fontWeight={700} sx={{ color: 'text.primary' }}>
-              {t('storyteller.waitingTitle', 'Warten auf')} {activePlayer.name}...
+              {t('storyteller.waitingTitle')} {activePlayer.name}...
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
-              {t(
-                'storyteller.waitingSubtitle',
-                'Dieser Spieler ist als Remote markiert. Sobald der Zug eingegangen ist, geht es hier automatisch weiter.',
-              )}
+              {t('storyteller.waitingSubtitle')}
             </Typography>
           </Box>
 
@@ -129,7 +126,6 @@ export const WaitingForStoryTurnView: React.FC<WaitingForStoryTurnViewProps> = (
               >
                 {t('storyteller.playHereInstead', {
                   name: activePlayer.name,
-                  defaultValue: `Hier als ${activePlayer.name} weiterschreiben`,
                 })}
               </Button>
             )}
@@ -146,9 +142,7 @@ export const WaitingForStoryTurnView: React.FC<WaitingForStoryTurnViewProps> = (
                   fontWeight: 600,
                 }}
               >
-                {copied
-                  ? t('common.linkCopied', 'Zug-Link kopiert!')
-                  : t('storyteller.shareTurnLink', 'QR-Code / Link für Mitspieler teilen')}
+                {copied ? t('storyteller.turnLinkCopied') : t('storyteller.shareTurnLink')}
               </Button>
             )}
 
@@ -160,7 +154,7 @@ export const WaitingForStoryTurnView: React.FC<WaitingForStoryTurnViewProps> = (
               onClick={onOpenReader}
               sx={{ color: 'text.secondary' }}
             >
-              {t('storyteller.readStorySoFar', 'Bisherige Geschichte ansehen')}
+              {t('storyteller.readStorySoFar')}
             </Button>
           </Stack>
         </CardContent>

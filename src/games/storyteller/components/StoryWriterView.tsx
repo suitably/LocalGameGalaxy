@@ -74,9 +74,7 @@ export const StoryWriterView: React.FC<StoryWriterViewProps> = ({
       handleSend();
     } else {
       // If nothing entered, provide a narrative fallback turn
-      onSubmitTurn(
-        t('storyteller.timeoutFallback', '...und plötzlich geschah eine unerwartete Wendung!'),
-      ).then(() => {
+      onSubmitTurn(t('storyteller.timeoutFallback')).then(() => {
         setText('');
       });
     }
@@ -89,7 +87,7 @@ export const StoryWriterView: React.FC<StoryWriterViewProps> = ({
   });
 
   const activePlayer = game.players[game.currentPlayerIndex] || {
-    name: t('storyteller.defaultPlayer', 'Spieler'),
+    name: t('storyteller.defaultPlayer'),
   };
 
   return (
@@ -143,7 +141,7 @@ export const StoryWriterView: React.FC<StoryWriterViewProps> = ({
           }}
         >
           <Typography variant="caption" fontWeight={600} sx={{ color: 'text.secondary', mb: 1 }}>
-            {t('storyteller.authorInputTitle', 'Dein Textabschnitt')}: {activePlayer.name}
+            {t('storyteller.authorInputTitle')}: {activePlayer.name}
           </Typography>
 
           <TextField
@@ -152,10 +150,7 @@ export const StoryWriterView: React.FC<StoryWriterViewProps> = ({
             maxRows={8}
             fullWidth
             variant="outlined"
-            placeholder={t(
-              'storyteller.inputPlaceholder',
-              'Schreibe hier deinen Teil der Geschichte weiter...',
-            )}
+            placeholder={t('storyteller.inputPlaceholder')}
             value={text}
             onChange={(e) => setText(e.target.value)}
             disabled={submitting || loading}
@@ -185,8 +180,7 @@ export const StoryWriterView: React.FC<StoryWriterViewProps> = ({
             }}
           >
             <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-              {wordsCount} {t('storyteller.words', 'Wörter')} | {text.length}{' '}
-              {t('storyteller.characters', 'Zeichen')}
+              {wordsCount} {t('storyteller.words')} | {text.length} {t('storyteller.characters')}
             </Typography>
 
             <Stack direction="row" spacing={1}>
@@ -200,7 +194,7 @@ export const StoryWriterView: React.FC<StoryWriterViewProps> = ({
                   startIcon={<CheckCircleOutlineRoundedIcon />}
                   sx={{ borderColor: (theme) => alpha(theme.palette.text.primary, 0.2) }}
                 >
-                  {t('storyteller.finishStory', 'Geschichte beenden')}
+                  {t('storyteller.finishStory')}
                 </Button>
               )}
 
@@ -215,7 +209,7 @@ export const StoryWriterView: React.FC<StoryWriterViewProps> = ({
                   px: 2,
                 }}
               >
-                {t('storyteller.submitTurn', 'Abschnitt senden')}
+                {t('storyteller.submitTurn')}
               </Button>
             </Stack>
           </Box>

@@ -68,6 +68,7 @@
     "playHereInsteadShort": "Auf diesem Gerät spielen",
     "spectatorNotTurn": "{{name}} ist gerade nicht dran.",
     "spectatorNoLines": "Noch keine Zeile geschrieben.",
-    "spectatorTurn": "Zug {{n}}"
+    "spectatorTurn": "Zug {{n}}",
+    "turnLinkCopied": "Zug-Link kopiert!"
   }
 }

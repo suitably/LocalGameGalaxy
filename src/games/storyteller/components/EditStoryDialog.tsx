@@ -29,8 +29,8 @@ export const EditStoryDialog: React.FC<EditStoryDialogProps> = ({
     <EditSessionDialog
       open={open}
       onClose={onClose}
-      title={t('storyteller.editStory', 'Geschichte bearbeiten')}
-      nameLabel={t('storyteller.storyTitleLabel', 'Titel der Geschichte')}
+      title={t('storyteller.editStory')}
+      nameLabel={t('storyteller.storyTitleLabel')}
       initialName={game.name || ''}
       players={players}
       onSave={onSave}

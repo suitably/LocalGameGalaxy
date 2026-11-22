@@ -11,20 +11,14 @@ export const StoryPlayModeCard: React.FC = () => {
       <CardContent>
         <Stack spacing={1.5}>
           <Typography variant="subtitle1" fontWeight={800}>
-            {t('storyteller.liveTitle', 'Live auf mehreren Geräten')}
+            {t('storyteller.liveTitle')}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {t(
-              'storyteller.liveDesc',
-              'Alle schreiben nacheinander am selben Abend: Mitspieler in die Lobby einladen, der Host startet.',
-            )}
+            {t('storyteller.liveDesc')}
           </Typography>
           <InvitePlayersButton game="storyteller" />
           <Typography variant="body2" color="text.secondary">
-            {t(
-              'storyteller.overDaysDesc',
-              'Über Tage spielen: Mitspieler unten eintragen und jedem einen eigenen Link schicken.',
-            )}
+            {t('storyteller.overDaysDesc')}
           </Typography>
         </Stack>
       </CardContent>

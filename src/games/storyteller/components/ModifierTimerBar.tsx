@@ -54,12 +54,12 @@ export const ModifierTimerBar: React.FC<ModifierTimerBarProps> = ({
             <TimerRoundedIcon sx={{ color, fontSize: 20 }} />
           )}
           <Typography variant="caption" fontWeight={700} sx={{ color: 'text.primary' }}>
-            {t('storyteller.timeAttackTitle', 'Time Attack')}
+            {t('storyteller.timeAttackTitle')}
           </Typography>
         </Stack>
 
         <Typography variant="caption" fontWeight={700} sx={{ color }}>
-          {timeLeft}s {t('storyteller.secondsRemaining', 'verbleibend')}
+          {timeLeft}s {t('storyteller.secondsRemaining')}
         </Typography>
       </Box>
 

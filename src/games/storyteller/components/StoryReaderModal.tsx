@@ -39,7 +39,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
 
   if (!game) return null;
 
-  const title = game.name || t('games.storyteller.title', 'Geschichtenschreiber');
+  const title = game.name || t('games.storyteller.title');
   const totalWords = entries.reduce((sum, e) => sum + e.wordCount, 0);
 
   const handleCopyStory = () => {
@@ -81,8 +81,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
               {title}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              {entries.length} {t('storyteller.chapters', 'Kapitel')} • {totalWords}{' '}
-              {t('storyteller.words', 'Wörter')}
+              {entries.length} {t('storyteller.chapters')} • {totalWords} {t('storyteller.words')}
             </Typography>
           </Box>
         </Stack>
@@ -102,7 +101,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
         {entries.length === 0 ? (
           <Box py={6} textAlign="center">
             <Typography variant="body1" sx={{ color: 'text.secondary' }}>
-              {t('storyteller.noEntriesYet', 'Es wurde noch kein Text geschrieben.')}
+              {t('storyteller.noEntriesYet')}
             </Typography>
           </Box>
         ) : (
@@ -118,7 +117,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
                   }}
                 >
                   <Typography variant="subtitle2" fontWeight={700} sx={{ color: 'secondary.main' }}>
-                    {t('storyteller.chapter', 'Kapitel')} {entry.turnNumber}
+                    {t('storyteller.chapter')} {entry.turnNumber}
                   </Typography>
 
                   <Chip
@@ -173,9 +172,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
             color: copied ? 'success.main' : 'inherit',
           }}
         >
-          {copied
-            ? t('common.copied', 'Kopiert!')
-            : t('storyteller.copyStory', 'Geschichte kopieren')}
+          {copied ? t('common.copied') : t('storyteller.copyStory')}
         </Button>
 
         <Button
@@ -184,7 +181,7 @@ export const StoryReaderModal: React.FC<StoryReaderModalProps> = ({
           onClick={onClose}
           sx={{ bgcolor: 'secondary.main', color: 'secondary.contrastText' }}
         >
-          {t('common.close', 'Schließen')}
+          {t('common.close')}
         </Button>
       </DialogActions>
     </Dialog>

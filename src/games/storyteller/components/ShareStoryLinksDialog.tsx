@@ -50,8 +50,8 @@ export const ShareStoryLinksDialog: React.FC<ShareStoryLinksDialogProps> = ({
     markPlayerLocal,
     open,
     onClose,
-    t('storyteller.shareLinksTitle', 'Mitspieler-Links & Benachrichtigungen'),
-    `${t('games.storyteller.title', 'Geschichtenschreiber')} - "${game?.name || 'Geschichte'}"`,
+    t('storyteller.shareLinksTitle'),
+    `${t('games.storyteller.title')} - "${game?.name || 'Geschichte'}"`,
   );
   if (!sharedProps) return null;
 
@@ -61,10 +61,7 @@ export const ShareStoryLinksDialog: React.FC<ShareStoryLinksDialogProps> = ({
       shareMessageText={(player: SessionPlayerItem, link: string) =>
         `📖 Hallo ${player.name}! Schreibe mit an unserer Geschichte: ${link}`
       }
-      descriptionText={t(
-        'storyteller.shareLinksDesc',
-        'Sobald ein Link oder QR-Code geteilt wird, wird der Spieler als Remote markiert. Mitspieler spielen auf ihrem Smartphone mit und empfangen Push-Benachrichtigungen.',
-      )}
+      descriptionText={t('storyteller.shareLinksDesc')}
       enablePushBanner={true}
     />
   );

@@ -20,7 +20,7 @@ export const StoryRoomGame: React.FC<{ roomId: string; language: string }> = ({
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  usePageTitle(t('games.storyteller.title', 'Geschichtenschreiber'));
+  usePageTitle(t('games.storyteller.title'));
   const { setHomeAction, setCustomHeaderActions, setMenuItems } = useHeaderLayout();
   useFollowPartyLobby(roomId);
   useWakeLock(true);
@@ -46,7 +46,7 @@ export const StoryRoomGame: React.FC<{ roomId: string; language: string }> = ({
       hasGame
         ? [
             {
-              label: t('storyteller.readStory', 'Geschichte lesen'),
+              label: t('storyteller.readStory'),
               icon: <MenuBookRoundedIcon />,
               action: () => setReaderOpen(true),
               showAlways: true,
@@ -66,20 +66,15 @@ export const StoryRoomGame: React.FC<{ roomId: string; language: string }> = ({
             <CircularProgress />
             <Typography color="text.secondary" textAlign="center">
               {live.synced && live.isHost
-                ? t(
-                    'storyteller.roomNeedTwo',
-                    'Es werden mindestens 2 Spieler in der Lobby benötigt.',
-                  )
-                : t('storyteller.roomConnecting', 'Verbinde mit dem Raum …')}
+                ? t('storyteller.roomNeedTwo')
+                : t('storyteller.roomConnecting')}
             </Typography>
           </Stack>
         ) : done ? (
           <Stack alignItems="center" gap={2} py={6}>
-            <Typography variant="h6">
-              {t('storyteller.roomDone', 'Die Geschichte ist fertig!')}
-            </Typography>
+            <Typography variant="h6">{t('storyteller.roomDone')}</Typography>
             <Button variant="contained" onClick={() => setReaderOpen(true)}>
-              {t('storyteller.roomRead', 'Lesen')}
+              {t('storyteller.roomRead')}
             </Button>
           </Stack>
         ) : !game.players.some((p) => p.id === live.myId) ? (
@@ -95,7 +90,7 @@ export const StoryRoomGame: React.FC<{ roomId: string; language: string }> = ({
           <Stack alignItems="center" gap={1} py={6}>
             <CircularProgress size={28} />
             <Typography color="text.secondary" textAlign="center">
-              {t('storyteller.roomWaiting', '{{name}} schreibt gerade …', { name: writer?.name })}
+              {t('storyteller.roomWaiting', { name: writer?.name })}
             </Typography>
           </Stack>
         )}

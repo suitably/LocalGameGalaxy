@@ -32,13 +32,10 @@ export const StoryContextCard: React.FC<StoryContextCardProps> = ({
             <AutoStoriesRoundedIcon sx={{ color: 'secondary.main', fontSize: 28 }} />
             <Box>
               <Typography variant="subtitle2" fontWeight={700} sx={{ color: 'text.primary' }}>
-                {t('storyteller.prologueTitle', 'Kapitel 1: Der Anfang')}
+                {t('storyteller.prologueTitle')}
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                {t(
-                  'storyteller.prologueHint',
-                  'Du machst den ersten Schritt! Schreibe den Eröffnungssatz oder die Einleitung für eure gemeinsame Geschichte.',
-                )}
+                {t('storyteller.prologueHint')}
               </Typography>
             </Box>
           </Stack>
@@ -79,15 +76,15 @@ export const StoryContextCard: React.FC<StoryContextCardProps> = ({
             )}
             <Typography variant="caption" fontWeight={700} sx={{ color: 'text.secondary' }}>
               {contextView.isBlind
-                ? t('storyteller.blindModeTitle', 'Blind-Modus (letzter Abschnitt)')
-                : t('storyteller.fullStoryContext', 'Bisherige Geschichte')}
+                ? t('storyteller.blindModeTitle')
+                : t('storyteller.fullStoryContext')}
             </Typography>
           </Stack>
 
           {contextView.precedingAuthorName && (
             <Chip
               size="small"
-              label={`${t('storyteller.by', 'von')} ${contextView.precedingAuthorName}`}
+              label={`${t('storyteller.by')} ${contextView.precedingAuthorName}`}
               sx={{
                 height: 20,
                 fontSize: '0.75rem',

@@ -21,7 +21,7 @@ import { notifyAfterOwnTurn, notifyIncomingTurn } from './logic/storyTurnNotify'
 const StorytellerLocalGame: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  usePageTitle(t('games.storyteller.title', 'Geschichtenschreiber'));
+  usePageTitle(t('games.storyteller.title'));
 
   const [activeGameId, setActiveGameId] = useState<string | null>(null);
   const [game, setGame] = useState<StoryGameRecord | null>(null);
