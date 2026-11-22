@@ -2,16 +2,11 @@
   "games": {
     "cards": {
       "select_game": "Kartenspiel wählen",
-      "players_title": "Mitspieler",
-      "add_player_placeholder": "Neuer Spielername...",
       "start_session": "Runde starten",
       "round": "Runde",
       "cards_count": "Karten",
       "eliminated": "Ertrunken",
       "swimming_status": "Schwimmt (0 Leben)",
-      "feuer": "Feuer",
-      "feuer_tooltip": "Feuer / 3 Asse (33 Punkte)",
-      "evaluate_round": "Runde auswerten",
       "has_won": "hat gewonnen!",
       "survived_all": "Hat alle Runden überstanden!",
       "play_again": "Nochmal spielen",
@@ -32,7 +27,6 @@
       "continue_to_tricks": "Ansagen fixieren & Runde spielen",
       "complete_round": "Runde abschließen",
       "score_table": "Punktetabelle",
-      "add_round_points": "Rundenpunkte eintragen",
       "schwimmen": {
         "title": "Schwimmen (31)",
         "description": "3 Leben + Schwimmring! Verlierer der Runde verlieren Leben. Blitz (31) zieht allen anderen 1 Leben ab.",

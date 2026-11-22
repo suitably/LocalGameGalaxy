@@ -2,16 +2,11 @@
   "games": {
     "cards": {
       "select_game": "Select Card Game",
-      "players_title": "Players",
-      "add_player_placeholder": "New player name...",
       "start_session": "Start Game",
       "round": "Round",
       "cards_count": "Cards",
       "eliminated": "Eliminated",
       "swimming_status": "Swimming (0 Lives)",
-      "feuer": "Feuer",
-      "feuer_tooltip": "Feuer / 3 Aces (33 Points)",
-      "evaluate_round": "Evaluate Round",
       "has_won": "has won!",
       "survived_all": "Survived all rounds!",
       "play_again": "Play Again",
@@ -32,7 +27,6 @@
       "continue_to_tricks": "Lock Bids & Play Round",
       "complete_round": "Complete Round",
       "score_table": "Score Table",
-      "add_round_points": "Add Round Points",
       "schwimmen": {
         "title": "Schwimmen (31)",
         "description": "3 lives + swimming ring! Round losers lose a life. Blitz (31) costs all other players 1 life.",

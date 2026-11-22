@@ -1,10 +1,8 @@
 {
   "games": {
     "imposter": {
-      "rules": "Rules: Normal players get a word. Imposter gets a hint. Discuss and find the imposter!",
       "info": {
         "title": "How to play",
-        "got_it": "Got it!",
         "rules": [
           "Every normal player sees a secret word.",
           "The Imposter only sees a general hint, not the word itself.",
@@ -46,21 +44,6 @@
         "imposter": "the Imposter",
         "normal": "an Innocent",
         "revealed_role": "{{name}} was {{role}}!"
-      },
-      "editor": {
-        "title": "Category Editor",
-        "add_category": "Add Category",
-        "edit_category": "Edit Category",
-        "category_name_en": "Category Name (EN)",
-        "category_name_de": "Category Name (DE)",
-        "words": "Words",
-        "add_word": "Add Word",
-        "word_en": "Word (EN)",
-        "word_de": "Word (DE)",
-        "hint_en": "Hint (EN)",
-        "hint_de": "Hint (DE)",
-        "custom_categories": "Custom Categories",
-        "standard_categories": "Standard Categories"
       },
       "room": {
         "connecting": "Connecting to the party room …",

@@ -52,10 +52,6 @@
       },
       "ability_btn": "{{type}} (Ziele: {{count}}){{status}}",
       "narrator": {
-        "night_start": "Die Nacht bricht herein. Alle schließen die Augen.",
-        "werewolves_wake": "Werwölfe, erwacht.",
-        "werewolves_sleep": "Werwölfe, schlaft wieder ein.",
-        "day_start": "Die Sonne geht auf. Alle erwachen!",
         "day_intro": "Es ist ein neuer Tag.",
         "died_night": "{{names}} ist/sind gestorben.",
         "noone_died": "Niemand ist gestorben.",
@@ -66,7 +62,6 @@
         "select_victim": "Opfer auswählen:",
         "skip_to_morning": "Zum Morgen springen",
         "finished_acting": "{{name}} hat seinen Zug beendet.",
-        "night_label": "Nacht {{round}}",
         "day_label": "Tag {{round}}",
         "night_summary_label": "Nacht-Zusammenfassung (Nur für Erzähler)",
         "choose_ability": "Wähle eine Fähigkeit:"
@@ -93,14 +88,6 @@
         "died_last_night": "Letzte Nacht gestorben:",
         "peaceful_night": "Eine friedliche Nacht.",
         "start_vote": "Abstimmung starten",
-        "narrator_mode": "Erzählermodus",
-        "narrator_select": "Wer ist der Erzähler?",
-        "tap_to_act": "ANTIPPEN",
-        "hide_screen": "Verstecken",
-        "pass_to_werewolf": "Handy an einen Werwolf geben oder in die Mitte legen.",
-        "player_name": "Spielername",
-        "add": "Hinzufügen",
-        "add_players_hint": "Füge mindestens 3 Spieler hinzu.",
         "select_roles_hint": "Wähle die Rollen für das Spiel:",
         "num_werewolves": "Anzahl der Werwölfe",
         "role_info": "Rolleninfo",
@@ -153,15 +140,11 @@
         },
         "pyromaniac": {
           "instruction_oil": "Mit jedem Tropfen Öl wird ein Feuer vorbereitet. Wähle zwei Spieler aus, um sie für einen zukünftigen Brand zu markieren.",
-          "instruction_burn": "Die Bühne ist bereit. Sollen wir das Zündholz anreißen und zusehen, wie das Dorf mit all deinen Zielen brennt?",
           "burn_action": "Alle verbrennen!",
           "oil_action": "Spieler einölen"
         },
         "thief": {
           "instruction": "Ein Leben in Bequemlichkeit oder ein Leben in Macht? Wähle, wessen Existenz du heute Nacht für dich beanspruchen wirst."
-        },
-        "little_girl": {
-          "instruction": "Ein mutiges Kind mit neugierigen Augen. In der Nacht, während die Werwölfe ihr Opfer wählen, darfst du blinzeln und versuchen, sie zu identifizieren. Aber Vorsicht: Wenn sie dich beim Gucken erwischen, werden sie dich sicher finden!"
         },
         "black_cat": {
           "instruction": "Die Nacht ruft nach Unglück. Wähle einen Spieler zum Verfluchen. Morgen wird eine unsichtbare Kraft das Dorf dazu treiben, gegen ihn zu stimmen."
@@ -191,15 +174,6 @@
           "ability_type": "Aktion",
           "timing": "Zeitpunkt",
           "targets": "Ziele",
-          "ability_instruction_kill": "Wähle ein Opfer zum Eliminieren.",
-          "ability_instruction_heal": "Wähle einen Spieler zum Retten.",
-          "ability_instruction_protect": "Wähle einen Spieler zum Beschützen.",
-          "ability_instruction_infect": "Wähle einen Spieler zum Infizieren.",
-          "ability_instruction_check_role": "Wähle einen Spieler, um seine Rolle zu sehen.",
-          "ability_instruction_link_lovers": "Wähle zwei Spieler, die sich verlieben sollen.",
-          "ability_instruction_give_egg": "Wähle Spieler, die einen Gegenstand erhalten.",
-          "ability_instruction_choose_camp": "Wähle dein Team für den Rest des Spiels.",
-          "ability_instruction_steal_role": "Wähle einen Spieler, dessen Rolle du stiehlst.",
           "alignments": {
             "villager": "Dorfbewohner",
             "werewolf": "Werwolf",
@@ -235,20 +209,16 @@
       "voting": {
         "title": "Dorfabstimmung (Tag {{round}})",
         "select_player": "Wer soll eliminiert werden?",
-        "instruction": "Tippe auf den Spieler, den das Dorf eliminieren möchte.",
         "skip": "Abstimmung überspringen / Keine Eliminierung"
       },
       "game_over": "Spiel vorbei",
       "winner_label": "Gewinner: {{winner}}",
-      "werewolves_win": "Die Werwölfe gewinnen!",
-      "villagers_win": "Die Dorfbewohner gewinnen!",
       "room": {
         "connecting": "Verbinde mit dem Partyraum …",
         "waiting_setup": "Der Host wählt die Rollen und startet das Spiel.",
         "players_one": "{{count}} Spieler",
         "players_other": "{{count}} Spieler",
         "narrator_only": "Dieses Gerät erzählt nur (keine Rolle)",
-        "too_few": "Es braucht mindestens {{count}} Spieler.",
         "card_hidden": "Deine Rolle liegt verdeckt. Schau sie dir an, wo niemand mitliest.",
         "hide_role": "Rolle verdecken",
         "seen": "Verstanden",

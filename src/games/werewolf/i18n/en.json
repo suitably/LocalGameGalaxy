@@ -52,10 +52,6 @@
       },
       "ability_btn": "{{type}} (Targets: {{count}}){{status}}",
       "narrator": {
-        "night_start": "Night falls. Everyone close your eyes.",
-        "werewolves_wake": "Werewolves, wake up.",
-        "werewolves_sleep": "Werewolves, go back to sleep.",
-        "day_start": "The sun rises. Everyone wake up!",
         "day_intro": "It is a new day.",
         "died_night": "{{names}} died last night.",
         "noone_died": "No one died last night.",
@@ -66,7 +62,6 @@
         "select_victim": "Select Victim:",
         "skip_to_morning": "Skip to Morning",
         "finished_acting": "{{name}} has finished acting.",
-        "night_label": "Night {{round}}",
         "day_label": "Day {{round}}",
         "night_summary_label": "Night Summary (Narrator only)",
         "choose_ability": "Choose an ability to execute:"
@@ -93,14 +88,6 @@
         "died_last_night": "Died last night:",
         "peaceful_night": "Peaceful night.",
         "start_vote": "Start Voting",
-        "narrator_mode": "Narrator Mode",
-        "narrator_select": "Who is the Narrator?",
-        "tap_to_act": "TAP TO ACT",
-        "hide_screen": "Hide Screen",
-        "pass_to_werewolf": "Pass phone to any Werewolf or place in middle.",
-        "player_name": "Player Name",
-        "add": "Add",
-        "add_players_hint": "Add at least 3 players to start.",
         "select_roles_hint": "Select roles to include:",
         "num_werewolves": "Number of Werewolves",
         "role_info": "Role info",
@@ -153,15 +140,11 @@
         },
         "pyromaniac": {
           "instruction_oil": "With every drop of oil, a fire is prepared. Select two players to mark for a future blaze.",
-          "instruction_burn": "The stage is set. Shall we strike the match and watch the village burn with all your oiled targets?",
           "burn_action": "Burn them all!",
           "oil_action": "Oil Players"
         },
         "thief": {
           "instruction": "A life of comfort or a life of power? Choose whose existence you will seize for yourself tonight."
-        },
-        "little_girl": {
-          "instruction": "A brave child with curious eyes. During the night, while the werewolves choose their victim, you can peek and try to identify them. But beware: if they catch you looking, they will surely find you!"
         },
         "black_cat": {
           "instruction": "The night calls for misfortune. Choose a player to curse. Tomorrow, an invisible force will push the village to vote against them."
@@ -191,15 +174,6 @@
           "ability_type": "Action",
           "timing": "Timing",
           "targets": "Targets",
-          "ability_instruction_kill": "Choose a victim to eliminate.",
-          "ability_instruction_heal": "Choose a player to save from death.",
-          "ability_instruction_protect": "Choose a player to protect tonight.",
-          "ability_instruction_infect": "Choose a player to infect.",
-          "ability_instruction_check_role": "Choose a player to reveal their secret role.",
-          "ability_instruction_link_lovers": "Choose two players to fall in love.",
-          "ability_instruction_give_egg": "Choose players to receive a special item.",
-          "ability_instruction_choose_camp": "Choose your loyalty for the rest of the game.",
-          "ability_instruction_steal_role": "Choose a player to swap roles with.",
           "alignments": {
             "villager": "Villager",
             "werewolf": "Werewolf",
@@ -235,20 +209,16 @@
       "voting": {
         "title": "Village Vote (Day {{round}})",
         "select_player": "Who should be eliminated?",
-        "instruction": "Tap on the player the village wants to eliminate.",
         "skip": "Skip Vote / No Elimination"
       },
       "game_over": "Game Over",
       "winner_label": "Winner: {{winner}}",
-      "werewolves_win": "The Werewolves Win!",
-      "villagers_win": "The Villagers Win!",
       "room": {
         "connecting": "Connecting to the party room …",
         "waiting_setup": "The host picks the roles and starts the game.",
         "players_one": "{{count}} player",
         "players_other": "{{count}} players",
         "narrator_only": "This device only narrates (no role)",
-        "too_few": "At least {{count}} players are needed.",
         "card_hidden": "Your role is face down. Look at it where nobody can read along.",
         "hide_role": "Hide role",
         "seen": "Got it",

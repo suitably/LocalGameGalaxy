@@ -1,10 +1,8 @@
 {
   "games": {
     "imposter": {
-      "rules": "Regeln: Normale Spieler erhalten ein Wort. Der Imposter erhält ein Hinweiswort. Diskutiert und findet den Imposter!",
       "info": {
         "title": "Spielanleitung",
-        "got_it": "Verstanden!",
         "rules": [
           "Jeder normale Spieler sieht ein geheimes Wort.",
           "Der Imposter sieht nur einen allgemeinen Hinweis, nicht das Wort selbst.",
@@ -46,21 +44,6 @@
         "imposter": "der Imposter",
         "normal": "ein Unschuldiger",
         "revealed_role": "{{name}} war {{role}}!"
-      },
-      "editor": {
-        "title": "Kategorien-Editor",
-        "add_category": "Kategorie hinzufügen",
-        "edit_category": "Kategorie bearbeiten",
-        "category_name_en": "Kategorienname (EN)",
-        "category_name_de": "Kategorienname (DE)",
-        "words": "Wörter",
-        "add_word": "Wort hinzufügen",
-        "word_en": "Wort (EN)",
-        "word_de": "Wort (DE)",
-        "hint_en": "Hinweis (EN)",
-        "hint_de": "Hinweis (DE)",
-        "custom_categories": "Eigene Kategorien",
-        "standard_categories": "Standard-Kategorien"
       },
       "room": {
         "connecting": "Verbinde mit dem Party-Raum …",
