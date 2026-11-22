@@ -167,9 +167,7 @@ export const STORAGE_KEYS = {
   STORYTELLER_LOBBY_PLAYERS: 'storyteller_lobby_players',
   STORYTELLER_LOBBY_MODIFIERS: 'storyteller_lobby_modifiers',
 
-  // Gartic Phone & Universal Party
-  GARTIC_STATE_PREFIX: 'galaxy_gartic_state_',
-  GARTIC_HOST_PREFIX: 'gartic_host_',
+  // Universal Party
   PARTY_MY_PLAYER_ID: 'party_my_player_id',
   /** Player name shared by the party lobby and party games (historical key name). */
   PARTY_PLAYER_NAME: 'guessart_player_name',

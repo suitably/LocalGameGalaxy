@@ -24,3 +24,10 @@ Blocked upstream: `npm view typescript-eslint peerDependencies` on 2026-11-22 st
 
 - [ ] When a `typescript-eslint` release accepts TS 7, bump the root `typescript` to 7.x (and `typescript-eslint`), keep `tsconfig` strictness, and run `npm run ci:gates && npm run build`; `check:lint-budget` must not rise.
 - [ ] Pitfalls from #616: `server/` already pins TS 7.0.2 while ESLint uses the root TS; `tsc -b` writes `tsBuildInfoFile` under `node_modules/.tmp/`; tools on the TS JS API (`ts-api-utils`).
+
+## #661 — real-device round of the party games
+
+Only browser contexts were tested (`npm run e2e:multiplayer`). Decisions for the other points: [ADR-0008](adr/0008-party-lobby-leftovers.md).
+
+- [ ] Play one full round of each party game from the lobby on real phones (Gartic Phone, GuessArt, Storyteller, Imposter/Werewolf if in the lobby, tabletop, Melodiq with phones as microphones) and note any failure in a new issue.
+- [ ] Start Melodiq from the hub and pair a phone via the QR code (hub pairing screen kept by ADR-0008).
