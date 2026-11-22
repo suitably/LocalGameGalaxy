@@ -3,7 +3,8 @@
  * Game scaffolder for LocalGameGalaxy.
  *
  * Produces the layout the existing games use (see docs/tech/game-catalog.md):
- *   src/games/<id>/index.ts                       named export of the entry component
+ *   src/games/<id>/index.ts                       registers the strings, named export of the entry component
+ *   src/games/<id>/i18n/{de,en}.json, index.ts    the game's own strings (ADR-0011 §7)
  *   src/games/<id>/<Pascal>Game.tsx               entry component (usePageTitle + t())
  *   src/games/<id>/hooks/use<Pascal>State.ts      state hook persisted via lib/storage
  *   src/games/<id>/logic/types.ts                 domain types
@@ -13,7 +14,7 @@
  * and patches by text insertion:
  *   src/lib/storage.ts                            STORAGE_KEYS.<ID>_GAME_STATE
  *   src/lib/catalog/entries.ts                    import + `ROUTE_GAMES` line
- *   public/locales/{de,en}/translation.json       games.<id>.title / description / UI strings
+ *   public/locales/{de,en}/translation.json       games.<id>.title / description (the hub needs them)
  *
  * Usage:
  *   node scripts/scaffold-game.mjs --id=<id> --title="<DE title>" [--title-en="<EN title>"]
@@ -242,7 +243,23 @@ export function ${pascal}Game() {
 }
 `;
 
-files['index.ts'] = `export { ${pascal}Game } from './${pascal}Game';\n`;
+files['index.ts'] = `import { init${pascal}I18n } from './i18n';
+
+// Every route of ${titleEn} loads through this barrel; its strings must be registered first.
+init${pascal}I18n();
+
+export { ${pascal}Game } from './${pascal}Game';
+`;
+
+files['i18n/index.ts'] = `import { registerGameBundle } from '../../../lib/i18n/gameBundle';
+import de from './de.json';
+import en from './en.json';
+
+const bundle = { de, en };
+
+/** Registers ${titleEn}'s own strings (\`./de.json\`, \`./en.json\`); safe to call more than once. */
+export const init${pascal}I18n = (): void => registerGameBundle(bundle);
+`;
 
 // ---------------------------------------------------------------- text patches
 
@@ -314,31 +331,30 @@ export const definition = defineGame({
   patches.push({ file: entriesPath, content: c });
 }
 
-// Locales: hub title/description plus the UI strings of the scaffolded component.
-const strings = {
+// Strings: hub title/description in public/locales, the component's UI strings in the game bundle.
+const hubStrings = {
+  de: { title: titleDe, description: descriptionDe },
+  en: { title: titleEn, description: descriptionEn },
+};
+const uiStrings = {
   de: {
-    title: titleDe,
-    description: descriptionDe,
     round: 'Runde {{round}}',
     start: 'Spiel starten',
     next_turn: 'Nächster Zug',
     restart: 'Neu starten',
   },
-  en: {
-    title: titleEn,
-    description: descriptionEn,
-    round: 'Round {{round}}',
-    start: 'Start game',
-    next_turn: 'Next turn',
-    restart: 'Restart',
-  },
+  en: { round: 'Round {{round}}', start: 'Start game', next_turn: 'Next turn', restart: 'Restart' },
 };
+for (const lang of ['de', 'en']) {
+  files[`i18n/${lang}.json`] =
+    `${JSON.stringify({ games: { [i18nId]: uiStrings[lang] } }, null, 2)}\n`;
+}
 for (const [lang, file] of Object.entries(localePaths)) {
   let c = fs.readFileSync(file, 'utf8');
   if (new RegExp(`^ {4}"${i18nId}": \\{`, 'm').test(c)) {
     fail(`games.${i18nId} already exists in ${rel(file)}.`);
   }
-  const body = Object.entries(strings[lang])
+  const body = Object.entries(hubStrings[lang])
     .map(([k, v]) => `      ${JSON.stringify(k)}: ${JSON.stringify(v)}`)
     .join(',\n');
   c = insertOnce(

@@ -1,7 +1,7 @@
 ---
 type: Reference
 title: 'i18n strategy (de/en)'
-description: 'How translations are loaded (i18next HTTP backend for the shell + per-game JSON bundles registered with registerGameBundle), where a string must be added, the 17 top-level namespaces, interpolation/plural conventions, and the parity ratchet in the hygiene check.'
+description: 'How translations are loaded (i18next HTTP backend for the shell + per-game JSON bundles registered with registerGameBundle), where a string must be added, the top-level namespaces, no t() defaults, interpolation/plural conventions, and the parity ratchet in the hygiene check.'
 tags: [i18n, localization, react-i18next, translation]
 status: stable
 generated:
@@ -47,13 +47,13 @@ sources:
 | `public/locales/{en,de}/translation.json` | app shell, hub, settings, party, connection, notifications, shared modules, every game's `games.<id>.title`/`.description` | HTTP backend at start-up                                                                                                                                                                                                    |
 | `src/games/<id>/i18n/{de,en}.json`        | everything else of that game, under the same key paths `t()` uses                                                          | `src/games/<id>/i18n/index.ts` exports `init<Game>I18n()`, which calls `registerGameBundle` (`src/lib/i18n/gameBundle.ts`: deep merge into `translation` once i18next is initialised); called from the game's entry modules |
 
-Games on per-game bundles so far: cards, darts, drawpot, garticphone, guessart, imposter, kniffel, knister, melodiq, melodiq-notes, qwixx, storyteller, sudoku, tabletop, werewolf, wordle (migration status: [GAME-CATALOG-RESTRUCTURE §7](../tasks/GAME-CATALOG-RESTRUCTURE.md#7-progress)). Games not yet migrated keep their strings in `public/locales`; add a string where its game keeps its strings today.
+Every game has its bundle. Keys a game shares with code outside its folder stay in `public/locales` (e.g. `guessart.*` keys Gartic Phone, the drawing module and push banners read; `games.werewolf.reveal_role` / `play_again`, read by Imposter).
 
 `init<Game>I18n()` must run before the game renders: call it at module level in the game's barrel (`index.ts`, which the catalogue's `lazy()` page loads) or in the page components it exports, and in any module outside the game folder that imports the game's components directly.
 
 ## 4. Namespaces in `translation.json`
 
-Top-level keys (identical in `en` and `de`): `app`, `common`, `connection`, `games`, `gartic`, `github`, `guessart`, `hub`, `lobby`, `notifications`, `party`, `server`, `settings`, `signaling`, `storyteller`, `sudoku`, `wordle`. Game titles/descriptions for the hub are under `games.<id>.title` / `.description` (the keys referenced by `gameRegistry.tsx`).
+Top-level keys of `public/locales` (identical in `en` and `de`): `app`, `common`, `connection`, `games`, `github`, `guessart`, `hub`, `latencyCalibrator`, `lobby`, `notifications`, `party`, `secondScreen`, `server`, `settings`, `signaling`, `storyteller`, `stun`, `turn`. Game titles/descriptions for the hub are under `games.<id>.title` / `.description` (the keys referenced by `gameRegistry.tsx`).
 
 ### Example
 

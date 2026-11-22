@@ -48,7 +48,7 @@ src/
 ├── features/        # hub/, party/ (Universal Party lobby), settings/
 ├── games/           # 15 game folders — one self-contained domain each (see game-catalog)
 ├── hooks/           # useWakeLock, useScreenOrientation, usePWAInstall, useServerUrlAutoConnect, usePrefersReducedMotion
-├── lib/             # storage.ts, catalog/ (game catalogue), gameRegistry.tsx (routes), github.ts, companion/, push/, notifications/, webrtc/, utils/, uuid.ts, disambiguateName.ts
+├── lib/             # storage.ts, catalog/ (game catalogue), gameRegistry.tsx (routes), i18n/ (registerGameBundle, localeT), github.ts, companion/, push/, notifications/, webrtc/, utils/, uuid.ts, disambiguateName.ts
 ├── modules/         # shared cross-game modules (§3.2)
 └── types/
 server/              # optional companion server (separate npm package, Hono)
@@ -58,7 +58,7 @@ server/              # optional companion server (separate npm package, Hono)
 └── cloudflare-push-relay/   # separate Cloudflare Worker for Web Push + ntfy fan-out
 signaling/           # standalone BitTorrent WebSocket tracker (port 8000)
 scripts/             # quality gates (check-*.mjs/js), scaffold-game.mjs, pipeline/
-public/locales/      # de/en translation.json
+public/locales/      # de/en translation.json: shell, shared modules, party, hub titles (game strings: src/games/<id>/i18n/)
 android/             # Capacitor Android project
 ```
 

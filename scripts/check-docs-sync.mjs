@@ -125,7 +125,8 @@ const matchedDocFiles = changedFiles.filter(
     f.startsWith('docs/tech/') ||
     f === 'AGENTS.md' ||
     f === 'README.md' ||
-    f.startsWith('public/locales/'),
+    f.startsWith('public/locales/') ||
+    /^src\/games\/[^/]+\/i18n\/(de|en)\.json$/.test(f),
 );
 
 if (matchedCodeFiles.length > 0 && matchedDocFiles.length === 0) {
@@ -161,7 +162,9 @@ if (matchedCodeFiles.length > 0 && matchedDocFiles.length === 0) {
   );
   console.error('   2. docs/tech/architecture.md (or relevant tech doc in docs/tech/)');
   console.error('   3. AGENTS.md');
-  console.error('   4. public/locales/de/ and public/locales/en/ (if UI strings changed)');
+  console.error(
+    '   4. public/locales/{de,en}/ or src/games/<id>/i18n/{de,en}.json (if UI strings changed)',
+  );
   console.error(
     "\nOr add [skip docs] to the PR description/title (or the 'no-changelog' label) for chore-only changes.\n",
   );

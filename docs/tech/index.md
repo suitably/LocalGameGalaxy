@@ -25,7 +25,7 @@ How the code works **right now**. One topic, one file. Start with the architectu
 
 ## Cross-cutting
 
-- [i18n strategy](i18n-strategy.md) — `public/locales` vs per-game bundles, namespaces, parity gate.
+- [i18n strategy](i18n-strategy.md) — `public/locales` for the shell, one JSON bundle per game, no `t()` defaults, parity gate.
 - [Styling](styling.md) — MUI theme, safe areas, Capacitor touch CSS.
 - [Testing guide](testing-guide.md) — Vitest, `node --test`, environment, mocks.
 - [Pipeline quality gates](pipeline-quality-gates.md) — rationale for the deterministic tools.
