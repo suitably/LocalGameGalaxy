@@ -6,7 +6,7 @@
  * host: the view carries `hints` for single-card picks, bigger picks are tried optimistically and
  * the host refuses illegal ones (`sessionAllows` + the script's `move`).
  */
-import type { ScriptMove, ScriptView } from './scriptTypes';
+import type { ScriptMove, ScriptOptions, ScriptView } from './scriptTypes';
 import { moveAllowed, sessionView, type SessionPlayer, type SessionState } from './session';
 
 /** One seat's (or the table's) picture of the game. */
@@ -17,6 +17,8 @@ export interface SeatPacket {
   view: ScriptView | null;
   /** Single-card moves the script accepts now: `card` or `card>target`. */
   hints: string[];
+  /** Table settings of the running match, shown read-only on the guests. */
+  options?: ScriptOptions;
 }
 
 const hintKey = (card: string, target?: string) => (target ? `${card}>${target}` : card);
@@ -43,7 +45,13 @@ function singleCardHints(state: SessionState, seat: number, view: ScriptView): s
 export function seatPacket(state: SessionState, viewer: number | null): SeatPacket {
   const view = sessionView(state, viewer);
   const hints = view && viewer !== null ? singleCardHints(state, viewer, view) : [];
-  return { players: state.players, step: state.step, view, hints };
+  return {
+    players: state.players,
+    step: state.step,
+    view,
+    hints,
+    ...(state.options ? { options: state.options } : {}),
+  };
 }
 
 /** The `allowed` check of a device that only holds its packet. */

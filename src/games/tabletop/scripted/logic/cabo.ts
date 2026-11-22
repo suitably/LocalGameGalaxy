@@ -229,6 +229,7 @@ export const cabo: GameScript<CaboState> = {
   minPlayers: 2,
   maxPlayers: 6,
   options: [{ id: 'memoryAid', label: 'cabo.option.memoryAid', hint: 'cabo.option.memoryAidHint' }],
+  configure: (s, options) => ({ ...s, memoryAid: options.memoryAid === true }),
   start: (count, rng, options) =>
     deal(Array<number>(count).fill(0), 1, rng, options?.memoryAid === true),
   move,

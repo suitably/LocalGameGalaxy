@@ -5,11 +5,15 @@
  * defender beats each card with a higher one of its suit or a trump, or takes everything. The
  * other players may add cards of ranks already on the table. Whoever is left with cards at the
  * end is the durak.
+ * Table settings (#796): `transfer` (on) — before the first defence the defender may pass the
+ * attack on to the next player with a card of the same rank (perevodnoy); `neighbours` (on) —
+ * only the two neighbours of the defender attack and throw in.
  */
 import type { Rng } from '../../logic/rng';
 import {
   RANKS_36,
   SUITS,
+  cardText,
   SUIT_SYMBOL,
   holdsAll,
   nextSeat,
@@ -21,9 +25,24 @@ import {
   without,
 } from './cardDeck';
 import type { CardId, Suit } from './cardDeck';
-import { emptyView, msg, type GameScript, type ScriptMove, type ScriptView } from './scriptTypes';
+import {
+  emptyView,
+  msg,
+  type ActionView,
+  type GameScript,
+  type ScriptMove,
+  type ScriptView,
+} from './scriptTypes';
+import {
+  DURAK_OPTIONS,
+  HAND_SIZE,
+  rulesOf,
+  transfer,
+  transferCards,
+  type DurakRules,
+} from './durakRules';
 
-const HAND_SIZE = 6;
+export { rulesOf, transferCards, type DurakRules } from './durakRules';
 
 export interface DurakPair {
   attack: CardId;
@@ -47,7 +66,9 @@ export interface DurakState {
   /** Loser of the round; `null` when the last cards went out together. */
   durak: number | null;
   losses: number[];
-  last: 'beaten' | 'taken' | null;
+  last: 'beaten' | 'taken' | 'transferred' | null;
+  /** Missing in sessions saved before the table settings existed: all off (the old rules). */
+  rules?: DurakRules;
 }
 
 export function beats(card: CardId, attack: CardId, trump: Suit): boolean {
@@ -61,12 +82,18 @@ const tableRanks = (s: DurakState) =>
   s.table.flatMap((p) => [p.attack, ...(p.defense ? [p.defense] : [])]).map(rankOf);
 const openAttacks = (s: DurakState) => s.table.filter((p) => !p.defense).map((p) => p.attack);
 
-/** Attackers in asking order: the main attacker, then clockwise, never the defender. */
+/**
+ * Attackers in asking order: the main attacker, then clockwise, never the defender. With
+ * `neighbours` only the main attacker and the seat after the defender.
+ */
 function attackers(s: DurakState): number[] {
   const n = s.hands.length;
-  return Array.from({ length: n }, (_, k) => (s.attacker + k) % n).filter(
+  const all = Array.from({ length: n }, (_, k) => (s.attacker + k) % n).filter(
     (seat) => seat !== s.defender && hasCards(s, seat),
   );
+  if (!s.rules?.neighbours) return all;
+  const after = nextSeat(s.defender, n, (i) => hasCards(s, i));
+  return all.filter((seat) => seat === s.attacker || seat === after);
 }
 
 const canAdd = (s: DurakState, seat: number): boolean =>
@@ -161,11 +188,12 @@ function defend(s: DurakState, cards: CardId[], target?: CardId): DurakState {
 function move(s: DurakState, seat: number, m: ScriptMove, rng: Rng): DurakState {
   if (s.phase === 'roundEnd') {
     if (m.kind !== 'action' || m.id !== 'next') return s;
-    return deal(s.hands.length, rng, s.losses, s.durak);
+    return deal(s.hands.length, rng, s.losses, s.durak, s.rules ?? rulesOf());
   }
   if (seat !== s.turn || m.kind === 'slot') return s;
   if (seat === s.defender) {
     if (m.kind === 'cards') return defend(s, m.cards, m.target);
+    if (m.id === 'transfer' && typeof m.arg === 'string') return transfer(s, m.arg);
     return m.id === 'take' ? endBout(s, true) : s;
   }
   if (m.kind === 'cards') return attack(s, seat, m.cards);
@@ -173,7 +201,13 @@ function move(s: DurakState, seat: number, m: ScriptMove, rng: Rng): DurakState 
   return askAttackers({ ...s, passed: [...s.passed, seat] });
 }
 
-function deal(count: number, rng: Rng, losses: number[], lastDurak: number | null): DurakState {
+function deal(
+  count: number,
+  rng: Rng,
+  losses: number[],
+  lastDurak: number | null,
+  rules: DurakRules,
+): DurakState {
   const deck = shuffledDeck(RANKS_36, rng);
   const trump = suitOf(deck[deck.length - 1]);
   const hands = Array.from({ length: count }, () => deck.splice(0, HAND_SIZE));
@@ -205,6 +239,7 @@ function deal(count: number, rng: Rng, losses: number[], lastDurak: number | nul
       durak: null,
       losses,
       last: null,
+      rules,
     },
     attacker,
   );
@@ -264,7 +299,12 @@ function view(s: DurakState, viewer: number | null): ScriptView {
     v.select = 'one';
     v.targets = openAttacks(s);
     v.playLabel = msg('durak.beat');
-    v.actions = [{ id: 'take', label: msg('durak.take'), tone: 'danger' }];
+    const passOn: ActionView[] = transferCards(s).map((card) => ({
+      id: 'transfer',
+      arg: card,
+      label: msg('durak.transfer', { card: cardText(card) }),
+    }));
+    v.actions = [...passOn, { id: 'take', label: msg('durak.take'), tone: 'danger' }];
   } else {
     v.select = 'many';
     v.playLabel = msg(s.table.length === 0 ? 'durak.attack' : 'durak.add');
@@ -278,7 +318,10 @@ export const durak: GameScript<DurakState> = {
   ranks: RANKS_36,
   minPlayers: 2,
   maxPlayers: 6,
-  start: (count, rng) => deal(count, rng, Array<number>(count).fill(0), null),
+  options: DURAK_OPTIONS,
+  start: (count, rng, options) =>
+    deal(count, rng, Array<number>(count).fill(0), null, rulesOf(options)),
+  configure: (s, options) => ({ ...s, rules: rulesOf(options) }),
   move,
   view,
 };

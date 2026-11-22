@@ -1,15 +1,16 @@
 /**
- * The setup switches a script offers (house rules, aids) [ID: COMP-TABLETOP-SCRIPT-OPTIONS]
+ * The table settings a script offers (house rules, aids), in the setup and the settings dialog [ID: COMP-TABLETOP-SCRIPT-OPTIONS]
  */
 import React from 'react';
 import { FormControlLabel, Stack, Switch, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import type { AnyGameScript, ScriptOptions } from '../logic/scriptTypes';
+import { optionOn, type AnyGameScript, type ScriptOptions } from '../logic/scriptTypes';
 
 interface ScriptOptionSwitchesProps {
   script: AnyGameScript;
   value: ScriptOptions;
-  onChange: (next: ScriptOptions) => void;
+  /** Missing: the switches are shown disabled. */
+  onChange?: (next: ScriptOptions) => void;
 }
 
 export const ScriptOptionSwitches: React.FC<ScriptOptionSwitchesProps> = ({
@@ -26,8 +27,9 @@ export const ScriptOptionSwitches: React.FC<ScriptOptionSwitchesProps> = ({
           <FormControlLabel
             control={
               <Switch
-                checked={value[option.id] === true}
-                onChange={(e) => onChange({ ...value, [option.id]: e.target.checked })}
+                checked={optionOn(script.options, value, option.id)}
+                disabled={!onChange}
+                onChange={(e) => onChange?.({ ...value, [option.id]: e.target.checked })}
               />
             }
             label={t(`games.tabletop.scripted.${option.label}`)}

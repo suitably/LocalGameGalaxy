@@ -1513,7 +1513,8 @@
           "start": "Deal",
           "tableOnly": "This device only shows the table",
           "tableOnlyHint": "For the TV: cast this device's screen. All players use their own phone for their hand and moves. Switch off if you play on this device.",
-          "waitingForHost": "The host is about to start the game …"
+          "waitingForHost": "The host is about to start the game …",
+          "addBack": "Let {{name}} play again"
         },
         "schwimmen": {
           "out": "out",
@@ -1533,8 +1534,11 @@
             "passOnce": "Pass only once",
             "passOnceHint": "Each player may pass only once per round.",
             "firstSwims": "Only the first one swims",
-            "firstSwimsHint": "Only whoever loses their last life first still swims. Everyone after that is out at once."
-          }
+            "firstSwimsHint": "Only whoever loses their last life first still swims. Everyone after that is out at once.",
+            "newMiddle": "New middle on 7-8-9",
+            "newMiddleHint": "If 7, 8 and 9 lie in the middle, the player to act may have three new cards put there and then play."
+          },
+          "newMiddle": "New middle (7-8-9)"
         },
         "durak": {
           "attacker": "attacks",
@@ -1549,7 +1553,14 @@
           "take": "Take",
           "attack": "Attack",
           "add": "Throw in",
-          "done": "Done"
+          "done": "Done",
+          "transfer": "Pass on with {{card}}",
+          "option": {
+            "transfer": "Passing on",
+            "transferHint": "As long as nothing is beaten, the defender may add a card of the same rank and pass the attack on to the next player.",
+            "neighbours": "Only neighbours attack",
+            "neighboursHint": "Only the players left and right of the defender attack and throw in."
+          }
         },
         "arschloch": {
           "president": "President",
@@ -1596,14 +1607,14 @@
           "trickTo": "Trick for {{name}}"
         },
         "rules": {
-          "schwimmen": "<p>32 cards. Everyone holds three cards, three lie open in the middle. The dealer first picks one of two hands; the other goes to the middle.</p><p><b>Your turn:</b> swap one card, swap all three, pass or knock. After a knock everyone else plays once more. If everyone passes, three new cards come to the middle.</p><p><b>Scoring:</b> the sum of one suit (ace 11, court cards 10). Three of a kind count 30.5. 31 or three aces end the round at once – everyone else loses a life. Otherwise the lowest hand loses.</p><p>Everyone has three lives, then you \"swim\", and with the next loss you are out. The last player wins.</p><p><b>House rules:</b> with “Pass only once” everyone may pass only once per round. With “Only the first one swims” only the first player out of lives swims – everyone after that is out at once.</p>",
-          "durak": "<p>36 cards (6 to ace), six in hand. The bottom card of the stock shows trumps. In the first round the lowest trump attacks.</p><p><b>Attack:</b> one or more cards of one rank. <b>Defence:</b> beat every card with a higher one of its suit or with a trump – or take everything.</p><p>Once everything is beaten, the others may throw in cards of ranks already on the table (six attack cards at most, never more than the defender held). Then everyone draws up to six. A successful defender attacks next; whoever takes is skipped.</p><p>Whoever still holds cards at the end is the durak.</p>",
+          "schwimmen": "<p>32 cards. Everyone holds three cards, three lie open in the middle. The dealer first picks one of two hands; the other goes to the middle.</p><p><b>Your turn:</b> swap one card, swap all three, pass or knock. After a knock everyone else plays once more. If everyone passes, three new cards come to the middle.</p><p><b>Scoring:</b> the sum of one suit (ace 11, court cards 10). Three of a kind count 30.5. 31 or three aces end the round at once – everyone else loses a life. Otherwise the lowest hand loses.</p><p>Everyone has three lives, then you \"swim\", and with the next loss you are out. The last player wins.</p><p><b>House rules:</b> with “Pass only once” everyone may pass only once per round. With “Only the first one swims” only the first player out of lives swims – everyone after that is out at once. With “New middle on 7-8-9” the player to act may ask for three new middle cards when 7, 8 and 9 lie there, and then play.</p>",
+          "durak": "<p>36 cards (6 to ace), six in hand. The bottom card of the stock shows trumps. In the first round the lowest trump attacks.</p><p><b>Attack:</b> one or more cards of one rank. <b>Defence:</b> beat every card with a higher one of its suit or with a trump – or take everything.</p><p>Once everything is beaten, the others may throw in cards of ranks already on the table (six attack cards at most, never more than the defender held). Then everyone draws up to six. A successful defender attacks next; whoever takes is skipped.</p><p>Whoever still holds cards at the end is the durak.</p><p><b>Table settings:</b> “Passing on” – as long as nothing is beaten, the defender adds a card of the same rank and the next player has to defend. “Only neighbours attack” – only the players left and right of the defender attack and throw in.</p>",
           "arschloch": "<p>All cards are dealt (32 up to four players, 52 above). The leader plays one or more cards of one rank. The others play as many cards of a higher rank or pass – a pass lasts until the trick ends. Whoever played last leads again.</p><p>First out is the president, last the scum. Before the next round the scum hands their best cards to the president (two from four players, otherwise one), who returns cards of their choice; from four players the vices swap one card too. The scum leads.</p>",
           "skat": "<p>Three players, 32 cards, ten each, two in the skat. Middlehand bids to forehand, then rearhand to the winner. The winner picks up the skat and discards two cards – or plays hand – and declares a suit, grand or null.</p><p>You must follow suit; the jacks are the highest trumps (not in null). The declarer needs 61 card points; in null they must not take a trick.</p><p><b>Value:</b> matadors + 1 (+ hand, schneider, schwarz) × base value (diamonds 9, hearts 10, spades 11, clubs 12, grand 24); null 23, hand 35, ouvert 46, ouvert hand 59. Lost games count double negative. If everyone passes, the next dealer deals. No Ramsch, no announced schneider/schwarz.</p>",
-          "maumau": "<p>32 cards, five each. The face-up start card has no effect.</p><p><b>Your turn:</b> play a card of the same suit or rank as the top card. If you cannot or do not want to, draw one card; if it fits you may play only that card, otherwise you pass.</p><p><b>Special cards:</b> 7 – the next player draws two cards or answers with a 7 (then four, and so on). 8 – the next player is skipped. Jack – on anything but a jack; you wish a suit for the next card.</p><p>The first player without cards wins the round. Round wins are counted.</p>",
+          "maumau": "<p>32 cards, five each. The face-up start card has no effect.</p><p><b>Your turn:</b> play a card of the same suit or rank as the top card. If you cannot or do not want to, draw one card; if it fits you may play only that card, otherwise you pass.</p><p><b>Special cards:</b> 7 – the next player draws two cards or answers with a 7 (then four, and so on). 8 – the next player is skipped. Jack – on anything but a jack; you wish a suit for the next card.</p><p>The first player without cards wins the round. Round wins are counted.</p><p><b>Table settings:</b> “8 skips”, “8 on 8 passes it on” (whoever is to be skipped plays an 8 and the next player is skipped), “Play a drawn card at once” and “Play on for a ranking” (after the first win the others play out the places).</p>",
           "schwarzer-peter": "<p>52 cards without the jack of clubs; the jack of spades is the Schwarzer Peter (Old Maid). All cards are dealt, pairs (same rank, same colour: red or black) go down at once.</p><p><b>Your turn:</b> draw one face-down card from the next player clockwise who still holds cards. Their cards are shuffled first. If it matches one of yours, the pair goes down.</p><p>A player without cards is done. Whoever holds the Schwarzer Peter at the end loses the round.</p>",
           "golf": "<p>52 cards and two jokers, two decks from five players. Everyone has six face-down cards in two rows of three and flips two at the start. Nobody knows a face-down card, not even its owner.</p><p><b>Your turn:</b> draw from the stock or take the top discard. Swap it for one of your cards (the old one goes face up onto the discard) or – only when drawn from the stock – discard it and flip a face-down card.</p><p>Once someone has all six cards face up, everyone else plays once more.</p><p><b>Scoring:</b> ace 1, 2–10 face value, jack and queen 10, king 0, joker −2. Two equal ranks in one column count 0 (jokers never). After nine holes the lowest total wins.</p>",
-          "cabo": "<p>52 cards and two jokers. Everyone has four face-down cards and looks at the bottom two at the start of each round – after that you have to remember them.</p><p><b>Your turn:</b> draw from the stock or take the top discard – or call <b>Cabo</b>. Swap the drawn card for one of yours (the old one goes onto the discard) or discard it if it came from the stock.</p><p><b>Discarded special cards (stock only):</b> 7/8 – look at one of your cards. 9/10 – look at another player's card. Jack/queen – blind-swap one of your cards with another player's. You may skip the power.</p><p>After Cabo everyone else plays once more. <b>Points:</b> ace 1, 2–10 face value, jack 11, queen 12, red king 0, black king 13, joker 0. Whoever calls Cabo without the strictly lowest hand gets 10 more. Exactly 100 falls back to 50. Above 100 the game ends, the lowest total wins.</p>"
+          "cabo": "<p>52 cards and two jokers. Everyone has four face-down cards and looks at the right two at the start of each round – after that you have to remember them.</p><p><b>Your turn:</b> draw from the stock or take the top discard – or call <b>Cabo</b>. Swap the drawn card for one of yours (the old one goes onto the discard) or discard it if it came from the stock.</p><p><b>Discarded special cards (stock only):</b> 7/8 – look at one of your cards. 9/10 – look at another player's card. Jack/queen – blind-swap one of your cards with another player's. You may skip the power.</p><p>After Cabo everyone else plays once more. <b>Points:</b> ace 1, 2–10 face value, jack 11, queen 12, red king 0, black king 13, joker 0. Whoever calls Cabo without the strictly lowest hand gets 10 more. Exactly 100 falls back to 50. Above 100 the game ends, the lowest total wins.</p>"
         },
         "maumau": {
           "wins_one": "{{count}} win",
@@ -1622,6 +1633,23 @@
             "S": "♠ Spades",
             "H": "♥ Hearts",
             "D": "♦ Diamonds"
+          },
+          "skip": "Skip turn",
+          "skipPending": "8: skip or play an 8",
+          "place": "Place {{place}}",
+          "cards_one": "{{count}} card",
+          "cards_other": "{{count}} cards",
+          "playOn": "Play on",
+          "playOnAsk": "Play on to decide the remaining places?",
+          "option": {
+            "eightSkips": "8 skips",
+            "eightSkipsHint": "After an 8 the next player is skipped.",
+            "eightCounter": "8 on 8 passes it on",
+            "eightCounterHint": "Whoever is to be skipped may play an 8; then the next player is skipped.",
+            "drawPlay": "Play a drawn card at once",
+            "drawPlayHint": "If the drawn card fits, it may be played at once. Off: after drawing the next player is up.",
+            "playOn": "Play on for a ranking",
+            "playOnHint": "Once someone has won, the others may play on until every place is decided."
           }
         },
         "schwarzerPeter": {
@@ -1655,7 +1683,7 @@
         "cabo": {
           "total": "{{points}} pts",
           "called": "Cabo!",
-          "peek": "{{name}} looks at the bottom two cards",
+          "peek": "{{name}} looks at the right two cards",
           "seen": "Got it",
           "drawStock": "Draw from stock",
           "takeDiscard": "Take discard",
@@ -1686,6 +1714,13 @@
             "memoryAid": "Memory aid",
             "memoryAidHint": "Cards you have already seen stay face up for you – easier, less to remember."
           }
+        },
+        "settings": {
+          "title": "Table settings",
+          "nextMatch": "Applies from the next game and is saved on this device.",
+          "appliesNow": "Changes apply to the running game at once.",
+          "appliesAll": "Changes apply at once for every device at the table.",
+          "hostOnly": "Only the host can change the settings."
         }
       },
       "showOnTv": "Show on TV",
