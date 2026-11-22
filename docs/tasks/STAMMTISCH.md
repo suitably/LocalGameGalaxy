@@ -21,11 +21,11 @@ sources:
 
 ## 1. Request (maintainer, 2026-11-22)
 
-- Play with relatives who are not good with apps. They only have to open the app; a helper who is connected can do the rest.
+- Play together remotely with people who only have to open the app; a connected helper can do the rest.
 - A **persistent room**, named **Stammtisch**: everyone who belongs to it can come back to it any time.
 - The helper can either **act on the other player's behalf** or **show them where to tap** by placing markers on their screen.
 - First games: **Kniffel**, plus the international rule variant of the same game.
-- No wording that names a specific person or age group (no "Oma", "senior"): the feature is "Stammtisch" and "help".
+- Neutral wording: the feature is called "Stammtisch" and "help".
 
 ## 2. Facts (what exists — reuse, never re-implement)
 
