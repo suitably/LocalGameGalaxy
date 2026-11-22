@@ -9,7 +9,7 @@ import { useSessionEnd } from './useSessionEnd';
 import { usePassiveSync } from './usePassiveSync';
 import { useSessionAudioController } from './useSessionAudioController';
 import { useSessionScoringController } from './useSessionScoringController';
-import { useParsedSong } from './useParsedSong';
+import { useSongVocals } from './useSongVocals';
 import type { MelodiqSessionHandle, MelodiqSessionProps } from '../types';
 import type { ScoreBoardPlayer } from '../logic/scoreBoardRanking';
 import type { RemoteResultEntry } from './usePeerSessionMessages';
@@ -42,7 +42,7 @@ export function useMelodiqSessionCore(
   useScreenOrientation('landscape');
 
   const [results, setResults] = useState<SessionResult[]>([]);
-  const { parsedSong, contentLoading, loadError } = useParsedSong(song);
+  const { parsedSong, contentLoading, loadError } = useSongVocals(song);
 
   const {
     audioSrc,

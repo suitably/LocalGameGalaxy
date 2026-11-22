@@ -411,6 +411,10 @@ export const melodiqResources = {
       session: {
         loading: 'Loading...',
         go_back: 'Go Back',
+        parse_failed: 'Failed to parse song format.',
+        no_lyrics: 'This song has neither a karaoke file nor sheet music.',
+        no_vocal_part: "This song's sheet music has no vocal part to sing.",
+        score_load_failed: "This song's sheet music could not be loaded.",
         exit: 'Exit',
         crashed: 'Session Crashed',
         no_audio_source: 'No Audio Source Found',
@@ -891,6 +895,10 @@ export const melodiqResources = {
       session: {
         loading: 'Wird geladen...',
         go_back: 'Zurück',
+        parse_failed: 'Das Songformat konnte nicht gelesen werden.',
+        no_lyrics: 'Dieser Song hat weder eine Karaoke-Datei noch Noten.',
+        no_vocal_part: 'Die Noten dieses Songs haben keine Gesangsstimme.',
+        score_load_failed: 'Die Noten dieses Songs konnten nicht geladen werden.',
         exit: 'Beenden',
         crashed: 'Sitzung abgestürzt',
         no_audio_source: 'Keine Audioquelle gefunden',

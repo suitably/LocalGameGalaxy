@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box } from '@mui/material';
-import type { Note } from '../../parser';
+import type { Note } from '../../logic/songVocals';
 import { groupNotesIntoWords } from '../logic/lyricsFit';
 
 interface LineWordsProps {

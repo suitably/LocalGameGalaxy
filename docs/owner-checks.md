@@ -80,3 +80,10 @@ Server routes (`POST /api/songs/:id/files` with `label`, `POST /api/songs/:id/me
 - [ ] With a companion server: "Save to Notes library" pre-selects the same-named song; a given name appears as the score label; "New song" creates a separate folder.
 - [ ] "Move into another song…" moves scores, marks and labels into a Melodiq song and the source entry disappears; "Re-scan library" shows a folder added on disk without a restart.
 - [ ] On the stage, a hidden part gets no player, is not offered on a joined phone and lowers the track count; "Synth backing" makes it audible in band mode Others/All (muted by default); a renamed part shows its name on stage and pult; both survive reloading the score.
+
+## #604 — Melodiq sings from `ScoreSong`
+
+Parity tests (solo, duet, golden, freestyle, rap fixtures) show identical notes, line breaks and scores through the old and new path; score-only songs are listed (`/api/songs?all=1`) and sing from the first score with a vocal part.
+
+- [ ] With a companion server, sing a karaoke song with a `.txt` (solo and duet) and compare the score with an earlier run.
+- [ ] Sing a song that has only a MusicXML with a lyric vocal part (+ bar marks): lyrics and pitch follow the mix. A phone that loads such a song needs its own companion connection (it fetches the score directly).

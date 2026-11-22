@@ -83,7 +83,7 @@ GuessArt's payload type, for example, is `GameSnapshot { game: GuessArtGameRecor
 ### UltraStar song
 
 ```typescript
-// src/modules/music-score/ultrastar.ts (Melodiq imports it via src/games/melodiq/parser.ts as Note / SongTrack / ParsedSong)
+// src/modules/music-score/ultrastar.ts (the parsed `.txt`; Melodiq sings it through ScoreSong, #604)
 export interface UltraStarNote {
   type: string; // ':' normal, '*' golden, 'F' freestyle, 'R' rap, 'G' golden rap, '-' line break
   start: number; // beats after GAP
@@ -91,17 +91,24 @@ export interface UltraStarNote {
   pitch: number; // MIDI number (0 for line breaks)
   text: string; // syllable
 }
-export interface SongTrack {
+export interface UltraStarTrack {
   name: string;
-  notes: Note[];
+  notes: UltraStarNote[];
 }
-export interface ParsedSong {
+export interface UltraStarSong {
   headers: Record<string, string>; // upper-cased #KEY: value
-  notes: Note[]; // @deprecated → tracks[0].notes
-  tracks: SongTrack[]; // duets have two
+  notes: UltraStarNote[]; // @deprecated → tracks[0].notes
+  tracks: UltraStarTrack[]; // duets have two
   bpm: number; // default 120
   gap: number; // ms, default 0
 }
+// src/modules/music-score/sungSong.ts — Melodiq's gameplay view of ScoreSong vocal parts
+export interface SungSong {
+  tracks: UltraStarTrack[]; // UltraStar grid, '-' line breaks
+  bpm: number;
+  gap: number; // ms
+}
+// src/games/melodiq/logic/songVocals.ts: SongVocals = SungSong + headers; Note / SongTrack aliases
 ```
 
 ### Tabletop

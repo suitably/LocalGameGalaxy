@@ -9,8 +9,8 @@ generated:
   at: 2026-09-27T10:00:00Z
   by: previous-agent
 verified:
-  at: 2026-11-14
-  method: '2026-11-14: §2.9 / §2.10 written from code and measurements; rest 2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
+  at: 2026-11-22
+  method: '2026-11-22: §2.11 written from code (#604); 2026-11-14: §2.9 / §2.10 written from code and measurements; rest 2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
 # Melodiq Architecture
@@ -117,6 +117,17 @@ Four things must agree: instrumental, vocal stem, lyrics / pitch lanes, and the 
 ### 2.10 Whose pitch lanes a screen shows
 
 `laneScope` / `playersInScope` (`gameplay/logic/stageLanes.ts`, used by `filterVisiblePlayers`): a shared screen (TV, laptop, tablet) shows every singer. A phone is one singer's screen: a phone client shows its own singer (the host's `GAME_STATE` player `config.deviceId` is kept on the passive player for that), a hosting phone without a TV shows the singers on its own microphone (`hasTv` session prop from `isTVConnected`), and with a TV it keeps all lanes as the controller. "Phone" is a coarse pointer with a short screen side of at most 600 px (`usePhoneScreen.ts`). Duet lyrics always show both parts (the phone picks its part there, §2.6).
+
+### 2.11 What a song sings: ScoreSong vocal parts (#604)
+
+Gameplay reads the vocal parts of the shared `ScoreSong` (`src/modules/music-score/types.ts`, epic #565), not a parsed `.txt` of its own; Melodiq has no UltraStar parser any more (`src/games/melodiq/parser.ts` and `ParsedSong` are gone).
+
+- `songVocals` (`logic/songVocals.ts`): a karaoke `.txt` goes `parseUltraStarTxt` → `ultraStarToScore` → `scoreToSungSong` (all in `modules/music-score`); a song without `.txt` sings the vocal part of its score (`{ song, marks }`), timed by its bar marks, or by the score's tempo map without marks. With both, the `.txt` wins. The result (`SongVocals`: `tracks`, `bpm`, `gap`, `headers`) is the gameplay view model; `Note` / `SongTrack` / `SongWithNotes` are exported there.
+- `scoreToSungSong` (`modules/music-score/sungSong.ts`): a score from a `.txt` (phrase breaks, one tempo, marks exactly on `#BPM` / `#GAP`) maps back exactly — same beats, pitches, kinds (`*`, `F`, `R`, `G`) and `-` line breaks; lyric text is rebuilt from the syllables (a leading space starts a new word, never at a line start). Any other score goes on an UltraStar grid through `scoreToUltraStarGrid`, the structured core of the `.txt` export (#567): default `#BPM` from the marks, `#GAP` at the first note, line breaks from phrase breaks or pauses. Parts: every vocal part of a karaoke score; else both parts of a two-part vocal score (a duet), else the first vocal part.
+- `useSongVocals` (`gameplay/hooks/useSongVocals.ts`) feeds the session (`useMelodiqSessionCore`): scoring (`useScoringEngine`, note rules in `gameplay/logic/noteScoring.ts`: `isScoredNote`, `activeNoteIndex`, `pointsPerBeat`), lyrics, pitch lane, duet tracks and the phone `songInfo` all read `tracks`; media names come from `headers`.
+- Parity: `logic/songVocals.test.ts` checks that solo, duet, golden, freestyle and rap `.txt` fixtures give the same notes, line breaks and scores through the old `ParsedSong` shape and through `ScoreSong`, and that a score-only song produces sung lines; `logic/scoreVocals.test.ts` covers listing, score choice, marks and the failure reasons.
+- Songs without `.txt` (#604): `fetchServerSongs` (`logic/serverSongsProvider.ts`) asks `/api/songs?all=1` and keeps karaoke songs plus songs with sheet music (`isSingableServerSong` in `logic/scoreVocals.ts`; whether a score has a vocal part is only known after reading it, the server does not parse scores). `processServerSongs` keeps `scores` on the `Song`. Without `txtContent`, `useSongVocals` runs `loadScoreVocals`: scores with bar marks first, else folder order (`scoreCandidates`); each is fetched (`fetchCompanionFile`) and read (`readScoreBytes`, `modules/music-score/readScore.ts`, shared with Melodiq Notes' `readScoreFile`) until one has a vocal part (`sungParts`); its `.marks.json` (`getSongMarks`) times it when the marks belong to the song's mix (`marksForMix`, fine-tune offset applied), else the score's tempo. Failures show an i18n message (`melodiq.session.no_vocal_part`, `score_load_failed`, `no_lyrics`, `parse_failed`; `loadError` is an i18n key). Phones get the song list from the host; a phone reading a score needs the companion server itself.
+- The library scan (`logic/localLibraryProvider.ts`) reads `.txt` header fields with the shared `parseUltraStarTxt`.
 
 ## 3. Known Technical Debt & Refactoring Goals
 
