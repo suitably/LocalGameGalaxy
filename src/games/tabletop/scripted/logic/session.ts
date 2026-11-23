@@ -7,7 +7,12 @@
  */
 import { seededRng, type Rng } from '../../logic/rng';
 import { getScript } from './scriptRegistry';
-import type { ScriptMove, ScriptView } from './scriptTypes';
+import {
+  resolveOptions,
+  type ScriptMove,
+  type ScriptOptions,
+  type ScriptView,
+} from './scriptTypes';
 
 export interface SessionPlayer {
   id: string;
@@ -22,11 +27,21 @@ export interface SessionState {
   /** Accepted moves so far. */
   step: number;
   game: unknown | null;
+  /** Table settings of the running match (missing in sessions saved before they existed). */
+  options?: ScriptOptions;
 }
 
 export type SessionAction =
-  | { type: 'START'; scriptId: string; players: SessionPlayer[]; seed: number }
+  | {
+      type: 'START';
+      scriptId: string;
+      players: SessionPlayer[];
+      seed: number;
+      options?: ScriptOptions;
+    }
   | { type: 'MOVE'; seat: number; move: ScriptMove }
+  /** New table settings for the running match (host only). */
+  | { type: 'OPTIONS'; options: ScriptOptions }
   /** Back to the setup (new players, other seats). */
   | { type: 'END' };
 
@@ -47,12 +62,14 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
       const script = getScript(action.scriptId);
       const count = action.players.length;
       if (!script || count < script.minPlayers || count > script.maxPlayers) return state;
+      const options = resolveOptions(script.options, action.options);
       return {
         scriptId: action.scriptId,
         players: action.players,
         seed: action.seed,
         step: 0,
-        game: script.start(count, rngFor(action.seed, -1)),
+        game: script.start(count, rngFor(action.seed, -1), options),
+        options,
       };
     }
     case 'MOVE': {
@@ -65,6 +82,14 @@ export function sessionReducer(state: SessionState, action: SessionAction): Sess
         rngFor(state.seed, state.step),
       );
       return game === state.game ? state : { ...state, game, step: state.step + 1 };
+    }
+    case 'OPTIONS': {
+      const script = getScript(state.scriptId);
+      if (!script || state.game === null) return state;
+      const options = resolveOptions(script.options, action.options);
+      const game = script.configure ? script.configure(state.game, options) : state.game;
+      // A new step, so every device gets a fresh packet.
+      return { ...state, game, options, step: state.step + 1 };
     }
     case 'END':
       return state.game === null ? state : emptySession(state.scriptId);

@@ -85,6 +85,7 @@ export const KnisterBoard: React.FC<KnisterBoardProps> = ({
                   activeSum={activeSum}
                   isTargetPicker={targetPickerCell?.row === rIdx && targetPickerCell?.col === cIdx}
                   onActivate={() => handleCellAction(rIdx, cIdx)}
+                  target={`knister.cell.${rIdx}.${cIdx}`}
                 />
               );
             })}

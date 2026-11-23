@@ -5,6 +5,7 @@ import {
   type DrumVoice,
 } from '../../../../modules/music-score';
 import { lowerBound, type StageNote } from '../logic/charts';
+import { padLane } from '../logic/drumLanes';
 import {
   centsOff,
   LEARN_EARLY_SEC,
@@ -117,7 +118,8 @@ export function playPitch(e: StageEngine, pitch: number, at: PlayAt = focused(e)
     return;
   }
   const midi = Math.round(pitch);
-  if (view === 'drums') return playLane(e, drumLaneOf(midi), drumVoiceOfKey(midi), at);
+  if (view === 'drums')
+    return playLane(e, padLane(p.drumKit, drumLaneOf(midi)), drumVoiceOfKey(midi), at);
   const cents = Number.isInteger(pitch) ? undefined : centsOff(pitch, midi);
   if (view === 'keys') return playLane(e, midi, undefined, at, cents);
   const near = p.notes

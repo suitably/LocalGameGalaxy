@@ -6,7 +6,7 @@
  */
 import { companionRequest as request, companionUrl, jsonBody } from './companionHttp';
 import { getHelperToken } from './companionSettings';
-import type { CompanionSong, StoredBarMarks } from './songScoresApi';
+import type { CompanionSong, ScorePartSettings, StoredBarMarks } from './songScoresApi';
 
 export interface StoredSongFile {
   file: string;
@@ -32,10 +32,18 @@ export const createLibrarySong = (meta: { title: string; artist: string }) =>
 export const updateSongMeta = (id: string, meta: SongMetaInput) =>
   request<CompanionSong>(`${songPath(id)}/meta`, jsonBody('PUT', meta));
 
-/** Stores a score or a recording; the server picks a free file name and says which it used. */
-export async function uploadSongFile(songId: string, file: File): Promise<StoredSongFile> {
+/**
+ * Stores a score or a recording; the server picks a free file name and says which it used.
+ * `label` names a score in `song.json` (#563).
+ */
+export async function uploadSongFile(
+  songId: string,
+  file: File,
+  label?: string,
+): Promise<StoredSongFile> {
   const form = new FormData();
   form.append('file', file);
+  if (label?.trim()) form.append('label', label.trim());
   return request<StoredSongFile>(`${songPath(songId)}/files`, { method: 'POST', body: form });
 }
 
@@ -55,6 +63,13 @@ export async function getSongMarks(songId: string, file: string): Promise<Stored
 export const saveSongMarks = (songId: string, file: string, marks: StoredBarMarks) =>
   request<{ success: true }>(marksPath(songId, file), jsonBody('PUT', marks));
 
+/** Replaces the hidden and renamed parts of a score in `song.json` (#564). */
+export const saveScoreParts = (songId: string, file: string, parts: ScorePartSettings) =>
+  request<CompanionSong>(
+    `${songPath(songId)}/scores/${encodeURIComponent(file)}/parts`,
+    jsonBody('PUT', { parts }),
+  );
+
 /** Removes the whole song folder (the UI offers it only for songs without karaoke `.txt`). */
 export const deleteLibrarySong = (songId: string) =>
   request<{ success: true }>(songPath(songId), { method: 'DELETE' });
@@ -65,3 +80,23 @@ export function songArchiveUrl(songId: string): string {
   const query = token ? `?token=${encodeURIComponent(token)}` : '';
   return companionUrl(`${songPath(songId)}/archive${query}`);
 }
+
+/**
+ * Moves the scores and recordings of a song without `.txt` into another song, e.g. a Melodiq
+ * song (#563); the source song is gone afterwards. `files`: new name of each moved score.
+ */
+export const mergeLibrarySong = (songId: string, intoId: string) =>
+  request<{ song: CompanionSong; files: Record<string, string> }>(
+    `${songPath(songId)}/merge`,
+    jsonBody('POST', { into: intoId }),
+  );
+
+/** Result of the library re-scan; `migration` is null without management rights. */
+export interface LibraryRescanResult {
+  songs: number;
+  migration: { migrated: number; failed: number } | null;
+}
+
+/** Full library scan without a server restart, plus the Notes migration of pieces not moved yet. */
+export const rescanLibrary = () =>
+  request<LibraryRescanResult>('/api/notes/library/rescan', { method: 'POST' });

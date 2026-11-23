@@ -42,6 +42,9 @@ jobs:
       - name: Run Repository Hygiene
         run: npm run check:hygiene
 
+      - name: Dependency Licence Allow-List
+        run: npm run check:licences
+
       # Tag pushes only: tag, every package.json / lockfile, Android versionName and CHANGELOG agree (#593)
       - name: Verify Release Version Consistency
         if: github.event_name == 'push'
@@ -149,7 +152,7 @@ jobs:
         run: npx cap sync android
 
       - name: Setup Java
-        uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           distribution: 'zulu'
           java-version: '21'
@@ -266,6 +269,14 @@ jobs:
           cp server/dist/nexumia-server-macos release/macos/
           cp server/release-scripts/start-server.command release/macos/
           chmod +x release/macos/nexumia-server-macos release/macos/start-server.command
+
+      # AGPL licence text and the licences of every bundled npm package (#594)
+      - name: Add Licence Notices
+        run: |
+          node scripts/check-licences.mjs --notice server --out THIRD_PARTY_LICENSES.txt
+          for os in linux windows macos; do
+            cp LICENSE THIRD_PARTY_LICENSES.txt "release/$os/"
+          done
 
       - name: Create Archives
         run: |

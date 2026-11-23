@@ -21,3 +21,5 @@ export * from './ultrastar';
 export * from './ultrastarScore';
 export * from './scoreToUltraStar';
 export * from './markQuality';
+export * from './sungSong';
+export * from './readScore';

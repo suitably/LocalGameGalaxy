@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Chip, Stack, useTheme } from '@mui/material';
+import PhoneIphoneIcon from '@mui/icons-material/PhoneIphoneRounded';
 import { useTranslation } from 'react-i18next';
 import { AreaSymbol } from '../../components/brand/AreaSymbol';
 import type { AreaDefinition, AreaId } from '../../lib/areas';
@@ -10,21 +11,36 @@ interface HubAreaFilterProps {
   areas: AreaDefinition[];
   selected: AreaFilter;
   onSelect: (area: AreaFilter) => void;
+  /** Show only games everyone plays on their own phone (party room). */
+  ownDevices: boolean;
+  onToggleOwnDevices: () => void;
 }
 
 /** Area labels as filter pills (DESIGN.md §8.2): coloured symbol, filled in the area colour when selected. */
-export const HubAreaFilter: React.FC<HubAreaFilterProps> = ({ areas, selected, onSelect }) => {
+export const HubAreaFilter: React.FC<HubAreaFilterProps> = ({
+  areas,
+  selected,
+  onSelect,
+  ownDevices,
+  onToggleOwnDevices,
+}) => {
   const { t } = useTranslation();
   const theme = useTheme();
   const ink = theme.palette.piece.contrastText;
 
-  const pill = (key: AreaFilter, label: string, fill: string, icon?: React.ReactNode) => {
-    const isSelected = selected === key;
+  const pill = (
+    key: string,
+    label: string,
+    fill: string,
+    icon: React.ReactNode,
+    isSelected: boolean,
+    onClick: () => void,
+  ) => {
     return (
       <Chip
         key={key}
         clickable
-        onClick={() => onSelect(key)}
+        onClick={onClick}
         aria-pressed={isSelected}
         label={
           <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
@@ -63,7 +79,22 @@ export const HubAreaFilter: React.FC<HubAreaFilterProps> = ({ areas, selected, o
         '&::-webkit-scrollbar': { display: 'none' },
       }}
     >
-      {pill('all', t('hub.categories.all'), theme.palette.primary.main)}
+      {pill(
+        'own-devices',
+        t('hub.filter.own_devices'),
+        theme.palette.primary.main,
+        <PhoneIphoneIcon sx={{ fontSize: 18 }} />,
+        ownDevices,
+        onToggleOwnDevices,
+      )}
+      {pill(
+        'all',
+        t('hub.categories.all'),
+        theme.palette.primary.main,
+        null,
+        selected === 'all',
+        () => onSelect('all'),
+      )}
       {areas.map((area) => {
         const fill = theme.palette.piece[area.color];
         const isSelected = selected === area.id;
@@ -76,6 +107,8 @@ export const HubAreaFilter: React.FC<HubAreaFilterProps> = ({ areas, selected, o
             color={isSelected ? ink : fill}
             cut={isSelected ? fill : theme.palette.background.default}
           />,
+          isSelected,
+          () => onSelect(area.id),
         );
       })}
     </Stack>

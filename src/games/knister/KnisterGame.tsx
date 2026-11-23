@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Box, Tabs, Tab } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { initKnisterI18n } from './i18n';
@@ -14,34 +14,50 @@ import { KnisterNumberBar } from './components/KnisterNumberBar';
 import { KnisterNumberPickerModal } from './components/KnisterNumberPickerModal';
 import { KnisterCombinationsLegend } from './components/KnisterCombinationsLegend';
 import { KnisterGameOverModal } from './components/KnisterGameOverModal';
+import { usePassAndPlayTurns } from '../../modules/pass-and-play';
+import { canUndoLocal } from './logic/knisterLocal';
 
 // Initialize i18n bundles at module load time to prevent setState side-effects during render
 initKnisterI18n();
 
 export const KnisterGame: React.FC = () => {
   const { t } = useTranslation();
-  usePageTitle(t('games.knister.title', 'Knister'));
+  usePageTitle(t('games.knister.title', 'Würfelgitter'));
   useWakeLock(true);
 
   const game = useKnisterGameState();
   const { state, dispatch } = game;
+  // One device for everyone: after placing, the cover asks for the next player of this roll.
+  const turns = usePassAndPlayTurns({
+    players: state.players,
+    activeIndex: state.activePlayerIndex,
+    onSwitch: useCallback(
+      (index: number) => dispatch({ type: 'SWITCH_PLAYER', index }),
+      [dispatch],
+    ),
+    onSetPlayers: useCallback(
+      (names: string[]) => dispatch({ type: 'SET_PLAYERS', names }),
+      [dispatch],
+    ),
+  });
 
   return (
     <GameLayout maxWidth="md">
       <KnisterToolbar
         showDice={game.showDice}
-        canUndo={Boolean(state.moveHistory?.length) && !state.isGameOver}
+        canUndo={canUndoLocal(state)}
         onToggleDice={game.toggleDice}
         onUndo={game.handleUndo}
         onOpenLegend={() => game.setLegendOpen(true)}
         onReset={() => game.setResetDialogOpen(true)}
+        onPlayers={turns.openPlayers}
       />
 
       {state.players.length > 1 && (
         <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 1 }}>
           <Tabs
             value={state.activePlayerIndex}
-            onChange={(_, val) => dispatch({ type: 'SWITCH_PLAYER', index: val })}
+            onChange={(_, val: number) => turns.switchTo(val)}
             variant="scrollable"
             scrollButtons="auto"
           >
@@ -94,6 +110,8 @@ export const KnisterGame: React.FC = () => {
         onSelectNumber={game.handlePickerSelectNumber}
         onClose={game.closePicker}
       />
+
+      {turns.overlay}
 
       <KnisterCombinationsLegend open={game.legendOpen} onClose={() => game.setLegendOpen(false)} />
 

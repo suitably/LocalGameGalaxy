@@ -1,0 +1,1 @@
+- **Schwarzer Peter is now played on the Spieltisch**: draw blind from your neighbour's face-down cards on the shared card table, on one device or with everyone on their own phone. The separate hub tile is gone.

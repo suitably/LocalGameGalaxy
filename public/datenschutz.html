@@ -15,7 +15,7 @@
         <a href="/">Zurück zu den Spielen</a>
       </p>
       <h1>Datenschutzerklärung</h1>
-      <p class="meta">für games.nexumia.de und die Nexumia-Android-App · Stand: 15. November 2026</p>
+      <p class="meta">für games.nexumia.de und die Nexumia-Android-App · Stand: 22. November 2026</p>
 
       <section class="summary" aria-labelledby="kurz">
         <h2 id="kurz">Das Wichtigste in Kürze</h2>
@@ -97,9 +97,21 @@
           eingibst (Spielernamen, Texte, Zeichnungen, Züge), sowie eine zufällige Geräte-Kennung.
         </li>
         <li>
-          <strong>Wichtig:</strong> Die Server sind öffentlich. Wer den Raumcode kennt, kann den
-          Spielstand lesen. Der jeweils letzte Stand bleibt auf dem Server gespeichert, bis er
-          überschrieben wird. Gib daher keine echten Namen oder vertraulichen Inhalte ein.
+          <strong>Verschlüsselung:</strong> Neue Räume und Spiele werden Ende-zu-Ende verschlüsselt
+          (AES-GCM). Der Schlüssel entsteht auf dem Gerät des Gastgebers und steht nur im
+          Einladungslink bzw. QR-Code hinter dem <code>#</code>; dieser Teil wird nie an einen Server
+          gesendet. Die MQTT-Server sehen daher nur verschlüsselte Daten, den Raumcode bzw. die
+          Spiel-Kennung, die Uhrzeit und deine IP-Adresse – nicht den Spielstand.
+        </li>
+        <li>
+          <strong>Speicherdauer:</strong> Nur der jeweils letzte Spielstand, den ein später
+          beitretendes Gerät braucht, bleibt (verschlüsselt) auf dem Server gespeichert, bis er
+          überschrieben wird; alles andere wird nur weitergeleitet.
+        </li>
+        <li>
+          <strong>Übergang:</strong> Räume aus älteren Einladungslinks ohne Schlüssel laufen für eine
+          Version noch unverschlüsselt; dort kann jeder, der den Raumcode kennt, den Spielstand
+          lesen. Gib dort keine echten Namen oder vertraulichen Inhalte ein.
         </li>
       </ul>
 

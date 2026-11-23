@@ -40,4 +40,19 @@ describe('roomPlayersOf (#647 S3)', () => {
     ]);
     expect(roomPlayersOf(null)).toEqual([]);
   });
+
+  it('lists only present members in a Stammtisch', () => {
+    const state = {
+      roomId: 'R',
+      hostId: 'a',
+      status: 'lobby' as const,
+      activeGame: null,
+      updatedAt: 0,
+      players: [player('a'), player('b'), player('c')],
+    } as PartyRoomState;
+    const here = (id: string) => id !== 'b';
+    expect(roomPlayersOf(state, here)).toHaveLength(3);
+    const ids = roomPlayersOf({ ...state, stammtisch: 'Stammtisch' }, here).map((p) => p.id);
+    expect(ids).toEqual(['a', 'c']);
+  });
 });

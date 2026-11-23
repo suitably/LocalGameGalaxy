@@ -7,8 +7,6 @@
  * answering guests and applying their actions while the host is in the lobby. Peers end with
  * their game: the party calls `releaseRoomPeers(roomId)` when a game is launched or ended.
  */
-import type { RoomStatePeer } from './roomPeer';
-
 interface Entry {
   roomId: string;
   peer: { stop(): void };
@@ -17,16 +15,24 @@ interface Entry {
 const peers = new Map<string, Entry>();
 
 /** The kept peer for `key`, or a new one from `create` that is kept from now on. */
-export function retainRoomPeer<S, A>(
+export function retainRoomPeer<P extends { stop(): void }>(
   key: string,
   roomId: string,
-  create: () => RoomStatePeer<S, A>,
-): RoomStatePeer<S, A> {
+  create: () => P,
+): P {
   const found = peers.get(key);
-  if (found) return found.peer as RoomStatePeer<S, A>;
+  if (found) return found.peer as P;
   const peer = create();
   peers.set(key, { roomId, peer });
   return peer;
+}
+
+/** Removes the kept peer for `key` from the registry and returns it (the caller stops it). */
+export function takeRoomPeer<P extends { stop(): void }>(key: string): P | null {
+  const found = peers.get(key);
+  if (!found) return null;
+  peers.delete(key);
+  return found.peer as P;
 }
 
 /** Stops and forgets every kept peer of a room (its game ended or a new one starts). */

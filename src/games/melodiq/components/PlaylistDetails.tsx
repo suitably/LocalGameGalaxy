@@ -11,6 +11,8 @@ import {
   ListItemAvatar,
   Avatar,
   ListItemSecondaryAction,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAddRounded';
@@ -23,22 +25,23 @@ import { useTranslation } from 'react-i18next';
 import { usePlaylists } from '../hooks/usePlaylists';
 import { useSongs } from '../hooks/useSongs';
 import { useQueue } from '../hooks/useQueue';
-import { type Playlist, type SongMeta } from '../db';
+import { songsByIds } from '../logic/songLibrary';
 
 interface PlaylistDetailsProps {
-  playlist: Playlist;
+  playlistId: string;
 }
 
-export const PlaylistDetails: React.FC<PlaylistDetailsProps> = ({ playlist }) => {
+/** Songs of one playlist; owners reorder, remove and (on the companion) share it (#636). */
+export const PlaylistDetails: React.FC<PlaylistDetailsProps> = ({ playlistId }) => {
   const { t } = useTranslation();
-  const { removeSongFromPlaylist, moveSongInPlaylist } = usePlaylists();
+  const { allPlaylists, storeKind, removeSongFromPlaylist, moveSongInPlaylist, setPlaylistShared } =
+    usePlaylists();
   const { songs } = useSongs();
-  const { addToQueue, playPlaylistNow } = useQueue(); // Need to add playPlaylistNow to useQueue or implement here
-
-  // Resolve song IDs to actual SongMeta objects
-  const playlistSongs = useMemo(() => {
-    return playlist.songs.map((id) => songs.find((s) => s.id === id)).filter(Boolean) as SongMeta[];
-  }, [playlist.songs, songs]);
+  const { addToQueue, playPlaylistNow } = useQueue();
+  const playlist = allPlaylists.find((p) => p.id === playlistId);
+  const ids = playlist?.songs;
+  const playlistSongs = useMemo(() => songsByIds(songs, ids ?? []), [songs, ids]);
+  if (!playlist) return null;
 
   const handlePlayNow = () => {
     if (playlistSongs.length === 0) return;
@@ -51,11 +54,22 @@ export const PlaylistDetails: React.FC<PlaylistDetailsProps> = ({ playlist }) =>
   };
 
   return (
-    <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ p: { xs: 2, sm: 3 }, height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
         <Typography variant="h5" sx={{ flexGrow: 1 }}>
           {playlist.name}
         </Typography>
+        {playlist.mine && storeKind === 'companion' && (
+          <FormControlLabel
+            control={
+              <Switch
+                checked={playlist.shared}
+                onChange={(e) => void setPlaylistShared(playlist.id, e.target.checked)}
+              />
+            }
+            label={t('melodiq.library.share_playlist')}
+          />
+        )}
       </Box>
 
       <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
@@ -106,7 +120,7 @@ export const PlaylistDetails: React.FC<PlaylistDetailsProps> = ({ playlist }) =>
                   primaryTypographyProps={{ noWrap: true }}
                   secondaryTypographyProps={{ noWrap: true }}
                 />
-                {!playlist.isGlobal && (
+                {playlist.mine && (
                   <ListItemSecondaryAction>
                     <IconButton
                       aria-label={t('melodiq.a11y.move_up')}

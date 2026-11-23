@@ -70,12 +70,15 @@ export function getSpriteSheetStyle(sprite: TTSSpriteRef): SpriteSheetStyle {
  */
 export function resolveBackSprite(
   cardId: number,
-  customDecks: Record<string, {
-    BackURL: string;
-    NumWidth: number;
-    NumHeight: number;
-    UniqueBack?: boolean;
-  }>,
+  customDecks: Record<
+    string,
+    {
+      BackURL: string;
+      NumWidth: number;
+      NumHeight: number;
+      UniqueBack?: boolean;
+    }
+  >,
 ): TTSSpriteRef | null {
   const deckIndex = Math.floor(cardId / 100);
   const cardIndex = cardId % 100;

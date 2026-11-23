@@ -3,6 +3,8 @@
  *
  * Provides a resilient, serverless MQTT communication layer over public WSS brokers
  * (HiveMQ, EMQX) with automatic reconnect, message deduplication, and LZString compression.
+ * Payloads of a channel with a room key are end-to-end encrypted (`roomCrypto.ts`, ADR 0009);
+ * only the last-state messages a late joiner needs are retained (`retain` option).
  *
  * Following SOLID Dependency Inversion (DIP):
  * This service contains NO game-specific domain logic or engine imports.
@@ -11,6 +13,8 @@
 
 import mqtt, { type MqttClient } from 'mqtt';
 import LZString from 'lz-string';
+import { decryptPayload, encryptPayload, parseEncryptedEnvelope } from './roomCrypto';
+import { getRoomKey } from './roomKeys';
 
 export const DEFAULT_BROKER_URLS = [
   'wss://broker.hivemq.com:8884/mqtt',
@@ -32,11 +36,15 @@ export type MessageListener<T> = (
   timestamp: number,
 ) => Promise<void> | void;
 
-export interface MqttMailboxOptions {
+export interface MqttMailboxOptions<T = unknown> {
   topicPrefix: string;
   clientPrefix?: string;
   brokerUrls?: string[];
   useCompression?: boolean;
+  /** Room key of a channel (base64url) or `null` for a legacy plaintext room; default `getRoomKey`. */
+  keyFor?: (channelId: string) => string | null;
+  /** Whether the broker keeps this message for late joiners (last state only); default never. */
+  retain?: (payload: T) => boolean;
 }
 
 export class MqttMailboxService<T> {
@@ -50,8 +58,13 @@ export class MqttMailboxService<T> {
   private readonly useCompression: boolean;
   private brokerIndex = 0;
   private lastProcessedRaw: Map<string, string> = new Map();
+  private readonly keyFor: (channelId: string) => string | null;
+  private readonly retainFor: (payload: T) => boolean;
+  private lockedListeners: Set<(channelId: string) => void> = new Set();
+  /** Keeps encryption (async) in publish order. */
+  private sealQueue: Promise<unknown> = Promise.resolve();
 
-  constructor(options: MqttMailboxOptions) {
+  constructor(options: MqttMailboxOptions<T>) {
     this.topicPrefix = options.topicPrefix.endsWith('/')
       ? options.topicPrefix
       : `${options.topicPrefix}/`;
@@ -60,6 +73,8 @@ export class MqttMailboxService<T> {
         ? options.brokerUrls
         : DEFAULT_BROKER_URLS;
     this.useCompression = options.useCompression ?? true;
+    this.keyFor = options.keyFor ?? getRoomKey;
+    this.retainFor = options.retain ?? (() => false);
     const prefix = options.clientPrefix || 'lgg_sync';
     this.clientId = `${prefix}_${Math.random().toString(36).substring(2, 10)}_${Date.now()}`;
   }
@@ -110,8 +125,10 @@ export class MqttMailboxService<T> {
       if (!channelId || !this.subscribedChannels.has(channelId)) return;
 
       try {
-        const rawStr = message.toString();
-        if (!rawStr || rawStr === '{}') return;
+        const wire = message.toString();
+        if (!wire || wire === '{}') return;
+        const rawStr = await this.openWire(channelId, wire);
+        if (!rawStr) return;
 
         let decompressed = rawStr;
         if (rawStr.startsWith('LZ:')) {
@@ -162,6 +179,29 @@ export class MqttMailboxService<T> {
 
     this.client = client;
     return client;
+  }
+
+  /**
+   * Plain wire string of a message, or `null` to ignore it: an encrypted room drops plaintext and
+   * anything that fails to decrypt; a room without a key cannot read encrypted messages.
+   */
+  private async openWire(channelId: string, wire: string): Promise<string | null> {
+    const key = this.keyFor(channelId);
+    const encrypted = parseEncryptedEnvelope(wire) !== null;
+    if (key) return encrypted ? decryptPayload(wire, key) : null;
+    if (encrypted) {
+      for (const listener of this.lockedListeners) listener(channelId);
+      return null;
+    }
+    return wire;
+  }
+
+  /** Called when an encrypted message arrives on a channel this device has no key for. */
+  public onLockedChannel(listener: (channelId: string) => void): () => void {
+    this.lockedListeners.add(listener);
+    return () => {
+      this.lockedListeners.delete(listener);
+    };
   }
 
   public subscribe(channelId: string, listener: MessageListener<T>): () => void {
@@ -243,32 +283,36 @@ export class MqttMailboxService<T> {
       }
     }
 
+    const key = this.keyFor(channelId);
+    const sealed = this.sealQueue.then(() =>
+      key ? encryptPayload(messageToSend, key) : messageToSend,
+    );
+    this.sealQueue = sealed.catch(() => undefined);
+    const options = { qos: 1 as const, retain: this.retainFor(payload) };
     const topic = this.getTopic(channelId);
     const client = this.getClient();
 
-    return new Promise((resolve) => {
-      if (client.connected) {
-        client.publish(topic, messageToSend, { qos: 1, retain: true }, (err) => {
-          if (err) {
-            console.warn(`[MqttMailbox:${this.topicPrefix}] Failed to publish to ${topic}:`, err);
-            resolve(false);
-          } else {
-            resolve(true);
-          }
-        });
-      } else {
-        client.once('connect', () => {
-          client.publish(topic, messageToSend, { qos: 1, retain: true }, (err) => {
-            if (err) {
-              console.warn(`[MqttMailbox:${this.topicPrefix}] Failed to publish to ${topic}:`, err);
-              resolve(false);
-            } else {
-              resolve(true);
-            }
-          });
-        });
-      }
-    });
+    return sealed.then(
+      (wire) =>
+        new Promise<boolean>((resolve) => {
+          const send = () =>
+            client.publish(topic, wire, options, (err) => {
+              if (err) {
+                console.warn(
+                  `[MqttMailbox:${this.topicPrefix}] Failed to publish to ${topic}:`,
+                  err,
+                );
+              }
+              resolve(!err);
+            });
+          if (client.connected) send();
+          else client.once('connect', send);
+        }),
+      (err) => {
+        console.warn(`[MqttMailbox:${this.topicPrefix}] Failed to encrypt for ${topic}:`, err);
+        return false;
+      },
+    );
   }
 
   public disconnect(): void {
@@ -279,5 +323,6 @@ export class MqttMailboxService<T> {
     this.subscribedChannels.clear();
     this.listeners.clear();
     this.globalListeners.clear();
+    this.lockedListeners.clear();
   }
 }

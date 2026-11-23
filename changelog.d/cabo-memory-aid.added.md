@@ -1,0 +1,1 @@
+- **Cabo memory aid is back**: switch on "Gedächtnisstütze" before dealing, and every card you have seen stays face up for you – on one device and in party rooms.

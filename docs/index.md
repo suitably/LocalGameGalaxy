@@ -37,6 +37,7 @@ This bundle describes **one code base**: the GitHub repository `suitably/LocalGa
 | Server `config.json`, tokens, HTTPS for phones                               | [tech/secrets-management.md](tech/secrets-management.md)                                                               |
 | Hosting, Docker images, Android APK, server binaries                         | [tech/deployment.md](tech/deployment.md)                                                                               |
 | Privacy notice: data flows, third-party services                             | [tech/privacy-notice.md](tech/privacy-notice.md)                                                                       |
+| Licences: REUSE, third-party files, dependency allow-list                    | [tech/dependencies.md](tech/dependencies.md)                                                                           |
 | Local dev setup problems                                                     | [tech/onboarding-faq.md](tech/onboarding-faq.md)                                                                       |
 | CI workflows, release pipeline, secrets, branch protection                   | [workflows/ci-cd-pipelines.md](workflows/ci-cd-pipelines.md)                                                           |
 | Run the server via Docker Compose locally                                    | [workflows/dev-compose-workflow.md](workflows/dev-compose-workflow.md)                                                 |
@@ -44,6 +45,7 @@ This bundle describes **one code base**: the GitHub repository `suitably/LocalGa
 | Why Dexie, BitTorrent signaling, Capacitor, audio-separator                  | [adr/index.md](adr/index.md)                                                                                           |
 | Open, agent-ready refactoring tasks                                          | [tasks/index.md](tasks/index.md)                                                                                       |
 | **Known contradictions, broken things, decisions pending**                   | [open-questions.md](open-questions.md)                                                                                 |
+| Manual checks only the maintainer can run (devices, accounts, upstream)      | [owner-checks.md](owner-checks.md)                                                                                     |
 | Dated audits and evaluations                                                 | [reports/index.md](reports/index.md)                                                                                   |
 | Edit this knowledge base (front matter, links, log, archive)                 | [workflows/knowledge-base-maintenance.md](workflows/knowledge-base-maintenance.md)                                     |
 | Split a task across subagents to save tokens                                 | [workflows/multi-agent-token-strategy.md](workflows/multi-agent-token-strategy.md)                                     |

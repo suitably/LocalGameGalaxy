@@ -92,6 +92,20 @@ export const pieceColorForSlot = (index: number): string =>
 /** White and black game pieces (chess, checkers …), which the palette deliberately leaves out. */
 export const pieceNeutrals = { white: '#F7F3EE', black: '#2C2733' } as const;
 
+/**
+ * Colour-blind-safe signal colours (Okabe & Ito), for games that offer a colour-blind palette for
+ * states such as hit / miss (DESIGN.md §2.3). Still paired with a shape or word, never alone.
+ */
+export const colorBlindPalette = {
+  skyBlue: '#56B4E9',
+  yellow: '#F0E442',
+  vermillion: '#D55E00',
+  bluishGreen: '#009E73',
+  orange: '#E69F00',
+  blue: '#0072B2',
+  reddishPurple: '#CC79A7',
+} as const;
+
 export const fontFamilies = {
   display: '"Bricolage Grotesque Variable", "Figtree Variable", system-ui, sans-serif',
   text: '"Figtree Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',

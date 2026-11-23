@@ -1,0 +1,1 @@
+- **Melodiq: Cast option only where it can work** : the TV menu no longer offers Cast on Android Chrome and in the app (use the window or QR flow there), skips the availability probe, and shows a message when casting fails.

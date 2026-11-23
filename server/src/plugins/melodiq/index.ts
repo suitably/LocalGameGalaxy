@@ -6,7 +6,7 @@ import { mediaRouter } from './routes/media';
 import { usdbRouter } from './routes/usdb';
 import { separatorRouter } from './routes/separator';
 import { configRouter } from './routes/config';
-import { playlistsRouter } from './routes/playlists';
+import { songLibraryRouter } from './routes/songLibrary';
 import { songFilesRouter } from './routes/songFiles';
 import { notesMigrationRouter } from './routes/notesMigration';
 import { initialScan } from './services/scanner';
@@ -40,8 +40,7 @@ export const melodiqPlugin: GalaxyPlugin = {
       '/api/youtube/*',
       '/api/separator/*',
       '/api/config/*',
-      '/api/playlists',
-      '/api/playlists/*',
+      '/api/melodiq/library/*',
       '/api/browse',
       '/api/feedback',
       '/api/notes/*',
@@ -59,7 +58,7 @@ export const melodiqPlugin: GalaxyPlugin = {
     app.route('/', usdbRouter);
     app.route('/', separatorRouter);
     app.route('/', configRouter);
-    app.route('/', playlistsRouter);
+    app.route('/', songLibraryRouter);
 
     // Initial song library scan, then the one-time move of the old Notes library into song
     // folders (#568)

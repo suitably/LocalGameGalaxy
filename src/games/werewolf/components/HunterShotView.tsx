@@ -8,7 +8,8 @@ interface HunterShotViewProps {
   hunter: Player;
   players: Player[];
   onShot: (targetId: string) => void;
-  onSkip: () => void;
+  /** Without it the hunter has to shoot. */
+  onSkip?: () => void;
 }
 
 export const HunterShotView: React.FC<HunterShotViewProps> = ({

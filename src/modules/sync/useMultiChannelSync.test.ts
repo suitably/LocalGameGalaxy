@@ -189,7 +189,7 @@ describe('MultiChannelSyncCoordinator', () => {
     expect(() => coordinatorSyncThrow.publish({ msg: 'test' })).not.toThrow();
     expect(console.warn).toHaveBeenCalledWith(
       '[MultiChannelSyncCoordinator] MQTT publish failed:',
-      expect.any(Error)
+      expect.any(Error),
     );
 
     (console.warn as any).mockClear();
@@ -220,9 +220,7 @@ describe('MultiChannelSyncCoordinator', () => {
     const unsubMock1 = vi.fn();
     const unsubMock2 = vi.fn();
     const mockMailbox = {
-      subscribe: vi.fn()
-        .mockReturnValueOnce(unsubMock1)
-        .mockReturnValueOnce(unsubMock2),
+      subscribe: vi.fn().mockReturnValueOnce(unsubMock1).mockReturnValueOnce(unsubMock2),
       publish: vi.fn().mockResolvedValue(true),
     } as unknown as MqttMailboxService<{ msg: string }>;
 
@@ -248,5 +246,88 @@ describe('MultiChannelSyncCoordinator', () => {
 
     coordinator.stop();
     expect(unsubMock2).toHaveBeenCalled();
+  });
+
+  describe('selfEcho', () => {
+    const peer = (name: string, onPeer: (data: unknown) => void): MockBroadcastChannel => {
+      const ch = new MockBroadcastChannel(name);
+      ch.onmessage = (event) => onPeer(event.data);
+      return ch;
+    };
+
+    it('echoes own publishes by default (transient channel per message)', () => {
+      const onMessage = vi.fn();
+      const coordinator = new MultiChannelSyncCoordinator<{ msg: string }>({
+        channelId: 'room1',
+        broadcastPrefix: 'test_prefix',
+        onMessage,
+      });
+      coordinator.start();
+      coordinator.publish({ msg: 'echo' });
+
+      expect(onMessage).toHaveBeenCalledWith({ msg: 'echo' }, 'broadcast');
+      expect(MockBroadcastChannel.instances).toHaveLength(2);
+      coordinator.stop();
+    });
+
+    it('selfEcho false: posts through the open listening channel, no echo, no allocation', () => {
+      const onMessage = vi.fn();
+      const onPeer = vi.fn();
+      const coordinator = new MultiChannelSyncCoordinator<{ msg: string }>({
+        channelId: 'control',
+        broadcastPrefix: 'app_tv',
+        onMessage,
+        selfEcho: false,
+      });
+      coordinator.start();
+      peer('app_tv_control', onPeer);
+      const created = MockBroadcastChannel.instances.length;
+
+      coordinator.publish({ msg: 'a' });
+      coordinator.publish({ msg: 'b' });
+
+      expect(onMessage).not.toHaveBeenCalled();
+      expect(onPeer.mock.calls).toEqual([[{ msg: 'a' }], [{ msg: 'b' }]]);
+      expect(MockBroadcastChannel.instances).toHaveLength(created);
+      coordinator.stop();
+    });
+
+    it('selfEcho false: still receives other same-tab instances on the channel', () => {
+      const onA = vi.fn();
+      const onB = vi.fn();
+      const options = { channelId: 'control', broadcastPrefix: 'app_tv', selfEcho: false };
+      const a = new MultiChannelSyncCoordinator<{ msg: string }>({ ...options, onMessage: onA });
+      const b = new MultiChannelSyncCoordinator<{ msg: string }>({ ...options, onMessage: onB });
+      a.start();
+      b.start();
+
+      a.publish({ msg: 'from a' });
+
+      expect(onA).not.toHaveBeenCalled();
+      expect(onB).toHaveBeenCalledWith({ msg: 'from a' }, 'broadcast');
+      a.stop();
+      b.stop();
+    });
+
+    it('selfEcho false: falls back to a transient channel while not started or for another target', () => {
+      const onPeer = vi.fn();
+      const onOther = vi.fn();
+      const coordinator = new MultiChannelSyncCoordinator<{ msg: string }>({
+        channelId: 'control',
+        broadcastPrefix: 'app_tv',
+        onMessage: vi.fn(),
+        selfEcho: false,
+        enabled: false,
+      });
+      peer('app_tv_control', onPeer);
+      peer('app_tv_other', onOther);
+
+      coordinator.publish({ msg: 'publish-only' });
+      coordinator.publish({ msg: 'elsewhere' }, 'other');
+
+      expect(onPeer).toHaveBeenCalledWith({ msg: 'publish-only' });
+      expect(onOther).toHaveBeenCalledWith({ msg: 'elsewhere' });
+      expect(MockBroadcastChannel.instances.filter((c) => c.closed)).toHaveLength(2);
+    });
   });
 });

@@ -18,7 +18,9 @@ export type GameSource = 'server' | 'local';
 export type ManagerNotice =
   | { kind: 'saved'; name: string }
   | { kind: 'saved_copy'; name: string }
-  | { kind: 'error'; error: string };
+  | { kind: 'error'; error: string }
+  /** An export of a third-party import was refused (`shareRules.ts`). */
+  | { kind: 'share_blocked' };
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
@@ -130,6 +132,7 @@ export function useGameManager(open: boolean) {
     busyId,
     notice,
     clearNotice: () => setNotice(null),
+    showNotice: setNotice,
     fetchFull,
     reloadLocal,
     saveToServer,

@@ -158,7 +158,7 @@ export const wordleEngine = {
   ): string {
     const countStr = won ? `${evaluations.length}/6` : 'X/6';
     const header =
-      mode === 'daily' ? `Wordle (${dateKey}) ${countStr}` : `Wordle Challenge ${countStr}`;
+      mode === 'daily' ? `Word Guess (${dateKey}) ${countStr}` : `Word Guess Duel ${countStr}`;
 
     const grid = evaluations
       .map((row) =>

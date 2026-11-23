@@ -5,6 +5,7 @@ import { inviteSeat, reclaimSeat } from '../player-management/seatActions';
 import type { SeatedPlayer } from '../player-management/playerSeats';
 import type { SessionPlayerItem } from './ShareSessionLinksDialog';
 import { buildSessionLink, pickQrLink } from './sessionLink';
+import { ensureRoomKey } from '../sync/roomKeys';
 
 /** A snapshot that wraps the game record, whose `updatedAt` is refreshed after a seat change. */
 const hasGameWithUpdatedAt = (
@@ -57,6 +58,8 @@ export function useSessionSharing<TGame, TSnapshot, TPlayer extends SeatedPlayer
             )
           : undefined,
         relay: gameRelayStorage.getEffectiveRelay(game.id, playerObj?.relayUrl),
+        // Games created before ADR 0009 get their key when they are shared again.
+        roomKey: ensureRoomKey(game.id, 'local'),
       });
     },
     [game, basePath, buildSnapshot],

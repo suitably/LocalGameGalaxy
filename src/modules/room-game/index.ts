@@ -4,3 +4,5 @@ export * from './useRoomEvents';
 export * from './roomPeer';
 export * from './roomTransport';
 export * from './roomPeerRegistry';
+export * from './roomSnapshot';
+export * from './peerTransport';

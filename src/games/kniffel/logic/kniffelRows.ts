@@ -24,7 +24,7 @@ export const LOWER_ROWS: readonly KniffelRowDef[] = [
   { category: 'full_house', label: 'Full House', hint: '3 + 2 gleiche · 25' },
   { category: 'small_straight', label: 'Kleine Straße', hint: '4 in Folge · 30' },
   { category: 'large_straight', label: 'Große Straße', hint: '5 in Folge · 40' },
-  { category: 'kniffel', label: 'Kniffel', hint: '5 gleiche · 50' },
+  { category: 'kniffel', label: 'Fünferpasch', hint: '5 gleiche · 50' },
   { category: 'chance', label: 'Chance', hint: 'Alle Augen zählen' },
 ];
 

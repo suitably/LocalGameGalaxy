@@ -61,6 +61,19 @@ export function shakeActionFor(widget: TabletopWidget | undefined): TabletopActi
   return null;
 }
 
+/** Deck context menu "Flip top card": the top card lands face up next to the deck (#672). */
+export function flipTopActionFor(widget: TabletopWidget | undefined): TabletopAction | null {
+  if (widget?.type !== 'deck' || !((widget as DeckWidget).cardIds?.length > 0)) return null;
+  return {
+    type: 'DRAW_CARD',
+    payload: {
+      deckId: widget.id,
+      position: { x: widget.x + widget.width + 16, y: widget.y },
+      faceUp: true,
+    },
+  };
+}
+
 /** Flip a card — F, double tap and the context menu. */
 export function flipActionFor(widget: TabletopWidget | undefined): TabletopAction | null {
   if (widget?.type !== 'card') return null;

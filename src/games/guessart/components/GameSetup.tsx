@@ -150,7 +150,7 @@ export const GameSetup: React.FC<GameSetupProps> = ({
               onClick={onOpenGartic}
               sx={{ fontWeight: 700, borderRadius: 2 }}
             >
-              {t('guessart.playGartic', 'Gartic Phone spielen')}
+              {t('guessart.playGartic', 'Zeichen-Stille-Post spielen')}
             </Button>
           </CardContent>
         </Card>

@@ -1,0 +1,1 @@
+- **Export card games from the Spieltisch**: Skat, Durak, Schwimmen, Arschloch and Mau-Mau have "Export as .json" in the header menu. The file is in the Spieltisch's own game format; imported on another device or companion server, it plays with the same rules again.

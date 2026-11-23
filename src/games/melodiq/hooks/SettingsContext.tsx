@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
+import { useMultiChannelSync } from '../../../modules/sync';
+import { TV_CONTROL_SYNC, type TvControlMessage } from '../logic/syncChannels';
 import {
   loadSettings,
   persistSettings,
@@ -21,7 +23,16 @@ const SettingsContext = createContext<SettingsContextValue | null>(null);
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<SettingsState>(loadSettings);
-  const channelRef = useRef<BroadcastChannel | null>(null);
+  // Settings changes made in another window of this device (e.g. the TV window) reload from storage
+  const { publish: publishLocal } = useMultiChannelSync<TvControlMessage>({
+    ...TV_CONTROL_SYNC,
+    selfEcho: false,
+    onMessage: (message) => {
+      if (message?.type === 'SETTINGS_UPDATE') {
+        setSettings(loadSettings());
+      }
+    },
+  });
 
   const updateSetting = useCallback(
     <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => {
@@ -32,38 +43,33 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return next;
       });
 
-      if (channelRef.current) {
-        try {
-          channelRef.current.postMessage({ type: 'SETTINGS_UPDATE', payload: { [key]: value } });
-        } catch (e) {}
-      }
+      publishLocal({ type: 'SETTINGS_UPDATE', payload: { [key]: value } });
       window.dispatchEvent(
         new CustomEvent('melodiq_settings_updated', { detail: { [key]: value } }),
       );
     },
-    [],
+    [publishLocal],
   );
 
-  const resetSettings = useCallback((newState: SettingsState) => {
-    setSettings((prev) => {
-      if (JSON.stringify(prev) === JSON.stringify(newState)) return prev;
-      persistSettings(newState);
-      return newState;
-    });
+  const resetSettings = useCallback(
+    (newState: SettingsState) => {
+      setSettings((prev) => {
+        if (JSON.stringify(prev) === JSON.stringify(newState)) return prev;
+        persistSettings(newState);
+        return newState;
+      });
 
-    if (channelRef.current) {
-      try {
-        channelRef.current.postMessage({ type: 'SETTINGS_UPDATE', payload: newState });
-      } catch (e) {}
-    }
-    window.dispatchEvent(new CustomEvent('melodiq_settings_updated', { detail: newState }));
-  }, []);
+      publishLocal({ type: 'SETTINGS_UPDATE', payload: newState });
+      window.dispatchEvent(new CustomEvent('melodiq_settings_updated', { detail: newState }));
+    },
+    [publishLocal],
+  );
 
   const saveSettings = useCallback(() => {
     persistSettings(settings);
   }, [settings]);
 
-  // Listen for cross-tab storage changes and BroadcastChannel updates so settings sync if changed in another tab or window
+  // Listen for cross-tab storage changes (broadcast updates: see useMultiChannelSync above)
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
       if (e.key && e.key.startsWith('melodiq_')) {
@@ -71,24 +77,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
     };
     window.addEventListener('storage', handleStorage);
-
-    if (typeof BroadcastChannel !== 'undefined') {
-      try {
-        const channel = new BroadcastChannel('melodiq_tv_control');
-        channel.onmessage = (event) => {
-          if (event.data?.type === 'SETTINGS_UPDATE') {
-            setSettings(loadSettings());
-          }
-        };
-        channelRef.current = channel;
-      } catch (e) {}
-    }
-
-    return () => {
-      window.removeEventListener('storage', handleStorage);
-      channelRef.current?.close();
-      channelRef.current = null;
-    };
+    return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
   // Parse URL parameters for initial setup

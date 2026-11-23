@@ -128,6 +128,7 @@ export const KnisterDiceRoller: React.FC<KnisterDiceRollerProps> = ({
             startIcon={<CasinoIcon />}
             onClick={handleRollClick}
             disabled={disabled || animating || rollCount >= 25 || currentRoll !== null}
+            data-room-target="knister.roll"
             sx={{
               fontWeight: 'bold',
               px: { xs: 2, sm: 3 },

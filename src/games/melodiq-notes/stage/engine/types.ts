@@ -5,6 +5,7 @@ import type {
   ScoreSong,
 } from '../../../../modules/music-score';
 import type { PitchRange, StageNote, Judgement } from '../logic/charts';
+import type { DrumKit } from '../logic/drumLanes';
 import type { StageInstrument } from '../logic/instruments';
 import type { PlayerStats } from '../logic/judging';
 
@@ -57,6 +58,8 @@ export interface StagePlayer {
   /** Recent sung pitch per beat (pitch view). */
   history: { beat: number; pitch: number | null }[];
   voice: { pitch: number; singing: boolean };
+  /** Drum view: the pads shown and the display-only notes (#571). */
+  drumKit?: DrumKit;
 }
 
 /** Sound output the engine drives; the browser implementation wraps an AudioContext. */
@@ -72,6 +75,15 @@ export interface StageSound {
   outputLatency?(): number;
   stopAll(): void;
 }
+
+/** No sound at all: the engine before a sound is attached, and in tests. */
+export const SILENT_SOUND: StageSound = {
+  now: () => 0,
+  playNote: () => {},
+  playDrum: () => {},
+  click: () => {},
+  stopAll: () => {},
+};
 
 /** A recording that replaces the synthesised band, mapped to the score by bar marks. */
 export interface StageRecording {
