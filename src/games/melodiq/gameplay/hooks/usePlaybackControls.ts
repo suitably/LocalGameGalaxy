@@ -1,4 +1,7 @@
 import { useCallback, useRef, useEffect } from 'react';
+import { createLogger } from '../../../../lib/logger';
+
+const log = createLogger('MelodiqSession');
 
 interface UsePlaybackControlsProps {
     audioRef: React.RefObject<HTMLAudioElement | null>;
@@ -100,7 +103,7 @@ export function usePlaybackControls({
             setIsPlaying(true);
         } catch (error: unknown) {
             if (error instanceof Error && error.name === 'AbortError') {
-                console.log('[Session] Playback aborted (likely fast skip)');
+                log.debug('Playback aborted (likely fast skip)');
             } else {
                 console.error('[Session] Playback failed', error);
             }

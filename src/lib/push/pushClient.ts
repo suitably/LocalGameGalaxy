@@ -7,12 +7,15 @@
 
 import { gameRelayStorage } from './gameRelayStorage';
 import { storage } from '../storage';
+import { createLogger } from '../logger';
 import type {
   NotificationMethod,
   PushNotificationPayload,
   StoredPushSubscription,
 } from './pushTypes';
 import { sendSitePush, subscribeWithKey } from './siteWebPush';
+
+const log = createLogger('PushClient');
 
 function sanitizeTopicPart(str: string): string {
   return str.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 32);
@@ -275,18 +278,14 @@ export const pushClient = {
       payload.targetPlayerId &&
       payload.senderPlayerId === payload.targetPlayerId
     ) {
-      console.log(
-        '[PushClient] Suppressing push notification to self (senderPlayerId === targetPlayerId)',
-      );
+      log.debug('Suppressing push notification to self (senderPlayerId === targetPlayerId)');
       return false;
     }
 
     // Never dispatch if target ntfyTopic matches this device's own personal topic!
     const ownUserTopic = storage.getUserNtfyTopic();
     if (payload.ntfyTopic && ownUserTopic && payload.ntfyTopic === ownUserTopic) {
-      console.log(
-        '[PushClient] Suppressing push notification to self (target ntfyTopic === own user topic)',
-      );
+      log.debug('Suppressing push notification to self (target ntfyTopic === own user topic)');
       return false;
     }
 
@@ -333,8 +332,7 @@ export const pushClient = {
         });
 
         if (res.ok) {
-          const data = await res.json().catch(() => null);
-          console.log('[PushClient] Push notification dispatched via relay:', data);
+          log.debug('Push notification dispatched via relay');
           relaySuccess = true;
         } else {
           console.warn(`[PushClient] Relay notify failed with status ${res.status}`);

@@ -8,8 +8,11 @@ import {
   generatePeerId,
   stringToInfoHash,
 } from './trackerProtocol';
+import { createLogger } from '../logger';
 import { discoveryRetryDelay } from './discoveryRetry';
 import { HEARTBEAT_CHECK_MS, isPeerStale, pongFor } from './heartbeat';
+
+const log = createLogger('WebRTCClient');
 
 const MAX_CANDIDATES = 4;
 /** A search younger than this is left alone when the page returns to the foreground. */
@@ -173,10 +176,7 @@ export function useWebRTCClient(
 
   const initiateConnection = useCallback(
     (trackerPeer: any, trackerPeerId: string) => {
-      console.log(
-        '[WebRTCClient] Host verified on tracker. Initiating WebRTC Data & Audio peer...',
-        trackerPeerId,
-      );
+      log.debug('Host verified on tracker. Initiating WebRTC Data & Audio peer...', trackerPeerId);
 
       const setupAudioPeer = () => {
         let connectionTimeout: any = null;
@@ -271,7 +271,7 @@ export function useWebRTCClient(
               return;
             }
 
-            console.log('[WebRTCClient] Connected to host! (We won the race)');
+            log.debug('Connected to host! (We won the race)');
             lastPingAt = Date.now();
             isWebRTCConnectedRef.current = true;
             setIsConnected(true);
@@ -362,7 +362,7 @@ export function useWebRTCClient(
       }
       handledTrackerPeersRef.current.add(trackerPeerId);
 
-      console.log('[WebRTCClient] Tracker discovered peer, sending client probe...', trackerPeerId);
+      log.debug('Tracker discovered peer, sending client probe...', trackerPeerId);
 
       const sendProbe = () => {
         if (trackerPeer.connected) {

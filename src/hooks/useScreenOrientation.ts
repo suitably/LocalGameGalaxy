@@ -1,4 +1,7 @@
 import { useEffect } from 'react';
+import { createLogger } from '../lib/logger';
+
+const log = createLogger('useScreenOrientation');
 
 export type ScreenOrientationType = 'portrait' | 'landscape' | 'any';
 
@@ -34,7 +37,7 @@ export function useScreenOrientation(orientation?: ScreenOrientationType) {
                 const error = err as { name?: string; message?: string } | null;
                 // Screen orientation lock requires fullscreen or mobile environment on standard web
                 if (error?.name !== 'SecurityError' && error?.name !== 'NotSupportedError') {
-                    console.debug('[useScreenOrientation] Orientation lock skipped/unsupported:', error?.message);
+                    log.debug('Orientation lock skipped/unsupported:', error?.message);
                 }
             }
         };

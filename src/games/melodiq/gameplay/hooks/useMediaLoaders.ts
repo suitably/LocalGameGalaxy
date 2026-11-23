@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { type Song } from '../../db';
 import { getYouTubeVideoId } from '../youtubeApi';
 import { storage, STORAGE_KEYS } from '../../../../lib/storage';
+import { createLogger } from '../../../../lib/logger';
+
+const log = createLogger('MelodiqSession');
 
 const getHelperUrl = () => {
   return storage.get(STORAGE_KEYS.HELPER_URL, 'http://localhost:3000').replace(/\/$/, '');
@@ -164,7 +167,7 @@ export function useMediaLoaders(
         }
       } catch (e) {
         if ((e as Error).name === 'NotAllowedError') {
-          console.debug('Audio permission not granted yet');
+          log.debug('Audio permission not granted yet');
           if (mounted) setNeedsFolderAccess(true);
         } else {
           console.error('Failed to load audio tracks', e);
@@ -292,12 +295,7 @@ export function useMediaLoaders(
                 '[Melodiq] Firefox detected: Skipping AVI-as-MP4 hack to prevent browser crash. Video may not play.',
               );
             } else {
-              console.log(
-                '[Melodiq] Attempting to force-load AVI file by masking as MP4:',
-                name,
-                'Type:',
-                type,
-              );
+              log.debug('Attempting to force-load AVI file by masking as MP4:', name, 'Type:', type);
               blobToUrl = new Blob([fileOrBlob], { type: 'video/mp4' });
             }
           }
@@ -316,7 +314,7 @@ export function useMediaLoaders(
       mounted = false;
       if (activeUrl && activeUrl.startsWith('blob:')) {
         URL.revokeObjectURL(activeUrl);
-        console.log(`[MelodiqSession] Revoked video URL: ${activeUrl}`);
+        log.debug('Revoked video URL');
       }
     };
   }, [song.video, song.audio, song.id, isClient, parsedSong?.headers?.VIDEO]);
@@ -363,14 +361,14 @@ export function useMediaLoaders(
 
       if (audioFile) {
         setAudioSrc(URL.createObjectURL(audioFile));
-        console.log('[Session] Loaded audio from re-selected folder:', audioFile.name);
+        log.debug('Loaded audio from re-selected folder:', audioFile.name);
       } else {
         console.error('Audio file not found in selected folder:', targetAudioPath);
       }
 
       if (videoFile) {
         setVideoSrc(URL.createObjectURL(videoFile));
-        console.log('[Session] Loaded video from re-selected folder:', videoFile.name);
+        log.debug('Loaded video from re-selected folder:', videoFile.name);
       }
     }
 

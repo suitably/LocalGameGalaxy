@@ -9,6 +9,9 @@ import { PlayerRuntime } from './PlayerRuntime';
 import type { ActivePlayer } from '../../types';
 import type { MicRemotePeer, WebRTCMicManager } from '../../audio/WebRTCMicManager';
 import { isWantedByHost } from '../logic/sessionRoster';
+import { createLogger } from '../../../../lib/logger';
+
+const log = createLogger('MelodiqSession');
 
 interface UsePeerRosterSyncProps {
   manager: WebRTCMicManager | null;
@@ -19,7 +22,7 @@ interface UsePeerRosterSyncProps {
 }
 
 function newGuest(manager: WebRTCMicManager, peer: MicRemotePeer): PlayerRuntime {
-  console.log(`[Session] New Phone Guest selected in session: ${peer.name}`);
+  log.debug(`New phone guest selected in session: ${peer.name}`);
   const player = new PlayerRuntime(
     {
       id: peer.peerId,
@@ -51,14 +54,14 @@ function refreshFromPeer(
     changed = true;
   }
   if (player.config.name !== peer.name || player.config.hue !== peer.hue) {
-    console.log(`[Session] Updating details for ${player.config.name} -> ${peer.name}`);
+    log.debug(`Updating details for ${player.config.name} -> ${peer.name}`);
     player.config.name = peer.name;
     if (peer.hue !== undefined) player.config.hue = peer.hue;
     changed = true;
   }
   // Also after a reconnect: the phone comes back under a new peer id, and pitch is read by peer id.
   if (!player.webRtcManager || player.remotePeerId !== peer.peerId) {
-    console.log(`[Session] Attaching Phone ${peer.name} to existing player ${player.config.name}`);
+    log.debug(`Attaching phone ${peer.name} to existing player ${player.config.name}`);
     player.attachRemotePeer(manager, peer.peerId);
     changed = true;
   }
@@ -100,7 +103,7 @@ export function usePeerRosterSync({
       const kept = updated.filter((p) => {
         const gone = p.config.isRemote && (!p.remotePeerId || !peerIds.has(p.remotePeerId));
         if (gone && p.config.id === p.config.deviceId) {
-          console.log(`[Session] removing disconnected guest ${p.config.name}`);
+          log.debug(`Removing disconnected guest ${p.config.name}`);
           return false;
         }
         return true;

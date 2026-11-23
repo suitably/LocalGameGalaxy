@@ -1,0 +1,1 @@
+- **Diagnostics are quiet by default** (#854): debug messages from party connections, push, Melodiq and other areas no longer appear in the browser console. To see them, set `lgg_debug_log` to `1` (or to a comma-separated list of areas) in local storage and reload; the party id, remote config and relay replies are no longer printed at all.

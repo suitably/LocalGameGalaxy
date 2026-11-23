@@ -1,4 +1,7 @@
 import { useEffect, useRef } from 'react';
+import { createLogger } from '../lib/logger';
+
+const log = createLogger('useWakeLock');
 
 // Tiny blank 1-frame silent WebM and MP4 video data URIs (NoSleep standard)
 const NO_SLEEP_WEBM =
@@ -104,7 +107,7 @@ export function useWakeLock(enabled: boolean = true) {
           window.addEventListener(ev, handleUserInteraction, { passive: true }),
         );
       } catch (err) {
-        console.debug('[useWakeLock] Video fallback setup error:', err);
+        log.debug('Video fallback setup error:', err);
       }
     };
 
@@ -123,8 +126,8 @@ export function useWakeLock(enabled: boolean = true) {
             lock.release().catch(() => {});
           }
         } catch (err) {
-          console.debug(
-            '[useWakeLock] Native wake lock rejected, falling back to video:',
+          log.debug(
+            'Native wake lock rejected, falling back to video:',
             err instanceof Error ? err.message : err,
           );
         }

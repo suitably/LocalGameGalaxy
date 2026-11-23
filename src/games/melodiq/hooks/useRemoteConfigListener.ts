@@ -1,5 +1,8 @@
 import { useEffect } from 'react';
 import { storage } from '../../../lib/storage';
+import { createLogger } from '../../../lib/logger';
+
+const log = createLogger('RemoteConfig');
 
 interface ConfigMessage {
   type?: string;
@@ -23,7 +26,7 @@ export function useRemoteConfigListener(
     if (currentView !== 'Session') {
       const handleConfig = (peerId: string, data: ConfigMessage) => {
         if (data.type === 'configure' && data.config) {
-          console.log(`[Host] Received Remote Config from ${peerId}:`, data.config);
+          log.debug(`Received remote config from ${peerId}`);
           if (data.config.url) storage.setHelperUrl(data.config.url);
           if (data.config.token) storage.setHelperToken(data.config.token);
           storage.setHelperActive(true);

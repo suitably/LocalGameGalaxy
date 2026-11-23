@@ -24,6 +24,9 @@ import {
   type RemoteCommandEvent,
 } from '../../logic/remoteCommands';
 import { MELODIQ_GAME_KEY, useMelodiqRoomTransport } from '../../hooks/useMelodiqRoomTransport';
+import { createLogger } from '../../../../lib/logger';
+
+const log = createLogger('Session');
 
 /** The part of a result entry a phone's history report updates. */
 export interface RemoteResultEntry {
@@ -77,7 +80,7 @@ export function usePeerSessionMessages<R extends RemoteResultEntry>(
   const handleCommand = (msg: RemoteCommandEvent) => {
     const peerId = msg.from;
     const { audioRef, vocalsRef, videoRef, onExit, activeSessionOverride } = propsRef.current;
-    console.log(`[Session] Remote command from ${peerId}:`, msg.command);
+    log.debug(`Remote command from ${peerId}:`, msg.command);
     switch (msg.command) {
       case 'UPDATE_PROFILE': {
         const latency = profileLatencyOf(msg);
@@ -116,7 +119,7 @@ export function usePeerSessionMessages<R extends RemoteResultEntry>(
           ]);
           const hide = isSpectator || !wanted;
           if (p.config.hidePitch === hide) return false;
-          console.log(`[Session] Phone ${peerId} hidePitch set to ${hide}`);
+          log.debug(`Phone ${peerId} hidePitch set to ${hide}`);
           p.config.hidePitch = hide;
           return true;
         });

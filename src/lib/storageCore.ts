@@ -201,6 +201,8 @@ export const STORAGE_KEYS = {
   /** Colour mode setting: `system` | `dark` | `light` (src/lib/colorMode.ts, DESIGN.md §9). */
   COLOR_MODE: 'lgg_color_mode',
   EXCALIDRAW_LIBRARY: 'guessart_excalidraw_library',
+  /** Switches `debug`/`info` log output on: `1` (all scopes) or a comma-separated scope list (src/lib/logger.ts). */
+  DEBUG_LOG: 'lgg_debug_log',
 } as const;
 
 export const STORAGE_PREFIXES = {

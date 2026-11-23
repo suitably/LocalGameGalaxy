@@ -14,15 +14,18 @@ import '@fontsource-variable/figtree';
 import './i18n';
 import './index.css';
 import { registerSW } from 'virtual:pwa-register';
+import { createLogger } from './lib/logger';
+
+const log = createLogger('PWA');
 
 // Auto-register service worker for PWA offline capabilities and update management
 registerSW({
   immediate: true,
   onNeedRefresh() {
-    console.log('PWA update available, will refresh automatically.');
+    log.debug('PWA update available, will refresh automatically.');
   },
   onOfflineReady() {
-    console.log('PWA is ready to work offline.');
+    log.debug('PWA is ready to work offline.');
   },
 });
 

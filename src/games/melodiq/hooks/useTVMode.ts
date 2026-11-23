@@ -8,6 +8,9 @@ import type { PresentationConnection } from './presentationTypes';
 import { loadTvSettings } from './settingsStorage';
 import { useMultiChannelSync } from '../../../modules/sync';
 import { TV_CONTROL_SYNC, type TvControlMessage } from '../logic/syncChannels';
+import { createLogger } from '../../../lib/logger';
+
+const log = createLogger('TVMode');
 
 export interface TVEvent {
   type: string;
@@ -116,7 +119,7 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
           };
         })
         .catch((e) =>
-          console.log('Presentation availability check failed (not secure context?):', e),
+          log.debug('Presentation availability check failed (not secure context?):', e),
         );
     }
   }, []);
@@ -181,20 +184,20 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
       presentationConnectionRef.current = connection;
 
       connection.onconnect = () => {
-        console.log('Presentation connected');
+        log.debug('Presentation connected');
         setIsTVConnected(true);
         sendSessionInfo();
       };
 
       connection.onclose = () => {
-        console.log('Presentation closed');
+        log.debug('Presentation closed');
         mediaSenderRef.current.reset();
         setIsTVConnected(false);
         presentationConnectionRef.current = null;
       };
 
       connection.onterminate = () => {
-        console.log('Presentation terminated');
+        log.debug('Presentation terminated');
         mediaSenderRef.current.reset();
         setIsTVConnected(false);
         presentationConnectionRef.current = null;

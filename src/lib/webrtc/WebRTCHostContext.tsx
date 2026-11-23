@@ -1,10 +1,5 @@
-import React, {
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-  useRef,
-} from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { createLogger } from '../logger';
 import { WebRTCHostManager } from './WebRTCHostManager';
 import type { RemotePeerBase } from './WebRTCHostManager';
 import { WebRTCHostContext } from './webRTCHostContextCore';
@@ -13,6 +8,8 @@ import { useTrackerConfig } from './useTrackerConfig';
 import { applyPeerConnected, applyPeerCreated, applyPeerUpdated } from './peerListUpdates';
 import { storage, STORAGE_PREFIXES } from '../storage';
 import { initialPartyId, randomPartyId } from './initialPartyId';
+
+const log = createLogger('WebRTCHostProvider');
 
 export interface WebRTCHostProviderProps<T extends RemotePeerBase, M extends WebRTCHostManager<T>> {
   children: React.ReactNode;
@@ -76,13 +73,12 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
     let managerInstance: M | null = null;
     let isCleanedUp = false;
 
-    console.log(`[WebRTCHostProvider:${gameId}] Scheduling Manager init...`, { partyId });
+    log.debug(`[${gameId}] Scheduling Manager init...`);
 
     const timer = setTimeout(() => {
       if (isCleanedUp) return;
 
-      console.log(`[WebRTCHostProvider:${gameId}] Initializing Manager with:`, {
-        partyId,
+      log.debug(`[${gameId}] Initializing Manager with tracker URLs:`, {
         trackerUrls: activeTrackerUrls,
       });
 
@@ -137,7 +133,7 @@ export function WebRTCHostProvider<T extends RemotePeerBase, M extends WebRTCHos
       isCleanedUp = true;
       clearTimeout(timer);
       if (managerInstance) {
-        console.log(`[WebRTCHostProvider:${gameId}] Cleaning up Manager`);
+        log.debug(`[${gameId}] Cleaning up Manager`);
         managerInstance.stop();
         setManager(null);
         setPeers([]);

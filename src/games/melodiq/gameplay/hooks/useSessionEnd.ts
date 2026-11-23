@@ -7,6 +7,9 @@ import type { RemoteResultEntry } from './usePeerSessionMessages';
 import { addPlayerScore, getPlayerScores } from '../../logic/melodiqRepository';
 import { useMultiChannelSync } from '../../../../modules/sync';
 import { TV_CONTROL_SYNC, type TvControlMessage } from '../../logic/syncChannels';
+import { createLogger } from '../../../../lib/logger';
+
+const log = createLogger('MelodiqSession');
 
 /** One scoreboard row of the session just ended. */
 export type SessionResult = ScoreBoardPlayer & RemoteResultEntry;
@@ -40,7 +43,7 @@ export function useSessionEnd({
   });
 
   const handleSongEnd = useCallback(async () => {
-    console.log('Song ended, showing scoreboard');
+    log.debug('Song ended, showing scoreboard');
 
     const now = new Date();
     const currentResults: SessionResult[] = [];
@@ -60,7 +63,7 @@ export function useSessionEnd({
             score: totalScore,
             date: isoDate,
           };
-          console.log(`[Session] Sending stats to ${p.config.name}`, statsPayload);
+          log.debug(`Sending stats to ${p.config.name}`);
           p.webRtcManager.sendToPeer(p.remotePeerId, statsPayload);
         }
 
