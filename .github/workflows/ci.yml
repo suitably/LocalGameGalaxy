@@ -151,6 +151,24 @@ jobs:
       - name: Check logic/ coverage ratchet
         run: npm run check:coverage
 
+  # Not in ci-ok `needs` yet (#841): informational until a few runs show knip has no false positives.
+  deadcode-ratchet:
+    name: Dead Code Ratchet (knip)
+    needs: precheck
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node & Dependencies
+        uses: ./.github/actions/setup
+
+      - name: Check dead-code ratchet
+        run: npm run check:deadcode
+
   build:
     name: Production Web Build
     needs: precheck
