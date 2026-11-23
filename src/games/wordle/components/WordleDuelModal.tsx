@@ -59,7 +59,7 @@ export const WordleDuelModal: React.FC<WordleDuelModalProps> = ({ open, onClose 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Wordle Challenge',
+          title: 'Word Guess Duel',
           text: shareText,
           url: duelLink,
         });

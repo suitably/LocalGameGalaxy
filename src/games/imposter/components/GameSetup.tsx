@@ -19,8 +19,9 @@ import { useImposterSetupState, type ImposterStartOptions } from '../hooks/useIm
 
 interface GameSetupProps {
   players: Array<{ name: string; isRemote?: boolean }>;
-  onAddPlayer: (name: string) => void;
-  onRemovePlayer: (name: string, index?: number) => void;
+  /** Without these the roster is fixed (a party room) and no player editor is shown. */
+  onAddPlayer?: (name: string) => void;
+  onRemovePlayer?: (name: string, index?: number) => void;
   onStartGame: (setup: ImposterStartOptions) => void;
 }
 
@@ -37,14 +38,16 @@ export const GameSetup: React.FC<GameSetupProps> = ({
 
   return (
     <Box maxWidth="sm" mx="auto">
-      <PlayerManagerCard
-        players={players}
-        onAddPlayer={onAddPlayer}
-        onRemovePlayer={onRemovePlayer}
-        minPlayers={3}
-        maxPlayers={20}
-        sx={{ mb: 4 }}
-      />
+      {onAddPlayer && onRemovePlayer && (
+        <PlayerManagerCard
+          players={players}
+          onAddPlayer={onAddPlayer}
+          onRemovePlayer={onRemovePlayer}
+          minPlayers={3}
+          maxPlayers={20}
+          sx={{ mb: 4 }}
+        />
+      )}
 
       <Paper variant="outlined" sx={{ p: 4, mb: 4, borderRadius: 2 }}>
         <Typography variant="h6" gutterBottom>

@@ -1,4 +1,4 @@
-import type { Note } from '../../parser';
+import type { Note } from '../../logic/songVocals';
 import type { SungSegment } from '../PitchVisualizer';
 import { getNoteName, isMelodyNote } from '../logic/pitchLayout';
 import { noteColor, type PitchColors } from './pitchColors';

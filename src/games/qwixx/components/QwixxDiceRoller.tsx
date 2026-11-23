@@ -171,6 +171,7 @@ export const QwixxDiceRoller: React.FC<QwixxDiceRollerProps> = ({
             aria-label={t('games.qwixx.roll', 'Roll')}
             onClick={handleRollClick}
             disabled={disabled || isRolling || animating}
+            data-room-target="qwixx.roll"
             sx={{
               fontWeight: 'bold',
               px: { xs: 1, sm: 3 },

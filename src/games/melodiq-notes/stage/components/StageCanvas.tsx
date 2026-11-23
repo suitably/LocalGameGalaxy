@@ -110,6 +110,7 @@ export function StageCanvas({
         p.octaveBase,
         p.instrument.kind === 'guitar' ? 6 : 4,
         down,
+        p.drumKit?.pads,
       );
       if (!action) return;
       e.preventDefault();
@@ -164,7 +165,7 @@ export function StageCanvas({
       case 'strings':
         return engine.hit(stringAt(stringGeometry(p, w, h), hit.y));
       case 'drums':
-        return engine.hit(drumLaneAt(w, h, hit.x, hit.y));
+        return engine.hit(drumLaneAt(w, h, hit.x, hit.y, p.drumKit?.pads));
       default:
         e.currentTarget.setPointerCapture(e.pointerId);
         return engine.setVoice(pitchGeometry(p, w, h).pitchAt(hit.y), true);

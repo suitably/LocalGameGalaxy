@@ -1,15 +1,15 @@
 import { useReducer, useEffect, useState, useCallback } from 'react';
 import { storage, STORAGE_KEYS } from '../../lib/storage';
-import { knisterReducer, INITIAL_KNISTER_STATE } from './logic/knisterReducer';
-import type { KnisterState } from './logic/types';
+import { INITIAL_KNISTER_STATE } from './logic/knisterReducer';
+import { knisterLocalReducer, type KnisterLocalState } from './logic/knisterLocal';
 
 interface Cell {
   row: number;
   col: number;
 }
 
-const loadInitialState = (initial: KnisterState): KnisterState => {
-  const saved = storage.getJson<KnisterState | null>(STORAGE_KEYS.KNISTER_CURRENT_GAME, null);
+const loadInitialState = (initial: KnisterLocalState): KnisterLocalState => {
+  const saved = storage.getJson<KnisterLocalState | null>(STORAGE_KEYS.KNISTER_CURRENT_GAME, null);
   if (saved && Array.isArray(saved.players) && saved.players.length > 0) {
     return {
       ...initial,
@@ -20,9 +20,13 @@ const loadInitialState = (initial: KnisterState): KnisterState => {
   return initial;
 };
 
-/** State, persistence and handlers of a local (single-device) Knister game. */
+/** State, persistence and handlers of a Knister game on one device (one or more players). */
 export const useKnisterGameState = () => {
-  const [state, dispatch] = useReducer(knisterReducer, INITIAL_KNISTER_STATE, loadInitialState);
+  const [state, dispatch] = useReducer(
+    knisterLocalReducer,
+    INITIAL_KNISTER_STATE,
+    loadInitialState,
+  );
   const [showDice, setShowDice] = useState<boolean>(
     () => storage.get(STORAGE_KEYS.KNISTER_SHOW_DICE, 'true') === 'true',
   );

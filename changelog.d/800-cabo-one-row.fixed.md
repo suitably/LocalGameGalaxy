@@ -1,0 +1,1 @@
+- **Cabo: four cards in one row** (#800): your cards lie side by side instead of two rows, so a phone shows the whole table; at the start you look at the right two.

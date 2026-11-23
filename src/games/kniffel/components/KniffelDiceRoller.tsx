@@ -86,19 +86,21 @@ export const KniffelDiceRoller: React.FC<KniffelDiceRollerProps> = ({
         }}
       >
         {dice.map((val, i) => (
-          <Die3D
-            key={i}
-            value={val}
-            color={heldDice[i] ? 'red' : 'white'}
-            isRolling={animating && !heldDice[i]}
-            isSelected={heldDice[i]}
-            onClick={() => {
-              if (!animating && rollCount > 0 && rollCount < 3) {
-                onToggleHold(i);
-              }
-            }}
-            disabled={animating || rollCount === 0 || rollCount >= 3}
-          />
+          // `data-room-target`: party "tap here" markers (features/party/RoomMarkers).
+          <Box key={i} data-room-target={`kniffel.die.${i}`} sx={{ display: 'inline-flex' }}>
+            <Die3D
+              value={val}
+              color={heldDice[i] ? 'red' : 'white'}
+              isRolling={animating && !heldDice[i]}
+              isSelected={heldDice[i]}
+              onClick={() => {
+                if (!animating && rollCount > 0 && rollCount < 3) {
+                  onToggleHold(i);
+                }
+              }}
+              disabled={animating || rollCount === 0 || rollCount >= 3}
+            />
+          </Box>
         ))}
       </Box>
       <Button
@@ -107,6 +109,7 @@ export const KniffelDiceRoller: React.FC<KniffelDiceRollerProps> = ({
         startIcon={<CasinoIcon />}
         onClick={handleRollClick}
         disabled={isRollDisabled}
+        data-room-target="kniffel.roll"
         aria-label={rollLabel}
         sx={{ fontWeight: 'bold', px: { xs: 1.5, sm: 3 }, py: 1, minHeight: 48, borderRadius: 2 }}
       >

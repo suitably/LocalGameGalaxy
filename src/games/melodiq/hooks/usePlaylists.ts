@@ -1,217 +1,32 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
-import db, { type Playlist } from '../db';
-import { melodiqFetch } from '../api/melodiqFetch';
-import { generateUUID } from '../../../lib/uuid';
-import { storage, STORAGE_KEYS } from '../../../lib/storage';
+import { useState } from 'react';
+import { useSongLibrary } from './useSongLibrary';
 
+/**
+ * Playlist view of the song library (#636): own playlists, or (toggle) the ones other users share
+ * on the companion. Storage and ownership rules live in `useSongLibrary` / `songLibraryStore`.
+ */
 export const usePlaylists = () => {
-    const [showGlobalPlaylists, setShowGlobalPlaylists] = useState(false);
-    const [isSyncing, setIsSyncing] = useState(false);
-    const [syncEnabled, setSyncEnabled] = useState(() => {
-        return storage.get(STORAGE_KEYS.MELODIQ_ENABLE_PLAYLIST_SYNC) !== 'false';
-    });
+  const library = useSongLibrary();
+  const [showGlobalPlaylists, setShowGlobalPlaylists] = useState(false);
+  const playlists = library.playlists.filter((p) => p.mine !== showGlobalPlaylists);
 
-    // Read config from storage
-    const getHelperConfig = () => ({
-        url: storage.getHelperUrl(),
-        token: storage.getHelperToken(),
-        enabled: storage.isHelperActive() && syncEnabled
-    });
-
-    // Local playlists from Dexie
-    const localPlaylists = useLiveQuery(
-        () => db.playlists.toArray(),
-        []
-    );
-
-    const syncWithServer = useCallback(async () => {
-        const { url, token, enabled } = getHelperConfig();
-        if (!enabled || !url) return;
-        setIsSyncing(true);
-        try {
-            // 1. Fetch from server
-            const serverPlaylists: Playlist[] = await melodiqFetch('/api/playlists');
-            
-            const localPlaylistsList = await db.playlists.toArray();
-            
-            // 2. Merge logic
-            // To simplify, if server has it and it's newer, update local.
-            // If local has it and it's newer, update server.
-            for (const serverP of serverPlaylists) {
-                const localP = localPlaylistsList.find(p => p.id === serverP.id);
-                const isGlobal = serverP.creatorToken !== token;
-                
-                if (!localP) {
-                    // New from server
-                    await db.playlists.put({ ...serverP, isGlobal });
-                } else if (serverP.updatedAt > localP.updatedAt) {
-                    // Server is newer
-                    await db.playlists.put({ ...serverP, isGlobal });
-                } else if (localP.updatedAt > serverP.updatedAt && !localP.isGlobal) {
-                    // Local is newer and we own it -> push to server
-                    await pushToServer(localP);
-                }
-            }
-            
-            // 3. Push local playlists that server doesn't have (if we own them)
-            for (const localP of localPlaylistsList) {
-                if (!localP.isGlobal && !serverPlaylists.find(p => p.id === localP.id)) {
-                    await pushToServer(localP);
-                }
-            }
-            
-        } catch (e) {
-            console.error('Playlist sync failed:', e);
-        } finally {
-            setIsSyncing(false);
-        }
-    }, []);
-
-    const pushToServer = async (playlist: Playlist) => {
-        const { url, enabled } = getHelperConfig();
-        if (!enabled || !url) return;
-        
-        try {
-            await melodiqFetch('/api/playlists', {
-                method: 'POST',
-                body: JSON.stringify(playlist)
-            });
-        } catch (e) {
-            console.error('Failed to push playlist to server:', e);
-        }
-    };
-
-    const deleteFromServer = async (id: string) => {
-        const { url, enabled } = getHelperConfig();
-        if (!enabled || !url) return;
-        
-        try {
-            await melodiqFetch(`/api/playlists/${id}`, {
-                method: 'DELETE'
-            });
-        } catch (e) {
-            console.error('Failed to delete playlist from server:', e);
-        }
-    };
-
-    // Initial sync
-    useEffect(() => {
-        syncWithServer();
-    }, [syncWithServer]);
-
-    const createPlaylist = async (name: string): Promise<string> => {
-        const { token } = getHelperConfig();
-        const id = generateUUID();
-        const newPlaylist: Playlist = {
-            id,
-            name,
-            songs: [],
-            creatorToken: token,
-            isGlobal: false,
-            updatedAt: Date.now()
-        };
-        await db.playlists.put(newPlaylist);
-        await pushToServer(newPlaylist);
-        return id;
-    };
-
-    const deletePlaylist = async (id: string) => {
-        await db.playlists.delete(id);
-        await deleteFromServer(id);
-    };
-
-    const updatePlaylistName = async (id: string, name: string) => {
-        const p = await db.playlists.get(id);
-        if (p) {
-            p.name = name;
-            p.updatedAt = Date.now();
-            await db.playlists.put(p);
-            await pushToServer(p);
-        }
-    };
-
-    const addSongToPlaylist = async (playlistId: string, songId: string) => {
-        const p = await db.playlists.get(playlistId);
-        if (p && !p.songs.includes(songId)) {
-            p.songs.push(songId);
-            p.updatedAt = Date.now();
-            await db.playlists.put(p);
-            await pushToServer(p);
-        }
-    };
-
-    const addSongsToPlaylist = async (playlistId: string, songIds: string[]) => {
-        const p = await db.playlists.get(playlistId);
-        if (p) {
-            let changed = false;
-            for (const id of songIds) {
-                if (!p.songs.includes(id)) {
-                    p.songs.push(id);
-                    changed = true;
-                }
-            }
-            if (changed) {
-                p.updatedAt = Date.now();
-                await db.playlists.put(p);
-                await pushToServer(p);
-            }
-        }
-    };
-
-    const removeSongFromPlaylist = async (playlistId: string, songId: string) => {
-        const p = await db.playlists.get(playlistId);
-        if (p) {
-            p.songs = p.songs.filter(id => id !== songId);
-            p.updatedAt = Date.now();
-            await db.playlists.put(p);
-            await pushToServer(p);
-        }
-    };
-
-    const moveSongInPlaylist = async (playlistId: string, fromIndex: number, toIndex: number) => {
-        const p = await db.playlists.get(playlistId);
-        if (p) {
-            const songs = [...p.songs];
-            const [moved] = songs.splice(fromIndex, 1);
-            songs.splice(toIndex, 0, moved);
-            p.songs = songs;
-            p.updatedAt = Date.now();
-            await db.playlists.put(p);
-            await pushToServer(p);
-        }
-    };
-
-    // Filter displayed playlists
-    const playlists = localPlaylists ? localPlaylists.filter(p => {
-        if (showGlobalPlaylists) return p.isGlobal;
-        return !p.isGlobal;
-    }) : [];
-
-    // Handle toggling sync
-    const toggleSync = (enabled: boolean) => {
-        setSyncEnabled(enabled);
-        storage.set(STORAGE_KEYS.MELODIQ_ENABLE_PLAYLIST_SYNC, enabled ? 'true' : 'false');
-        if (enabled) {
-            syncWithServer(); // Immediately sync when turned on
-        }
-    };
-
-    return {
-        playlists,
-        allPlaylists: localPlaylists || [],
-        showGlobalPlaylists,
-        setShowGlobalPlaylists,
-        isSyncing,
-        syncEnabled,
-        toggleSync,
-        syncWithServer,
-        createPlaylist,
-        deletePlaylist,
-        updatePlaylistName,
-        addSongToPlaylist,
-        addSongsToPlaylist,
-        removeSongFromPlaylist,
-        moveSongInPlaylist
-    };
+  return {
+    playlists,
+    allPlaylists: library.playlists,
+    ownPlaylists: library.playlists.filter((p) => p.mine),
+    storeKind: library.storeKind,
+    showGlobalPlaylists,
+    setShowGlobalPlaylists,
+    isSyncing: library.isLoading,
+    syncWithServer: library.refresh,
+    createPlaylist: library.createPlaylist,
+    deletePlaylist: library.deletePlaylist,
+    updatePlaylistName: library.renamePlaylist,
+    setPlaylistShared: library.setPlaylistShared,
+    addSongToPlaylist: (playlistId: string, songId: string) =>
+      library.addSongsToPlaylist(playlistId, [songId]),
+    addSongsToPlaylist: library.addSongsToPlaylist,
+    removeSongFromPlaylist: library.removeSongFromPlaylist,
+    moveSongInPlaylist: library.moveSongInPlaylist,
+  };
 };

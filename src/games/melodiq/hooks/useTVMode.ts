@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { getHelperToken, getHelperUrl } from '../../../lib/companion/companionSettings';
+import { canTryPresentation, currentScreenPlatform } from '../../../lib/secondScreen';
 import type { Song, SongMeta } from '../db';
 import { TvMediaSender, withAbsoluteMediaUrls } from '../logic/tvMediaTransfer';
 import type { PresentationConnection } from './presentationTypes';
 import { loadTvSettings } from './settingsStorage';
+import { useMultiChannelSync } from '../../../modules/sync';
+import { TV_CONTROL_SYNC, type TvControlMessage } from '../logic/syncChannels';
 
 export interface TVEvent {
   type: string;
@@ -18,7 +21,11 @@ export interface TVSessionInfo {
   baseUrl?: string;
 }
 
-export const useTVMode = (sessionInfo?: TVSessionInfo) => {
+export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void) => {
+  const onCastFailedRef = useRef(onCastFailed);
+  useEffect(() => {
+    onCastFailedRef.current = onCastFailed;
+  }, [onCastFailed]);
   const [isTVConnected, setIsTVConnected] = useState(false);
   const [lastEvent, setLastEvent] = useState<TVEvent | null>(null);
   const [isPresentationAvailable, setIsPresentationAvailable] = useState(false);
@@ -47,7 +54,6 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
   }, []);
 
   // Transports
-  const channelRef = useRef<BroadcastChannel | null>(null);
   const presentationConnectionRef = useRef<PresentationConnection | null>(null);
   const mediaSenderRef = useRef(new TvMediaSender());
   const tvWindowRef = useRef<Window | null>(null);
@@ -85,28 +91,21 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
     [sendSessionInfo],
   );
 
-  // Setup Broadcast Channel (Local Window)
+  // Broadcast channel to a TV window on this device (shared sync hook, no self-echo)
+  const { publish: publishLocal } = useMultiChannelSync<TvControlMessage>({
+    ...TV_CONTROL_SYNC,
+    selfEcho: false,
+    onMessage: ({ type, payload }) => handleMessage(type, payload),
+  });
+
+  // Check if a TV window is already open (ping)
   useEffect(() => {
-    const channel = new BroadcastChannel('melodiq_tv_control');
-    channelRef.current = channel;
-
-    channel.onmessage = (event) => {
-      const { type, payload } = event.data;
-      handleMessage(type, payload);
-    };
-
-    // Check if already open (ping)
-    channel.postMessage({ type: 'PING' });
-
-    return () => {
-      channel.close();
-      channelRef.current = null;
-    };
-  }, [handleMessage]);
+    publishLocal({ type: 'PING' });
+  }, [publishLocal]);
 
   // Check Presentation Availability
   useEffect(() => {
-    if (window.PresentationRequest) {
+    if (window.PresentationRequest && canTryPresentation(currentScreenPlatform())) {
       const request = new window.PresentationRequest(['/games/melodiq/tv']);
       request
         .getAvailability()
@@ -143,26 +142,27 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
   }, []);
 
   // Unified Sender
-  const sendMessage = useCallback((type: string, payload?: any) => {
-    const msg = { type, payload };
+  const sendMessage = useCallback(
+    (type: string, payload?: any) => {
+      const msg = { type, payload };
 
-    // Send via BroadcastChannel
-    if (channelRef.current) {
-      channelRef.current.postMessage(msg);
-    }
+      // Send via the local broadcast channel
+      publishLocal(msg);
 
-    // Send via PresentationConnection
-    if (
-      presentationConnectionRef.current &&
-      presentationConnectionRef.current.state === 'connected'
-    ) {
-      try {
-        presentationConnectionRef.current.send(JSON.stringify(msg));
-      } catch (e) {
-        console.error('Failed to send to PresentationConnection:', e);
+      // Send via PresentationConnection
+      if (
+        presentationConnectionRef.current &&
+        presentationConnectionRef.current.state === 'connected'
+      ) {
+        try {
+          presentationConnectionRef.current.send(JSON.stringify(msg));
+        } catch (e) {
+          console.error('Failed to send to PresentationConnection:', e);
+        }
       }
-    }
-  }, []);
+    },
+    [publishLocal],
+  );
 
   useEffect(() => {
     sendMessageRef.current = sendMessage;
@@ -213,7 +213,10 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
   );
 
   const startPresentation = useCallback(async () => {
-    if (!window.PresentationRequest) return;
+    if (!window.PresentationRequest || !canTryPresentation(currentScreenPlatform())) {
+      onCastFailedRef.current?.();
+      return;
+    }
 
     try {
       const request = new window.PresentationRequest(['/games/melodiq/tv']);
@@ -221,6 +224,10 @@ export const useTVMode = (sessionInfo?: TVSessionInfo) => {
       setupPresentationConnection(connection);
     } catch (error) {
       console.error('Presentation request failed:', error);
+      // A dismissed device picker is not an error worth a message
+      if (!(error instanceof DOMException && error.name === 'NotAllowedError')) {
+        onCastFailedRef.current?.();
+      }
     }
   }, [setupPresentationConnection]);
 

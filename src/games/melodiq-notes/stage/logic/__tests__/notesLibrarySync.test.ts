@@ -141,3 +141,20 @@ describe('saveToNotesLibrary (#568: into song folders)', () => {
     await expect(saveToNotesLibrary({ ...base, xml: null }, api)).rejects.toThrow('no score');
   });
 });
+
+describe('saveToNotesLibrary with a chosen song (#563)', () => {
+  it('uploads into the chosen song with its label, even when another song matches', async () => {
+    const { api, uploads } = fakeApi([songFolder('match', 'Prelude', 'Bach')]);
+    await saveToNotesLibrary({ ...base, target: { songId: 'chosen', label: 'Beginner' } }, api);
+    expect(uploads).toEqual([['chosen', 'Prelude.musicxml']]);
+    expect(api.upload).toHaveBeenCalledWith('chosen', expect.any(File), 'Beginner');
+    expect(api.listSongs).not.toHaveBeenCalled();
+  });
+
+  it('creates a new song when the user chose one, despite a matching folder', async () => {
+    const { api, uploads } = fakeApi([songFolder('match', 'Prelude', 'Bach')]);
+    await saveToNotesLibrary({ ...base, target: { songId: null, label: '' } }, api);
+    expect(api.createSong).toHaveBeenCalled();
+    expect(uploads).toEqual([['new', 'Prelude.musicxml']]);
+  });
+});

@@ -1,3 +1,4 @@
+import { drumVoiceOfKey, type DrumVoice } from './drumVoices';
 import type { InstrumentKind, ScoreNote } from './types';
 
 export interface StringTuning {
@@ -18,18 +19,63 @@ export const STRING_TUNINGS: Partial<Record<InstrumentKind, StringTuning>> = {
   ukulele: { strings: ['A', 'E', 'C', 'G'], tuning: [69, 64, 60, 67], maxFret: 12 },
 };
 
-/** Drum lanes on the stage, left to right; the kick is drawn as a bar across all lanes. */
-export const DRUM_LANES = ['cymbal', 'hihat', 'snare', 'tom', 'kick'] as const;
+/**
+ * Drum lanes on the stage, left to right in kit order (#571, ADR-0007); the kick is drawn as a bar
+ * across all lanes. A stage shows only the lanes a song uses.
+ */
+export const DRUM_LANES = [
+  'cymbal',
+  'hihat',
+  'snare',
+  'tom1',
+  'tom2',
+  'tom3',
+  'floorTom',
+  'percussion',
+  'kick',
+] as const;
 export type DrumLane = (typeof DRUM_LANES)[number];
 
-/** Maps a General MIDI percussion key to a stage lane index (see DRUM_LANES). */
+export const DRUM_TOM_LANES: readonly number[] = [3, 4, 5, 6];
+/** Tambourine, cowbell, clap and every other non-kit sound; judged only when the player wants it. */
+export const DRUM_PERCUSSION_LANE = 7;
+export const DRUM_KICK_LANE = 8;
+
+const VOICE_LANE: Record<DrumVoice, number> = {
+  crash: 0,
+  ride: 0,
+  rideBell: 0,
+  china: 0,
+  splash: 0,
+  hihatClosed: 1,
+  hihatOpen: 1,
+  hihatPedal: 1,
+  snare: 2,
+  snareRimshot: 2,
+  snareCrossStick: 2,
+  snareGhost: 2,
+  tom1: 3,
+  tom2: 4,
+  tom3: 5,
+  floorTom: 6,
+  cowbell: DRUM_PERCUSSION_LANE,
+  tambourine: DRUM_PERCUSSION_LANE,
+  other: DRUM_PERCUSSION_LANE,
+  kick: DRUM_KICK_LANE,
+};
+
+/** Stage lane index (see DRUM_LANES) of a drum voice; non-kit voices go to the percussion lane. */
+export const drumLaneOfVoice = (voice: DrumVoice): number => VOICE_LANE[voice];
+
+/**
+ * E-drum keys outside General MIDI that kits send for kit pieces (Roland V-Drums: 22/26 hi-hat
+ * edge closed/open, 58 tom 3 rim, which GM calls vibraslap and no kit score writes).
+ */
+const KIT_KEY_LANES: Record<number, number> = { 22: 1, 26: 1, 58: 6 };
+
+/** Maps a General MIDI percussion key to a stage lane index (see DRUM_LANES); unknown keys are percussion. */
 export function drumLaneOf(midiKey: number): number {
-  if (midiKey === 35 || midiKey === 36) return 4;
-  if (midiKey >= 37 && midiKey <= 40) return 2;
-  // 58: Roland V-Drums tom 3 rim (GM vibraslap, never written for a kit)
-  if ([41, 43, 45, 47, 48, 50, 58].includes(midiKey)) return 3;
-  if ([49, 51, 52, 53, 55, 57, 59].includes(midiKey)) return 0;
-  return 1;
+  return KIT_KEY_LANES[midiKey] ?? drumLaneOfVoice(drumVoiceOfKey(midiKey));
 }
 
 const NAME_RULES: Array<[RegExp, InstrumentKind]> = [

@@ -12,6 +12,7 @@ import {
   barLabel,
   fadeIfPlayed,
   STAGE,
+  type Ctx,
 } from './common';
 import { stringGeometry } from './geometry';
 import { upcoming, type HitPoint, type ViewContext } from './view';
@@ -74,12 +75,17 @@ export function drawStrings(v: ViewContext): HitPoint {
   g.beginPath();
   g.rect(LABEL_X + (v.isFocus ? 20 : 6), 0, w, h);
   g.clip();
+  let strumAt = Number.NaN;
   forVisibleNotes(p, beat - geo.hitX / geo.pxPerBeat, beat + geo.lookBeats, (note) => {
     // the head is centred on the note's time, so it crosses the hit line as the note sounds
     const x = geo.hitX + (note.t - beat) * geo.pxPerBeat;
     const len = Math.max(r, note.dur * geo.pxPerBeat - 4);
     if (x > w + 30 || x + len < 0) return;
     fadeIfPlayed(g, note, beat);
+    if (note.strum && note.t !== strumAt) {
+      strumAt = note.t;
+      drawStrumArrow(g, x, geo.top - 12, note.strum);
+    }
     const y = laneY(note.lane);
     const c = note.judged === 'miss' ? MISS_COLOR : colors[note.lane];
     g.fillStyle = withAlpha(c, 0.22);
@@ -99,6 +105,22 @@ export function drawStrings(v: ViewContext): HitPoint {
 
   if (geo.fretboardH) drawFretboard(v, geo.fretboardH, colors);
   return (note) => ({ x: geo.hitX, y: laneY(note.lane) });
+}
+
+/** A stroke's direction above the strings (#634): down = arrow pointing down, as strum charts write it. */
+function drawStrumArrow(g: Ctx, x: number, bottom: number, dir: 'down' | 'up') {
+  const top = bottom - 16;
+  const tip = dir === 'down' ? bottom : top;
+  const back = dir === 'down' ? -5 : 5;
+  g.strokeStyle = withAlpha(STAGE.ink, 0.7);
+  g.lineWidth = 2;
+  g.beginPath();
+  g.moveTo(x, top);
+  g.lineTo(x, bottom);
+  g.moveTo(x - 4, tip + back);
+  g.lineTo(x, tip);
+  g.lineTo(x + 4, tip + back);
+  g.stroke();
 }
 
 function drawFretboard(v: ViewContext, fbH: number, colors: string[]) {

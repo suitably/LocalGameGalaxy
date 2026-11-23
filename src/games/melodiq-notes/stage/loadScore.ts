@@ -1,30 +1,19 @@
 import {
-  extractGpif,
-  extractMxl,
-  parseGuitarPro,
-  parseMidi,
+  applyBarMarksToMusicXml,
   parseMusicXml,
+  readScoreBytes,
+  type BarMark,
+  type ScoreFileContent,
   type ScoreSong,
 } from '../../../modules/music-score';
 
 const browserXml = (text: string) => new DOMParser().parseFromString(text, 'application/xml');
 
-export interface LoadedScore {
-  song: ScoreSong;
-  /** MusicXML text when the source was MusicXML (needed to export it with the recording's tempo). */
-  xml: string | null;
-}
+export type LoadedScore = ScoreFileContent;
 
 /** Reads .mxl, .musicxml/.xml, .mid/.midi or Guitar Pro 7/8 .gp bytes into a song. */
-export function readScoreFile(fileName: string, data: ArrayBuffer): LoadedScore {
-  const lower = fileName.toLowerCase();
-  const bytes = new Uint8Array(data);
-  if (/\.midi?$/.test(lower)) return { song: parseMidi(bytes, fileName), xml: null };
-  if (lower.endsWith('.gp'))
-    return { song: parseGuitarPro(extractGpif(bytes), fileName, browserXml), xml: null };
-  const xml = lower.endsWith('.mxl') ? extractMxl(bytes) : new TextDecoder().decode(bytes);
-  return { song: parseMusicXml(xml, fileName, browserXml), xml };
-}
+export const readScoreFile = (fileName: string, data: ArrayBuffer): LoadedScore =>
+  readScoreBytes(fileName, data, browserXml);
 
 export function readMusicXmlText(xml: string, name: string): LoadedScore {
   return { song: parseMusicXml(xml, name, browserXml), xml };
@@ -41,4 +30,16 @@ export function downloadText(name: string, text: string, type: string) {
   a.download = name;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Downloads the MusicXML with the recording's tempo from its bar marks (shifted by the offset). */
+export function downloadAlignedScore(
+  song: ScoreSong,
+  xml: string,
+  played: BarMark[],
+  offset: number,
+) {
+  const shifted = played.map((m) => ({ ...m, sec: m.sec + offset }));
+  const out = applyBarMarksToMusicXml(xml, song, shifted, browserXml, serializeXml);
+  downloadText(`${song.title || 'score'}.musicxml`, out, 'application/vnd.recordare.musicxml+xml');
 }

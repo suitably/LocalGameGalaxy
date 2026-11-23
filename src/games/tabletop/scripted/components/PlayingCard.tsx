@@ -4,7 +4,7 @@
 import React from 'react';
 import { alpha, Box, ButtonBase } from '@mui/material';
 import { SUIT_DATA } from '../../components/widgets/StandardSuitCardFace';
-import { SUIT_SYMBOL, cardText, rankOf, suitOf, type CardId } from '../logic/cardDeck';
+import { SUIT_SYMBOL, cardText, isJoker, rankOf, suitOf, type CardId } from '../logic/cardDeck';
 import { transitionOf } from '../../../../lib/motion';
 
 export const CARD_RATIO = 1.45;
@@ -21,7 +21,28 @@ interface PlayingCardProps {
   label?: string;
 }
 
+const JokerFace: React.FC = () => (
+  <Box
+    sx={{
+      position: 'absolute',
+      inset: 0,
+      bgcolor: 'common.white',
+      color: 'secondary.main',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontWeight: 800,
+      lineHeight: 1,
+    }}
+  >
+    <Box sx={{ fontSize: '2.2em' }}>🃏</Box>
+    <Box sx={{ fontSize: '0.6em', letterSpacing: '0.04em' }}>JOKER</Box>
+  </Box>
+);
+
 const Face: React.FC<{ card: CardId }> = ({ card }) => {
+  if (isJoker(card)) return <JokerFace />;
   const symbol = SUIT_SYMBOL[suitOf(card)];
   const color = SUIT_DATA[symbol].color;
   return (

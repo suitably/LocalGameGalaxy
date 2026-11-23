@@ -5,6 +5,7 @@ import {
   type CompanionSong,
   type SongScore,
   type StoredBarMarks,
+  type ScorePartSettings,
 } from '../../../lib/companion/songScoresApi';
 import { getSongMarks } from '../../../lib/companion/notesLibraryApi';
 import { parseUltraStarTxt, ultraStarToScore } from '../../../modules/music-score';
@@ -38,6 +39,8 @@ export interface ServerScoreLoad {
   recording: RecordingSource | null;
   /** Only marks that belong to `recording`. */
   marks: StoredBarMarks | null;
+  /** Hidden and renamed parts stored for the score (#564). */
+  parts?: ScorePartSettings;
 }
 
 async function readServerScore(file: string, url: string, meta: { title: string; artist: string }) {
@@ -88,6 +91,7 @@ export async function loadSongScore(
     loaded,
     origin: { kind: 'notes', title: song.title, songId: song.id, scoreFile: score.file },
     ...pickRecording(song, stored),
+    parts: score.parts,
   };
 }
 

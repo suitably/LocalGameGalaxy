@@ -1,0 +1,1 @@
+- **Kniffel international rules**: in a party room the host can switch Kniffel to the international rules before the first score — every further five of a kind scores 100 and counts as a joker for Full House and the straights.

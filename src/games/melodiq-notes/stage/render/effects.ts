@@ -1,4 +1,4 @@
-import { JUDGEMENT_COLORS } from '../logic/instruments';
+import { judgementColors, judgementLabel } from '../logic/judgementStyle';
 import type { StagePlayer } from '../engine/types';
 import { clamp, FONT_DISPLAY, type Ctx, type StageTexts } from './common';
 import type { HitPoint } from './view';
@@ -38,20 +38,17 @@ const SPARKS_PER_HIT = 3;
 
 /** Turns the player's new judgements into a ring, a few sparks (only for clean hits) and a word. */
 export function collectEffects(p: StagePlayer, fx: PlayerEffects, at: HitPoint, texts: StageTexts) {
+  const colors = judgementColors();
   for (const e of p.fx.splice(0)) {
     const pt = at(e.note);
     const color =
-      e.kind === 'learn'
-        ? p.instrument.color
-        : e.kind === 'wrong'
-          ? JUDGEMENT_COLORS.miss
-          : JUDGEMENT_COLORS[e.kind];
+      e.kind === 'learn' ? p.instrument.color : colors[e.kind === 'wrong' ? 'miss' : e.kind];
     fx.labels.push({
       x: pt.x,
       y: pt.y - 22,
       life: e.kind === 'wrong' ? 0.8 : 1,
       color,
-      text: texts.judgement[e.kind],
+      text: judgementLabel(e.kind, texts.judgement[e.kind]),
     });
     if (e.kind === 'miss' || e.kind === 'wrong') continue;
     fx.rings.push({ x: pt.x, y: pt.y, life: 1, color });

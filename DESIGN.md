@@ -68,7 +68,7 @@ Rules:
 - Colour is never the only signal: pair it with the player's name, initial, number or a shape (colour-blind players, glare on a TV).
 - Tints for large areas (a player's score column, a row background): the piece colour at 16 % opacity over `bg.surface`, text stays `text.primary`.
 - Game-specific needs that the palette cannot cover (e.g. Sudoku conflict highlights, Wordle letter states) map to roles first (`success`, `warning`, `error`, `accent`). Anything still missing is added here as a token, never inline.
-- In code: `theme.palette.piece.*` in components, `piecePalette`, `PIECE_ORDER`, `pieceColorForSlot()` and `pieceNeutrals` (white/black pieces) from `src/themeTokens.ts` in logic and canvas code.
+- In code: `theme.palette.piece.*` in components, `piecePalette`, `PIECE_ORDER`, `pieceColorForSlot()` and `pieceNeutrals` (white/black pieces) from `src/themeTokens.ts` in logic and canvas code. A game that offers a colour-blind palette for states (hit / miss …) takes it from `colorBlindPalette` (Okabe & Ito) in the same file, and still pairs it with a shape or word.
 - **Exempt — table content:** what a game _depicts_ keeps realistic or user-defined colours: playing-card faces and suits, wood holders, table felt, imported Tabletop widget colours (`src/games/tabletop/logic/*` parsers), MusicXML colours, the karaoke lyric highlight on video. Exempt colours never style UI chrome (buttons, dialogs, navigation, selection).
 
 ## 3. Typography
@@ -201,7 +201,7 @@ Each area is the couch in its piece colour with the area symbol on the (taller) 
 | Party  | `area-party.svg`  | `piece.pink`   | Speech bubble    | `party`, `drawing`, `social_deduction` |
 | Rätsel | `area-puzzle.svg` | `piece.purple` | 2×2 tiles        | `puzzle`                               |
 
-The mapping lives in `src/lib/areas.ts`; the hub filters by area.
+Areas are listed in `src/lib/areas.ts`; each catalogue entry names its area (ADR-0011). The hub groups its tiles into one section per area, tools last, and filters by area and by "with own phones".
 
 - **Area lock-up** (hub section headers, area pages): area couch + small "Nexumia" caption above the area name in the display face.
 - **Area label** (filters, chips, game cards): pill in the piece colour, ink symbol (20px) + ink area name, 600–700 weight. Labels are UI, not logos: no couch inside.
@@ -225,7 +225,7 @@ Order (each step its own PR):
 1. ~~**Tokens in code**~~ — done for dark (`src/themeTokens.ts` holds dark, light and piece tokens; `src/theme.ts` builds a dark-only MUI theme, no `colorSchemes`/CSS variables yet, because MUI would follow the system mode and keep its own `localStorage` key). Original plan: rewrite `src/theme.ts` with MUI `colorSchemes` (`dark` + `light`) and CSS variables (`cssVariables: true`), the piece palette as a custom palette key, typography (§3), `shape.borderRadius: 4`, component overrides (§6). Update `index.css`, `index.html` and the PWA manifest in `vite.config.ts` to `bg.canvas`.
 2. ~~**Fonts**~~ — done: add both `@fontsource-variable` packages, import in `src/main.tsx`.
 3. ~~**Mode setting**~~ — done (§9, #499): `STORAGE_KEYS.COLOR_MODE`, Settings → General → Appearance, `colorSchemes` with `lightTokens`.
-4. ~~**Hub**~~ — done: tiles and filter use the areas (`src/lib/areas.ts`, `src/features/hub/HubGameCard.tsx`, `HubAreaFilter.tsx`). The unused gradient fields in `src/lib/gameRegistry.tsx` go with suitably/LocalGameGalaxy#498.
+4. ~~**Hub**~~ — done: tiles and filter use the areas (`src/lib/areas.ts`, `src/features/hub/HubGameCard.tsx`, `HubAreaFilter.tsx`). Areas are set per catalogue entry (`area` in `src/games/<id>/definition.tsx`, ADR-0011).
 5. **Games:** done for every file that stays within its component budget (codemod for `sx` props, hand edits elsewhere, stage canvas via `STAGE` in `src/games/melodiq-notes/stage/render/common.ts`). The 35 files that must be decomposed first are tracked in suitably/LocalGameGalaxy#491–#498; light mode in #499; epic #490.
 6. ~~Logo, word mark and app icons~~ — done (§8). Remaining: area icons in the hub (with step 4).
 

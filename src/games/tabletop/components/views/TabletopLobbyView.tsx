@@ -6,14 +6,11 @@ import { Box, Button, Container, Grid, Paper, Typography } from '@mui/material';
 import SettingsIcon from '@mui/icons-material/SettingsRounded';
 import { useTranslation } from 'react-i18next';
 import { GameManagerDialog } from '../manager/GameManagerDialog';
-import { PublishTabletopGameDialog } from '../publisher/PublishTabletopGameDialog';
-import type { TabletopGameDefinition, TabletopGameSummary } from '../../logic/types';
+import type { TabletopGameSummary } from '../../logic/types';
 import { listTabletopGames } from '../../logic/tabletopStorage';
 import {
-  CARD_GAMES,
-  DICE_GAMES,
-  TABLETOP_STARTERS,
   playModesOf,
+  spieltischSection,
   routeFor,
   type PlayMode,
   type TableGameEntry,
@@ -30,7 +27,6 @@ interface TabletopLobbyViewProps {
 export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) => {
   const { t } = useTranslation();
   const [managerOpen, setManagerOpen] = useState(false);
-  const [publishGame, setPublishGame] = useState<TabletopGameDefinition | null>(null);
   const [installedGames, setInstalledGames] = useState<TabletopGameSummary[]>([]);
   const [choosing, setChoosing] = useState<TableGameEntry | null>(null);
 
@@ -119,9 +115,13 @@ export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) 
             </Button>
           </Box>
 
-          {section(t('games.tabletop.starter_games', 'Klassiker'), TABLETOP_STARTERS)}
-          {section(t('games.tabletop.card_games', 'Kartenspiele'), CARD_GAMES)}
-          {section(t('games.tabletop.dice_games', 'Würfelspiele'), DICE_GAMES)}
+          {section(t('games.tabletop.starter_games', 'Klassiker'), spieltischSection('starters'))}
+          {section(t('games.tabletop.card_games', 'Kartenspiele'), spieltischSection('cards'))}
+          {section(t('games.tabletop.dice_games', 'Würfelspiele'), spieltischSection('dice'))}
+          {section(
+            t('games.tabletop.score_trackers', 'Punktezähler'),
+            spieltischSection('trackers'),
+          )}
           {section(t('games.tabletop.custom_games', 'Eigene & Importierte Spiele'), custom)}
         </Paper>
       </Container>
@@ -140,12 +140,6 @@ export const TabletopLobbyView: React.FC<TabletopLobbyViewProps> = ({ onOpen }) 
         onClose={() => setManagerOpen(false)}
         onPlayParty={(id) => onOpen(routeFor(byId(id), 'own_devices'))}
         onPlayLocal={(id) => onOpen(routeFor(byId(id), 'shared_device'))}
-        onPublish={setPublishGame}
-      />
-      <PublishTabletopGameDialog
-        open={Boolean(publishGame)}
-        game={publishGame}
-        onClose={() => setPublishGame(null)}
       />
     </Box>
   );

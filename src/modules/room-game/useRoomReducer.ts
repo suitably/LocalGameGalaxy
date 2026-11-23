@@ -11,7 +11,8 @@ import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import type { RoomHost } from './roomSync';
 import { RoomStatePeer } from './roomPeer';
 import { getRoomTransport, type RoomTransport } from './roomTransport';
-import { retainRoomPeer } from './roomPeerRegistry';
+import { retainRoomPeer, takeRoomPeer } from './roomPeerRegistry';
+import { loadRoomSnapshot, resumeFrom, saveRoomSnapshot } from './roomSnapshot';
 
 export interface UseRoomReducerOptions<S, A> {
   gameKey: string;
@@ -32,6 +33,13 @@ export interface UseRoomReducerOptions<S, A> {
    * room (`releaseRoomPeers`). Default on; off for a game that is not in a party room.
    */
   keepAlive?: boolean;
+  /**
+   * Set (e.g. to the party's `statusAt`) to keep a snapshot of every state on this device, so a
+   * device that becomes host later — even after a restart — continues the game (Stammtisch).
+   */
+  resumeTag?: string;
+  /** Applied to a resumed state when this device takes over as host (e.g. its `hostId`). */
+  adoptState?: (state: S) => S;
 }
 
 export function useRoomReducer<S, A>({
@@ -45,6 +53,8 @@ export function useRoomReducer<S, A>({
   transport,
   enabled = true,
   keepAlive = true,
+  resumeTag,
+  adoptState,
 }: UseRoomReducerOptions<S, A>): {
   state: S;
   /** Revision of the shown state; 0 until the host's first action (a fresh game). */
@@ -57,8 +67,18 @@ export function useRoomReducer<S, A>({
 
   const peer = useMemo(() => {
     const channel = `${gameKey}_${roomId}`;
-    const create = () =>
-      new RoomStatePeer<S, A>({
+    const kept = keepAlive && !transport;
+    const keyOf = (host: boolean) => `${channel}|${playerId}|${host ? 'host' : 'guest'}`;
+    const create = () => {
+      // A device that becomes host goes on from the newest state it knows (host change).
+      let initialHost = null;
+      if (isHost) {
+        const guest = kept ? takeRoomPeer<RoomStatePeer<S, A>>(keyOf(false)) : null;
+        guest?.stop();
+        const snapshot = resumeTag ? loadRoomSnapshot<S>(roomId, channel, resumeTag) : null;
+        initialHost = resumeFrom([guest?.current, snapshot], adoptState);
+      }
+      return new RoomStatePeer<S, A>({
         transport: transport ?? getRoomTransport(roomId),
         channel,
         playerId,
@@ -66,12 +86,14 @@ export function useRoomReducer<S, A>({
         reducer,
         authorize,
         initialState,
+        initialHost,
+        persist: resumeTag
+          ? (host) => saveRoomSnapshot(roomId, channel, resumeTag, host)
+          : undefined,
         onChange: () => {},
       });
-    const kept = keepAlive && !transport;
-    return kept
-      ? retainRoomPeer(`${channel}|${playerId}|${isHost ? 'host' : 'guest'}`, roomId, create)
-      : create();
+    };
+    return kept ? retainRoomPeer(keyOf(isHost), roomId, create) : create();
     // A new peer only for a new room, game, player or role; the rest is updated below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameKey, roomId, playerId, isHost, transport, keepAlive]);

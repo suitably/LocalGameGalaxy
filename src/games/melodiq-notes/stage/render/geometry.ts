@@ -1,5 +1,6 @@
 import type { StagePlayer } from '../engine/types';
-import { STRING_TUNINGS } from '../../../../modules/music-score';
+import { DRUM_KICK_LANE, STRING_TUNINGS } from '../../../../modules/music-score';
+import { DEFAULT_DRUM_PADS } from '../logic/drumLanes';
 import { clamp, playLineX } from './common';
 
 export const isBlackKey = (m: number) => [1, 3, 6, 8, 10].includes(((m % 12) + 12) % 12);
@@ -95,10 +96,18 @@ export function drumGeometry(w: number, h: number) {
   return { hitY, horizonY: 22, cx: w / 2, width, kickY: hitY + Math.min(40, h * 0.12) };
 }
 
-export function drumLaneAt(w: number, h: number, x: number, y: number): number {
+/** The drum lane under a tap: one of the shown pads (DRUM_LANES indices), or the kick below them. */
+export function drumLaneAt(
+  w: number,
+  h: number,
+  x: number,
+  y: number,
+  pads: readonly number[] = DEFAULT_DRUM_PADS,
+): number {
   const g = drumGeometry(w, h);
-  if (y > g.hitY + 28) return 4;
-  return clamp(Math.floor((x - (w - g.width) / 2) / (g.width / 4)), 0, 3);
+  if (y > g.hitY + 28) return DRUM_KICK_LANE;
+  const n = pads.length;
+  return pads[clamp(Math.floor((x - (w - g.width) / 2) / (g.width / n)), 0, n - 1)];
 }
 
 export function pitchGeometry(p: StagePlayer, w: number, h: number) {

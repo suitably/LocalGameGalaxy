@@ -14,11 +14,13 @@
  * replaced; a host that left the roster is.
  */
 import { markHost, resolveHostId, seatOf, upsertHost, upsertJoiningPlayer } from './partyRoster';
-import type { PartyPlayer, PartyRoomState } from './universalPartyManager';
+import type { PartyPlayer, PartyRoomState, PlayerHelpers } from './universalPartyManager';
 
 export const HOST_TIMEOUT_MS = 20_000;
 /** Longer than this without any message from the room means this device was cut off. */
 export const HEARING_GAP_MS = 8_000;
+/** A player not heard for this long counts as away (Stammtisch: not dealt into the next game). */
+export const AWAY_AFTER_MS = 15_000;
 
 /**
  * Since when this device hears the room without a gap, after a message at `now`. Everyone pings
@@ -56,7 +58,7 @@ export function createdState(
 /** State after this device joins (or renames itself in) a room; `known` is the last state seen. */
 export function joinedState(
   roomId: string,
-  { myId, name, spectator, isRoomCreator }: JoinOptions,
+  { myId, name, spectator, isRoomCreator, helpers }: JoinOptions,
   known: PartyRoomState | null,
   now: number,
 ): { state: PartyRoomState; player: PartyPlayer } {
@@ -74,6 +76,7 @@ export function joinedState(
     name,
     isHost: isRoomCreator || hostId === myId,
     spectator,
+    helpers,
     now,
   });
   return { player, state: { ...base, players, hostId, updatedAt: now } };
@@ -84,6 +87,8 @@ interface JoinOptions {
   name: string;
   spectator?: boolean;
   isRoomCreator: boolean;
+  /** New help grant; `undefined` keeps the known one, `null` removes it. */
+  helpers?: PlayerHelpers | null;
 }
 
 /**
@@ -115,7 +120,9 @@ export function shouldTakeOverHost(
         alive(p.id) &&
         seenAt(p.id) - seenAt(host.id) > HEARING_GAP_MS,
     );
-  if (host && !heardOther) return false;
+  // In a Stammtisch, being alone is normal (members come on different days): no other player
+  // needs to be heard before this device takes over a silent host.
+  if (host && !heardOther && !state.stammtisch) return false;
   const candidates = state.players.filter((p) => p.id !== state.hostId && alive(p.id));
   const seated = candidates.filter((p) => !p.spectator);
   const pool = seated.length > 0 ? seated : candidates;

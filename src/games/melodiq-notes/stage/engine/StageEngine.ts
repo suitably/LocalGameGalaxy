@@ -15,26 +15,20 @@ import {
   stageBandEvents,
   syncRecording,
 } from './transport';
-import { autoDrumSeat, createPlayers, defaultSeats, nextSeat } from './players';
-import type {
-  BandEvent,
-  BandMode,
-  PlayerSeat,
-  PlayState,
-  StageMode,
-  StagePlayer,
-  StageRecording,
-  StageSound,
+import { autoDrumSeat, defaultSeats, nextSeat, playersFor } from './players';
+import {
+  SILENT_SOUND as SILENT,
+  type BandEvent,
+  type BandMode,
+  type PlayerSeat,
+  type PlayState,
+  type StageMode,
+  type StagePlayer,
+  type StageRecording,
+  type StageSound,
 } from './types';
 
 const BAND_VOLUME = 0.45;
-const SILENT: StageSound = {
-  now: () => 0,
-  playNote: () => {},
-  playDrum: () => {},
-  click: () => {},
-  stopAll: () => {},
-};
 const LOOP_LEAD_BEATS = 2;
 const SYNC_SNAP_BEATS = 0.5;
 
@@ -51,6 +45,8 @@ export class StageEngine {
   /** With a recording, it replaces the band; this mutes it. */
   recordingAudible = true;
   state: PlayState = 'idle';
+  /** Drum lanes: percussion judged or display-only (#571); a pult merges the toms on one pad. */
+  drumOptions = { judgePercussion: false, mergeToms: false };
   /** How late input on this screen arrives after the sound it follows (tap-along), ms. */
   inputLatencyMs = 0;
   onTap: ((localMs: number) => void) | null = null;
@@ -162,7 +158,7 @@ export class StageEngine {
     this.recording?.pause();
     this.state = 'idle';
     if (!this.song) return this.emit();
-    this.players = createPlayers(this.song, this.seats, this.sections.length, this.startBeat);
+    this.players = playersFor(this, this.song);
     this.focus = this.players.find((p) => !p.remoteId) ?? null;
     if (this.mode === 'learn' && this.players.length > 1) this.mode = 'practice';
     this.countIn = Math.min(6, Math.max(2, this.song.measureLengths[0] ?? 4));

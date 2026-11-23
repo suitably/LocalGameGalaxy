@@ -2,7 +2,11 @@
  * The scripted card games of the Spieltisch [ID: LOGIC-TABLETOP-SCRIPT-REGISTRY]
  */
 import { arschloch } from './arschloch';
+import { cabo } from './cabo';
 import { durak } from './durak';
+import { golf } from './golf';
+import { maumau } from './maumau';
+import { schwarzerPeter } from './schwarzerPeter';
 import { schwimmen } from './schwimmen';
 import { skat } from './skat';
 import { eraseScript, type AnyGameScript } from './scriptTypes';
@@ -12,6 +16,10 @@ const SCRIPTS: Record<string, AnyGameScript> = {
   durak: eraseScript(durak),
   arschloch: eraseScript(arschloch),
   skat: eraseScript(skat),
+  maumau: eraseScript(maumau),
+  'schwarzer-peter': eraseScript(schwarzerPeter),
+  golf: eraseScript(golf),
+  cabo: eraseScript(cabo),
 };
 
 export const SCRIPTED_GAME_IDS: readonly string[] = Object.keys(SCRIPTS);

@@ -117,7 +117,7 @@ function advance(s: ArschlochState): ArschlochState {
 }
 
 function play(s: ArschlochState, seat: number, m: ScriptMove): ArschlochState {
-  if (seat !== s.turn) return s;
+  if (seat !== s.turn || m.kind === 'slot') return s;
   if (m.kind === 'action') {
     if (m.id !== 'pass' || !s.top) return s;
     return advance({ ...s, passed: [...s.passed, seat] });
@@ -234,6 +234,7 @@ function view(s: ArschlochState, viewer: number | null): ScriptView {
 
 export const arschloch: GameScript<ArschlochState> = {
   id: 'arschloch',
+  ranks: RANKS_52,
   minPlayers: 3,
   maxPlayers: 8,
   start: (count, rng) => deal(count, rng, Array<number>(count).fill(0), null),

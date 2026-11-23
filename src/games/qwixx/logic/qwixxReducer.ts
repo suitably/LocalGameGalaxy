@@ -650,6 +650,9 @@ export function qwixxReducer(state: QwixxGameState, action: QwixxAction): QwixxG
         isRolling: false,
       };
 
+    case 'LOAD_SHEET':
+      return { ...state, mySheet: action.sheet };
+
     case 'RESET_GAME':
       return {
         ...INITIAL_STATE,
