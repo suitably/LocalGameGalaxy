@@ -4,7 +4,7 @@ import HistoryIcon from '@mui/icons-material/HistoryRounded';
 import PersonAddAlt1RoundedIcon from '@mui/icons-material/PersonAddAlt1Rounded';
 import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded';
 import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
-import { useHeaderLayout } from '../../../context/HeaderLayoutContext';
+import { useHeaderLayout } from '../../../context/headerLayoutContextCore';
 import type { WordleDialog } from './useWordleScreen';
 
 /**

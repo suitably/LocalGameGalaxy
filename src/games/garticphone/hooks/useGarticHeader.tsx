@@ -8,8 +8,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
 import StopCircleRoundedIcon from '@mui/icons-material/StopCircleRounded';
-import { useHeaderLayout, type MenuItem } from '../../../context/HeaderLayoutContext';
-import { usePageTitle } from '../../../context/TitleContext';
+import { useHeaderLayout, type MenuItem } from '../../../context/headerLayoutContextCore';
+import { usePageTitle } from '../../../context/titleContextCore';
 import { ConfirmDialog } from '../../../components/common/ConfirmDialog';
 import { GarticShareDialog } from '../components/GarticShareDialog';
 

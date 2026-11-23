@@ -2,7 +2,7 @@ import { NotificationChoiceDialog } from '../../components/push/NotificationChoi
 import { useCallback } from 'react';
 import { Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { usePageTitle } from '../../context/TitleContext';
+import { usePageTitle } from '../../context/titleContextCore';
 import { useWakeLock } from '../../hooks/useWakeLock';
 import { useGuessArtLobby } from './hooks/useGuessArtLobby';
 import { useGuessArtUrlParam } from './hooks/useGuessArtUrlParam';

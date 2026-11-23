@@ -7,7 +7,7 @@
 import React, { useMemo, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { usePageTitle } from '../../context/TitleContext';
+import { usePageTitle } from '../../context/titleContextCore';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { usePartyRoomGame } from '../../features/party/hooks/usePartyRoomGame';
 import type { RoomPlayer } from '../../features/party/hooks/usePartyRoomPlayers';

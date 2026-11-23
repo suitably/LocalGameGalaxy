@@ -21,7 +21,7 @@ import DownloadIcon from '@mui/icons-material/DownloadRounded';
 import CodeIcon from '@mui/icons-material/CodeRounded';
 import CodeOffIcon from '@mui/icons-material/CodeOffRounded';
 import ArticleIcon from '@mui/icons-material/ArticleRounded';
-import { useHeaderLayout, type MenuItem } from '../../../context/HeaderLayoutContext';
+import { useHeaderLayout, type MenuItem } from '../../../context/headerLayoutContextCore';
 import { HEADER_MENU_ENTRIES, headerMenuKeys, type HeaderMenuKey } from '../logic/headerMenu';
 
 export interface TabletopHeaderActions extends Partial<Record<HeaderMenuKey, () => void>> {

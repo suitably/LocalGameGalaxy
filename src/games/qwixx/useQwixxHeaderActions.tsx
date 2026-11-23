@@ -4,7 +4,7 @@ import ReplayIcon from '@mui/icons-material/ReplayRounded';
 import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import CasinoOutlinedIcon from '@mui/icons-material/CasinoOutlined';
 import GroupRoundedIcon from '@mui/icons-material/GroupRounded';
-import { useHeaderLayout } from '../../context/LayoutContext';
+import { useHeaderLayout } from '../../context/headerLayoutContextCore';
 
 interface QwixxHeaderActionsOptions {
   showDice: boolean;

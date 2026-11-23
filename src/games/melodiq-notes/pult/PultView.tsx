@@ -19,7 +19,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { usePageTitle } from '../../../context/TitleContext';
+import { usePageTitle } from '../../../context/titleContextCore';
 import { useWakeLock } from '../../../hooks/useWakeLock';
 import { GameLayout } from '../../../components/Layout/GameLayout';
 import { getOrCreatePlayerName } from '../../../features/party/logic/playerName';

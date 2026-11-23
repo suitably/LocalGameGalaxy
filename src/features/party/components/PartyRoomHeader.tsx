@@ -7,7 +7,7 @@ import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import ShareRoundedIcon from '@mui/icons-material/ShareRounded';
 import { useTranslation } from 'react-i18next';
-import { usePageTitle } from '../../../context/TitleContext';
+import { usePageTitle } from '../../../context/titleContextCore';
 import type { PartyLobbyController } from '../hooks/usePartyLobbyController';
 
 export const PartyRoomHeader: React.FC<{ lobby: PartyLobbyController }> = ({ lobby }) => {

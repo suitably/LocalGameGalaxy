@@ -10,7 +10,7 @@ import { GameOver } from './components/GameOver';
 import { HunterShotView } from './components/HunterShotView';
 import { ContinueGameDialog } from './components/ContinueGameDialog';
 import { useTranslation } from 'react-i18next';
-import { usePageTitle } from '../../context/TitleContext';
+import { usePageTitle } from '../../context/titleContextCore';
 import { WerewolfGameProvider, useWerewolfGame } from './context/WerewolfGameContext';
 import { useWakeLock } from '../../hooks/useWakeLock';
 

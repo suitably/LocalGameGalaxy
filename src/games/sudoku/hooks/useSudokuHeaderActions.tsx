@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
 import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded';
-import { useHeaderLayout } from '../../../context/HeaderLayoutContext';
+import { useHeaderLayout } from '../../../context/headerLayoutContextCore';
 
 interface SudokuHeaderActionsOptions {
   onOpenStats: () => void;

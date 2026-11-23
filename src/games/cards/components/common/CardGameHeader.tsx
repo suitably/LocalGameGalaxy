@@ -4,7 +4,7 @@ import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
 import UndoRoundedIcon from '@mui/icons-material/UndoRounded';
 import { useTranslation } from 'react-i18next';
-import { useHeaderLayout } from '../../../../context/HeaderLayoutContext';
+import { useHeaderLayout } from '../../../../context/headerLayoutContextCore';
 import { ConfirmDialog } from '../../../../components/common/ConfirmDialog';
 
 interface CardGameHeaderProps {

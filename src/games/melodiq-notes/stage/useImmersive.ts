@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useMediaQuery } from '@mui/material';
-import { useHeaderLayout } from '../../../context/HeaderLayoutContext';
+import { useHeaderLayout } from '../../../context/headerLayoutContextCore';
 
 type OrientationLock = ScreenOrientation & {
   lock?: (o: string) => Promise<void>;

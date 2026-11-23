@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom';
 import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import CasinoRoundedIcon from '@mui/icons-material/CasinoRounded';
 import { useTranslation } from 'react-i18next';
-import { usePageTitle } from '../../context/TitleContext';
+import { usePageTitle } from '../../context/titleContextCore';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { ErrorState } from '../../components/common/ErrorState';
 import { useParticipantPot } from './hooks/useParticipantPot';

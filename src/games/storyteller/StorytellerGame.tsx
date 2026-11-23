@@ -3,7 +3,7 @@ import React, { useState, useCallback } from 'react';
 import { Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { usePageTitle } from '../../context/TitleContext';
+import { usePageTitle } from '../../context/titleContextCore';
 import { useWakeLock } from '../../hooks/useWakeLock';
 import { useStorytellerLobby } from './hooks/useStorytellerLobby';
 import { StoryLobby } from './components/StoryLobby';

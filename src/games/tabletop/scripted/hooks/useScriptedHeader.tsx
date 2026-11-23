@@ -3,7 +3,7 @@
  */
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { usePageTitle } from '../../../../context/TitleContext';
+import { usePageTitle } from '../../../../context/titleContextCore';
 import { useTabletopHeader } from '../../hooks/useTabletopHeader';
 import { RulesDialog } from '../../components/surface/RulesDialog';
 import { findEntry } from '../../../../lib/catalog/views';

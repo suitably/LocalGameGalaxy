@@ -4,7 +4,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
 import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
 import GroupsIcon from '@mui/icons-material/GroupsRounded';
 import { useTranslation } from 'react-i18next';
-import { usePageTitle, useHeaderLayout } from '../../../context/LayoutContext';
+import { usePageTitle } from '../../../context/titleContextCore';
+import { useHeaderLayout } from '../../../context/headerLayoutContextCore';
 import { TOUCH_TARGET } from '../../../lib/touchTarget';
 
 interface UseMelodiqNotesHeaderOptions {

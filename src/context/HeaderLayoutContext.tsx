@@ -1,32 +1,16 @@
 import React, {
-  createContext,
-  useContext,
   useState,
   useCallback,
   useMemo,
   useRef,
   type ReactNode,
 } from 'react';
-import { commitMenuItems, type MenuItem } from './headerMenuItems';
-
-export type { MenuItem };
-
-export interface HeaderLayoutContextType {
-  headerHidden: boolean;
-  setHeaderHidden: (hidden: boolean) => void;
-  customHeaderTitle: ReactNode;
-  setCustomHeaderTitle: (node: ReactNode) => void;
-  customHeaderActions: ReactNode;
-  setCustomHeaderActions: (node: ReactNode) => void;
-  menuItems: MenuItem[];
-  setMenuItems: (items: MenuItem[]) => void;
-  homeAction: (() => void) | null;
-  setHomeAction: (action: (() => void) | null) => void;
-  hideHome: boolean;
-  setHideHome: (hide: boolean) => void;
-}
-
-export const HeaderLayoutContext = createContext<HeaderLayoutContextType | undefined>(undefined);
+import { commitMenuItems } from './headerMenuItems';
+import {
+  HeaderLayoutContext,
+  type HeaderLayoutContextType,
+  type MenuItem,
+} from './headerLayoutContextCore';
 
 export const HeaderLayoutProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [headerHidden, setHeaderHiddenState] = useState<boolean>(false);
@@ -100,12 +84,4 @@ export const HeaderLayoutProvider: React.FC<{ children: ReactNode }> = ({ childr
   );
 
   return <HeaderLayoutContext.Provider value={value}>{children}</HeaderLayoutContext.Provider>;
-};
-
-export const useHeaderLayout = (): HeaderLayoutContextType => {
-  const context = useContext(HeaderLayoutContext);
-  if (!context) {
-    throw new Error('useHeaderLayout must be used within a HeaderLayoutProvider');
-  }
-  return context;
 };

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useLayout, type MenuItem } from '../../../context/LayoutContext';
+import { useLayout } from '../../../context/layoutContextCore';
+import { type MenuItem } from '../../../context/headerLayoutContextCore';
 
 import QueueMusicIcon from '@mui/icons-material/QueueMusicRounded';
 import QrCodeIcon from '@mui/icons-material/QrCodeRounded';

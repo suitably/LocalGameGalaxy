@@ -11,7 +11,7 @@ import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import TransferWithinAStationRoundedIcon from '@mui/icons-material/TransferWithinAStationRounded';
 import PhonelinkRingRoundedIcon from '@mui/icons-material/PhonelinkRingRounded';
-import { useHeaderLayout, type MenuItem } from '../../../context/HeaderLayoutContext';
+import { useHeaderLayout, type MenuItem } from '../../../context/headerLayoutContextCore';
 import { GuessArtHeaderTitle } from '../components/GuessArtHeaderTitle';
 import { TemporaryTurnChip } from '../components/TemporaryTurnChip';
 import { gameNameOverride } from '../logic/gameNameOverride';

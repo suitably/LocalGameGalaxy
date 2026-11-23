@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Stack, Typography } from '@mui/material';
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import { useTranslation } from 'react-i18next';
-import { usePageTitle } from '../../context/TitleContext';
+import { usePageTitle } from '../../context/titleContextCore';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { loadHistory, loadHosted, removeHistory, removeHosted } from './logic/localStore';
 import { PotList } from './components/PotList';
