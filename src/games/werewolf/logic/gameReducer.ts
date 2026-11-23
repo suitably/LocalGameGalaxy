@@ -532,14 +532,11 @@ export const gameReducer = (state: GameState, action: Action): GameState => {
 };
 
 const checkHunterDeath = (state: GameState, newVictimIds: string[]): GameState => {
-    console.log('Checking Hunter Death. Victims:', newVictimIds);
     const newlyDeadHunters = state.players.filter(p =>
         newVictimIds.includes(p.id) &&
         p.role === 'HUNTER' &&
         !p.powerState.hasShot
     ).map(p => p.id);
-
-    console.log('Newly Dead Hunters:', newlyDeadHunters);
 
     if (newlyDeadHunters.length === 0) return state;
 

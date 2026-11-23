@@ -12,6 +12,9 @@ import { useClientSessionSync } from './useClientSessionSync';
 import { useRemoteConfigListener } from './useRemoteConfigListener';
 import { useHostPhoneJoin } from './useHostPhoneJoin';
 import { useHostRemoteCommands } from './useHostRemoteCommands';
+import { createLogger } from '../../../lib/logger';
+
+const log = createLogger('MelodiqGlobalEvents');
 
 interface UseMelodiqGlobalEventsProps {
   lastEvent: TVEvent | null;
@@ -91,13 +94,13 @@ export const useMelodiqGlobalEvents = ({
       setRemoteSong(null);
       const nextItem = popNext();
       if (nextItem) {
-        console.log('TV Song Ended. Playing next from queue:', nextItem.song.title);
+        log.debug('TV song ended, playing next from queue:', nextItem.song.title);
         handleSelectSongRef.current(nextItem.song, true, nextItem.participants);
       }
     } else if (lastEvent.type === 'TV_READY') {
       processedEventRef.current = lastEvent.timestamp;
       if (selectedSong && !remoteSong) {
-        console.log('TV_READY received while playing locally, switching to TV...');
+        log.debug('TV_READY received while playing locally, switching to TV...');
         const currentTime = (window as Window & { __melodiq_current_time?: number }).__melodiq_current_time || 0;
         playSongOnTV(selectedSong.id, selectedSong, currentTime);
         setRemoteSong(selectedSong as unknown as SongMeta);
@@ -209,7 +212,7 @@ export const useMelodiqGlobalEvents = ({
   // 7. Auto-Play on TV Connect
   useEffect(() => {
     if (isTVConnected && selectedSong && !remoteSong) {
-      console.log('TV Connected while playing locally, switching to TV...');
+      log.debug('TV connected while playing locally, switching to TV...');
       const { __melodiq_current_time: currentTime } = window as Window & {
         __melodiq_current_time?: number;
       };

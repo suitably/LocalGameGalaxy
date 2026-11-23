@@ -332,7 +332,6 @@ export const pushClient = {
         });
 
         if (res.ok) {
-          const data = await res.json().catch(() => null);
           log.debug('Push notification dispatched via relay');
           relaySuccess = true;
         } else {

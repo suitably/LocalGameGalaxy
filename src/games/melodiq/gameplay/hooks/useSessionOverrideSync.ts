@@ -9,6 +9,9 @@ import { PlayerRuntime } from './PlayerRuntime';
 import type { ActivePlayer } from '../../types';
 import type { MicRemotePeer, WebRTCMicManager } from '../../audio/WebRTCMicManager';
 import { BOT_PLAYER_CONFIG, BOT_PROFILE_ID, loadSessionInputs } from '../logic/sessionRoster';
+import { createLogger } from '../../../../lib/logger';
+
+const log = createLogger('MelodiqSession');
 
 interface UseSessionOverrideSyncProps {
   manager: WebRTCMicManager | null;
@@ -126,7 +129,7 @@ export function useSessionOverrideSync({
                 .start()
                 .catch((e) => console.warn('[Session] Failed to start new player mic:', e));
             }
-            console.log('[Session] Participant added live:', profileId, 'isRemote:', isRemote);
+            log.debug('Participant added live:', profileId, 'isRemote:', isRemote);
             updated.push(player);
             changed = true;
           }
@@ -143,7 +146,7 @@ export function useSessionOverrideSync({
           isListed(e.config.deviceId) ||
           Boolean(e.remotePeerId && desiredRemoteKeys.has(e.remotePeerId));
         if (wanted) return true;
-        console.log('[Session] Participant removed live:', e.config.id);
+        log.debug('Participant removed live:', e.config.id);
         if (!e.config.isRemote) {
           e.stop().catch((err) => console.warn('[Session] Error stopping removed player:', err));
         }

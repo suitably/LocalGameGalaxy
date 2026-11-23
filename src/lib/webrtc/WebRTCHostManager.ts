@@ -192,7 +192,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
     });
 
     this.trackerClient.on('warning', (err: Error) => {
-      console.debug('[WebRTCHostManager] Tracker warning:', err);
+      log.debug('Tracker warning:', err);
     });
 
     this.trackerClient.on('error', (err: Error) => {

@@ -6,6 +6,9 @@ import {
     type LocalSong,
     type ScanProgress
 } from '../logic/localLibraryProvider';
+import { createLogger } from '../../../lib/logger';
+
+const log = createLogger('useLocalLibrary');
 
 export type FolderPermissionStatus = 'granted' | 'prompt' | 'denied' | 'none';
 
@@ -46,11 +49,11 @@ export function useLocalLibrary(): UseLocalLibraryResult {
         setScanProgress({ scannedFolders: 0, scannedFiles: 0, foundSongs: 0 });
 
         try {
-            console.log(`[useLocalLibrary] Scanning directory: ${dirHandle.name}...`);
+            log.debug(`Scanning directory: ${dirHandle.name}...`);
             const songs = await scanLocalDirectory(dirHandle, (p) => {
                 setScanProgress(p);
             });
-            console.log(`[useLocalLibrary] Scan complete: ${songs.length} songs found.`);
+            log.debug(`Scan complete: ${songs.length} songs found.`);
             setLocalSongs(songs);
         } catch (err) {
             console.error('[useLocalLibrary] Error during directory scan:', err);
