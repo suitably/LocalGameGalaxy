@@ -1,4 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createLogger } from '../lib/logger';
+
+const log = createLogger('PWA');
 
 // Interface for BeforeInstallPromptEvent according to W3C Web App Manifest spec
 interface BeforeInstallPromptEvent extends Event {
@@ -66,7 +69,7 @@ export const usePWAInstall = (): PWAInstallState => {
     const handleAppInstalled = () => {
       setIsInstalled(true);
       setDeferredPrompt(null);
-      console.log('LocalGameGalaxy PWA was installed successfully.');
+      log.debug('PWA was installed successfully.');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);

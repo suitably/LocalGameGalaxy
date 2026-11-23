@@ -1,4 +1,7 @@
 import { type Note } from './logic/songVocals';
+import { createLogger } from '../../lib/logger';
+
+const log = createLogger('melodiq');
 
 /**
  * Calculates the duration of a song in seconds based on its notes, BPM, and gap.
@@ -72,7 +75,7 @@ export const readFileAsText = async (file: Blob): Promise<string> => {
         resolve(text);
       } catch {
         // 2. Fallback to Windows-1252 (common for older UltraStar files, covers German/Danish)
-        console.log('UTF-8 decoding failed, falling back to windows-1252');
+        log.debug('UTF-8 decoding failed, falling back to windows-1252');
         const win1252Decoder = new TextDecoder('windows-1252');
         const text = win1252Decoder.decode(buffer);
         resolve(text);

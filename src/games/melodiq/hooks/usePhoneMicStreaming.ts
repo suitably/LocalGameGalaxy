@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { MicrophoneManager } from '../audio/MicrophoneManager';
 import { startSteadyTicker } from '../../../lib/utils/steadyTicker';
+import { createLogger } from '../../../lib/logger';
+
+const log = createLogger('PhoneClientEngine');
 
 const SEND_INTERVAL_MS = 33;
 
@@ -60,7 +63,7 @@ export const usePhoneMicStreaming = ({
           next.stop();
           return;
         }
-        console.log('[PhoneClientEngine] Microphone started successfully.');
+        log.debug('Microphone started successfully.');
         stopTicker = startSteadyTicker(SEND_INTERVAL_MS, () => tick(next));
       } catch (err) {
         console.error('[PhoneClientEngine] Failed to start microphone:', err);

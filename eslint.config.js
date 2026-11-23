@@ -136,4 +136,12 @@ export default defineConfig([
       ],
     },
   },
+  {
+    // Production source goes through src/lib/logger.ts; tests and the logger itself may use the console.
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/**/*.test.{ts,tsx}', 'src/lib/logger.ts'],
+    rules: {
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+    },
+  },
 ]);

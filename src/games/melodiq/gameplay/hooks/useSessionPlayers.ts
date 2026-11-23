@@ -16,6 +16,9 @@ import { useSessionOverrideSync } from './useSessionOverrideSync';
 import { usePeerRosterSync } from './usePeerRosterSync';
 import { usePeerSessionMessages, type RemoteResultEntry } from './usePeerSessionMessages';
 import { useBroadcastSongInfo } from './useBroadcastSongInfo';
+import { createLogger } from '../../../../lib/logger';
+
+const log = createLogger('MelodiqSession');
 
 interface UseSessionPlayersProps<R extends RemoteResultEntry> {
   manager: WebRTCMicManager | null;
@@ -67,7 +70,7 @@ export function useSessionPlayers<R extends RemoteResultEntry>({
           p.start().catch((e) => console.warn('[Session] Failed to start player mic:', e));
         }
       }
-      console.log('[MelodiqSession] Initialized players:', newPlayers.length);
+      log.debug('Initialized players:', newPlayers.length);
       setPlayers(newPlayers);
       playersRef.current = newPlayers;
     } else {
@@ -76,7 +79,7 @@ export function useSessionPlayers<R extends RemoteResultEntry>({
     setReady(true);
 
     return () => {
-      console.log('[MelodiqSession] Cleaning up players on unmount...');
+      log.debug('Cleaning up players on unmount...');
       // Copy first: the ref may change while players stop
       for (const p of [...playersRef.current]) {
         p.stop().catch((e) => console.warn('Error stopping player:', e));
