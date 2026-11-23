@@ -166,7 +166,7 @@ The host's `useQueue.ts` (`QueueProvider`, host storage) stays the source of tru
 
 - Pure logic `logic/librarySearch.ts` [ID: GAME-MELODIQ-LIBRARY-SEARCH]: `searchLibrary(songs, query, filters)` (genre, year or decade like `2010s`, language, then title/artist text; first 50 songs, stripped to id/title/artist/year/genre/language), parsers, `handleLibrarySearchEvent` (host) and `handleLibraryResultsEvent` (phone).
 - Events on the Melodiq room events channel (`useRoomEvents`, `gameKey: 'melodiq'`): `{ type: 'library.search', from, reqId, query, filters }` phone to host; `{ type: 'library.results', from, to, reqId, results }` host to the requester only (`to` = the request's `from`; other phones ignore it). The old direct `library.search` / `library.results` data-channel messages are gone.
-- Host: `hooks/useHostLibrarySearch.ts` (mounted by `PhoneQueueBridge`). Phone: `hooks/usePhoneLibrarySearch.ts` (`search()`, `results` of the latest `reqId` only; stale replies are dropped). **Unverified:** no phone UI calls it yet (the old message had no sender in the code either).
+- Host: `hooks/useHostLibrarySearch.ts` (mounted by `PhoneQueueBridge`). Phone: no search hook; `usePhoneLibrarySearch.ts` was removed in #840 because no phone UI ever called it.
 
 ### 2.15 Phone remote commands (room events)
 
