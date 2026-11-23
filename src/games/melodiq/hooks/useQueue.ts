@@ -1,6 +1,8 @@
 import { useState, useCallback, createContext, useContext } from 'react';
 import React from 'react';
 import type { SongMeta } from '../db';
+import type { ActivePlayer, MelodiqParticipant, MelodiqProfile } from '../types';
+import type { QueueParticipantProfile } from '../logic/queueRoom';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { generateUUID } from '../../../lib/uuid';
 import { enrichQueueParticipants } from '../logic/queueParticipantUtils';
@@ -10,8 +12,8 @@ import { usePhoneQueueRoom } from './usePhoneQueueRoom';
 
 function recordSongToHistory(song: SongMeta) {
   try {
-    const history = storage.getJson<any[]>(STORAGE_KEYS.SONG_HISTORY, []);
-    const filtered = history.filter((item: any) => item.id !== song.id);
+    const history = storage.getJson<Array<{ id: string }>>(STORAGE_KEYS.SONG_HISTORY, []);
+    const filtered = history.filter((item) => item.id !== song.id);
     const updated = [
       {
         id: song.id,
@@ -38,13 +40,13 @@ export interface QueueItem {
   addedAt: number;
   requester?: string;
   requesterId?: string;
-  participants?: any[]; // using any[] to avoid circular dependency or needing ActivePlayer import if not available here
+  participants?: MelodiqParticipant[];
 }
 
 /** Builds a queue entry with the currently active session participants attached. */
 function createQueueItem(song: SongMeta, requester?: string, requesterId?: string): QueueItem {
-  const activeSession = storage.getJson<any[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
-  const storedProfiles = storage.getJson<any[]>(STORAGE_KEYS.PROFILES, []);
+  const activeSession = storage.getJson<ActivePlayer[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
+  const storedProfiles = storage.getJson<MelodiqProfile[]>(STORAGE_KEYS.PROFILES, []);
   return {
     id: generateUUID(),
     song,
@@ -65,7 +67,7 @@ interface QueueContextValue {
   clearQueue: () => void;
   moveItem: (fromIndex: number, toIndex: number) => void;
   replaceItem: (itemId: string, newSong: SongMeta) => void;
-  toggleQueueParticipant: (itemId: string, deviceId: string, profile: any) => void;
+  toggleQueueParticipant: (itemId: string, deviceId: string, profile: QueueParticipantProfile) => void;
   reorderQueueParticipant: (itemId: string, startIndex: number, endIndex: number) => void;
   setNowPlaying: (song: SongMeta | null) => void;
   playPlaylistNow: (songs: SongMeta[], requester?: string) => void;
@@ -217,8 +219,8 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const playPlaylistNow = useCallback(
     (songs: SongMeta[], requester?: string) => {
-      const activeSession = storage.getJson<any[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
-      const storedProfiles = storage.getJson<any[]>(STORAGE_KEYS.PROFILES, []);
+      const activeSession = storage.getJson<ActivePlayer[]>(STORAGE_KEYS.ACTIVE_SESSION, []);
+      const storedProfiles = storage.getJson<MelodiqProfile[]>(STORAGE_KEYS.PROFILES, []);
       const enrichedSession = enrichQueueParticipants(activeSession, storedProfiles);
 
       const next: QueueItem[] = songs.map((song) => ({
@@ -272,7 +274,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 
   const toggleQueueParticipant = useCallback(
-    (itemId: string, deviceId: string, profile: any) => {
+    (itemId: string, deviceId: string, profile: QueueParticipantProfile) => {
       if (isClient) {
         sendRequest({ type: 'queue.toggle_participant', itemId, deviceId, profile });
         return;
@@ -283,7 +285,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           if (item.id === itemId) {
             const participants = item.participants || [];
             const exists = participants.find(
-              (p: any) =>
+              (p) =>
                 p.deviceId === deviceId ||
                 p.profileId === deviceId ||
                 (profile?.peerId && p.deviceId === profile.peerId),
@@ -291,7 +293,7 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             let newParticipants;
             if (exists) {
               newParticipants = participants.filter(
-                (p: any) =>
+                (p) =>
                   p.deviceId !== deviceId &&
                   p.profileId !== deviceId &&
                   !(profile?.peerId && p.deviceId === profile.peerId),
