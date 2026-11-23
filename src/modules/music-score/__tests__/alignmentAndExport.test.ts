@@ -149,8 +149,10 @@ describe('instruments', () => {
   });
 
   it('maps GM drum keys to lanes', () => {
-    expect([36, 38, 42, 45, 49].map(drumLaneOf)).toEqual([4, 2, 1, 3, 0]);
-    expect(drumLaneOf(58)).toBe(3); // Roland tom 3 rim
+    expect([36, 38, 42, 48, 47, 45, 43, 54, 49].map(drumLaneOf)).toEqual([
+      8, 2, 1, 3, 4, 5, 6, 7, 0,
+    ]);
+    expect(drumLaneOf(58)).toBe(6); // Roland tom 3 rim (head 43, a GM floor tom)
   });
 
   it('gives chord notes distinct strings and keeps frets in reach', () => {

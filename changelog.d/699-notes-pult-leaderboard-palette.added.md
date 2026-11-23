@@ -1,0 +1,1 @@
+- **Melodiq Notes leaderboard on the phones and colour-blind judgements**: players on their own device see the song's leaderboard between songs, with their row highlighted. Every judgement now has its own shape (★ perfect, ● good, ✕ miss, ▲ different note), and the game settings offer a colour-blind palette for the judgement colours.

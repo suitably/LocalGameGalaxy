@@ -8,6 +8,7 @@ import { ImportWorkshopDialog } from './ImportWorkshopDialog';
 import { useGameManager, type GameSource, type ManagerNotice } from '../../hooks/useGameManager';
 import { saveTabletopGame } from '../../logic/tabletopStorage';
 import { exportGameAsJson, exportGameAsPcio } from '../../logic/tabletopExporter';
+import { ShareBlockedError } from '../../logic/shareRules';
 import type { TabletopGameDefinition } from '../../logic/types';
 
 interface GameManagerDialogProps {
@@ -15,7 +16,6 @@ interface GameManagerDialogProps {
   onClose: () => void;
   onPlayParty: (id: string) => void;
   onPlayLocal: (id: string) => void;
-  onPublish: (game: TabletopGameDefinition) => void;
 }
 
 export const GameManagerDialog: React.FC<GameManagerDialogProps> = ({
@@ -23,23 +23,29 @@ export const GameManagerDialog: React.FC<GameManagerDialogProps> = ({
   onClose,
   onPlayParty,
   onPlayLocal,
-  onPublish,
 }) => {
   const { t } = useTranslation();
   const manager = useGameManager(open);
   const { server } = manager;
   const [workshopOpen, setWorkshopOpen] = useState(false);
 
-  const noticeText = (n: ManagerNotice) =>
-    n.kind === 'error'
-      ? t('games.tabletop.server_save_failed', { error: n.error })
-      : t(`games.tabletop.server_${n.kind}`, { name: n.name });
+  const noticeText = (n: ManagerNotice) => {
+    if (n.kind === 'error') return t('games.tabletop.server_save_failed', { error: n.error });
+    if (n.kind === 'share_blocked') return t('games.tabletop.workshop.share_blocked');
+    return t(`games.tabletop.server_${n.kind}`, { name: n.name });
+  };
 
   /** The card actions, bound to where the listed games live. */
   const handlersFor = (source: GameSource) => {
-    const withFull = (use: (game: TabletopGameDefinition) => void) => async (id: string) => {
+    const withFull = (action: (game: TabletopGameDefinition) => void) => async (id: string) => {
       const full = await manager.fetchFull(id, source);
-      if (full) use(full);
+      if (!full) return;
+      try {
+        action(full);
+      } catch (e) {
+        if (!(e instanceof ShareBlockedError)) throw e;
+        manager.showNotice({ kind: 'share_blocked' });
+      }
     };
     return {
       onPlayParty: async (id: string) => {
@@ -55,7 +61,6 @@ export const GameManagerDialog: React.FC<GameManagerDialogProps> = ({
       onEdit: (id: string) => void manager.startEdit(id, source),
       onExportJson: withFull(exportGameAsJson),
       onExportPcio: withFull(exportGameAsPcio),
-      onPublish: withFull(onPublish),
       onDelete: (id: string) => void manager.remove(id, source),
     };
   };
@@ -81,7 +86,11 @@ export const GameManagerDialog: React.FC<GameManagerDialogProps> = ({
         <DialogContent dividers sx={{ pt: 2.5 }}>
           {manager.notice && (
             <Alert
-              severity={manager.notice.kind === 'error' ? 'error' : 'success'}
+              severity={
+                manager.notice.kind === 'error' || manager.notice.kind === 'share_blocked'
+                  ? 'error'
+                  : 'success'
+              }
               onClose={manager.clearNotice}
               sx={{ mb: 2 }}
             >

@@ -111,6 +111,8 @@ export interface Song {
   bpm: number;
   gap: number;
   edition?: string;
+  /** UltraStar `#ALBUM`, else `song.json` `album` (#636). */
+  album?: string;
   genre?: string;
   language?: string;
   year?: string;
@@ -137,7 +139,33 @@ export interface Song {
   recordings: SongRecording[];
   /** Label per score file, from `song.json`. */
   labels: Record<string, string>;
+  /** Hidden and renamed parts per score file, from `song.json` (#564). */
+  partSettings: Record<string, ScorePartSettings>;
 }
+
+/** How one part of a score shows on the Notes stage (#564); defaults are left out. */
+export interface PartSetting {
+  /** Left out of seats, the pult part list and the part count. */
+  hidden?: true;
+  /** A hidden part the synth plays as backing (default: muted). */
+  playback?: 'synth';
+  /** Display name instead of the part name in the score. */
+  name?: string;
+  /** Strum direction overrides of a guitar part (#634). */
+  strum?: StrumSetting;
+}
+
+/** One stroke direction for a whole song or bar, or `auto` (score marks, then rhythm). */
+export type StrumMode = 'auto' | 'down' | 'up';
+
+/** Strum overrides of one part (#634): song-wide direction and per played bar (1-based). */
+export interface StrumSetting {
+  mode?: 'down' | 'up';
+  bars?: Record<string, StrumMode>;
+}
+
+/** Part settings of one score, by part id. */
+export type ScorePartSettings = Record<string, PartSetting>;
 
 export interface SongScore {
   file: string;
@@ -160,9 +188,14 @@ export interface ClientSongScore {
   hasMarks: boolean;
   /** Free text shown instead of the file name (`song.json`), or null. */
   label: string | null;
+  /** Hidden and renamed parts (`song.json`, #564). */
+  parts: ScorePartSettings;
 }
 
-export type ClientSong = Omit<Song, 'folderScores' | 'folder' | 'recordings' | 'labels'> & {
+export type ClientSong = Omit<
+  Song,
+  'folderScores' | 'folder' | 'recordings' | 'labels' | 'partSettings'
+> & {
   scores: ClientSongScore[];
   recordings: { file: string; url: string | null }[];
 };
@@ -199,12 +232,4 @@ export interface SeparatorJob {
   progress: number;
   log: string[];
   error: string | null;
-}
-
-export interface Playlist {
-  id: string;
-  name: string;
-  songs: string[];
-  creatorToken?: string;
-  updatedAt: number;
 }

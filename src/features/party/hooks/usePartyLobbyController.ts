@@ -11,6 +11,7 @@ import {
   type PartyGameType,
 } from '../logic/universalPartyManager';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
+import { captureInviteKey, ensureRoomKey, getRoomKey } from '../../../modules/sync/roomKeys';
 import { getOrCreatePlayerName, savePlayerName } from '../logic/playerName';
 import { isSpectatorPlayer, seatOf } from '../logic/partyRoster';
 import {
@@ -20,6 +21,7 @@ import {
   resolvePendingLaunch,
 } from '../logic/partyRoutes';
 import { shouldFollowIntoGame, visitedGameAt } from '../logic/lobbyReturn';
+import { useStammtisch } from './useStammtisch';
 
 export function usePartyLobbyController(initialRoomId?: string) {
   const navigate = useNavigate();
@@ -27,7 +29,11 @@ export function usePartyLobbyController(initialRoomId?: string) {
   const [playerName, setPlayerName] = useState<string>(() => getOrCreatePlayerName());
 
   // Which room to open is decided purely here; joining/creating happens in the effect below.
-  const [entry] = useState(() => resolveLobbyEntry(initialRoomId));
+  // An invite link's key (fragment) is stored before the room is joined (ADR 0009).
+  const [entry] = useState(() => {
+    captureInviteKey();
+    return resolveLobbyEntry(initialRoomId);
+  });
   // A game picked before the lobby opened (Spieltisch, a game's invite button): only the host
   // applies it — on create, or when re-opening its own room — and starts it once everybody joined.
   const [pendingLaunch, setPendingLaunch] = useState(() =>
@@ -35,9 +41,12 @@ export function usePartyLobbyController(initialRoomId?: string) {
       ? resolvePendingLaunch()
       : null,
   );
-  const [roomId, setRoomId] = useState<string>(() =>
-    entry.kind === 'join' ? entry.roomId : universalPartyManager.getSavedHostRoomCode(),
-  );
+  const [roomId, setRoomId] = useState<string>(() => {
+    if (entry.kind === 'join') return entry.roomId;
+    const created = universalPartyManager.getSavedHostRoomCode();
+    ensureRoomKey(created, 'session'); // so the first share link already carries it
+    return created;
+  });
 
   useEffect(() => {
     if (entry.kind === 'create') {
@@ -154,6 +163,12 @@ export function usePartyLobbyController(initialRoomId?: string) {
     if (updated) setRoomState(updated);
   };
 
+  /** Lets the others in the room play for this device's player (`logic/partyHelp.ts`). */
+  const setAcceptHelp = (on: boolean) => {
+    const updated = universalPartyManager.setHelpers(roomId, on ? 'all' : null);
+    if (updated) setRoomState(updated);
+  };
+
   const handleSaveCustomRoom = () => {
     const cleaned = customRoomInput
       .toUpperCase()
@@ -175,6 +190,7 @@ export function usePartyLobbyController(initialRoomId?: string) {
       origin: window.location.origin,
       pathname: window.location.pathname,
       roomId,
+      roomKey: getRoomKey(roomId),
       relayUrl: isServerActive ? serverUrl : null,
     });
 
@@ -204,8 +220,10 @@ export function usePartyLobbyController(initialRoomId?: string) {
   const shareUrl = buildShareUrl();
   const players = roomState?.players || [];
   const amIHost = universalPartyManager.isHost(roomId);
+  const stammtisch = useStammtisch(roomId, roomState);
 
   return {
+    stammtisch,
     roomId,
     roomState,
     copied,
@@ -226,6 +244,7 @@ export function usePartyLobbyController(initialRoomId?: string) {
     getGameRoute,
     handleSaveName,
     setWatching,
+    setAcceptHelp,
     handleSaveCustomRoom,
     handleCopyLink,
     handleLaunchGame,

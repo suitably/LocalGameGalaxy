@@ -120,4 +120,6 @@ export type QwixxAction =
   | { type: 'SET_DICE'; dice: DiceValues }
   | { type: 'START_ROLL' }
   | { type: 'FINISH_ROLL'; dice: DiceValues }
-  | { type: 'RESET_GAME' };
+  | { type: 'RESET_GAME' }
+  /** Opens another player's sheet (several sheets on one device). */
+  | { type: 'LOAD_SHEET'; sheet: PlayerSheet };

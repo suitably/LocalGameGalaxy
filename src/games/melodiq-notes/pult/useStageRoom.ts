@@ -4,6 +4,7 @@
  * The stage hosts the room (`modules/room-game`): it publishes song and play state, seats the
  * pults that joined (at once, also mid-song), sends its transport as `clock`, answers clock pings,
  * chart requests and calibration click requests, shows what pults play and merges what they judged.
+ * It also shares the song's leaderboard from its stored results whenever they change (#699).
  */
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
 import { useRoomEvents, useRoomReducer } from '../../../modules/room-game';
@@ -19,6 +20,7 @@ import {
 import {
   initialPultRoom,
   PULT_GAME_KEY,
+  pultBoardOf,
   pultRoomAllows,
   pultRoomReducer,
   type PultEvent,
@@ -26,6 +28,7 @@ import {
   type PultRoomState,
 } from './logic/protocol';
 import { packChart, pultSongOf } from './logic/pultSong';
+import { getResultsVersion, readResults, subscribeResults } from '../stage/logic/songResults';
 
 /** While idle the clock is repeated this often, so a pult that just joined gets it. */
 const CLOCK_HEARTBEAT_MS = 2000;
@@ -51,6 +54,12 @@ export function useStageRoom(engine: StageEngine, roomId: string) {
   useEffect(() => {
     dispatch({ type: 'STAGE', song: pultSong, play });
   }, [dispatch, pultSong, play, version]);
+
+  // after STAGE, so the board's song key matches the room's song
+  const resultsVersion = useSyncExternalStore(subscribeResults, getResultsVersion);
+  useEffect(() => {
+    if (songKey) dispatch({ type: 'BOARD', board: pultBoardOf(readResults(), songKey) });
+  }, [dispatch, songKey, resultsVersion]);
 
   // a pult gets its seat as soon as it joins, also mid-song
   useEffect(() => {

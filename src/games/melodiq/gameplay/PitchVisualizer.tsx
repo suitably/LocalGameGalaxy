@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import { Box, useTheme } from '@mui/material';
-import type { Song } from '../db';
-import type { Note, SongTrack } from '../parser';
+import type { SongWithNotes } from '../logic/songVocals';
 import type { PitchResult } from '../audio/MicrophoneManager';
 import { VisualizerBoundary } from './pitch/VisualizerBoundary';
 import {
@@ -24,13 +23,7 @@ import {
   type StageMetrics,
 } from './pitch/drawPitchStage';
 
-export type SongWithNotes = Song & {
-  notes?: Note[];
-  tracks?: SongTrack[];
-  bpm?: number;
-  gap?: number;
-  headers?: any;
-};
+export type { SongWithNotes } from '../logic/songVocals';
 
 /**
  * Represents a historical segment of successfully sung notes by a user.

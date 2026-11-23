@@ -198,15 +198,5 @@ export type HostSettings = Pick<
   | 'showScoreboardQrCode'
 >;
 
-/** Phone to host settings requests over the WebRTC data channel; the host accepts them from admins only. */
-export type HostSettingsRpc =
-  { type: 'host.settings.get' } | { type: 'host.settings.set'; patch: Partial<HostSettings> };
-
-/** Host to phone reply carrying the host's current values. */
-export interface HostSettingsReply {
-  type: 'host.settings.state';
-  settings: HostSettings;
-}
-
 export type { Song, SongMeta } from './db';
 export type { LocalSong } from './logic/localLibraryProvider';

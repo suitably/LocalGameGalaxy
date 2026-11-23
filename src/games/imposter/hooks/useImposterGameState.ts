@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { Player, GameState, DbCategory, DbWordPair } from '../logic/types';
-import { getWordPairsByCategories } from '../logic/imposterRepository';
+import type { Player, GameState, DbCategory } from '../logic/types';
+import { pickWordPair } from '../logic/pickWordPair';
 
 const INITIAL_STATE: GameState = {
   phase: 'LOBBY',
@@ -24,15 +24,9 @@ export function useImposterGameState(lobbyPlayers: Array<{ name: string }>, lang
     imposterCount: number;
     timerLength: number;
   }) => {
-    // Fetch word pairs from selected categories
-    const categoryIds = setup.categories.map((c) => c.id);
-    const pairs = await getWordPairsByCategories(categoryIds);
-
-    if (pairs.length === 0) return;
-
-    const randomPair = pairs[Math.floor(Math.random() * pairs.length)] as DbWordPair;
-    const currentLang = language.startsWith('de') ? 'de' : 'en';
-    const [word, hint] = randomPair.words[currentLang];
+    const drawn = await pickWordPair(setup.categories, language);
+    if (!drawn) return;
+    const { word, hint } = drawn;
 
     const playerList: Player[] = lobbyPlayers.map((p, idx) => ({
       id: `p_${idx}_${Math.random().toString(36).substring(2, 7)}`,

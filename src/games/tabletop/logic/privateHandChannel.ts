@@ -9,51 +9,29 @@
  */
 import type { TabletopGameDefinition } from './types';
 import type { GameDelta } from './stateDelta';
-import { redactDelta, redactGame, restoreCards, type WidgetSecret } from './handPrivacy';
+import {
+  redactDelta,
+  redactGame,
+  restoreCards,
+  withGrantChanges,
+  type WidgetSecret,
+} from './handPrivacy';
 import {
   hasActiveHiddenZone,
   redactZoneWidgets,
   withZoneVisibilityChanges,
   type BroadcastSecrets,
 } from './hiddenZoneRedaction';
-import {
-  deriveSealKey,
-  exportPublicKey,
-  generateSealKeyPair,
-  seal,
-  unseal,
-  type SealedBox,
-} from './sealCrypto';
+import { seal, unseal, type SealedBox } from '../../../modules/room-game/sealed/sealCrypto';
+import { SealChannel } from '../../../modules/room-game/sealed/sealChannel';
+
+export { isSealingSupported } from '../../../modules/room-game/sealed/sealChannel';
 
 export type SealedSecrets = Record<number, SealedBox>;
 
-export const isSealingSupported = (): boolean =>
-  typeof globalThis.crypto !== 'undefined' && typeof globalThis.crypto.subtle !== 'undefined';
-
-export class PrivateHandChannel {
-  private readonly keyPair: Promise<CryptoKeyPair | null>;
-  private readonly seatKeys = new Map<number, CryptoKey>();
-  private hostKey: { jwk: string; key: CryptoKey } | null = null;
-
-  private readonly supported: boolean;
-
-  constructor(supported = isSealingSupported()) {
-    this.supported = supported;
-    this.keyPair = supported ? generateSealKeyPair().catch(() => null) : Promise.resolve(null);
-  }
-
-  async publicKey(): Promise<JsonWebKey | undefined> {
-    const pair = await this.keyPair;
-    return pair ? exportPublicKey(pair.publicKey) : undefined;
-  }
-
+/** Tabletop redaction (hands, hidden zones) on top of the shared seal channel. */
+export class PrivateHandChannel extends SealChannel {
   // ─── Host ─────────────────────────────────────────────────────────────
-
-  async registerSeat(seat: number, theirPublic: JsonWebKey): Promise<void> {
-    const pair = await this.keyPair;
-    if (!pair) return;
-    this.seatKeys.set(seat, await deriveSealKey(pair.privateKey, theirPublic));
-  }
 
   /**
    * Hands are redacted whenever sealing works, also before (or without) any seat key, so a
@@ -90,7 +68,10 @@ export class PrivateHandChannel {
     return { state: { ...game, widgets }, sealed: await this.sealAll(secrets), hostKey };
   }
 
-  /** `gameBefore` lets a zone change resend the widgets whose visibility it changed. */
+  /**
+   * `gameBefore` lets a zone change or a view request (#557) resend the widgets whose visibility
+   * it changed.
+   */
   async outgoingDelta(
     delta: GameDelta,
     gameAfter: TabletopGameDefinition,
@@ -98,8 +79,10 @@ export class PrivateHandChannel {
   ) {
     const zones = this.hidesZones(gameAfter) || this.hidesZones(gameBefore ?? gameAfter);
     if (!this.privateHands && !zones) return { delta };
+    const granted =
+      gameBefore && this.privateHands ? withGrantChanges(delta, gameBefore, gameAfter) : delta;
     const full =
-      gameBefore && zones ? withZoneVisibilityChanges(delta, gameBefore, gameAfter) : delta;
+      gameBefore && zones ? withZoneVisibilityChanges(granted, gameBefore, gameAfter) : granted;
     const hand = this.privateHands ? redactDelta(full, gameAfter) : { delta: full, secrets: {} };
     const { widgets, secrets } = redactZoneWidgets(
       full.widgets,
@@ -110,20 +93,6 @@ export class PrivateHandChannel {
   }
 
   // ─── Seat device ──────────────────────────────────────────────────────
-
-  private async keyFor(hostPublic: JsonWebKey): Promise<CryptoKey | null> {
-    const jwk = JSON.stringify(hostPublic);
-    if (this.hostKey?.jwk === jwk) return this.hostKey.key;
-    const pair = await this.keyPair;
-    if (!pair) return null;
-    this.hostKey = { jwk, key: await deriveSealKey(pair.privateKey, hostPublic) };
-    return this.hostKey.key;
-  }
-
-  /** Remembers the host's key from a snapshot so later deltas can be opened. */
-  async acceptHostKey(hostPublic: JsonWebKey | undefined): Promise<void> {
-    if (hostPublic && this.supported) await this.keyFor(hostPublic);
-  }
 
   /** This seat's cards restored in received widgets; others' stay redacted. */
   async open<T extends Record<string, unknown>>(

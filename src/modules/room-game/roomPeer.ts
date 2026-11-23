@@ -18,6 +18,10 @@ export interface RoomPeerOptions<S, A> {
   initialState: S;
   /** Called with every state this peer shows (host: after each applied action). */
   onChange: (host: RoomHost<S>, synced: boolean) => void;
+  /** Host only: the state to continue from (a guest copy or snapshot after a host change). */
+  initialHost?: RoomHost<S> | null;
+  /** Called with every new state, also while no page shows this peer (resume snapshots). */
+  persist?: (host: RoomHost<S>) => void;
 }
 
 export class RoomStatePeer<S, A> {
@@ -28,7 +32,7 @@ export class RoomStatePeer<S, A> {
 
   constructor(opts: RoomPeerOptions<S, A>) {
     this.opts = opts;
-    this.host = { state: opts.initialState, rev: 0 };
+    this.host = (opts.isHost && opts.initialHost) || { state: opts.initialState, rev: 0 };
     this.synced = opts.isHost;
   }
 
@@ -86,6 +90,7 @@ export class RoomStatePeer<S, A> {
     const next = hostApply(this.host, action, from, this.opts.reducer, this.opts.authorize);
     if (!next) return;
     this.host = next;
+    this.opts.persist?.(next);
     this.opts.onChange(next, true);
     this.publishState();
   }
@@ -98,6 +103,7 @@ export class RoomStatePeer<S, A> {
     } else if (msg.kind === 'state' && guestAccept(this.host.rev, msg.rev)) {
       this.host = { state: msg.state, rev: msg.rev };
       this.synced = true;
+      this.opts.persist?.(this.host);
       this.opts.onChange(this.host, true);
     }
   }

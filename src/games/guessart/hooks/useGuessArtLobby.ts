@@ -6,6 +6,7 @@ import { useLobbyPlayers } from '../../../modules/player-management';
 import type { LobbyPlayerItem } from '../../../modules/player-management';
 import type { GuessArtGameRecord } from '../logic/types';
 import { STORAGE_KEYS } from '../../../lib/storage';
+import { ensureRoomKey } from '../../../modules/sync/roomKeys';
 
 export type { LobbyPlayerItem };
 
@@ -88,6 +89,7 @@ export const useGuessArtLobby = () => {
         language: options.language,
         manualWordMode: options.manualWordMode,
       });
+      ensureRoomKey(record.id, 'local'); // the game's mailbox is end-to-end encrypted (ADR 0009)
 
       await loadActiveGames();
       return record;

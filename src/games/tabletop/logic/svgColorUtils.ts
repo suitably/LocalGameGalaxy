@@ -14,9 +14,12 @@ export function recolorSvgText(
   borderWidth = '2',
 ): string {
   return svgText
-    .split('#primaryColor').join(primaryColor)
-    .split('#borderColor').join(borderColor)
-    .split('#borderWidth').join(borderWidth);
+    .split('#primaryColor')
+    .join(primaryColor)
+    .split('#borderColor')
+    .join(borderColor)
+    .split('#borderWidth')
+    .join(borderWidth);
 }
 
 /**

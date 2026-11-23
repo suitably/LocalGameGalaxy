@@ -12,19 +12,26 @@ export function uint8ArrayToBase64(bytes: Uint8Array): string {
 export function detectMimeType(bytes: Uint8Array, fileName: string): string {
   const ext = fileName.split('.').pop()?.toLowerCase();
   switch (ext) {
-    case 'png': return 'image/png';
+    case 'png':
+      return 'image/png';
     case 'jpg':
-    case 'jpeg': return 'image/jpeg';
-    case 'webp': return 'image/webp';
-    case 'svg': return 'image/svg+xml';
-    case 'gif': return 'image/gif';
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'webp':
+      return 'image/webp';
+    case 'svg':
+      return 'image/svg+xml';
+    case 'gif':
+      return 'image/gif';
   }
 
   if (bytes.length >= 3) {
     if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'image/jpeg';
-    if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return 'image/png';
+    if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47)
+      return 'image/png';
     if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) return 'image/gif';
-    if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46) return 'image/webp';
+    if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46)
+      return 'image/webp';
     if (
       (bytes[0] === 0x3c && bytes[1] === 0x3f && bytes[2] === 0x78) ||
       (bytes[0] === 0x3c && bytes[1] === 0x73 && bytes[2] === 0x76)
@@ -36,7 +43,10 @@ export function detectMimeType(bytes: Uint8Array, fileName: string): string {
   return 'image/png';
 }
 
-export function resolveAssetUrl(nameOrPath: unknown, assetFiles?: Record<string, string>): string | null {
+export function resolveAssetUrl(
+  nameOrPath: unknown,
+  assetFiles?: Record<string, string>,
+): string | null {
   if (typeof nameOrPath !== 'string' || !nameOrPath.trim()) return null;
   const str = nameOrPath.trim();
   if (str.startsWith('data:') || str.startsWith('http://') || str.startsWith('https://')) {

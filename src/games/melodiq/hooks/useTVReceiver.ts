@@ -8,6 +8,8 @@ import {
 import { useMelodiqSettings, type SettingsState } from './SettingsContext';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { TvMediaAssembler, type TvMediaManifest } from '../logic/tvMediaTransfer';
+import { useMultiChannelSync } from '../../../modules/sync';
+import { TV_CONTROL_SYNC, type TvControlMessage } from '../logic/syncChannels';
 
 export interface TVSessionPayload {
   partyId?: string;
@@ -92,9 +94,15 @@ export const useTVReceiver = () => {
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
-  useEffect(() => {
-    const channel = new BroadcastChannel('melodiq_tv_control');
+  // Broadcast channel to the host on this device; the handler is installed by the effect below
+  const handleMessageRef = useRef<(type: string, payload?: TVMessagePayload) => void>(() => {});
+  const { publish: publishLocal } = useMultiChannelSync<TvControlMessage<TVMessagePayload>>({
+    ...TV_CONTROL_SYNC,
+    selfEcho: false,
+    onMessage: ({ type, payload }) => handleMessageRef.current(type, payload),
+  });
 
+  useEffect(() => {
     const handleMessage = (type: string, payload?: TVMessagePayload) => {
       if (!payload && type !== 'PING' && type !== 'STOP_SONG') return;
 
@@ -138,12 +146,12 @@ export const useTVReceiver = () => {
         setPassiveState(state);
         window.dispatchEvent(new CustomEvent('melodiq_tv_game_state', { detail: payload }));
       } else if (type === 'PING') {
-        channel.postMessage({ type: 'PONG' });
+        publishLocal({ type: 'PONG' });
       }
     };
 
-    channel.onmessage = (e) => handleMessage(e.data.type, e.data.payload);
-    channel.postMessage({ type: 'TV_READY' });
+    handleMessageRef.current = handleMessage;
+    publishLocal({ type: 'TV_READY' });
 
     // Presentation API
     const nav = navigator as NavigatorWithPresentation;
@@ -176,8 +184,10 @@ export const useTVReceiver = () => {
       connection.send(JSON.stringify({ type: 'TV_READY' }));
     }
 
-    return () => channel.close();
-  }, [updateSetting, updateSessionInfo]);
+    return () => {
+      handleMessageRef.current = () => {};
+    };
+  }, [updateSetting, updateSessionInfo, publishLocal]);
 
   return {
     activeSong,

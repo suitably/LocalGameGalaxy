@@ -24,6 +24,22 @@
       "music": "Music",
       "social_deduction": "Social Deduction",
       "party": "Party"
+    },
+    "party_room": {
+      "title": "Party room",
+      "desc": "One room for the whole evening: everyone joins with their own phone by QR code, the TV shows the game.",
+      "open": "Open room"
+    },
+    "filter": {
+      "own_devices": "With own phones"
+    },
+    "sections": {
+      "tools": "Helpers"
+    },
+    "empty": "No games match this selection.",
+    "stammtisch": {
+      "desc": "Your fixed room: tap and you are in.",
+      "open": "Go"
     }
   },
   "games": {
@@ -54,7 +70,7 @@
       "restart_desc": "Are you sure you want to restart? All current scores and throws will be lost."
     },
     "wordle": {
-      "title": "Wordle",
+      "title": "Word Guess",
       "description": "Guess the hidden 5-letter word in 6 attempts. Play the daily challenge or duel friends."
     },
     "sudoku": {
@@ -305,7 +321,44 @@
       "winner_label": "Winner: {{winner}}",
       "werewolves_win": "The Werewolves Win!",
       "villagers_win": "The Villagers Win!",
-      "play_again": "Play Again"
+      "play_again": "Play Again",
+      "room": {
+        "connecting": "Connecting to the party room …",
+        "waiting_setup": "The host picks the roles and starts the game.",
+        "players_one": "{{count}} player",
+        "players_other": "{{count}} players",
+        "narrator_only": "This device only narrates (no role)",
+        "too_few": "At least {{count}} players are needed.",
+        "card_hidden": "Your role is face down. Look at it where nobody can read along.",
+        "hide_role": "Hide role",
+        "seen": "Got it",
+        "seen_waiting": "{{count}} of {{total}} have read their role.",
+        "pack": "Your pack: {{names}}",
+        "lovers": "You are in love with {{names}}.",
+        "insight": "{{name}} is: {{role}}",
+        "night_title": "Night {{round}}",
+        "sleep": "Close your eyes and wait.",
+        "dead_hint": "You are dead – stay silent.",
+        "narrate_night": "Night falls. Everyone close your eyes.",
+        "narrate_call": "{{role}}, wake up.",
+        "narrate_day": "Morning. Tonight died: {{names}}.",
+        "narrate_day_none": "Morning. Nobody died tonight.",
+        "narrate_vote": "Time to vote. Everyone votes on their phone.",
+        "narrate_hunter": "{{name}} was the hunter and takes a last shot.",
+        "discuss_hint": "Discuss who the werewolves are, then tap “Ready to vote”.",
+        "your_vote": "Your vote: {{name}}",
+        "voted_waiting": "{{count}} of {{total}} have voted.",
+        "roles_title": "All roles",
+        "table_hint": "This device shows the table",
+        "pack_agree": "The kill happens once all wolves pick the same player. You can change your pick.",
+        "pack_pick": "{{name}}: {{target}}",
+        "pack_choosing": "still choosing …",
+        "pack_nobody": "nobody",
+        "ready": "Ready to vote",
+        "not_ready": "Not ready yet",
+        "ready_waiting": "{{count}} of {{total}} are ready. The vote starts when more than half are.",
+        "pack_time_left": "{{count}} s left – then the most picked player dies (a tie: nobody)."
+      }
     },
     "imposter": {
       "title": "Imposter",
@@ -370,10 +423,28 @@
         "hint_de": "Hint (DE)",
         "custom_categories": "Custom Categories",
         "standard_categories": "Standard Categories"
+      },
+      "room": {
+        "connecting": "Connecting to the party room …",
+        "waiting_setup": "The host picks the categories and starts the round.",
+        "card_hidden": "Your card is face down. Look at it where nobody can read along.",
+        "show_card": "Show card",
+        "hide_card": "Hide card",
+        "seen_waiting": "{{count}} of {{total}} have read their card.",
+        "discuss_hint": "Take turns naming a word that fits – and find out who does not know it.",
+        "start_vote": "Start voting",
+        "time_up": "Time is up",
+        "voted_waiting": "{{count}} of {{total}} have voted.",
+        "tie": "A tie – nobody was voted out.",
+        "word_was": "The word was “{{word}}”, the hint “{{hint}}”.",
+        "votes_one": "{{count}} vote",
+        "votes_other": "{{count}} votes",
+        "new_round": "New round",
+        "table_hint": "This device shows the table"
       }
     },
     "qwixx": {
-      "title": "Qwixx",
+      "title": "Color Rows",
       "description": "Tactical dice-rolling score sheet game. Cross numbers, lock rows, and maximize your score!"
     },
     "guessart": {
@@ -385,13 +456,13 @@
       "description": "Collaborative story writing game! Write stories turn by turn with modular modifiers like Blind Mode, Time Attack, and Word Roulette."
     },
     "garticphone": {
-      "title": "Gartic Phone",
+      "title": "Drawing Telephone",
       "description": "The hilarious pass-the-message drawing game! Write sentence ➔ Draw ➔ Guess ➔ Draw ➔ Animated Album Show!",
       "inviteHelp": "Invite friends: Scan the QR code with other smartphones or share the link."
     },
     "party": {
       "title": "Party Mode",
-      "description": "Unified multiplayer lobby for synchronized party games: Gartic Phone & more!"
+      "description": "Unified multiplayer lobby for synchronized party games: Drawing Telephone & more!"
     },
     "melodiq": {
       "title": "Melodiq",
@@ -581,6 +652,11 @@
           "hihat": "Hi-hat",
           "snare": "Snare",
           "tom": "Tom",
+          "tom1": "Tom 1",
+          "tom2": "Tom 2",
+          "tom3": "Tom 3",
+          "floorTom": "Floor tom",
+          "percussion": "Percussion",
           "kick": "Kick"
         },
         "next_grip": "Next grip",
@@ -656,7 +732,7 @@
         "detected": "{{count}} notes · detected as {{inst}}",
         "keys_keyboard": "A S D F G H J K = white keys · W E T Y U = black keys",
         "keys_strings": "1 to {{count}} = strings from the top",
-        "keys_drums": "D cymbal · F hi-hat · J snare · K tom · Space kick",
+        "keys_drums": "D cymbal · F hi-hat · J snare · K L ; ' toms (from the left) · G percussion · Space kick",
         "keys_pitch": "Mouse up/down = pitch, hold to sing · arrow keys and Space work too",
         "keys_switch": "Tab hands the computer keys to the next player",
         "input": "Input",
@@ -665,6 +741,8 @@
         "input_mic": "Microphone",
         "midi_none": "No MIDI device found",
         "midi_sound": "Play MIDI notes through the speakers",
+        "judge_percussion": "Judge the percussion lane",
+        "judge_percussion_note": "Tambourine, cowbell, clap and other percussion have a lane of their own. Unjudged, it is only shown and played along and never counts towards score or accuracy. The phone pult has no percussion pad.",
         "midi_lost": "\"{{name}}\" was disconnected. Plugged it back in and no notes arrive? Restart the browser (Firefox on Linux does not pick up a replugged MIDI device).",
         "song_pick": "Choose song",
         "server_off": "No Nexumia server connected. Connect it in Settings to play songs from your library.",
@@ -757,6 +835,37 @@
         "files_recordings_hint": "The song's mix and its stems are not listed here; they belong to Melodiq.",
         "files_add": "Add files",
         "files_add_hint": "Sheet music (.gp, .mxl, .musicxml, .xml, .mid) or audio. Existing files are never overwritten; a file with the same name is stored as \"name (2)\".",
+        "files_add_label": "Name of the score (optional)",
+        "link_save_title": "Save to which song?",
+        "link_move_title": "Move into which song?",
+        "link_search": "Search artist or title",
+        "link_new_song": "New song",
+        "link_same_song": "Same song",
+        "link_label": "Name of the score (optional)",
+        "link_label_hint": "Shown instead of the file name, e.g. Beginner or Band.",
+        "link_move_open": "Move into another song…",
+        "link_move_action": "Move here",
+        "rescan": "Re-scan library",
+        "rescan_hint": "Reads the song folders on the server again, without a restart, and moves old Notes pieces that are not moved yet.",
+        "rescan_done": "{{songs}} songs found, {{migrated}} Notes pieces moved.",
+        "parts_edit": "Parts",
+        "parts_edit_hidden_one": "Parts ({{count}} hidden)",
+        "parts_edit_hidden_other": "Parts ({{count}} hidden)",
+        "parts_hide": "Hide",
+        "parts_playback": "Hidden part plays",
+        "parts_muted": "Muted",
+        "parts_synth": "Synth backing",
+        "strum_label": "Strum direction",
+        "strum_auto": "Automatic (score marks, else rhythm)",
+        "strum_down": "All down",
+        "strum_up": "All up",
+        "strum_bar": "Bar",
+        "strum_bar_mode": "Direction in this bar",
+        "strum_bar_set": "Set",
+        "strum_bar_chip": "Bar {{bar}}: {{mode}}",
+        "strum_hint": "Automatic: downstrokes on the beats, upstrokes on the offbeats, unless the score marks the stroke. A bar setting wins over the song-wide one.",
+        "parts_stored": "Hidden parts get no seat, are not offered on players' devices and do not count as parts. Names and hidden parts are stored with this score in its song folder.",
+        "parts_session": "Hidden parts get no seat, are not offered on players' devices and do not count as parts. This score is not in a song folder, so the settings last until another song is opened.",
         "files_download": "Download",
         "files_zip": "Download folder (ZIP)",
         "files_zip_hint": "Downloads the whole song folder (karaoke .txt, mix, stems, sheet music, bar marks, recordings) as one ZIP. Single files: the download button next to each file.",
@@ -895,7 +1004,8 @@
         "playing": "Playing – your device judges your notes, the stage shows them.",
         "waiting": "Waiting for the stage to start.",
         "loading_part": "Loading your part from the stage…",
-        "network": "Network round trip {{ms}} ms – only the clock sync uses the network, your notes are judged on this device."
+        "network": "Network round trip {{ms}} ms – only the clock sync uses the network, your notes are judged on this device.",
+        "leaderboard_you": "You"
       },
       "latency": {
         "button": "Latency {{ms}} ms",
@@ -911,10 +1021,15 @@
         "tap_done": "Done: {{ms}} ms (±{{spread}} ms)",
         "tap_few_taps": "Too few taps on the clicks – try again.",
         "tap_uneven": "The taps were too uneven – try again and tap steadily."
+      },
+      "judgement_palette": {
+        "title": "Judgements",
+        "colorblind": "Colour-blind palette",
+        "hint": "Every judgement has its own shape (★ perfect, ● good, ✕ miss, ▲ different note). The colour-blind palette also switches to colours that stay apart with red-green colour blindness."
       }
     },
     "kniffel": {
-      "title": "Yahtzee",
+      "title": "Five Dice",
       "description": "The classic dice game. Score points by cleverly combining 5 dice.",
       "roll": "Roll",
       "rolling": "Rolling...",
@@ -942,9 +1057,9 @@
         "full_house": "Full House",
         "small_straight": "Small Straight",
         "large_straight": "Large Straight",
-        "kniffel": "Yahtzee",
+        "kniffel": "Five of a Kind",
         "chance": "Chance",
-        "kniffel_bonus": "Yahtzee Bonus"
+        "kniffel_bonus": "Five of a Kind Bonus"
       },
       "hint": {
         "ones": "Sum of all Ones",
@@ -960,20 +1075,20 @@
         "large_straight": "5 in a row · 40",
         "kniffel": "5 of a kind · 50",
         "chance": "Sum of all dice",
-        "kniffel_bonus": "Each additional · 50"
+        "kniffel_bonus": "Each additional · {{points}}"
       }
     },
     "knister": {
-      "title": "Knister",
+      "title": "Dice Grid",
       "description": "The popular 5x5 Dice Bingo! Form pairs, straights, and full houses on your grid."
     },
     "cards": {
-      "title": "Card Games",
+      "title": "Card game scores",
       "description": "Digital companion for tabletop card games: Life tracking (Schwimmen) and trick predictor (Oh Hell)."
     },
     "tabletop": {
       "title": "Game Table",
-      "description": "Card, board and dice games: one device passed around or everyone on their own phone, with hidden hands.",
+      "description": "Your own and imported games, the free table and every card, board and dice game in one place.",
       "subtitle": "Card, board and dice games – one device for everyone or everyone on their own.",
       "manage_games": "Manage Games",
       "starter_games": "Classics & Templates",
@@ -995,10 +1110,9 @@
       "by_author": "by {{author}}",
       "play_party_choice": "Launch in Party Mode",
       "play_local_choice": "Play locally on this device",
-      "export": "Export",
+      "share": "Share",
       "export_pcio": "Export as .pcio (ZIP)",
       "export_json": "Export as .json",
-      "publish": "Submit as PR",
       "confirm_delete_title": "Delete Game?",
       "confirm_delete_message": "Do you really want to permanently delete \"{{name}}\" from your storage?",
       "importing": "Importing game...",
@@ -1032,6 +1146,19 @@
         "global": "Global script",
         "global_toggle": "Show/hide global script"
       },
+      "lua": {
+        "enable": "Run Lua scripts (experimental)",
+        "disable": "Stop Lua scripts",
+        "log_title": "Script log",
+        "log_empty": "The scripts have printed nothing yet.",
+        "unshimmed_one": "{{count}} TTS call without support yet:",
+        "unshimmed_other": "{{count}} TTS calls without support yet:",
+        "status_starting": "Starting the scripts…",
+        "status_running": "Scripts are running on this device.",
+        "status_stopped": "Scripts are stopped.",
+        "status_killed": "A script took too long and was stopped. The table keeps every change made so far.",
+        "status_failed": "The scripts could not be started."
+      },
       "import_report": {
         "title": "Import report: {{count}} objects",
         "converted": "{{count}} converted",
@@ -1059,12 +1186,6 @@
       "refresh": "Rescan",
       "my_games": "Installed Games",
       "no_games": "No custom games imported yet. Drag and drop a .pcio or .json file above!",
-      "publish_author": "Your Name / GitHub Handle",
-      "publish_notes": "Notes for reviewers (optional)",
-      "publish_dialog_title": "Submit Game as Pull Request",
-      "publish_success_title": "Pull Request created successfully!",
-      "publish_success_desc": "Your game was submitted as a branch and will be available to all users after review.",
-      "view_pr": "View Pull Request on GitHub",
       "standard_cards_title": "Standard Card Deck (52)",
       "standard_cards_desc": "Mau-Mau, Skat, Poker or Rummy with a shared table and smartphone controller hands.",
       "liars_dice_title": "Liar's Dice / Perudo",
@@ -1199,6 +1320,8 @@
         "add": "Add widget",
         "table": "Table settings",
         "inspector": "Properties",
+        "inspector_expand": "Show properties",
+        "inspector_collapse": "Fold properties away",
         "widget": "Widget",
         "none": "None",
         "select_hint": "Tap a widget on the table or pick one above.",
@@ -1330,7 +1453,7 @@
         "rights_author": "Author",
         "rights_author_profile": "Steam profile {{id}}",
         "rights_notice": "This mod belongs to its author and to the rights holders of the game it shows. The import is a private copy: it is stored on this device and, with a companion server, on that server for everyone who uses it. It is never published anywhere else, and imported games cannot be submitted for publishing.",
-        "publish_blocked": "Imported games (e.g. from the Steam Workshop) belong to their authors and cannot be published. Only games you made yourself can be submitted.",
+        "share_blocked": "Imported games (e.g. from the Steam Workshop) belong to their authors and cannot be shared as a file. Only games you made yourself can be exported; on the companion server they stay private.",
         "storing": "Saving the game on the companion server...",
         "stored_on_server": "Saved on the companion server: everyone who uses it can play this game. The server downloads its images in the background.",
         "store_failed": "Saving on the companion server failed ({{error}}). The game was saved on this device only."
@@ -1340,6 +1463,7 @@
       "mode_own_devices": "Everyone on their own device",
       "mode_own_devices_hint": "Open a session, players join with a QR code or link.",
       "dice_games": "Dice games",
+      "score_trackers": "Score trackers",
       "custom_game_meta": "{{min}}–{{max}} players",
       "save_to_server": "Save to server",
       "local_games_title": "On this device ({{count}})",
@@ -1369,7 +1493,6 @@
       "error_invalid_token": "Invalid or missing server token",
       "error_server_http": "Server error: HTTP {{status}}",
       "error_server_unreachable": "Server not reachable",
-      "publish_license_agree": "I agree to share this game with the LocalGameGalaxy community under an open-source licence (MIT / CC0).",
       "labels": {
         "card": "{{rank}} of {{suit}}",
         "spades": "Spades",
@@ -1399,6 +1522,7 @@
       "counterDecrement": "Decrease",
       "counterIncrement": "Increase",
       "drawToHand": "Draw to my hand",
+      "flipTopCard": "Flip top card",
       "dealEach": "Deal {{count}} to everyone",
       "dealEach_one": "Deal {{count}} card to everyone",
       "dealEach_other": "Deal {{count}} cards to everyone",
@@ -1426,6 +1550,22 @@
           "skat": {
             "title": "Skat",
             "desc": "Bid, discard, take 61 points – for exactly 3 players."
+          },
+          "maumau": {
+            "title": "Mau-Mau",
+            "desc": "Match suit or rank, 7 draws two, 8 skips, jack wishes a suit – for 2 to 5 players."
+          },
+          "schwarzer-peter": {
+            "title": "Schwarzer Peter",
+            "desc": "Discard pairs and draw blind in turn – whoever holds the jack of spades at the end loses. For 2 to 6 players."
+          },
+          "golf": {
+            "title": "Golf",
+            "desc": "Six cards in a grid, pairs in a column count zero. Nine holes, fewest points win – for 2 to 6 players."
+          },
+          "cabo": {
+            "title": "Lowball",
+            "desc": "Four face-down cards: remember, swap, peek – knock when you have the fewest points. For 2 to 6 players."
           }
         },
         "turn": "{{name}}'s turn",
@@ -1444,7 +1584,8 @@
           "start": "Deal",
           "tableOnly": "This device only shows the table",
           "tableOnlyHint": "For the TV: cast this device's screen. All players use their own phone for their hand and moves. Switch off if you play on this device.",
-          "waitingForHost": "The host is about to start the game …"
+          "waitingForHost": "The host is about to start the game …",
+          "addBack": "Let {{name}} play again"
         },
         "schwimmen": {
           "out": "out",
@@ -1459,7 +1600,16 @@
           "pass": "Pass",
           "knock": "Knock",
           "fire": "{{name}} has 31 – everyone else loses a life",
-          "tie": "Tie – nobody loses a life"
+          "tie": "Tie – nobody loses a life",
+          "option": {
+            "passOnce": "Pass only once",
+            "passOnceHint": "Each player may pass only once per round.",
+            "firstSwims": "Only the first one swims",
+            "firstSwimsHint": "Only whoever loses their last life first still swims. Everyone after that is out at once.",
+            "newMiddle": "New middle on 7-8-9",
+            "newMiddleHint": "If 7, 8 and 9 lie in the middle, the player to act may have three new cards put there and then play."
+          },
+          "newMiddle": "New middle (7-8-9)"
         },
         "durak": {
           "attacker": "attacks",
@@ -1474,7 +1624,14 @@
           "take": "Take",
           "attack": "Attack",
           "add": "Throw in",
-          "done": "Done"
+          "done": "Done",
+          "transfer": "Pass on with {{card}}",
+          "option": {
+            "transfer": "Passing on",
+            "transferHint": "As long as nothing is beaten, the defender may add a card of the same rank and pass the attack on to the next player.",
+            "neighbours": "Only neighbours attack",
+            "neighboursHint": "Only the players left and right of the defender attack and throw in."
+          }
         },
         "arschloch": {
           "president": "President",
@@ -1521,11 +1678,164 @@
           "trickTo": "Trick for {{name}}"
         },
         "rules": {
-          "schwimmen": "<p>32 cards. Everyone holds three cards, three lie open in the middle. The dealer first picks one of two hands; the other goes to the middle.</p><p><b>Your turn:</b> swap one card, swap all three, pass or knock. After a knock everyone else plays once more. If everyone passes, three new cards come to the middle.</p><p><b>Scoring:</b> the sum of one suit (ace 11, court cards 10). Three of a kind count 30.5. 31 or three aces end the round at once – everyone else loses a life. Otherwise the lowest hand loses.</p><p>Everyone has three lives, then you \"swim\", and with the next loss you are out. The last player wins.</p>",
-          "durak": "<p>36 cards (6 to ace), six in hand. The bottom card of the stock shows trumps. In the first round the lowest trump attacks.</p><p><b>Attack:</b> one or more cards of one rank. <b>Defence:</b> beat every card with a higher one of its suit or with a trump – or take everything.</p><p>Once everything is beaten, the others may throw in cards of ranks already on the table (six attack cards at most, never more than the defender held). Then everyone draws up to six. A successful defender attacks next; whoever takes is skipped.</p><p>Whoever still holds cards at the end is the durak.</p>",
+          "schwimmen": "<p>32 cards. Everyone holds three cards, three lie open in the middle. The dealer first picks one of two hands; the other goes to the middle.</p><p><b>Your turn:</b> swap one card, swap all three, pass or knock. After a knock everyone else plays once more. If everyone passes, three new cards come to the middle.</p><p><b>Scoring:</b> the sum of one suit (ace 11, court cards 10). Three of a kind count 30.5. 31 or three aces end the round at once – everyone else loses a life. Otherwise the lowest hand loses.</p><p>Everyone has three lives, then you \"swim\", and with the next loss you are out. The last player wins.</p><p><b>House rules:</b> with “Pass only once” everyone may pass only once per round. With “Only the first one swims” only the first player out of lives swims – everyone after that is out at once. With “New middle on 7-8-9” the player to act may ask for three new middle cards when 7, 8 and 9 lie there, and then play.</p>",
+          "durak": "<p>36 cards (6 to ace), six in hand. The bottom card of the stock shows trumps. In the first round the lowest trump attacks.</p><p><b>Attack:</b> one or more cards of one rank. <b>Defence:</b> beat every card with a higher one of its suit or with a trump – or take everything.</p><p>Once everything is beaten, the others may throw in cards of ranks already on the table (six attack cards at most, never more than the defender held). Then everyone draws up to six. A successful defender attacks next; whoever takes is skipped.</p><p>Whoever still holds cards at the end is the durak.</p><p><b>Table settings:</b> “Passing on” – as long as nothing is beaten, the defender adds a card of the same rank and the next player has to defend. “Only neighbours attack” – only the players left and right of the defender attack and throw in.</p>",
           "arschloch": "<p>All cards are dealt (32 up to four players, 52 above). The leader plays one or more cards of one rank. The others play as many cards of a higher rank or pass – a pass lasts until the trick ends. Whoever played last leads again.</p><p>First out is the president, last the scum. Before the next round the scum hands their best cards to the president (two from four players, otherwise one), who returns cards of their choice; from four players the vices swap one card too. The scum leads.</p>",
-          "skat": "<p>Three players, 32 cards, ten each, two in the skat. Middlehand bids to forehand, then rearhand to the winner. The winner picks up the skat and discards two cards – or plays hand – and declares a suit, grand or null.</p><p>You must follow suit; the jacks are the highest trumps (not in null). The declarer needs 61 card points; in null they must not take a trick.</p><p><b>Value:</b> matadors + 1 (+ hand, schneider, schwarz) × base value (diamonds 9, hearts 10, spades 11, clubs 12, grand 24); null 23, hand 35, ouvert 46, ouvert hand 59. Lost games count double negative. If everyone passes, the next dealer deals. No Ramsch, no announced schneider/schwarz.</p>"
+          "skat": "<p>Three players, 32 cards, ten each, two in the skat. Middlehand bids to forehand, then rearhand to the winner. The winner picks up the skat and discards two cards – or plays hand – and declares a suit, grand or null.</p><p>You must follow suit; the jacks are the highest trumps (not in null). The declarer needs 61 card points; in null they must not take a trick.</p><p><b>Value:</b> matadors + 1 (+ hand, schneider, schwarz) × base value (diamonds 9, hearts 10, spades 11, clubs 12, grand 24); null 23, hand 35, ouvert 46, ouvert hand 59. Lost games count double negative. If everyone passes, the next dealer deals. No Ramsch, no announced schneider/schwarz.</p>",
+          "maumau": "<p>32 cards, five each. The face-up start card has no effect.</p><p><b>Your turn:</b> play a card of the same suit or rank as the top card. If you cannot or do not want to, draw one card; if it fits you may play only that card, otherwise you pass.</p><p><b>Special cards:</b> 7 – the next player draws two cards or answers with a 7 (then four, and so on). 8 – the next player is skipped. Jack – on anything but a jack; you wish a suit for the next card.</p><p>The first player without cards wins the round. Round wins are counted.</p><p><b>Table settings:</b> “8 skips”, “8 on 8 passes it on” (whoever is to be skipped plays an 8 and the next player is skipped), “Play a drawn card at once” and “Play on for a ranking” (after the first win the others play out the places).</p>",
+          "schwarzer-peter": "<p>52 cards without the jack of clubs; the jack of spades is the Schwarzer Peter (Old Maid). All cards are dealt, pairs (same rank, same colour: red or black) go down at once.</p><p><b>Your turn:</b> draw one face-down card from the next player clockwise who still holds cards. Their cards are shuffled first. If it matches one of yours, the pair goes down.</p><p>A player without cards is done. Whoever holds the Schwarzer Peter at the end loses the round.</p>",
+          "golf": "<p>52 cards and two jokers, two decks from five players. Everyone has six face-down cards in two rows of three and flips two at the start. Nobody knows a face-down card, not even its owner.</p><p><b>Your turn:</b> draw from the stock or take the top discard. Swap it for one of your cards (the old one goes face up onto the discard) or – only when drawn from the stock – discard it and flip a face-down card.</p><p>Once someone has all six cards face up, everyone else plays once more.</p><p><b>Scoring:</b> ace 1, 2–10 face value, jack and queen 10, king 0, joker −2. Two equal ranks in one column count 0 (jokers never). After nine holes the lowest total wins.</p>",
+          "cabo": "<p>52 cards and two jokers. Everyone has four face-down cards and looks at the right two at the start of each round – after that you have to remember them.</p><p><b>Your turn:</b> draw from the stock or take the top discard – or call <b>Lowball</b>. Swap the drawn card for one of yours (the old one goes onto the discard) or discard it if it came from the stock.</p><p><b>Discarded special cards (stock only):</b> 7/8 – look at one of your cards. 9/10 – look at another player's card. Jack/queen – blind-swap one of your cards with another player's. You may skip the power.</p><p>After Lowball everyone else plays once more. <b>Points:</b> ace 1, 2–10 face value, jack 11, queen 12, red king 0, black king 13, joker 0. Whoever calls Lowball without the strictly lowest hand gets 10 more. Exactly 100 falls back to 50. Above 100 the game ends, the lowest total wins.</p>"
+        },
+        "maumau": {
+          "wins_one": "{{count}} win",
+          "wins_other": "{{count}} wins",
+          "mau": "Mau!",
+          "wished": "Wish: {{suit}}",
+          "pending": "Penalty: {{count}} cards",
+          "drew": "Drawn: {{card}}",
+          "wishes": "{{name}} wishes a suit",
+          "roundWon": "{{name}} wins the round – Mau-Mau!",
+          "draw": "Draw a card",
+          "penalty": "Draw {{count}} cards",
+          "pass": "Pass",
+          "suit": {
+            "C": "♣ Clubs",
+            "S": "♠ Spades",
+            "H": "♥ Hearts",
+            "D": "♦ Diamonds"
+          },
+          "skip": "Skip turn",
+          "skipPending": "8: skip or play an 8",
+          "place": "Place {{place}}",
+          "cards_one": "{{count}} card",
+          "cards_other": "{{count}} cards",
+          "playOn": "Play on",
+          "playOnAsk": "Play on to decide the remaining places?",
+          "option": {
+            "eightSkips": "8 skips",
+            "eightSkipsHint": "After an 8 the next player is skipped.",
+            "eightCounter": "8 on 8 passes it on",
+            "eightCounterHint": "Whoever is to be skipped may play an 8; then the next player is skipped.",
+            "drawPlay": "Play a drawn card at once",
+            "drawPlayHint": "If the drawn card fits, it may be played at once. Off: after drawing the next player is up.",
+            "playOn": "Play on for a ranking",
+            "playOnHint": "Once someone has won, the others may play on until every place is decided."
+          }
+        },
+        "schwarzerPeter": {
+          "losses_one": "{{count}}× Peter",
+          "losses_other": "{{count}}× Peter",
+          "done": "done",
+          "pairs": "Pairs",
+          "drawsFrom": "draws from {{name}}",
+          "drew": "Drawn: {{card}}",
+          "drewPair": "Drawn: {{card}} – pair discarded",
+          "pairDown": "{{name}} discards a pair",
+          "continue": "Continue",
+          "lost": "{{name}} is the Schwarzer Peter!"
+        },
+        "slot": "Card {{n}} of {{name}}",
+        "golf": {
+          "total": "{{points}} pts",
+          "hole": "Hole {{hole}}/{{holes}}",
+          "lastLap": "{{name}} is done – last lap",
+          "flipStart": "{{name}} flips {{count}} card(s)",
+          "drawStock": "Draw from stock",
+          "takeDiscard": "Take discard",
+          "place": "{{name}}: swap {{card}} for a card",
+          "discard": "Discard",
+          "flipOne": "{{name}} flips a card",
+          "drawn": "Drawn",
+          "won": "{{name}} wins with the fewest points",
+          "holeOver": "Hole {{hole}} finished",
+          "nextHole": "Next hole"
+        },
+        "cabo": {
+          "total": "{{points}} pts",
+          "called": "Knock!",
+          "peek": "{{name}} looks at the right two cards",
+          "seen": "Got it",
+          "drawStock": "Draw from stock",
+          "takeDiscard": "Take discard",
+          "call": "Knock",
+          "place": "{{name}} swaps the drawn card in or discards it",
+          "discard": "Discard",
+          "discardFor": {
+            "peekOwn": "Discard – look at own card",
+            "peekOther": "Discard – look at another card",
+            "blindSwap": "Discard – blind swap"
+          },
+          "power": {
+            "peekOwn": "{{name}} looks at an own card",
+            "peekOther": "{{name}} looks at another player's card",
+            "blindSwap": "{{name}} swaps blind: own card first, then another"
+          },
+          "swapFrom": "Own card {{n}} picked",
+          "skip": "Skip",
+          "looking": "{{name}} looks at a card",
+          "endTurn": "End turn",
+          "drawn": "Drawn",
+          "drew": "Drawn: {{card}}",
+          "lastLap": "{{name}} knocked – last lap",
+          "won": "{{name}} wins with the fewest points",
+          "penalty": "{{name}} knocked but was not strictly lowest: +{{points}}",
+          "reset": "{{name}} had exactly 100 – back to {{points}}",
+          "option": {
+            "memoryAid": "Memory aid",
+            "memoryAidHint": "Cards you have already seen stay face up for you – easier, less to remember."
+          }
+        },
+        "settings": {
+          "title": "Table settings",
+          "nextMatch": "Applies from the next game and is saved on this device.",
+          "appliesNow": "Changes apply to the running game at once.",
+          "appliesAll": "Changes apply at once for every device at the table.",
+          "hostOnly": "Only the host can change the settings."
         }
+      },
+      "showOnTv": "Show on TV",
+      "playAlong": "Play along (table on TV)",
+      "showTableOnly": "Show table only",
+      "handRequests": {
+        "button": "See or give cards",
+        "askTitle": "Cards with other players",
+        "modeCards": "Pick cards",
+        "modeCount": "Any cards",
+        "pickHint": "Tap the positions in {{name}}'s hand you want to see.",
+        "countLabel_one": "{{count}} card",
+        "countLabel_other": "{{count}} cards",
+        "cardN": "Card {{n}}",
+        "waiting": "Waiting for {{name}} to answer. Changes update the request.",
+        "send": "Ask",
+        "update": "Update request",
+        "withdraw": "Withdraw",
+        "incomingCards_one": "{{name}} wants to see the marked card",
+        "incomingCards_other": "{{name}} wants to see the {{count}} marked cards",
+        "incomingCount_one": "{{name}} wants to see {{count}} of your cards",
+        "incomingCount_other": "{{name}} wants to see {{count}} of your cards",
+        "chooseHint": "Tap the cards you want to show.",
+        "reject": "Reject",
+        "choose": "Choose",
+        "accept": "Show",
+        "random_one": "Show {{count}} random",
+        "random_other": "Show {{count}} random",
+        "showSelected_one": "Show {{count}} card",
+        "showSelected_other": "Show {{count}} cards",
+        "shownTitle": "{{name}} shows you",
+        "rejectedTitle": "{{name}} said no",
+        "rejectedBody": "{{name}} does not show these cards.",
+        "onlyYou": "Only you see these cards. Closing hides them again.",
+        "tabSee": "See cards",
+        "tabGive": "Give cards",
+        "offerHint": "Tap the cards you want to give to {{name}}.",
+        "modeRandom": "Random cards",
+        "offerWaiting": "Waiting for {{name}} to accept. Changes update the offer.",
+        "offerSend": "Offer",
+        "offerIncoming_one": "{{name}} offers you {{count}} card",
+        "offerIncoming_other": "{{name}} offers you {{count}} cards",
+        "offerAccept": "Take",
+        "offerRejected": "{{name}} did not take your cards"
       }
     },
     "drawpot": {
@@ -1544,6 +1854,7 @@
     "addPlayer": "Add"
   },
   "common": {
+    "add": "Add",
     "retry": "Retry",
     "start": "Start Game",
     "back": "Back",
@@ -1572,7 +1883,11 @@
       "switchFrom": "{{name}} done",
       "coverTitle": "Hand the device to {{name}}",
       "reveal": "I'm {{name}} – reveal",
-      "otherPlayer": "Someone else's turn?"
+      "otherPlayer": "Someone else's turn?",
+      "players": "Players",
+      "playersTitle": "Players on this device",
+      "playersHint": "The device is passed around. Applying starts a new game.",
+      "playersApply": "Apply & restart"
     },
     "seatInvited": "Invited – link not opened yet",
     "seatJoined": "Joined",
@@ -1801,11 +2116,14 @@
     "privacy_title": "Privacy",
     "privacy_desc": "Which data the games use, which services they contact and your rights.",
     "privacy_open": "Privacy Notice",
+    "source_title": "Source code",
+    "source_desc": "Nexumia is free software under the GNU AGPL v3.0 or later. Get the source code on GitHub.",
+    "source_open": "Source code",
     "notify_open": "Set up notifications"
   },
   "server": {
     "title": "Nexumia Server Connection",
-    "desc": "Connect to a Nexumia Server to stream your Melodiq karaoke song library, download tracks, and use AI vocal separation. Party games (GuessArt, Gartic Phone, Werewolf, Qwixx) run serverless and do not require this server.",
+    "desc": "Connect to a Nexumia Server to stream your Melodiq karaoke song library, download tracks, and use AI vocal separation. Party games (GuessArt, Drawing Telephone, Werewolf, Color Rows) run serverless and do not require this server.",
     "enable": "Enable Server Connection",
     "url": "Server URL",
     "token": "Security Token",
@@ -2140,7 +2458,7 @@
     "liveDesc": "Everyone plays at the same time: invite players to the lobby, the host starts.",
     "overDaysDesc": "Play over days: add the players below and send each one their own link.",
     "garticShortDesc": "Live Multiplayer: Write phrase ➔ Draw ➔ Guess ➔ Album reveal show!",
-    "playGartic": "Play Gartic Phone",
+    "playGartic": "Play Drawing Telephone",
     "roomCode": "Room Code",
     "readyToStart": "Ready!",
     "needMinPlayers": "Min 2 players needed",
@@ -2309,7 +2627,7 @@
   },
   "party": {
     "hubBannerTitle": "Party Mode (Multiplayer Lobby)",
-    "hubBannerSubtitle": "1 Room for the whole evening: Connect friends & play Gartic Phone together!",
+    "hubBannerSubtitle": "1 Room for the whole evening: Connect friends & play Drawing Telephone together!",
     "openLobby": "Open Lobby ➔",
     "lobbyTitle": "Party Lobby",
     "room": "Party Room",
@@ -2327,7 +2645,7 @@
     "hostSelectPrompt": "Select a game to launch for all players:",
     "guestWaitingPrompt": "The host is currently choosing the next game...",
     "garticDesc": "Telephone drawing game! Write phrase ➔ Draw ➔ Guess ➔ Draw ➔ Hilarious album reveal!",
-    "launchGartic": "Launch Gartic Phone",
+    "launchGartic": "Launch Drawing Telephone",
     "needMin2": "At least 2 players needed",
     "ready": "Ready",
     "backToLobby": "Back to Party Lobby",
@@ -2349,7 +2667,7 @@
     "confirmEndGameTitle": "End Game?",
     "confirmEndGameDesc": "Do you want to cancel the current game for all connected players and return to the party lobby?",
     "confirmEndTitle": "Really end game?",
-    "confirmEndDesc": "The current Gartic Phone match will be cancelled for all connected players and everyone returns to the party lobby.",
+    "confirmEndDesc": "The current Drawing Telephone match will be cancelled for all connected players and everyone returns to the party lobby.",
     "shareLobby": "Share Lobby",
     "shareLobbyTooltip": "Share lobby / invite friends",
     "shareLobbyDesc": "Share this link or scan the QR code to invite more friends to the game:",
@@ -2362,7 +2680,7 @@
     "melodiq_notes_desc": "Everyone plays their own part on their own device; the stage shows the band.",
     "melodiq_desc": "Karaoke on the TV, the guests' phones are the microphones.",
     "storyteller_desc": "Write a story together, one after the other.",
-    "guessart_desc": "Pictionary drawing game with pass-and-play or peer sync.",
+    "guessart_desc": "Drawing and guessing game with pass-and-play or peer sync.",
     "no_custom_tabletop": "No custom party-ready tabletop games imported yet.",
     "custom_game_info": "{{min}}-{{max}} Players • {{cards}} Cards",
     "party_ready": "Party Ready",
@@ -2370,6 +2688,7 @@
     "moreGamesSoonTitle": "More Party Games",
     "pending_game_label": "Chosen game",
     "pending_game_waiting": "Waiting for players – they join with the QR code below.",
+    "encrypted_room_hint": "This room is end-to-end encrypted. Open the host's invite link or scan their QR code – the room code alone is not enough.",
     "pending_game_ready": "{{count}} players ready.",
     "pending_game_start": "Start now",
     "pending_game_other": "Other game",
@@ -2382,7 +2701,41 @@
     "spectatorWatching": "You are watching",
     "spectatorPickHint": "Pick whose view to follow",
     "gameSelectionTitle": "Game selection",
-    "partyModeChip": "Party mode"
+    "gameSelectionDesc": "Choose between party classics (Drawing Telephone, GuessArt), dice games and synced tabletop card and board games.",
+    "chooseAndStart": "Choose game & start",
+    "partyModeChip": "Party mode",
+    "werewolf_desc": "Every role secretly on its own phone, the host narrates.",
+    "imposter_desc": "Everyone sees their word secretly on their own phone – who only has the hint?",
+    "stammtisch": {
+      "title": "Stammtisch",
+      "desc": "A fixed room with the same code: everyone can come back any time.",
+      "save": "Save as Stammtisch",
+      "saveHere": "Save on this device",
+      "saveTitle": "Save as Stammtisch",
+      "saveDesc": "The room keeps its code. Whoever saves it comes back with one tap from the home screen.",
+      "nameLabel": "Name",
+      "waiting": "Waiting for the others …",
+      "autoOpen": "Open on start",
+      "autoOpenHint": "The app starts right in this room",
+      "claimHost": "Take over hosting",
+      "forget": "Forget",
+      "forgetTitle": "Forget this Stammtisch?",
+      "forgetDesc": "The Stammtisch disappears from this device. You can join again with an invite link.",
+      "away": "away"
+    },
+    "help": {
+      "accept": "Others may play for me",
+      "acceptHint": "Help when you are stuck",
+      "badge": "Others may help",
+      "playedForYou": "{{name}} played for you",
+      "mySheet": "My sheet",
+      "sheetOf": "For {{name}}",
+      "rollingFor": "You are rolling for {{name}}"
+    },
+    "marker": {
+      "show": "Show where to tap",
+      "hint": "Tap the spot you want to show."
+    }
   },
   "gartic": {
     "waitingHeader": "Waiting for other players...",
@@ -2448,6 +2801,20 @@
       "empty": "No daily challenges played yet.",
       "target_word": "Target Word:",
       "btn_tooltip": "History"
+    },
+    "not_in_dictionary": "Not in word list!",
+    "settings": {
+      "dictionary_only": "Only dictionary words",
+      "dictionary_only_hint": "Guesses must be a known word. Invalid words do not use up an attempt."
+    },
+    "key_enter": "Enter",
+    "key_delete": "Delete",
+    "letter_state": {
+      "correct": "correct spot",
+      "present": "wrong spot",
+      "absent": "not in word",
+      "tbd": "typed",
+      "empty": "empty"
     }
   },
   "sudoku": {
@@ -2749,5 +3116,26 @@
       "add_one": "Add {{count}} group",
       "add_other": "Add {{count}} groups"
     }
+  },
+  "playingCards": {
+    "faceDown": "Face-down card",
+    "joker": "Joker"
+  },
+  "secondScreen": {
+    "title": "Show on TV",
+    "androidHint": "Android cannot cast a single page to a Chromecast. Send the link to the TV instead; screen mirroring would also show your cards.",
+    "castFailed": "No cast screen found. Open the link on the TV instead.",
+    "cast": "Cast to TV",
+    "copyLink": "Copy link",
+    "copied": "Copied",
+    "castDesc": "Chromecast or a TV with Cast in the same Wi-Fi.",
+    "window": "Open in a separate window",
+    "windowDesc": "For a laptop or PC on the TV: drag the window onto the TV and press F11 for full screen.",
+    "windowBlocked": "The browser blocked the window. Allow pop-ups for this page.",
+    "share": "Send link to the TV",
+    "shareDesc": "Share the link to the TV or another device and open it there.",
+    "mirror": "Mirror this screen",
+    "mirrorDesc": "This device shows only the table, so mirroring is safe: Android Quick Settings → \"Cast\" / \"Smart View\", iPhone → AirPlay \"Screen Mirroring\".",
+    "otherDevice": "Or open this address in the TV browser or scan the code. The TV shows only the shared table; your cards stay on this phone."
   }
 }

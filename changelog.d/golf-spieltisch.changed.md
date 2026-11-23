@@ -1,0 +1,1 @@
+- **Golf is now played on the Spieltisch**: the six-card grids lie on the shared card table, playable on one device or with everyone on their own phone. The separate hub tile is gone.

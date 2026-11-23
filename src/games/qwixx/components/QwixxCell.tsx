@@ -15,6 +15,8 @@ interface QwixxCellProps {
   /** Colour of the segment the cell sits in. */
   color: RowColor;
   chainKey?: string;
+  /** Name for party "tap here" markers (`data-room-target`). */
+  target?: string;
   isCrossed: boolean;
   isSubCrossed: boolean;
   isClickable: boolean;
@@ -41,6 +43,7 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
   cell,
   color,
   chainKey,
+  target,
   isCrossed,
   isSubCrossed,
   isClickable,
@@ -73,6 +76,7 @@ export const QwixxCell: React.FC<QwixxCellProps> = ({
     >
       <ButtonBase
         data-chain-cell={chainKey}
+        data-room-target={target}
         onClick={onTap}
         disabled={disabled || !isClickable}
         sx={{

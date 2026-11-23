@@ -24,6 +24,22 @@
       "music": "Musik",
       "social_deduction": "Social Deduction",
       "party": "Party"
+    },
+    "party_room": {
+      "title": "Party-Raum",
+      "desc": "Ein Raum für den ganzen Abend: Alle treten per QR-Code mit dem eigenen Handy bei, der Fernseher zeigt das Spiel.",
+      "open": "Raum öffnen"
+    },
+    "filter": {
+      "own_devices": "Mit eigenen Handys"
+    },
+    "sections": {
+      "tools": "Helfer"
+    },
+    "empty": "Keine Spiele für diese Auswahl.",
+    "stammtisch": {
+      "desc": "Euer fester Raum: tippen und dabei sein.",
+      "open": "Hingehen"
     }
   },
   "games": {
@@ -54,7 +70,7 @@
       "restart_desc": "Bist du sicher? Der aktuelle Spielstand geht verloren."
     },
     "wordle": {
-      "title": "Wordle",
+      "title": "Wortraten",
       "description": "Errate das 5-Buchstaben-Wort in 6 Versuchen. Spiele das Tagesrätsel oder fordere Freunde heraus."
     },
     "sudoku": {
@@ -305,7 +321,44 @@
       "winner_label": "Gewinner: {{winner}}",
       "werewolves_win": "Die Werwölfe gewinnen!",
       "villagers_win": "Die Dorfbewohner gewinnen!",
-      "play_again": "Nochmal spielen"
+      "play_again": "Nochmal spielen",
+      "room": {
+        "connecting": "Verbinde mit dem Partyraum …",
+        "waiting_setup": "Der Host wählt die Rollen und startet das Spiel.",
+        "players_one": "{{count}} Spieler",
+        "players_other": "{{count}} Spieler",
+        "narrator_only": "Dieses Gerät erzählt nur (keine Rolle)",
+        "too_few": "Es braucht mindestens {{count}} Spieler.",
+        "card_hidden": "Deine Rolle liegt verdeckt. Schau sie dir an, wo niemand mitliest.",
+        "hide_role": "Rolle verdecken",
+        "seen": "Verstanden",
+        "seen_waiting": "{{count}} von {{total}} haben ihre Rolle gelesen.",
+        "pack": "Dein Rudel: {{names}}",
+        "lovers": "Du bist verliebt in {{names}}.",
+        "insight": "{{name}} ist: {{role}}",
+        "night_title": "Nacht {{round}}",
+        "sleep": "Augen zu und warten.",
+        "dead_hint": "Du bist tot – bleib still.",
+        "narrate_night": "Die Nacht bricht herein. Alle schließen die Augen.",
+        "narrate_call": "{{role}}, wach auf.",
+        "narrate_day": "Es wird Morgen. Heute Nacht starb: {{names}}.",
+        "narrate_day_none": "Es wird Morgen. Heute Nacht ist niemand gestorben.",
+        "narrate_vote": "Zeit für die Abstimmung. Alle stimmen auf ihrem Handy ab.",
+        "narrate_hunter": "{{name}} war der Jäger und gibt einen letzten Schuss ab.",
+        "discuss_hint": "Diskutiert, wer die Werwölfe sind, und tippt dann auf „Bereit zur Abstimmung“.",
+        "your_vote": "Deine Stimme: {{name}}",
+        "voted_waiting": "{{count}} von {{total}} haben abgestimmt.",
+        "roles_title": "Alle Rollen",
+        "table_hint": "Dieses Gerät zeigt den Tisch",
+        "pack_agree": "Getötet wird, sobald alle Wölfe dieselbe Person wählen. Du kannst deine Wahl ändern.",
+        "pack_pick": "{{name}}: {{target}}",
+        "pack_choosing": "wählt noch …",
+        "pack_nobody": "niemand",
+        "ready": "Bereit zur Abstimmung",
+        "not_ready": "Doch noch nicht bereit",
+        "ready_waiting": "{{count}} von {{total}} sind bereit. Abgestimmt wird, sobald mehr als die Hälfte bereit ist.",
+        "pack_time_left": "Noch {{count}} s – dann stirbt, wer die meisten Stimmen hat (bei Gleichstand niemand)."
+      }
     },
     "imposter": {
       "title": "Imposter",
@@ -370,10 +423,28 @@
         "hint_de": "Hinweis (DE)",
         "custom_categories": "Eigene Kategorien",
         "standard_categories": "Standard-Kategorien"
+      },
+      "room": {
+        "connecting": "Verbinde mit dem Party-Raum …",
+        "waiting_setup": "Der Host wählt die Kategorien und startet die Runde.",
+        "card_hidden": "Deine Karte ist verdeckt. Schau sie dir an, ohne dass andere mitlesen.",
+        "show_card": "Karte zeigen",
+        "hide_card": "Karte verbergen",
+        "seen_waiting": "{{count}} von {{total}} haben ihre Karte gelesen.",
+        "discuss_hint": "Nennt reihum ein Wort, das zum Begriff passt – und findet heraus, wer ihn nicht kennt.",
+        "start_vote": "Abstimmung starten",
+        "time_up": "Zeit ist um",
+        "voted_waiting": "{{count}} von {{total}} haben abgestimmt.",
+        "tie": "Gleichstand – niemand wurde rausgewählt.",
+        "word_was": "Das Wort war „{{word}}“, der Tipp „{{hint}}“.",
+        "votes_one": "{{count}} Stimme",
+        "votes_other": "{{count}} Stimmen",
+        "new_round": "Neue Runde",
+        "table_hint": "Dieses Gerät zeigt den Tisch"
       }
     },
     "qwixx": {
-      "title": "Qwixx",
+      "title": "Farbreihen",
       "description": "Taktischer Würfel-Klassiker. Kreuze Zahlen von links nach rechts an, schließe Reihen ab und sammle die meisten Punkte!"
     },
     "guessart": {
@@ -385,13 +456,13 @@
       "description": "Schreibt gemeinsam eine Geschichte – Zug um Zug mit modularen Spielregeln wie Blind Mode, Time Attack und Word Roulette!"
     },
     "garticphone": {
-      "title": "Gartic Phone",
+      "title": "Zeichen-Stille-Post",
       "description": "Das geniale Flüsterpost-Zeichenspiel! Satz schreiben ➔ Zeichnen ➔ Raten ➔ Zeichnen ➔ Animierte Album-Show!",
       "inviteHelp": "Freunde verbinden: Scanne den QR-Code mit weiteren Smartphones oder teile den Link."
     },
     "party": {
       "title": "Party-Modus",
-      "description": "Gemeinsame Mehrspieler-Lobby für synchronisierte Spiele: Gartic Phone & mehr!"
+      "description": "Gemeinsame Mehrspieler-Lobby für synchronisierte Spiele: Zeichen-Stille-Post & mehr!"
     },
     "melodiq": {
       "title": "Melodiq",
@@ -581,6 +652,11 @@
           "hihat": "Hi-Hat",
           "snare": "Snare",
           "tom": "Tom",
+          "tom1": "Tom 1",
+          "tom2": "Tom 2",
+          "tom3": "Tom 3",
+          "floorTom": "Standtom",
+          "percussion": "Percussion",
           "kick": "Kick"
         },
         "next_grip": "Nächster Griff",
@@ -656,7 +732,7 @@
         "detected": "{{count}} Noten · erkannt als {{inst}}",
         "keys_keyboard": "A S D F G H J K = weiße Tasten · W E T Z U = schwarze",
         "keys_strings": "1 bis {{count}} = Saiten von oben",
-        "keys_drums": "D Becken · F Hi-Hat · J Snare · K Tom · Leertaste Kick",
+        "keys_drums": "D Becken · F Hi-Hat · J Snare · K L Ö Ä Toms (von links) · G Percussion · Leertaste Kick",
         "keys_pitch": "Maus hoch/runter = Tonhöhe, gedrückt halten = singen · auch Pfeiltasten und Leertaste",
         "keys_switch": "Tab gibt die Tastatur an den nächsten Spieler",
         "input": "Eingabe",
@@ -665,6 +741,8 @@
         "input_mic": "Mikrofon",
         "midi_none": "Kein MIDI-Gerät gefunden",
         "midi_sound": "MIDI-Töne über die Lautsprecher abspielen",
+        "judge_percussion": "Percussion-Spur bewerten",
+        "judge_percussion_note": "Tamburin, Kuhglocke, Klatschen und andere Percussion haben eine eigene Spur. Ohne Bewertung wird sie nur angezeigt und mitgespielt und zählt nicht zu Punkten und Trefferquote. Am Handy-Pult gibt es kein Percussion-Pad.",
         "midi_lost": "„{{name}}“ wurde getrennt. Wieder eingesteckt, aber es kommen keine Noten an? Starte den Browser neu (Firefox unter Linux erkennt ein neu eingestecktes MIDI-Gerät nicht).",
         "song_pick": "Song wählen",
         "server_off": "Kein Nexumia-Server verbunden. Verbinde ihn in den Einstellungen, um Songs aus deiner Bibliothek zu spielen.",
@@ -757,6 +835,37 @@
         "files_recordings_hint": "Der Mix des Songs und seine Spuren stehen hier nicht; sie gehören zu Melodiq.",
         "files_add": "Dateien hinzufügen",
         "files_add_hint": "Noten (.gp, .mxl, .musicxml, .xml, .mid) oder Audio. Vorhandene Dateien werden nie überschrieben; eine Datei mit gleichem Namen wird als „Name (2)“ gespeichert.",
+        "files_add_label": "Name der Noten (optional)",
+        "link_save_title": "Zu welchem Song speichern?",
+        "link_move_title": "In welchen Song verschieben?",
+        "link_search": "Interpret oder Titel suchen",
+        "link_new_song": "Neuer Song",
+        "link_same_song": "Gleicher Song",
+        "link_label": "Name der Noten (optional)",
+        "link_label_hint": "Wird statt des Dateinamens gezeigt, z. B. Anfänger oder Band.",
+        "link_move_open": "In einen anderen Song verschieben …",
+        "link_move_action": "Hierher verschieben",
+        "rescan": "Bibliothek neu einlesen",
+        "rescan_hint": "Liest die Song-Ordner auf dem Server ohne Neustart neu ein und verschiebt alte Notes-Stücke, die noch nicht verschoben wurden.",
+        "rescan_done": "{{songs}} Songs gefunden, {{migrated}} Notes-Stücke verschoben.",
+        "parts_edit": "Stimmen",
+        "parts_edit_hidden_one": "Stimmen ({{count}} ausgeblendet)",
+        "parts_edit_hidden_other": "Stimmen ({{count}} ausgeblendet)",
+        "parts_hide": "Ausblenden",
+        "parts_playback": "Ausgeblendete Stimme",
+        "parts_muted": "Stumm",
+        "parts_synth": "Synth spielt mit",
+        "strum_label": "Anschlagrichtung",
+        "strum_auto": "Automatisch (Zeichen in den Noten, sonst Rhythmus)",
+        "strum_down": "Alle abwärts",
+        "strum_up": "Alle aufwärts",
+        "strum_bar": "Takt",
+        "strum_bar_mode": "Richtung in diesem Takt",
+        "strum_bar_set": "Setzen",
+        "strum_bar_chip": "Takt {{bar}}: {{mode}}",
+        "strum_hint": "Automatisch: Abschlag auf den Zählzeiten, Aufschlag auf den Zwischenschlägen, außer die Noten geben den Anschlag vor. Eine Takt-Einstellung gilt vor der für den ganzen Song.",
+        "parts_stored": "Ausgeblendete Stimmen bekommen keinen Platz, werden auf den Geräten der Spieler nicht angeboten und zählen nicht als Stimmen. Namen und ausgeblendete Stimmen werden mit diesen Noten im Song-Ordner gespeichert.",
+        "parts_session": "Ausgeblendete Stimmen bekommen keinen Platz, werden auf den Geräten der Spieler nicht angeboten und zählen nicht als Stimmen. Diese Noten liegen in keinem Song-Ordner, daher gelten die Einstellungen, bis ein anderer Song geöffnet wird.",
         "files_download": "Herunterladen",
         "files_zip": "Ordner herunterladen (ZIP)",
         "files_zip_hint": "Lädt den ganzen Song-Ordner (Karaoke-.txt, Mix, Spuren, Noten, Taktmarken, Aufnahmen) als ein ZIP herunter. Einzelne Dateien: der Download-Knopf neben jeder Datei.",
@@ -895,7 +1004,8 @@
         "playing": "Läuft – dein Gerät bewertet deine Noten, die Bühne zeigt sie.",
         "waiting": "Warte, bis die Bühne startet.",
         "loading_part": "Lade deine Stimme von der Bühne…",
-        "network": "Netzwerk-Laufzeit {{ms}} ms – das Netz dient nur dem Uhrenabgleich, deine Noten werden auf diesem Gerät bewertet."
+        "network": "Netzwerk-Laufzeit {{ms}} ms – das Netz dient nur dem Uhrenabgleich, deine Noten werden auf diesem Gerät bewertet.",
+        "leaderboard_you": "Du"
       },
       "latency": {
         "button": "Latenz {{ms}} ms",
@@ -911,10 +1021,15 @@
         "tap_done": "Fertig: {{ms}} ms (±{{spread}} ms)",
         "tap_few_taps": "Zu wenige Anschläge auf den Klicks – bitte noch einmal.",
         "tap_uneven": "Die Anschläge waren zu ungleichmäßig – noch einmal und gleichmäßig klopfen."
+      },
+      "judgement_palette": {
+        "title": "Bewertungen",
+        "colorblind": "Farbenblind-Palette",
+        "hint": "Jede Bewertung hat ihre eigene Form (★ perfekt, ● gut, ✕ daneben, ▲ andere Note). Die Farbenblind-Palette wechselt zusätzlich auf Farben, die auch bei Rot-Grün-Schwäche unterscheidbar bleiben."
       }
     },
     "kniffel": {
-      "title": "Kniffel",
+      "title": "Fünf Würfel",
       "description": "Der Klassiker unter den Würfelspielen. Sammle Punkte durch geschicktes Kombinieren von 5 Würfeln.",
       "roll": "Würfeln",
       "rolling": "Würfelt...",
@@ -942,9 +1057,9 @@
         "full_house": "Full House",
         "small_straight": "Kleine Straße",
         "large_straight": "Große Straße",
-        "kniffel": "Kniffel",
+        "kniffel": "Fünferpasch",
         "chance": "Chance",
-        "kniffel_bonus": "Kniffel-Bonus"
+        "kniffel_bonus": "Fünferpasch-Bonus"
       },
       "hint": {
         "ones": "Summe aller Einsen",
@@ -960,20 +1075,20 @@
         "large_straight": "5 in Folge · 40",
         "kniffel": "5 gleiche · 50",
         "chance": "Alle Augen zählen",
-        "kniffel_bonus": "Jeder weitere · 50"
+        "kniffel_bonus": "Jeder weitere · {{points}}"
       }
     },
     "knister": {
-      "title": "Knister",
+      "title": "Würfelgitter",
       "description": "Das beliebte 5x5 Würfel-Bingo! Bilde Paare, Straßen und Full Houses auf deinem Raster."
     },
     "cards": {
-      "title": "Kartenspiele",
+      "title": "Kartenspiel-Zähler",
       "description": "Digitale Punkte-, Lebens- (Schwimmen) und Stichverwaltung (Oh Hell) für Kartenspiele am Tisch."
     },
     "tabletop": {
       "title": "Spieltisch",
-      "description": "Karten-, Brett- und Würfelspiele: ein Gerät reihum oder jeder am eigenen Handy, mit verdeckten Handkarten.",
+      "description": "Eigene und importierte Spiele, der freie Tisch und alle Karten-, Brett- und Würfelspiele an einem Ort.",
       "subtitle": "Karten-, Brett- und Würfelspiele – auf einem Gerät für alle oder jeder am eigenen.",
       "manage_games": "Spiele verwalten",
       "starter_games": "Klassiker & Vorlagen",
@@ -995,10 +1110,9 @@
       "by_author": "von {{author}}",
       "play_party_choice": "Im Party-Modus starten",
       "play_local_choice": "Lokal an diesem Gerät spielen",
-      "export": "Exportieren",
+      "share": "Teilen",
       "export_pcio": "Als .pcio (ZIP) exportieren",
       "export_json": "Als .json exportieren",
-      "publish": "Als PR einreichen",
       "confirm_delete_title": "Spiel löschen?",
       "confirm_delete_message": "Möchtest du \"{{name}}\" wirklich unwiderruflich aus deinem Speicher löschen?",
       "importing": "Importiere Spiel...",
@@ -1032,6 +1146,19 @@
         "global": "Globales Skript",
         "global_toggle": "Globales Skript ein-/ausblenden"
       },
+      "lua": {
+        "enable": "Lua-Skripte ausführen (experimentell)",
+        "disable": "Lua-Skripte stoppen",
+        "log_title": "Skriptprotokoll",
+        "log_empty": "Die Skripte haben noch nichts ausgegeben.",
+        "unshimmed_one": "{{count}} TTS-Aufruf wird noch nicht unterstützt:",
+        "unshimmed_other": "{{count}} TTS-Aufrufe werden noch nicht unterstützt:",
+        "status_starting": "Skripte werden gestartet …",
+        "status_running": "Skripte laufen auf diesem Gerät.",
+        "status_stopped": "Skripte sind gestoppt.",
+        "status_killed": "Ein Skript hat zu lange gebraucht und wurde gestoppt. Der Tisch behält alle bisherigen Änderungen.",
+        "status_failed": "Die Skripte konnten nicht gestartet werden."
+      },
       "import_report": {
         "title": "Importbericht: {{count}} Objekte",
         "converted": "{{count}} umgewandelt",
@@ -1059,12 +1186,6 @@
       "refresh": "Neu scannen",
       "my_games": "Installierte Spiele",
       "no_games": "Noch keine eigenen Spiele importiert. Ziehe eine .pcio- oder .json-Datei in das Feld oben!",
-      "publish_author": "Dein Name / GitHub Handle",
-      "publish_notes": "Hinweise für die Reviewer (optional)",
-      "publish_dialog_title": "Spiel als Pull Request einreichen",
-      "publish_success_title": "Pull Request erfolgreich erstellt!",
-      "publish_success_desc": "Dein Spiel wurde als Branch eingereicht und steht nach dem Review allen Nutzern in der offiziellen Bibliothek zur Verfügung.",
-      "view_pr": "Pull Request auf GitHub ansehen",
       "standard_cards_title": "Standard Kartendeck (52)",
       "standard_cards_desc": "Mau-Mau, Skat, Poker oder Rommé mit geteiltem Tisch und Smartphone-Handkarten.",
       "liars_dice_title": "Liar's Dice / Perudo",
@@ -1199,6 +1320,8 @@
         "add": "Element hinzufügen",
         "table": "Tisch-Einstellungen",
         "inspector": "Eigenschaften",
+        "inspector_expand": "Eigenschaften anzeigen",
+        "inspector_collapse": "Eigenschaften einklappen",
         "widget": "Element",
         "none": "Keins",
         "select_hint": "Tippe ein Element auf dem Tisch an oder wähle es oben aus.",
@@ -1330,7 +1453,7 @@
         "rights_author": "Autor",
         "rights_author_profile": "Steam-Profil {{id}}",
         "rights_notice": "Diese Mod gehört ihrem Autor und den Rechteinhabern des gezeigten Spiels. Der Import ist eine private Kopie: Sie wird auf diesem Gerät gespeichert und, mit einem Companion-Server, auf diesem Server für alle, die ihn nutzen. Sie wird nirgendwo sonst veröffentlicht, und importierte Spiele können nicht zur Veröffentlichung eingereicht werden.",
-        "publish_blocked": "Importierte Spiele (z. B. aus dem Steam Workshop) gehören ihren Autoren und können nicht veröffentlicht werden. Einreichen kannst du nur selbst erstellte Spiele.",
+        "share_blocked": "Importierte Spiele (z. B. aus dem Steam Workshop) gehören ihren Autoren und können nicht als Datei geteilt werden. Exportieren kannst du nur selbst erstellte Spiele; auf dem Companion-Server bleiben sie privat.",
         "storing": "Spiel wird auf dem Companion-Server gespeichert...",
         "stored_on_server": "Auf dem Companion-Server gespeichert: Alle, die ihn nutzen, können dieses Spiel spielen. Der Server lädt die Bilder im Hintergrund herunter.",
         "store_failed": "Speichern auf dem Companion-Server fehlgeschlagen ({{error}}). Das Spiel wurde nur auf diesem Gerät gespeichert."
@@ -1340,6 +1463,7 @@
       "mode_own_devices": "Jeder am eigenen Gerät",
       "mode_own_devices_hint": "Session öffnen, Mitspieler treten per QR-Code oder Link bei.",
       "dice_games": "Würfelspiele",
+      "score_trackers": "Punktezähler",
       "custom_game_meta": "{{min}}–{{max}} Spieler",
       "save_to_server": "Auf Server speichern",
       "local_games_title": "Auf diesem Gerät ({{count}})",
@@ -1369,7 +1493,6 @@
       "error_invalid_token": "Ungültiger oder fehlender Server-Token",
       "error_server_http": "Serverfehler: HTTP {{status}}",
       "error_server_unreachable": "Server nicht erreichbar",
-      "publish_license_agree": "Ich stimme zu, dieses Spiel unter der Open-Source-Lizenz (MIT / CC0) für die LocalGameGalaxy-Community bereitzustellen.",
       "labels": {
         "card": "{{suit}} {{rank}}",
         "spades": "Pik",
@@ -1399,6 +1522,7 @@
       "counterDecrement": "Verringern",
       "counterIncrement": "Erhöhen",
       "drawToHand": "Auf die Hand ziehen",
+      "flipTopCard": "Oberste Karte aufdecken",
       "dealEach": "{{count}} an alle austeilen",
       "dealEach_one": "{{count}} Karte an alle austeilen",
       "dealEach_other": "{{count}} Karten an alle austeilen",
@@ -1426,6 +1550,22 @@
           "skat": {
             "title": "Skat",
             "desc": "Reizen, drücken, 61 Augen holen – für genau 3 Spieler."
+          },
+          "maumau": {
+            "title": "Mau-Mau",
+            "desc": "Farbe oder Wert bedienen, 7 zieht zwei, 8 setzt aus, Bube wünscht – für 2 bis 5 Spieler."
+          },
+          "schwarzer-peter": {
+            "title": "Schwarzer Peter",
+            "desc": "Paare ablegen, reihum blind ziehen – wer am Ende den Pik-Buben hält, verliert. Für 2 bis 6 Spieler."
+          },
+          "golf": {
+            "title": "Golf",
+            "desc": "Sechs Karten im Raster, Paare in einer Spalte zählen null. Neun Löcher, wenigste Punkte gewinnt – für 2 bis 6 Spieler."
+          },
+          "cabo": {
+            "title": "Tiefstapler",
+            "desc": "Vier verdeckte Karten, merken, tauschen, spicken – wer die wenigsten Punkte hat, klopft. Für 2 bis 6 Spieler."
           }
         },
         "turn": "{{name}} ist dran",
@@ -1444,7 +1584,8 @@
           "start": "Karten geben",
           "tableOnly": "Dieses Gerät zeigt nur den Tisch",
           "tableOnlyHint": "Für den Fernseher: Bildschirm dieses Geräts übertragen. Alle Spieler nutzen ihr eigenes Handy für Handkarten und Züge. Ausschalten, wenn du auf diesem Gerät mitspielst.",
-          "waitingForHost": "Der Gastgeber startet das Spiel gleich …"
+          "waitingForHost": "Der Gastgeber startet das Spiel gleich …",
+          "addBack": "{{name}} wieder mitspielen lassen"
         },
         "schwimmen": {
           "out": "raus",
@@ -1459,7 +1600,16 @@
           "pass": "Schieben",
           "knock": "Klopfen",
           "fire": "{{name}} hat 31 – alle anderen verlieren ein Leben",
-          "tie": "Gleichstand – niemand verliert ein Leben"
+          "tie": "Gleichstand – niemand verliert ein Leben",
+          "option": {
+            "passOnce": "Nur einmal schieben",
+            "passOnceHint": "Jeder darf pro Runde nur einmal schieben.",
+            "firstSwims": "Nur der Erste schwimmt",
+            "firstSwimsHint": "Nur wer als Erstes sein letztes Leben verliert, schwimmt noch. Alle danach sind sofort raus.",
+            "newMiddle": "Neue Mitte bei 7-8-9",
+            "newMiddleHint": "Liegen 7, 8 und 9 in der Mitte, darf der Spieler am Zug drei neue Karten in die Mitte legen lassen und dann ziehen."
+          },
+          "newMiddle": "Neue Mitte (7-8-9)"
         },
         "durak": {
           "attacker": "greift an",
@@ -1474,7 +1624,14 @@
           "take": "Aufnehmen",
           "attack": "Angreifen",
           "add": "Nachlegen",
-          "done": "Fertig"
+          "done": "Fertig",
+          "transfer": "Weiterschieben mit {{card}}",
+          "option": {
+            "transfer": "Weiterschieben",
+            "transferHint": "Solange noch nichts geschlagen ist, darf der Verteidiger eine Karte gleichen Werts dazulegen und den Angriff an den Nächsten weitergeben.",
+            "neighbours": "Nur Nachbarn greifen an",
+            "neighboursHint": "Nur die Spieler links und rechts vom Verteidiger greifen an und legen nach."
+          }
         },
         "arschloch": {
           "president": "Präsident",
@@ -1521,11 +1678,164 @@
           "trickTo": "Stich für {{name}}"
         },
         "rules": {
-          "schwimmen": "<p>32 Karten. Jeder hat drei Karten, drei liegen offen in der Mitte. Der Geber wählt zu Beginn eines von zwei Blättern; das andere kommt in die Mitte.</p><p><b>Dein Zug:</b> eine Karte tauschen, alle drei tauschen, schieben oder klopfen. Nach dem Klopfen sind alle anderen noch einmal dran. Schieben alle, kommen drei neue Karten in die Mitte.</p><p><b>Wertung:</b> Summe einer Farbe (Ass 11, Bilder 10). Drei Gleiche zählen 30,5. Wer 31 oder drei Asse hat, beendet die Runde sofort – alle anderen verlieren ein Leben. Sonst verliert das niedrigste Blatt.</p><p>Jeder hat drei Leben, danach „schwimmt“ man, beim nächsten Verlust ist man raus. Der Letzte gewinnt.</p>",
-          "durak": "<p>36 Karten (6 bis Ass), sechs auf der Hand. Die unterste Karte des Stapels zeigt Trumpf. In der ersten Runde greift der niedrigste Trumpf an.</p><p><b>Angriff:</b> eine oder mehrere Karten gleichen Werts. <b>Verteidigung:</b> jede Karte mit einer höheren derselben Farbe oder mit Trumpf schlagen – oder alles aufnehmen.</p><p>Ist alles geschlagen, dürfen die anderen Karten nachlegen, deren Wert schon auf dem Tisch liegt (höchstens sechs Angriffskarten, nie mehr als der Verteidiger Karten hatte). Danach ziehen alle auf sechs nach. Wer abwehrt, greift als Nächster an; wer aufnimmt, setzt aus.</p><p>Wer am Ende noch Karten hat, ist der Durak.</p>",
+          "schwimmen": "<p>32 Karten. Jeder hat drei Karten, drei liegen offen in der Mitte. Der Geber wählt zu Beginn eines von zwei Blättern; das andere kommt in die Mitte.</p><p><b>Dein Zug:</b> eine Karte tauschen, alle drei tauschen, schieben oder klopfen. Nach dem Klopfen sind alle anderen noch einmal dran. Schieben alle, kommen drei neue Karten in die Mitte.</p><p><b>Wertung:</b> Summe einer Farbe (Ass 11, Bilder 10). Drei Gleiche zählen 30,5. Wer 31 oder drei Asse hat, beendet die Runde sofort – alle anderen verlieren ein Leben. Sonst verliert das niedrigste Blatt.</p><p>Jeder hat drei Leben, danach „schwimmt“ man, beim nächsten Verlust ist man raus. Der Letzte gewinnt.</p><p><b>Hausregeln:</b> Mit „Nur einmal schieben“ darf jeder pro Runde nur einmal schieben. Mit „Nur der Erste schwimmt“ schwimmt nur, wer als Erstes kein Leben mehr hat – alle danach sind sofort raus. Mit „Neue Mitte bei 7-8-9“ darf der Spieler am Zug bei 7, 8 und 9 in der Mitte drei neue Karten verlangen und dann ziehen.</p>",
+          "durak": "<p>36 Karten (6 bis Ass), sechs auf der Hand. Die unterste Karte des Stapels zeigt Trumpf. In der ersten Runde greift der niedrigste Trumpf an.</p><p><b>Angriff:</b> eine oder mehrere Karten gleichen Werts. <b>Verteidigung:</b> jede Karte mit einer höheren derselben Farbe oder mit Trumpf schlagen – oder alles aufnehmen.</p><p>Ist alles geschlagen, dürfen die anderen Karten nachlegen, deren Wert schon auf dem Tisch liegt (höchstens sechs Angriffskarten, nie mehr als der Verteidiger Karten hatte). Danach ziehen alle auf sechs nach. Wer abwehrt, greift als Nächster an; wer aufnimmt, setzt aus.</p><p>Wer am Ende noch Karten hat, ist der Durak.</p><p><b>Spieltisch-Einstellungen:</b> „Weiterschieben“ – solange nichts geschlagen ist, legt der Verteidiger eine Karte gleichen Werts dazu und der Nächste muss verteidigen. „Nur Nachbarn greifen an“ – nur die Spieler links und rechts vom Verteidiger greifen an und legen nach.</p>",
           "arschloch": "<p>Alle Karten werden verteilt (32 bis vier Spieler, sonst 52). Wer ausspielt, legt eine oder mehrere Karten gleichen Werts. Die anderen legen gleich viele höhere Karten oder passen – wer passt, setzt bis zum Ende des Stichs aus. Wer zuletzt gelegt hat, spielt neu aus.</p><p>Wer zuerst keine Karten mehr hat, ist Präsident, der Letzte das Arschloch. Vor der nächsten Runde gibt das Arschloch seine besten Karten an den Präsidenten (zwei ab vier Spielern, sonst eine), der beliebige zurückgibt; ab vier Spielern tauschen auch die Vizes eine Karte. Das Arschloch spielt aus.</p>",
-          "skat": "<p>Drei Spieler, 32 Karten, je zehn auf der Hand, zwei im Skat. Mittelhand reizt Vorhand, danach Hinterhand den Gewinner. Wer das Reizen gewinnt, nimmt den Skat auf und drückt zwei Karten – oder spielt Hand – und sagt Farbe, Grand oder Null an.</p><p>Farbe bedienen ist Pflicht; die Buben sind die höchsten Trümpfe (außer bei Null). Der Alleinspieler braucht 61 Augen, bei Null darf er keinen Stich machen.</p><p><b>Wert:</b> Spitzen + 1 (+ Hand, Schneider, Schwarz) × Grundwert (Karo 9, Herz 10, Pik 11, Kreuz 12, Grand 24); Null 23, Hand 35, Ouvert 46, Ouvert Hand 59. Verlorene Spiele zählen doppelt minus. Passen alle, gibt der Nächste. Ohne Ramsch und ohne Schneider-/Schwarz-Ansage.</p>"
+          "skat": "<p>Drei Spieler, 32 Karten, je zehn auf der Hand, zwei im Skat. Mittelhand reizt Vorhand, danach Hinterhand den Gewinner. Wer das Reizen gewinnt, nimmt den Skat auf und drückt zwei Karten – oder spielt Hand – und sagt Farbe, Grand oder Null an.</p><p>Farbe bedienen ist Pflicht; die Buben sind die höchsten Trümpfe (außer bei Null). Der Alleinspieler braucht 61 Augen, bei Null darf er keinen Stich machen.</p><p><b>Wert:</b> Spitzen + 1 (+ Hand, Schneider, Schwarz) × Grundwert (Karo 9, Herz 10, Pik 11, Kreuz 12, Grand 24); Null 23, Hand 35, Ouvert 46, Ouvert Hand 59. Verlorene Spiele zählen doppelt minus. Passen alle, gibt der Nächste. Ohne Ramsch und ohne Schneider-/Schwarz-Ansage.</p>",
+          "maumau": "<p>32 Karten, jeder bekommt fünf. Die aufgedeckte Startkarte hat keine Wirkung.</p><p><b>Dein Zug:</b> lege eine Karte mit gleicher Farbe oder gleichem Wert wie die oberste Karte. Kannst oder willst du nicht, ziehst du eine Karte; passt sie, darfst du nur sie legen, sonst passt du.</p><p><b>Sonderkarten:</b> 7 – der Nächste zieht zwei Karten oder antwortet mit einer 7 (dann vier usw.). 8 – der Nächste setzt aus. Bube – auf alles außer einen Buben, du wünschst dir eine Farbe für die nächste Karte.</p><p>Wer zuerst keine Karte mehr hat, gewinnt die Runde. Gezählt werden die gewonnenen Runden.</p><p><b>Spieltisch-Einstellungen:</b> „8 setzt aus“, „8 auf 8 gibt weiter“ (wer aussetzen soll, legt eine 8 und der Nächste setzt aus), „Gezogene Karte sofort legen“ und „Weiterspielen für Rangliste“ (nach dem ersten Sieg spielen die anderen die Plätze aus).</p>",
+          "schwarzer-peter": "<p>52 Karten ohne den Kreuz-Buben; der Pik-Bube ist der Schwarze Peter. Alle Karten werden verteilt, Paare (gleicher Wert, gleiche Farbe: rot oder schwarz) werden sofort abgelegt.</p><p><b>Dein Zug:</b> ziehe verdeckt eine Karte vom nächsten Spieler im Uhrzeigersinn, der noch Karten hat. Seine Karten werden vorher gemischt. Passt sie zu einer deiner Karten, legst du das Paar ab.</p><p>Wer keine Karten mehr hat, ist fertig. Wer am Ende den Schwarzen Peter hält, verliert die Runde.</p>",
+          "golf": "<p>52 Karten und zwei Joker, ab fünf Spielern zwei Decks. Jeder hat sechs verdeckte Karten in zwei Reihen zu drei und deckt zu Beginn zwei davon auf. Verdeckte Karten kennt auch ihr Besitzer nicht.</p><p><b>Dein Zug:</b> ziehe vom Stapel oder nimm die oberste Karte der Ablage. Tausche sie gegen eine deiner Karten (die alte kommt offen auf die Ablage) oder – nur wenn vom Stapel gezogen – lege sie ab und decke eine verdeckte Karte auf.</p><p>Hat jemand alle sechs Karten offen, ist jeder andere noch einmal dran.</p><p><b>Wertung:</b> Ass 1, 2–10 Augenzahl, Bube und Dame 10, König 0, Joker −2. Zwei gleiche Werte in einer Spalte zählen 0 (Joker nie). Nach neun Löchern gewinnt die niedrigste Summe.</p>",
+          "cabo": "<p>52 Karten und zwei Joker. Jeder hat vier verdeckte Karten und sieht sich zu Beginn jeder Runde die rechten zwei an – danach musst du sie dir merken.</p><p><b>Dein Zug:</b> ziehe vom Stapel oder nimm die oberste Karte der Ablage – oder rufe <b>Tiefstapler</b>. Tausche die gezogene Karte gegen eine deiner Karten (die alte kommt auf die Ablage) oder lege sie ab, wenn sie vom Stapel kam.</p><p><b>Abgelegte Sonderkarten (nur vom Stapel):</b> 7/8 – schau eine eigene Karte an. 9/10 – schau eine Karte eines Mitspielers an. Bube/Dame – tausche blind eine eigene Karte mit einer eines Mitspielers. Du darfst die Fähigkeit auslassen.</p><p>Nach Tiefstapler ist jeder andere noch einmal dran. <b>Punkte:</b> Ass 1, 2–10 Augenzahl, Bube 11, Dame 12, roter König 0, schwarzer König 13, Joker 0. Wer Tiefstapler ruft und nicht allein die wenigsten Punkte hat, bekommt 10 dazu. Genau 100 Punkte fallen auf 50 zurück. Über 100 endet das Spiel, die niedrigste Summe gewinnt.</p>"
+        },
+        "maumau": {
+          "wins_one": "{{count}} Sieg",
+          "wins_other": "{{count}} Siege",
+          "mau": "Mau!",
+          "wished": "Wunsch: {{suit}}",
+          "pending": "Strafe: {{count}} Karten",
+          "drew": "Gezogen: {{card}}",
+          "wishes": "{{name}} wünscht sich eine Farbe",
+          "roundWon": "{{name}} gewinnt die Runde – Mau-Mau!",
+          "draw": "Karte ziehen",
+          "penalty": "{{count}} Karten ziehen",
+          "pass": "Passen",
+          "suit": {
+            "C": "♣ Kreuz",
+            "S": "♠ Pik",
+            "H": "♥ Herz",
+            "D": "♦ Karo"
+          },
+          "skip": "Aussetzen",
+          "skipPending": "8: aussetzen oder 8 legen",
+          "place": "{{place}}. Platz",
+          "cards_one": "{{count}} Karte",
+          "cards_other": "{{count}} Karten",
+          "playOn": "Weiterspielen",
+          "playOnAsk": "Weiterspielen, um die übrigen Plätze auszuspielen?",
+          "option": {
+            "eightSkips": "8 setzt aus",
+            "eightSkipsHint": "Nach einer 8 muss der Nächste aussetzen.",
+            "eightCounter": "8 auf 8 gibt weiter",
+            "eightCounterHint": "Wer aussetzen soll, darf eine 8 legen; dann setzt der Nächste aus.",
+            "drawPlay": "Gezogene Karte sofort legen",
+            "drawPlayHint": "Passt die gezogene Karte, darf sie sofort gelegt werden. Aus: nach dem Ziehen ist der Nächste dran.",
+            "playOn": "Weiterspielen für Rangliste",
+            "playOnHint": "Hat jemand gewonnen, kann weitergespielt werden, bis alle Plätze feststehen."
+          }
+        },
+        "schwarzerPeter": {
+          "losses_one": "{{count}}× Peter",
+          "losses_other": "{{count}}× Peter",
+          "done": "fertig",
+          "pairs": "Paare",
+          "drawsFrom": "zieht bei {{name}}",
+          "drew": "Gezogen: {{card}}",
+          "drewPair": "Gezogen: {{card}} – Paar abgelegt",
+          "pairDown": "{{name}} legt ein Paar ab",
+          "continue": "Weiter",
+          "lost": "{{name}} ist der Schwarze Peter!"
+        },
+        "slot": "Karte {{n}} von {{name}}",
+        "golf": {
+          "total": "{{points}} Pkt.",
+          "hole": "Loch {{hole}}/{{holes}}",
+          "lastLap": "{{name}} ist fertig – letzte Runde",
+          "flipStart": "{{name}} deckt {{count}} Karte(n) auf",
+          "drawStock": "Vom Stapel ziehen",
+          "takeDiscard": "Ablage nehmen",
+          "place": "{{name}}: {{card}} gegen eine Karte tauschen",
+          "discard": "Ablegen",
+          "flipOne": "{{name}} deckt eine Karte auf",
+          "drawn": "Gezogen",
+          "won": "{{name}} gewinnt mit den wenigsten Punkten",
+          "holeOver": "Loch {{hole}} beendet",
+          "nextHole": "Nächstes Loch"
+        },
+        "cabo": {
+          "total": "{{points}} Pkt.",
+          "called": "Klopf!",
+          "peek": "{{name}} schaut sich die rechten zwei Karten an",
+          "seen": "Gemerkt",
+          "drawStock": "Vom Stapel ziehen",
+          "takeDiscard": "Ablage nehmen",
+          "call": "Klopfen",
+          "place": "{{name}} tauscht die gezogene Karte ein oder legt sie ab",
+          "discard": "Ablegen",
+          "discardFor": {
+            "peekOwn": "Ablegen – eigene Karte ansehen",
+            "peekOther": "Ablegen – fremde Karte ansehen",
+            "blindSwap": "Ablegen – blind tauschen"
+          },
+          "power": {
+            "peekOwn": "{{name}} schaut eine eigene Karte an",
+            "peekOther": "{{name}} schaut eine fremde Karte an",
+            "blindSwap": "{{name}} tauscht blind: erst eigene, dann fremde Karte"
+          },
+          "swapFrom": "Eigene Karte {{n}} gewählt",
+          "skip": "Auslassen",
+          "looking": "{{name}} schaut sich eine Karte an",
+          "endTurn": "Zug beenden",
+          "drawn": "Gezogen",
+          "drew": "Gezogen: {{card}}",
+          "lastLap": "{{name}} hat geklopft – letzte Runde",
+          "won": "{{name}} gewinnt mit den wenigsten Punkten",
+          "penalty": "{{name}} hat geklopft, war aber nicht allein vorn: +{{points}}",
+          "reset": "{{name}} hatte genau 100 – zurück auf {{points}}",
+          "option": {
+            "memoryAid": "Gedächtnisstütze",
+            "memoryAidHint": "Karten, die du schon gesehen hast, bleiben für dich offen – leichter, weniger Merken."
+          }
+        },
+        "settings": {
+          "title": "Spieltisch-Einstellungen",
+          "nextMatch": "Gilt ab dem nächsten Spiel und wird auf diesem Gerät gespeichert.",
+          "appliesNow": "Änderungen gelten sofort im laufenden Spiel.",
+          "appliesAll": "Änderungen gelten sofort für alle Geräte am Tisch.",
+          "hostOnly": "Nur der Gastgeber kann die Einstellungen ändern."
         }
+      },
+      "showOnTv": "Auf dem TV anzeigen",
+      "playAlong": "Mitspielen (Tisch auf dem TV)",
+      "showTableOnly": "Nur Tisch anzeigen",
+      "handRequests": {
+        "button": "Karten ansehen oder geben",
+        "askTitle": "Karten mit anderen Spielern",
+        "modeCards": "Karten wählen",
+        "modeCount": "Beliebige Karten",
+        "pickHint": "Tippe die Positionen in der Hand von {{name}} an, die du sehen möchtest.",
+        "countLabel_one": "{{count}} Karte",
+        "countLabel_other": "{{count}} Karten",
+        "cardN": "Karte {{n}}",
+        "waiting": "Warte auf die Antwort von {{name}}. Änderungen aktualisieren die Anfrage.",
+        "send": "Fragen",
+        "update": "Anfrage ändern",
+        "withdraw": "Zurückziehen",
+        "incomingCards_one": "{{name}} möchte die markierte Karte sehen",
+        "incomingCards_other": "{{name}} möchte die {{count}} markierten Karten sehen",
+        "incomingCount_one": "{{name}} möchte {{count}} deiner Karten sehen",
+        "incomingCount_other": "{{name}} möchte {{count}} deiner Karten sehen",
+        "chooseHint": "Tippe die Karten an, die du zeigen möchtest.",
+        "reject": "Ablehnen",
+        "choose": "Auswählen",
+        "accept": "Zeigen",
+        "random_one": "{{count}} zufällig zeigen",
+        "random_other": "{{count}} zufällig zeigen",
+        "showSelected_one": "{{count}} Karte zeigen",
+        "showSelected_other": "{{count}} Karten zeigen",
+        "shownTitle": "{{name}} zeigt dir",
+        "rejectedTitle": "{{name}} hat abgelehnt",
+        "rejectedBody": "{{name}} zeigt diese Karten nicht.",
+        "onlyYou": "Nur du siehst diese Karten. Schließen verdeckt sie wieder.",
+        "tabSee": "Ansehen",
+        "tabGive": "Geben",
+        "offerHint": "Tippe die Karten an, die du {{name}} geben möchtest.",
+        "modeRandom": "Zufällige Karten",
+        "offerWaiting": "Warte, bis {{name}} annimmt. Änderungen aktualisieren das Angebot.",
+        "offerSend": "Anbieten",
+        "offerIncoming_one": "{{name}} bietet dir {{count}} Karte an",
+        "offerIncoming_other": "{{name}} bietet dir {{count}} Karten an",
+        "offerAccept": "Nehmen",
+        "offerRejected": "{{name}} hat deine Karten nicht genommen"
       }
     },
     "drawpot": {
@@ -1544,6 +1854,7 @@
     "addPlayer": "Hinzufügen"
   },
   "common": {
+    "add": "Hinzufügen",
     "retry": "Erneut versuchen",
     "start": "Spiel starten",
     "back": "Zurück",
@@ -1572,7 +1883,11 @@
       "switchFrom": "{{name}} fertig",
       "coverTitle": "Gib das Gerät an {{name}}",
       "reveal": "Ich bin {{name}} – aufdecken",
-      "otherPlayer": "Jemand anderes ist dran?"
+      "otherPlayer": "Jemand anderes ist dran?",
+      "players": "Spieler",
+      "playersTitle": "Spieler an diesem Gerät",
+      "playersHint": "Das Gerät wird reihum weitergegeben. Übernehmen startet ein neues Spiel.",
+      "playersApply": "Übernehmen & neu starten"
     },
     "seatInvited": "Eingeladen – Link noch nicht geöffnet",
     "seatJoined": "Beigetreten",
@@ -1801,11 +2116,14 @@
     "privacy_title": "Datenschutz",
     "privacy_desc": "Welche Daten die Spiele nutzen, welche Dienste sie kontaktieren und welche Rechte du hast.",
     "privacy_open": "Datenschutzerklärung",
+    "source_title": "Quellcode",
+    "source_desc": "Nexumia ist freie Software unter der GNU AGPL v3.0 oder später. Den Quellcode gibt es auf GitHub.",
+    "source_open": "Quellcode",
     "notify_open": "Benachrichtigungen einrichten"
   },
   "server": {
     "title": "Nexumia Server Verbindung",
-    "desc": "Verbinde dich mit einem Nexumia Server, um deine Melodiq Karaoke-Songbibliothek zu streamen, Songs herunterzuladen und KI-Stimmtrennung zu nutzen. Partyspiele (GuessArt, Gartic Phone, Werwolf, Qwixx) laufen serverlos und benötigen diesen Server nicht.",
+    "desc": "Verbinde dich mit einem Nexumia Server, um deine Melodiq Karaoke-Songbibliothek zu streamen, Songs herunterzuladen und KI-Stimmtrennung zu nutzen. Partyspiele (GuessArt, Zeichen-Stille-Post, Werwolf, Farbreihen) laufen serverlos und benötigen diesen Server nicht.",
     "enable": "Server-Verbindung aktivieren",
     "url": "Server-URL",
     "token": "Sicherheitstoken",
@@ -2140,7 +2458,7 @@
     "liveDesc": "Alle spielen gleichzeitig: Mitspieler in die Lobby einladen, der Host startet.",
     "overDaysDesc": "Über Tage spielen: Mitspieler unten eintragen und jedem einen eigenen Link schicken.",
     "garticShortDesc": "Live Multiplayer: Satz schreiben ➔ Zeichnen ➔ Raten ➔ Album-Show!",
-    "playGartic": "Gartic Phone spielen",
+    "playGartic": "Zeichen-Stille-Post spielen",
     "roomCode": "Raum-Code",
     "readyToStart": "Bereit!",
     "needMinPlayers": "Mind. 2 Spieler nötig",
@@ -2309,7 +2627,7 @@
   },
   "party": {
     "hubBannerTitle": "Party-Modus (Mehrspieler-Lobby)",
-    "hubBannerSubtitle": "1 Raum für den ganzen Abend: Freunde verbinden & gemeinsam Gartic Phone spielen!",
+    "hubBannerSubtitle": "1 Raum für den ganzen Abend: Freunde verbinden & gemeinsam Zeichen-Stille-Post spielen!",
     "openLobby": "Lobby öffnen ➔",
     "lobbyTitle": "Party-Lobby",
     "room": "Party-Raum",
@@ -2327,7 +2645,7 @@
     "hostSelectPrompt": "Wähle ein Spiel aus, um es für alle Spieler zu starten:",
     "guestWaitingPrompt": "Der Host wählt gerade das nächste Spiel aus...",
     "garticDesc": "Das Flüsterpost-Zeichenspiel! Satz schreiben ➔ Zeichnen ➔ Raten ➔ Zeichnen ➔ Finale Auflösung!",
-    "launchGartic": "Gartic Phone starten",
+    "launchGartic": "Zeichen-Stille-Post starten",
     "needMin2": "Mind. 2 Spieler nötig",
     "ready": "Bereit",
     "backToLobby": "Zurück zur Party-Lobby",
@@ -2351,7 +2669,7 @@
     "confirmEndGameTitle": "Spiel beenden?",
     "confirmEndGameDesc": "Möchtest du das aktuelle Spiel für alle verbundenen Spieler abbrechen und zur Party-Lobby zurückkehren?",
     "confirmEndTitle": "Spiel wirklich beenden?",
-    "confirmEndDesc": "Das aktuelle Gartic Phone Spiel wird für alle verbundenen Spieler abgebrochen und alle kehren zur Party-Lobby zurück.",
+    "confirmEndDesc": "Das aktuelle Zeichen-Stille-Post Spiel wird für alle verbundenen Spieler abgebrochen und alle kehren zur Party-Lobby zurück.",
     "shareLobby": "Lobby teilen",
     "shareLobbyTooltip": "Lobby teilen / Freunde einladen",
     "shareLobbyDesc": "Teile diesen Link oder scanne den QR-Code, um weitere Freunde ins Spiel einzuladen:",
@@ -2370,6 +2688,7 @@
     "party_ready": "Party bereit",
     "pending_game_label": "Gewähltes Spiel",
     "pending_game_waiting": "Warte auf Mitspieler – sie treten über den QR-Code unten bei.",
+    "encrypted_room_hint": "Dieser Raum ist Ende-zu-Ende-verschlüsselt. Öffne den Einladungslink oder scanne den QR-Code des Hosts – der Raumcode allein reicht nicht.",
     "pending_game_ready": "{{count}} Mitspieler bereit.",
     "pending_game_start": "Jetzt starten",
     "pending_game_other": "Anderes Spiel",
@@ -2382,7 +2701,41 @@
     "spectatorWatching": "Du schaust zu",
     "spectatorPickHint": "Wähle, wessen Sicht du sehen willst",
     "gameSelectionTitle": "Spielauswahl",
-    "partyModeChip": "Party-Modus"
+    "gameSelectionDesc": "Wähle zwischen Party-Klassikern (Zeichen-Stille-Post, GuessArt), Würfelspielen und synchronisierten Tabletop-Karten- & Brettspielen.",
+    "chooseAndStart": "Spiel wählen & starten",
+    "partyModeChip": "Party-Modus",
+    "werewolf_desc": "Jede Rolle geheim auf dem eigenen Handy, der Host erzählt.",
+    "imposter_desc": "Jeder sieht sein Wort geheim auf dem eigenen Handy – wer hat nur den Hinweis?",
+    "stammtisch": {
+      "title": "Stammtisch",
+      "desc": "Fester Raum mit gleichem Code: Alle können jederzeit wiederkommen.",
+      "save": "Als Stammtisch speichern",
+      "saveHere": "Auf diesem Gerät speichern",
+      "saveTitle": "Als Stammtisch speichern",
+      "saveDesc": "Der Raum behält seinen Code. Wer ihn speichert, kommt mit einem Tipp vom Startbildschirm zurück.",
+      "nameLabel": "Name",
+      "waiting": "Warte auf die anderen …",
+      "autoOpen": "Beim Start öffnen",
+      "autoOpenHint": "Die App startet direkt in diesem Raum",
+      "claimHost": "Leitung übernehmen",
+      "forget": "Vergessen",
+      "forgetTitle": "Stammtisch vergessen?",
+      "forgetDesc": "Der Stammtisch verschwindet von diesem Gerät. Über einen Einladungslink kannst du wieder beitreten.",
+      "away": "nicht da"
+    },
+    "help": {
+      "accept": "Andere dürfen für mich spielen",
+      "acceptHint": "Hilfe, wenn du nicht weiterweißt",
+      "badge": "Andere dürfen helfen",
+      "playedForYou": "{{name}} hat für dich gespielt",
+      "mySheet": "Mein Blatt",
+      "sheetOf": "Für {{name}}",
+      "rollingFor": "Du würfelst für {{name}}"
+    },
+    "marker": {
+      "show": "Zeigen, wo getippt werden soll",
+      "hint": "Tippe auf die Stelle, die du zeigen willst."
+    }
   },
   "gartic": {
     "waitingHeader": "Warte auf die anderen Spieler...",
@@ -2448,6 +2801,20 @@
       "empty": "Noch keine Tagesrätsel gespielt.",
       "target_word": "Gesuchtes Wort:",
       "btn_tooltip": "Verlauf"
+    },
+    "not_in_dictionary": "Nicht im Wörterbuch!",
+    "settings": {
+      "dictionary_only": "Nur Wörterbuch-Wörter",
+      "dictionary_only_hint": "Tipps müssen ein bekanntes Wort sein. Ungültige Wörter kosten keinen Versuch."
+    },
+    "key_enter": "Eingabe",
+    "key_delete": "Löschen",
+    "letter_state": {
+      "correct": "richtige Stelle",
+      "present": "andere Stelle",
+      "absent": "nicht im Wort",
+      "tbd": "Eingabe",
+      "empty": "leer"
     }
   },
   "sudoku": {
@@ -2749,5 +3116,26 @@
       "add_one": "{{count}} Gruppe hinzufügen",
       "add_other": "{{count}} Gruppen hinzufügen"
     }
+  },
+  "playingCards": {
+    "faceDown": "Verdeckte Karte",
+    "joker": "Joker"
+  },
+  "secondScreen": {
+    "title": "Auf TV zeigen",
+    "androidHint": "Android kann keine einzelne Seite an einen Chromecast senden. Sende den Link stattdessen an den TV; Bildschirm-Spiegelung würde auch deine Karten zeigen.",
+    "castFailed": "Kein Cast-Bildschirm gefunden. Öffne den Link stattdessen am TV.",
+    "cast": "An TV streamen",
+    "copyLink": "Link kopieren",
+    "copied": "Kopiert",
+    "castDesc": "Chromecast oder TV mit Cast im selben WLAN.",
+    "window": "In separatem Fenster öffnen",
+    "windowDesc": "Für einen Laptop oder PC am TV: Fenster auf den TV ziehen und F11 für Vollbild drücken.",
+    "windowBlocked": "Der Browser hat das Fenster blockiert. Erlaube Pop-ups für diese Seite.",
+    "share": "Link an den TV senden",
+    "shareDesc": "Teile den Link an den TV oder ein anderes Gerät und öffne ihn dort.",
+    "mirror": "Diesen Bildschirm spiegeln",
+    "mirrorDesc": "Dieses Gerät zeigt nur den Tisch, Spiegeln ist also unbedenklich: Android-Schnelleinstellungen → „Übertragen“ / „Smart View“, iPhone → AirPlay „Bildschirmsynchronisierung“.",
+    "otherDevice": "Oder öffne diese Adresse im Browser des Fernsehers oder scanne den Code. Der TV zeigt nur den gemeinsamen Tisch, deine Karten bleiben auf diesem Handy."
   }
 }

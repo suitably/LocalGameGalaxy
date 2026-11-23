@@ -141,6 +141,17 @@ function turnAllowed(
 }
 
 /**
+ * Hand requests (#557): a seat asks, extends, withdraws or dismisses only its own requests
+ * (`from`) and answers only those addressed to its hand (`to`); never to itself.
+ */
+function handRequestAllowed(action: TabletopAction, seat: number | null): boolean | undefined {
+  if (action.type !== 'HAND_REQUEST') return undefined;
+  const { from, to, op } = action.payload;
+  if (seat === null || from === to) return false;
+  return op === 'answer' ? to === seat : from === seat;
+}
+
+/**
  * Whether a seated, non-spectator sender may apply this action on the host's game. Spectator,
  * local-only and redacted checks stay in `acceptIntent` (`syncProtocol.ts`).
  */
@@ -152,6 +163,8 @@ export function authorizeSeatIntent(
   if (sender.spectator || isHostOnlyAction(action)) return false;
   const zone = zoneAllowed(action, game, sender.seat);
   if (zone !== undefined) return zone;
+  const request = handRequestAllowed(action, sender.seat);
+  if (request !== undefined) return request;
 
   const widgets = game.widgets ?? {};
   const turn = turnAllowed(action, widgets, sender.seat);

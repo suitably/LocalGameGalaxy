@@ -3,6 +3,7 @@ import { DRUM_VOICE_KEY, resolveDrumVoice, type DrumVoice } from './drumVoices';
 import { guessInstrument } from './instruments';
 import { ScoreImportError, writeOutNotes, type BarEvent } from './musicXml';
 import { playOrder } from './musicXmlBars';
+import { gpStrum } from './strumMarks';
 import { kid, kids, num, text } from './xmlDom';
 import type { ScorePart, ScoreSong, TabPosition, TempoEvent, XmlParser } from './types';
 
@@ -189,6 +190,7 @@ export function parseGuitarPro(gpif: string, fileName: string, parseXml: XmlPars
             const beat = beats.get(bid);
             if (!beat || kid(beat, 'GraceNotes')) continue;
             const dur = rhythmLength(rhythms.get(kid(beat, 'Rhythm')?.getAttribute('ref') || ''));
+            const strum = gpStrum(prop(beat, 'PickStroke') ?? prop(beat, 'Brush'));
             for (const nid of ids(beat, 'Notes')) {
               const note = notes.get(nid);
               if (!note || prop(note, 'Muted')) continue;
@@ -213,6 +215,7 @@ export function parseGuitarPro(gpif: string, fileName: string, parseXml: XmlPars
                 syl: '',
                 drum,
                 tab: tab ?? undefined,
+                strum,
               });
             }
             pos += dur;

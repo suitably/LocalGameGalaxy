@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { storage } from '../../../lib/storage';
-import { parseFeedbackResult } from '../logic/feedbackRpc';
 import { parseAssignedTrack } from '../gameplay/logic/trackChoice';
 import { reportTrackAssignment } from '../gameplay/hooks/usePhoneTrackChoice';
 import { ApiChunkBuffer } from '../logic/apiChunkBuffer';
@@ -11,8 +10,6 @@ import type {
   MelodiqParticipant,
   MelodiqProfile,
   MelodiqRosterMember,
-  HostSettings,
-  HostSettingsReply,
 } from '../types';
 
 interface HostPlayer {
@@ -47,7 +44,6 @@ export const usePhoneClientMessages = ({
 }: Options) => {
   const [isSessionPlaying, setIsSessionPlaying] = useState(false);
   const [activeSongId, setActiveSongId] = useState<string | null>(null);
-  const [hostSettings, setHostSettings] = useState<HostSettings | null>(null);
 
   const playingRef = useRef(isSessionPlaying);
   const activeSongRef = useRef(activeSongId);
@@ -153,9 +149,6 @@ export const usePhoneClientMessages = ({
         case 'game_state_update':
           if (data.state) handleGameState(data.state);
           break;
-        case 'queue.update':
-          emit('melodiq_client_queue_update', data);
-          break;
         case 'session_sync':
           handleSessionSync(data);
           break;
@@ -173,14 +166,6 @@ export const usePhoneClientMessages = ({
           // Legacy fallback for small responses sent without chunking
           emit(`melodiq_api_response_${data.reqId}`, data);
           break;
-        case 'host.settings.state':
-          setHostSettings((data as unknown as HostSettingsReply).settings);
-          break;
-        case 'host.feedback.result': {
-          const result = parseFeedbackResult(data);
-          if (result) emit(`melodiq_feedback_result_${result.reqId}`, result);
-          break;
-        }
         case 'songInfo': {
           const assignment = parseAssignedTrack(data);
           if (assignment) reportTrackAssignment(assignment);
@@ -198,5 +183,5 @@ export const usePhoneClientMessages = ({
     [getDeviceId, setClientRole, handleGameState, handleSessionSync, handleChunk],
   );
 
-  return { handleMessage, isSessionPlaying, activeSongId, hostSettings };
+  return { handleMessage, isSessionPlaying, activeSongId };
 };

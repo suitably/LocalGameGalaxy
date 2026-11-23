@@ -11,6 +11,7 @@ import { ControllerActionToolbar } from './ControllerActionToolbar';
 import { TargetSelectionDialog } from './TargetSelectionDialog';
 import { TabletopSurface } from '../surface/TabletopSurface';
 import { myAreaBounds } from '../../logic/myArea';
+import { HandRequestsLayer } from '../requests/HandRequestsLayer';
 
 interface TabletopControllerViewProps {
   state: TabletopGameState;
@@ -106,6 +107,12 @@ export const TabletopControllerView: React.FC<TabletopControllerViewProps> = ({
                 ? t('games.tabletop.spectator', 'Zuschauer')
                 : t('games.tabletop.playerN', 'Spieler {{n}}', { n: (mySeat ?? 0) + 1 })
             }
+          />
+          <HandRequestsLayer
+            game={state.game}
+            seat={mySeat}
+            dispatch={dispatch}
+            readOnly={isSpectator}
           />
           {topDiscardCard && (
             <Typography variant="caption" color="text.secondary" fontWeight={600}>

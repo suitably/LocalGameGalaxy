@@ -14,6 +14,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNewRounded';
 import CastIcon from '@mui/icons-material/CastRounded';
 import CastConnectedIcon from '@mui/icons-material/CastConnectedRounded';
 import CancelIcon from '@mui/icons-material/CancelRounded';
+import { canTryPresentation, currentScreenPlatform } from '../../../lib/secondScreen';
 
 interface TVModeButtonProps {
   isTVConnected: boolean;
@@ -25,6 +26,7 @@ interface TVModeButtonProps {
 
 export const TVModeButton: React.FC<TVModeButtonProps> = ({
   isTVConnected,
+  isPresentationAvailable,
   onOpenTV,
   onStartPresentation,
   onDisconnect,
@@ -57,7 +59,8 @@ export const TVModeButton: React.FC<TVModeButtonProps> = ({
     handleClose();
   };
 
-  const hasPresentationAPI = typeof window !== 'undefined' && 'PresentationRequest' in window;
+  const hasPresentationAPI =
+    canTryPresentation(currentScreenPlatform()) && isPresentationAvailable !== false;
 
   return (
     <>

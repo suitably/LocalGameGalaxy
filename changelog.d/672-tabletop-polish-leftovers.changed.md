@@ -1,0 +1,1 @@
+- **Spieltisch leftovers** (#672): a deck's menu offers "Flip top card" (the top card lands face up next to the deck); the editor's properties panel folds to its title bar so it no longer covers the board; the checkers pieces no longer carry a "⚫"/"🔴" label (their colour already tells them apart).

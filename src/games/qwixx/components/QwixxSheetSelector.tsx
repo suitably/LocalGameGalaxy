@@ -58,7 +58,7 @@ export const QwixxSheetSelector: React.FC<QwixxSheetSelectorProps> = ({
                   fontWeight="bold"
                   sx={{ fontSize: { xs: '1.05rem', sm: undefined }, lineHeight: 1.3 }}
                 >
-                  {t('games.qwixx.select_sheet_title', 'Wähle deinen Qwixx-Block')}
+                  {t('games.qwixx.select_sheet_title', 'Wähle deinen Farbreihen-Block')}
                 </Typography>
                 <Typography
                   variant="caption"

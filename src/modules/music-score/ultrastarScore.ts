@@ -24,8 +24,13 @@ const isSung = (n: UltraStarNote) => n.type !== '-';
 /** Syllable in the score convention: trimmed, with a trailing '-' when the word continues. */
 function syllable(note: UltraStarNote, next: UltraStarNote | undefined): string {
   const text = note.text.trim();
-  // the next syllable continues this word when it does not start with a space (UltraStar rule)
-  const continues = !!next && isSung(next) && !/^\s/.test(next.text) && next.text.trim() !== '';
+  // the next syllable continues this word unless a space ends this one or starts the next
+  const continues =
+    !!next &&
+    isSung(next) &&
+    !/\s$/.test(note.text) &&
+    !/^\s/.test(next.text) &&
+    next.text.trim() !== '';
   return continues && text ? `${text}-` : text;
 }
 

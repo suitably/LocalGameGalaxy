@@ -1,8 +1,7 @@
 /**
  * Context menu for Tabletop widgets [ID: GAME-TABLETOP-WIDGET-CONTEXT-MENU]
  *
- * Built from a flat item list: MUI's `Menu` needs its items as direct children (no Fragments)
- * for keyboard navigation.
+ * Flat item list: MUI's `Menu` needs direct children (no Fragments) for keyboard navigation.
  */
 import React from 'react';
 import { Menu, MenuItem, ListItemIcon, ListItemText, Divider } from '@mui/material';
@@ -53,6 +52,8 @@ interface WidgetContextMenuProps {
   onSetStackDisplay?: (deckId: string, display: StackDisplay) => void;
   /** Deck: draw the top card into the viewer's hand (absent without a hand). */
   onDrawToHand?: (deckId: string) => void;
+  /** Deck: put the top card face up next to the deck. */
+  onFlipTop?: (deckId: string) => void;
   /** Deck: deal `perHand` cards to every player's hand (absent without hands). */
   onDeal?: (deckId: string, perHand: number) => void;
 }
@@ -105,6 +106,16 @@ export const WidgetContextMenu: React.FC<WidgetContextMenuProps> = (props) => {
         icon: <StyleIcon fontSize="small" />,
         label: t(fanned ? 'games.tabletop.stackPile' : 'games.tabletop.stackFan'),
         run: () => props.onSetStackDisplay?.(id, fanned ? 'pile' : 'fan'),
+      },
+  );
+  add(
+    0,
+    hasCards &&
+      props.onFlipTop && {
+        key: 'flipTop',
+        icon: <FlipIcon fontSize="small" />,
+        label: t('games.tabletop.flipTopCard'),
+        run: () => props.onFlipTop?.(id),
       },
   );
   for (const perHand of [1, 5]) {

@@ -1,0 +1,1 @@
+- **Dice games on one device for everyone**: Kniffel, Knister and Qwixx get a "Players" dialog; when the turn moves on the screen asks to hand the device to the next player. Knister keeps one roll for every player until all placed it, and Qwixx keeps a sheet per player with "<name> done" and a small scoreboard (#467).

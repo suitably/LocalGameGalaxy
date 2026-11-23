@@ -19,6 +19,8 @@ interface RoleSelectionGridProps {
   enabledRoles: Role[];
   onToggle: (role: Role) => void;
   onShowInfo: (role: RoleDefinition) => void;
+  /** Offer only these roles (room games). */
+  only?: Role[];
 }
 
 export const RoleSelectionGrid: React.FC<RoleSelectionGridProps> = ({
@@ -26,6 +28,7 @@ export const RoleSelectionGrid: React.FC<RoleSelectionGridProps> = ({
   enabledRoles,
   onToggle,
   onShowInfo,
+  only,
 }) => {
   const { t } = useTranslation();
 
@@ -36,7 +39,8 @@ export const RoleSelectionGrid: React.FC<RoleSelectionGridProps> = ({
     const def = customDef || DEFAULT_ROLES.find((r) => r.id === id);
     if (def) builtIn.push({ def, name: customDef?.name || t(`games.werewolf.roles.${id}`) });
   }
-  const entries: RoleEntry[] = [...builtIn, ...customRoles.map((def) => ({ def, name: def.name }))];
+  const all: RoleEntry[] = [...builtIn, ...customRoles.map((def) => ({ def, name: def.name }))];
+  const entries = only ? all.filter((e) => only.includes(e.def.id)) : all;
 
   return (
     <Grid container spacing={1}>

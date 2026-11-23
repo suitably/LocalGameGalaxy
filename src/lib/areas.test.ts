@@ -1,19 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { AREAS, areaOfCategory, areasFor } from './areas';
+import { AREAS, areaById, areasFor } from './areas';
 
 describe('areas', () => {
-  it('maps drawing and social deduction into the party area', () => {
-    expect(areaOfCategory('drawing').id).toBe('party');
-    expect(areaOfCategory('social_deduction').id).toBe('party');
-    expect(areaOfCategory('puzzle').color).toBe('purple');
+  it('finds an area by id', () => {
+    expect(areaById('puzzle').color).toBe('purple');
+    expect(areaById('party').id).toBe('party');
   });
 
-  it('lists only areas that have games, in a stable order', () => {
-    expect(areasFor(['puzzle', 'music', 'drawing', 'party']).map((a) => a.id)).toEqual([
-      'party',
-      'music',
-      'puzzle',
-    ]);
+  it('lists only areas that have entries, in a stable order', () => {
+    const entries = (['puzzle', 'music', 'party', 'party'] as const).map((area) => ({ area }));
+    expect(areasFor(entries).map((a) => a.id)).toEqual(['party', 'music', 'puzzle']);
     expect(areasFor([])).toEqual([]);
   });
 

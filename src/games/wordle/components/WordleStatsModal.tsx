@@ -55,7 +55,7 @@ export const WordleStatsModal: React.FC<WordleStatsModalProps> = ({
 
   const handleShare = () =>
     share(
-      'Wordle Result',
+      'Word Guess Result',
       wordleEngine.generateShareGrid(evaluations, gameStatus === 'won', mode, dateKey),
     );
 

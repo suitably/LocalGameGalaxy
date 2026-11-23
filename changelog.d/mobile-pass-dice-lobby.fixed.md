@@ -1,0 +1,1 @@
+- **Phones (390 px)**: the dice game toolbars keep one row and 44 px buttons, Qwixx's "<name> done" sits below the sheet, the party lobby's leave and room-code buttons are thumb-sized, the waiting note no longer gets cut off, and the lobby's game card and the player dialog's "Add" button are translated (#467).

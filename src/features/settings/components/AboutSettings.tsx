@@ -8,6 +8,7 @@ import { SettingsSection } from '../../../components/settings';
 import { resolveGitHubConfig } from '../../../lib/github';
 import { settingsPath } from '../settingsRoutes';
 import { PrivacyNoticeLink } from './PrivacyNoticeLink';
+import { SourceCodeLink } from './SourceCodeLink';
 
 /** About page: feedback & bug report entry (needs a GitHub token, else leads to Integrations). */
 export const AboutSettings: React.FC = () => {
@@ -18,6 +19,7 @@ export const AboutSettings: React.FC = () => {
   return (
     <>
       <PrivacyNoticeLink />
+      <SourceCodeLink />
       <SettingsSection
         id="feedback"
         title={t('settings.feedback_title', 'Feedback & Bug Report')}

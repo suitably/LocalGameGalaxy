@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React from 'react';
 import {
   Button,
   Dialog,
@@ -11,7 +11,9 @@ import { useTranslation } from 'react-i18next';
 import { useClientEngine } from '../PhoneClientEngine';
 import { SettingSlider, SettingSwitch, SettingToggleGroup } from '../../../components/settings';
 import { LYRICS_MIN_FIT_OPTIONS } from '../gameplay/logic/lyricsFit';
-import type { HostSettings, HostSettingsRpc } from '../types';
+import type { HostSettings } from '../types';
+import type { MelodiqRoomTransport } from '../hooks/useMelodiqRoomTransport';
+import { useRemoteHostSettings } from '../hooks/useRemoteHostSettings';
 
 type VolumeKey = 'songVolume' | 'masterVolume' | 'vocalsVolume';
 
@@ -19,27 +21,15 @@ const LINE_OPTIONS = [0, 1, 2, 3].map((n) => ({ value: n, label: String(n) }));
 
 /**
  * Lightweight host settings for an admin phone. It never touches the phone's own settings or
- * storage: every change is sent as a typed `HostSettingsRpc` and the host answers with its values.
+ * storage: it asks with `settings.get` on open, every change is a `settings.set` room event, and
+ * the host answers with its values (`settings.state`). `room` is the phone's room transport.
  */
-export const RemoteHostSettingsModal: React.FC = () => {
+export const RemoteHostSettingsModal: React.FC<{ room: MelodiqRoomTransport | null }> = ({
+  room,
+}) => {
   const { t } = useTranslation();
-  const { isHostSettingsOpen, setHostSettingsOpen, hostSettings, sendClientData } =
-    useClientEngine();
-
-  const send = useCallback(
-    (rpc: HostSettingsRpc) => {
-      sendClientData(rpc);
-    },
-    [sendClientData],
-  );
-  const set = useCallback(
-    (patch: Partial<HostSettings>) => send({ type: 'host.settings.set', patch }),
-    [send],
-  );
-
-  useEffect(() => {
-    if (isHostSettingsOpen) send({ type: 'host.settings.get' });
-  }, [isHostSettingsOpen, send]);
+  const { isHostSettingsOpen, setHostSettingsOpen } = useClientEngine();
+  const { settings: hostSettings, set } = useRemoteHostSettings(room, isHostSettingsOpen);
 
   const percent = (value: number) => `${Math.round(value * 100)}%`;
 

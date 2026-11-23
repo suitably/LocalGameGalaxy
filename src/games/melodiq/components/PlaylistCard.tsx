@@ -4,7 +4,7 @@ import DeleteIcon from '@mui/icons-material/DeleteRounded';
 import EditIcon from '@mui/icons-material/EditRounded';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlayRounded';
 import { useTranslation } from 'react-i18next';
-import { type Playlist } from '../db';
+import { type LibraryPlaylist as Playlist } from '../logic/songLibrary';
 
 interface PlaylistCardProps {
   playlist: Playlist;
@@ -41,10 +41,15 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
         </Box>
         <Typography variant="body2" color="text.secondary">
           {playlist.songs.length} {t('melodiq.songs_count_short')}
+          {!playlist.mine && playlist.ownerName
+            ? ` · ${t('melodiq.library.shared_by', { name: playlist.ownerName })}`
+            : playlist.shared
+              ? ` · ${t('melodiq.library.shared')}`
+              : ''}
         </Typography>
       </CardActionArea>
 
-      {!playlist.isGlobal && (
+      {playlist.mine && (
         <Box
           sx={{
             display: 'flex',

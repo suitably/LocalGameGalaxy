@@ -34,7 +34,7 @@ const MelodiqSessionContent = forwardRef(
           }}
         >
           <Typography variant="h6" color="error" align="center">
-            {loadError}
+            {t(loadError)}
           </Typography>
           <Button variant="contained" onClick={() => onExit(true)}>
             {t('melodiq.session.go_back')}

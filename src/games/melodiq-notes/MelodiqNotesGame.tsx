@@ -15,6 +15,7 @@ import { StageCanvas } from './stage/components/StageCanvas';
 import { StageOverlay } from './stage/components/StageOverlay';
 import { TransportBar } from './stage/components/TransportBar';
 import { SessionBar } from './stage/components/SessionBar';
+import { PartSettingsButton } from './stage/components/PartSettingsButton';
 import { SectionStrip } from './stage/components/SectionStrip';
 import { SongPicker } from './stage/components/SongPicker';
 import { RecordingPanel } from './stage/components/RecordingPanel';
@@ -159,6 +160,7 @@ export const MelodiqNotesGame: React.FC<{ roomId?: string | null }> = ({ roomId 
             )
           }
           trail={immersive.active && <RecordingButton state={songState} onOpen={openRecording} />}
+          playersExtra={<PartSettingsButton song={songState.song} parts={songState.parts} />}
         />
         {songState.error && !pickerOpen && (
           <Alert severity="error" onClose={songState.clearError} sx={{ mx: 1, mb: 1 }}>

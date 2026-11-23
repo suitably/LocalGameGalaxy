@@ -19,6 +19,7 @@ export const DRUM_VOICES = [
   'splash',
   'cowbell',
   'tambourine',
+  /** Any other percussion (clap, shaker, cabasa, maracas, claves, unknown keys): the percussion lane. */
   'other',
 ] as const;
 export type DrumVoice = (typeof DRUM_VOICES)[number];
@@ -150,6 +151,11 @@ export function drumVoiceOfName(name: string): DrumVoice | null {
     return 'tom2';
   }
   if (/kick|bass drum/.test(n)) return 'kick';
+  // hand percussion: own voice, so it never passes for a kit piece (#571)
+  if (
+    /clap|shaker|cabasa|maraca|clave|conga|bongo|g[uü]iro|triang|wood ?block|agogo|timbal/.test(n)
+  )
+    return 'other';
   return null;
 }
 

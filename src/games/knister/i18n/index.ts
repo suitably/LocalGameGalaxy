@@ -13,7 +13,7 @@ export const initKnisterI18n = () => {
       {
         games: {
           knister: {
-            title: 'Knister',
+            title: 'Würfelgitter',
             description:
               'Das beliebte 5x5 Würfel-Bingo! Bilde Paare, Straßen und Full Houses auf deinem Raster.',
             round: 'Wurf',
@@ -40,7 +40,7 @@ export const initKnisterI18n = () => {
               'Diagonalen (2x): Hauptdiagonale {{main}}P, Nebendiagonale {{anti}}P',
             undo: 'Rückgängig',
             undo_tooltip: 'Letzten Eintrag rückgängig machen',
-            legend_title: 'Knister Punkteübersicht',
+            legend_title: 'Würfelgitter Punkteübersicht',
             diagonal_bonus_hint:
               'Wichtig: Die beiden Diagonalen zählen jeweils DOPPELT (2x Punkte)!',
             combination: 'Kombination',
@@ -84,7 +84,7 @@ export const initKnisterI18n = () => {
       {
         games: {
           knister: {
-            title: 'Knister',
+            title: 'Dice Grid',
             description:
               'The popular 5x5 Dice Bingo! Form pairs, straights, and full houses on your grid.',
             round: 'Round',
@@ -110,7 +110,7 @@ export const initKnisterI18n = () => {
             diagonals_tooltip: 'Diagonals (2x): main diagonal {{main}}P, anti-diagonal {{anti}}P',
             undo: 'Undo',
             undo_tooltip: 'Undo last entry',
-            legend_title: 'Knister Scoring Guide',
+            legend_title: 'Dice Grid Scoring Guide',
             diagonal_bonus_hint: 'Important: Both diagonals count DOUBLE (2x points)!',
             combination: 'Combination',
             example: 'Example',

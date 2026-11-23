@@ -11,14 +11,10 @@ import { runBackHandlers } from './lib/backButton';
 import { settingsPath } from './features/settings/settingsRoutes';
 
 // Route-level code splitting: the hub and settings load on first visit (the party lobby is a
-// registry entry like the games, see gameRegistry.tsx).
+// catalogue entry like the games, see src/lib/catalog/entries.ts).
 const Hub = lazy(() => import('./features/hub/Hub').then((m) => ({ default: m.Hub })));
 const Settings = lazy(() =>
   import('./features/settings/Settings').then((m) => ({ default: m.Settings })),
-);
-// Gartic Phone has no hub card: the party lobby launches it for the whole room.
-const GarticPhoneGame = lazy(() =>
-  import('./games/garticphone').then((m) => ({ default: m.GarticPhoneGame })),
 );
 
 // Loading fallback component
@@ -99,18 +95,7 @@ function AppRoutes() {
           }
         />
         <Route path="feedback" element={<FeedbackRedirect />} />
-        <Route
-          path="games/garticphone"
-          element={
-            <ErrorBoundary componentName="garticphone">
-              <Suspense fallback={<LoadingFallback />}>
-                <GarticPhoneGame />
-              </Suspense>
-            </ErrorBoundary>
-          }
-        />
-
-        {/* Dynamic Game Routes registered via GameRegistry (OCP) */}
+        {/* Game routes from the catalogue, including those without a hub tile (Gartic Phone) */}
         {gameRegistry.getGames().map((game) => (
           <Route
             key={game.id}

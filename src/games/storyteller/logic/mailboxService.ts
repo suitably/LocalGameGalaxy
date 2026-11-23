@@ -16,4 +16,6 @@ export interface StorytellerSyncMessage {
 export const storytellerMailboxService = new MqttMailboxService<StorytellerSyncMessage>({
   topicPrefix: 'lgg/storyteller/v1',
   clientPrefix: 'lgg_story',
+  // Channel = game id, key per game (`roomKeys.ts`); a short link loads the last snapshot.
+  retain: () => true,
 });
