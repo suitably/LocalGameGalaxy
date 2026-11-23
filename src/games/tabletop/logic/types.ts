@@ -14,7 +14,6 @@ export type {
 } from './routineTypes';
 
 import type { TabletopPlayMode } from '../../../lib/catalog/tableCatalog';
-export type { TabletopPlayMode };
 
 export type WidgetType =
   | 'card'
