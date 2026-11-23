@@ -1,7 +1,7 @@
 /**
  * Signaling tracker settings on this device [ID: LIB-WEBRTC-SIGNALING-SETTINGS]
  */
-import { storage, STORAGE_KEYS } from '../storage';
+import { storage, STORAGE_KEYS } from '../storageCore';
 import { getHelperUrl, isHelperActive } from '../companion/companionSettings';
 
 /** Port of the self-hosted tracker next to the companion server (`signaling/`). */

@@ -209,7 +209,7 @@ for (const filePath of allFiles) {
   }
 
   // Check 2: Raw localStorage / sessionStorage outside storage.ts
-  const isStorageLib = relativePath === 'src/lib/storage.ts';
+  const isStorageLib = relativePath === 'src/lib/storage.ts' || relativePath === 'src/lib/storageCore.ts';
   const isTestFile = relativePath.endsWith('.test.ts') || relativePath.endsWith('.test.tsx');
 
   if (!isStorageLib && !isTestFile) {
