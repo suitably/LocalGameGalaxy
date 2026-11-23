@@ -7,7 +7,9 @@
     },
     "server": {
       "entry": ["src/index.ts", "src/worker.ts", "cloudflare-push-relay/worker.ts", "test/**/*.test.js"],
-      "project": ["src/**/*.ts", "cloudflare-push-relay/**/*.ts"]
+      "project": ["src/**/*.ts", "cloudflare-push-relay/**/*.ts"],
+      "ignoreDependencies": ["@yao-pkg/pkg"],
+      "ignoreBinaries": ["pkg"]
     },
     "signaling": {
       "entry": ["src/index.js"],
