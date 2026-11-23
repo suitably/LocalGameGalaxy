@@ -10,10 +10,10 @@ export interface SongCardSong {
   title: string;
   artist: string;
   duration?: number;
-  year?: string;
+  year?: string | number;
   genre?: string;
   source?: string;
-  usdbId?: number;
+  usdbId?: number | string;
   hasCover?: boolean;
   cover?: unknown;
   coverThumbnail?: unknown;

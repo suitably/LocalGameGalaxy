@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { storage } from '../../../lib/storage';
 import { DAILY_STORAGE_PREFIX, normalizeWordleLang } from '../logic/wordleStorage';
 import { wordleEngine } from '../logic/wordleEngine';
@@ -13,41 +13,48 @@ export interface HistoryEntry {
     status: 'won' | 'lost' | 'playing';
 }
 
-export function useWordleHistory(currentLanguage: string) {
-    const [history, setHistory] = useState<HistoryEntry[]>([]);
+function readHistory(currentLanguage: string): HistoryEntry[] {
+    const langKey = normalizeWordleLang(currentLanguage);
+    const prefix = `${DAILY_STORAGE_PREFIX}${langKey}_`;
+    const keys = storage.findKeysWithPrefix(prefix);
 
-    const loadHistory = useCallback(() => {
-        const langKey = normalizeWordleLang(currentLanguage);
-        const prefix = `${DAILY_STORAGE_PREFIX}${langKey}_`;
-        const keys = storage.findKeysWithPrefix(prefix);
+    const entries: HistoryEntry[] = [];
 
-        const entries: HistoryEntry[] = [];
+    for (const key of keys) {
+        const dateKey = key.substring(prefix.length);
+        // Ignore incomplete date keys if any
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) continue;
 
-        for (const key of keys) {
-            const dateKey = key.substring(prefix.length);
-            // Ignore incomplete date keys if any
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) continue;
-
-            const savedState = storage.getJson<Partial<WordleState> | null>(key, null);
-            if (savedState) {
-                entries.push({
-                    dateKey,
-                    lang: langKey,
-                    targetWord: wordleEngine.getDailyTargetWord(langKey, dateKey),
-                    guesses: Array.isArray(savedState.guesses) ? savedState.guesses : [],
-                    evaluations: Array.isArray(savedState.evaluations) ? savedState.evaluations : [],
-                    status: savedState.status === 'won' || savedState.status === 'lost' ? savedState.status : 'playing',
-                });
-            }
+        const savedState = storage.getJson<Partial<WordleState> | null>(key, null);
+        if (savedState) {
+            entries.push({
+                dateKey,
+                lang: langKey,
+                targetWord: wordleEngine.getDailyTargetWord(langKey, dateKey),
+                guesses: Array.isArray(savedState.guesses) ? savedState.guesses : [],
+                evaluations: Array.isArray(savedState.evaluations) ? savedState.evaluations : [],
+                status: savedState.status === 'won' || savedState.status === 'lost' ? savedState.status : 'playing',
+            });
         }
+    }
 
-        entries.sort((a, b) => b.dateKey.localeCompare(a.dateKey));
-        setHistory(entries);
+    entries.sort((a, b) => b.dateKey.localeCompare(a.dateKey));
+    return entries;
+}
+
+export function useWordleHistory(currentLanguage: string) {
+    const [history, setHistory] = useState<HistoryEntry[]>(() => readHistory(currentLanguage));
+
+    // Re-read when the language changes (adjusted during render).
+    const [prevLanguage, setPrevLanguage] = useState(currentLanguage);
+    if (currentLanguage !== prevLanguage) {
+        setPrevLanguage(currentLanguage);
+        setHistory(readHistory(currentLanguage));
+    }
+
+    const refreshHistory = useCallback(() => {
+        setHistory(readHistory(currentLanguage));
     }, [currentLanguage]);
 
-    useEffect(() => {
-        loadHistory();
-    }, [loadHistory]);
-
-    return { history, refreshHistory: loadHistory };
+    return { history, refreshHistory };
 }

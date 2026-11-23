@@ -6,12 +6,12 @@ import CloudDownloadIcon from '@mui/icons-material/CloudDownloadRounded';
 import CheckCircleIcon from '@mui/icons-material/CheckCircleRounded';
 import CircularProgress from '@mui/material/CircularProgress';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesomeRounded';
-import { type SongMeta } from '../db';
+import { type SongCardSong } from './SongCard';
 import { formatDuration } from '../utils';
 import { useTranslation } from 'react-i18next';
 
 interface SongListItemProps {
-  song: SongMeta;
+  song: SongCardSong;
   onClick: () => void;
   onMenuClick?: (e: React.MouseEvent) => void;
   onActionClick?: (e: React.MouseEvent) => void;

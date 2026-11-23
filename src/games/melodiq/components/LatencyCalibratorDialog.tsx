@@ -38,7 +38,7 @@ export const LatencyCalibratorDialog: React.FC<LatencyCalibratorDialogProps> = (
   const micStreamRef = useRef<MediaStream | null>(null);
   const isCancelledRef = useRef(false);
 
-  const stopAll = () => {
+  const releaseResources = () => {
     isCancelledRef.current = true;
     if (micStreamRef.current) {
       micStreamRef.current.getTracks().forEach((track) => track.stop());
@@ -48,17 +48,29 @@ export const LatencyCalibratorDialog: React.FC<LatencyCalibratorDialogProps> = (
       audioContextRef.current.close().catch(() => {});
       audioContextRef.current = null;
     }
+  };
+
+  const stopAll = () => {
+    releaseResources();
     setIsCalibrating(false);
   };
 
+  // Release mic/audio resources when the dialog closes (no state is set in the effect).
   useEffect(() => {
+    if (!open) releaseResources();
+  }, [open]);
+
+  // Reset calibration state when the dialog closes (adjusted during render).
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (!open) {
-      stopAll();
+      setIsCalibrating(false);
       setDetectedLatency(null);
       setProgress(0);
       setError(null);
     }
-  }, [open]);
+  }
 
   const runCalibration = async () => {
     setIsCalibrating(true);

@@ -45,11 +45,9 @@ export const NightPhase: React.FC<NightPhaseProps> = ({
   const nextRole = () => setCurrentRoleIndex((prev) => prev + 1);
 
   // Automatically trigger morning when all roles have acted
-  useEffect(() => {
-    if (!isMorningComing && rolesToAct.length > 0 && currentRoleIndex >= rolesToAct.length) {
-      setIsMorningComing(true);
-    }
-  }, [currentRoleIndex, rolesToAct.length, isMorningComing]);
+  if (!isMorningComing && rolesToAct.length > 0 && currentRoleIndex >= rolesToAct.length) {
+    setIsMorningComing(true);
+  }
 
   // Handle phase transition timer whenever morning starts
   useEffect(() => {

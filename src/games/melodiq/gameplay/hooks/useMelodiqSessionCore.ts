@@ -11,11 +11,8 @@ import { useSessionAudioController } from './useSessionAudioController';
 import { useSessionScoringController } from './useSessionScoringController';
 import { useSongVocals } from './useSongVocals';
 import type { MelodiqSessionHandle, MelodiqSessionProps } from '../types';
-import type { ScoreBoardPlayer } from '../logic/scoreBoardRanking';
-import type { RemoteResultEntry } from './usePeerSessionMessages';
 import type { PlayerRuntime } from './PlayerRuntime';
-
-type SessionResult = ScoreBoardPlayer & RemoteResultEntry;
+import type { SessionResult } from './useSessionEnd';
 type SetPlayers = React.Dispatch<React.SetStateAction<PlayerRuntime[]>>;
 
 /** All state of a running session: media, audio, players, scoring, passive sync and the handle. */

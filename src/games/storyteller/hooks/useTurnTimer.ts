@@ -30,9 +30,12 @@ export const useTurnTimer = ({
     setTimeLeft(durationSeconds);
   }, [durationSeconds]);
 
-  useEffect(() => {
+  // Restart the countdown when the duration changes (adjusted during render).
+  const [prevDuration, setPrevDuration] = useState(durationSeconds);
+  if (durationSeconds !== prevDuration) {
+    setPrevDuration(durationSeconds);
     setTimeLeft(durationSeconds);
-  }, [durationSeconds]);
+  }
 
   useEffect(() => {
     if (!isActive || timeLeft <= 0) return;
