@@ -33,6 +33,7 @@ Full rule set and what enforces each rule: [`docs/tech/coding-conventions.md`](d
 
 - **No cross-game imports** (`src/games/<A>` → `src/games/<B>`). Shared code goes to `src/modules/`, `src/components/` or `src/lib/`. _(check:architecture fails)_
 - **Storage only via `src/lib/storage.ts`** (`storage`, `sessionStorageSafe`), keys registered in `STORAGE_KEYS` / `STORAGE_PREFIXES`. Never `localStorage.` / `sessionStorage.` directly. _(check:architecture fails on raw access; unregistered key strings are not checked)_
+- **No import cycles** in `src` (value imports; `import type` is fine). Move the shared part into a leaf file both sides import. _(check:architecture fails)_
 - **No native dialogs** (`confirm`, `prompt`, `alert`). Use [`ConfirmDialog`](src/components/common/ConfirmDialog.tsx) or MUI `<Dialog>`. _(ESLint + check:architecture fail)_
 - **Component budget:** new `.tsx` files ≤ 250 lines (orchestrators ideally < 160); files in `scripts/legacy-component-baselines.json` must never grow; when one shrinks, lock it in with `npm run check:budget -- --update` (fails otherwise). Split into a `use<Feature>State.ts` hook, focused sub-components and a co-located `types.ts`. _(check:budget fails)_
 - **Game logic** pure, in `logic/*.ts`, with Vitest tests; components hold no game rules.
