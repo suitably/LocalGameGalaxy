@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { storage } from '../../lib/storage';
-import { melodiqFetch } from '../../games/melodiq';
+import { melodiqFetch } from '../../lib/companion/melodiqFetch';
 import type { DownloadDirResponse } from './serverConfigTypes';
 
 type DirectoriesResponse = string[] | { directories?: string[] };

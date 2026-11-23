@@ -10,7 +10,7 @@ import {
   toTableEntry,
   type PlayMode,
   type TableGameEntry,
-} from '../../games/tabletop/logic/tableCatalog';
+} from '../../lib/catalog/tableCatalog';
 
 const onSpieltisch = (e: CatalogEntry) =>
   (SPIELTISCH_SECTIONS as readonly string[]).includes(e.listing);

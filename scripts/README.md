@@ -21,7 +21,7 @@ Starts a local BitTorrent-based WebRTC signaling tracker on port 8000. Used for 
 
 ### `check-architecture.mjs`
 
-Enforces game boundary isolation, zero cross-game imports, and prohibits raw `localStorage` or blocking `window.confirm`, and ratchets hard-coded colours in `src/**/*.tsx` per file via `hardcoded-color-baselines.json` (`--update-colors` lowers it).
+Enforces game boundary isolation, zero cross-game imports, no imports from `src/games` in shared code (allowlist with reasons in `architecture-baseline.json`), and prohibits raw `localStorage` or blocking `window.confirm`, and ratchets hard-coded colours in `src/**/*.tsx` per file via `hardcoded-color-baselines.json` (`--update-colors` lowers it).
 
 - **Execution**:
   ```bash

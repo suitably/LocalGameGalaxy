@@ -32,6 +32,7 @@ Knowledge base: [`docs/`](docs/index.md) (Open Knowledge Format v0.2).
 Full rule set and what enforces each rule: [`docs/tech/coding-conventions.md`](docs/tech/coding-conventions.md). Essentials:
 
 - **No cross-game imports** (`src/games/<A>` → `src/games/<B>`). Shared code goes to `src/modules/`, `src/components/` or `src/lib/`. _(check:architecture fails)_
+- **Shared code never imports `src/games/**`** (components, lib, modules, hooks, context, features, `main.tsx`). Exception: the catalogue `src/lib/catalog/entries.ts`; a justified leftover needs a `reason` entry in `scripts/architecture-baseline.json`. _(check:architecture fails)_
 - **Storage only via `src/lib/storage.ts`** (`storage`, `sessionStorageSafe`), keys registered in `STORAGE_KEYS` / `STORAGE_PREFIXES`. Never `localStorage.` / `sessionStorage.` directly. _(check:architecture fails on raw access; unregistered key strings are not checked)_
 - **No import cycles** in `src` (value imports; `import type` is fine). Move the shared part into a leaf file both sides import. _(check:architecture fails)_
 - **No native dialogs** (`confirm`, `prompt`, `alert`). Use [`ConfirmDialog`](src/components/common/ConfirmDialog.tsx) or MUI `<Dialog>`. _(ESLint + check:architecture fail)_

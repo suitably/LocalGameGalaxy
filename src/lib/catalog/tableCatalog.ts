@@ -6,10 +6,12 @@
  * - `shared_device`: one device for everyone, passed around (pass and play, or solo);
  * - `own_devices`: a party session that everyone joins with their own device.
  */
-import type { AreaId } from '../../../lib/areas';
-import type { CatalogEntry, Mode, SpieltischSection } from '../../../lib/catalog/types';
-import { entriesIn, entryColor } from '../../../lib/catalog/views';
-import type { TabletopPlayMode } from './types';
+import type { AreaId } from '../areas';
+import type { CatalogEntry, Mode, SpieltischSection } from './types';
+import { entriesIn, entryColor } from './views';
+
+/** Play modes a tabletop game declares it supports (re-exported by the tabletop engine types). */
+export type TabletopPlayMode = 'party_multi_device' | 'local_pass_and_play' | 'solo';
 
 export type PlayMode = 'shared_device' | 'own_devices';
 

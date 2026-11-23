@@ -17,9 +17,9 @@ vi.mock('react-i18next', () => ({
     }),
 }));
 
-// Mock melodiqFetch from ../../games/melodiq
+// Mock melodiqFetch from ../../lib/companion/melodiqFetch
 const mockMelodiqFetch = vi.fn();
-vi.mock('../../games/melodiq', () => ({
+vi.mock('../../lib/companion/melodiqFetch', () => ({
     melodiqFetch: (...args: unknown[]) => mockMelodiqFetch(...args),
 }));
 
