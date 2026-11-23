@@ -27,7 +27,6 @@ export interface WebRTCHostContextType<
 
 // We use a generic context type but map to any under the hood.
 // Consumers can cast it or use specific typed hooks.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- erased here, narrowed by useWebRTCHost<T, M>
 export const WebRTCHostContext = createContext<WebRTCHostContextType<any, any> | null>(null);
 
 export function useWebRTCHost<
