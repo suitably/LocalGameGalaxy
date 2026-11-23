@@ -63,7 +63,6 @@ export const MelodiqGameContent: React.FC = () => {
   );
   const { settings } = useMelodiqSettings();
   const { clientRole, clientProfile } = useClientEngine();
-
   const searchFilterState = useSearchFilters(songs, jobs);
 
   const [showQueueDrawer, setShowQueueDrawer] = useState(false);
