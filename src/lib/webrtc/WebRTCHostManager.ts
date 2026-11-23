@@ -1,5 +1,6 @@
 import SimplePeer from 'simple-peer';
 import Client from 'bittorrent-tracker';
+import { createLogger } from '../logger';
 import { getIceServers } from './iceServers';
 import {
   decodeNdjsonChunk,
@@ -15,6 +16,8 @@ import {
   isPingDue,
   pingMessage,
 } from './heartbeat';
+
+const log = createLogger('WebRTCHostManager');
 
 /**
  * Base type for a remote peer entry stored in the peers Map.
@@ -165,15 +168,10 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
 
   async start(): Promise<void> {
     const infoHash = this.stringToInfoHash(this.partyId);
-    console.log('[WebRTCHostManager] Generated InfoHash for Party ID:', this.partyId);
-    const infoHashHex = Array.from(infoHash)
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
-    console.log('[WebRTCHostManager] InfoHash (Hex):', infoHashHex);
     const peerId = this.generatePeerId();
 
     const finalTrackers = filterTrackerUrlsForPage(this.trackerUrls);
-    console.log('[WebRTCHostManager] Using trackers:', finalTrackers);
+    log.debug('Using trackers:', finalTrackers);
 
     if (finalTrackers.length === 0) {
       console.warn('[WebRTCHostManager] No trackers provided. Connection will not be possible.');
@@ -190,7 +188,6 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
     } as any);
 
     this.trackerClient.on('peer', (peer: any) => {
-      console.log('[WebRTCHostManager] Tracker discovered peer:', peer);
       this.handleTrackerPeer(peer);
     });
 
@@ -208,7 +205,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
   private handleTrackerPeer(trackerPeer: any): void {
     const trackerPeerId =
       trackerPeer.id || trackerPeer._id || trackerPeer.channelName || Math.random().toString(36);
-    console.log('[WebRTCHostManager] Tracker peer found. Sending host_hello...', trackerPeerId);
+    log.debug('Tracker peer found. Sending host_hello...', trackerPeerId);
 
     const sendHostHello = () => {
       if (trackerPeer.connected) {
@@ -297,7 +294,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
     const currentConnectionId = (trackerPeer as any)._currentConnectionId;
 
     if (signal.type === 'offer' && connectionId !== currentConnectionId) {
-      console.log('[WebRTCHostManager] New connection attempt detected:', connectionId);
+      log.debug('New connection attempt detected:', connectionId);
 
       const existingPeer = (trackerPeer as any)._audioPeerInstance;
       if (existingPeer) {
@@ -328,7 +325,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
   }
 
   private initDataPeer(trackerPeer: any, connectionId: string) {
-    console.log('[WebRTCHostManager] Initializing Data Peer for:', connectionId);
+    log.debug('Initializing Data Peer for:', connectionId);
     const peerId = this.generatePeerId();
 
     const dataPeer = new SimplePeer({
@@ -371,7 +368,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
     });
 
     dataPeer.on('connect', () => {
-      console.log('[WebRTCHostManager] Data Peer connected:', peerId);
+      log.debug('Data Peer connected:', peerId);
       // Some peers might just be data
       this.callbacks?.onPeerConnected?.(
         peerId,
@@ -407,16 +404,16 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
     });
 
     dataPeer.on('track', (track: MediaStreamTrack, stream: MediaStream) => {
-      console.log('[WebRTCHostManager] Received track from phone:', track.kind, stream.id, peerId);
+      log.debug('Received track from phone:', track.kind, stream.id, peerId);
     });
 
     dataPeer.on('stream', (stream: MediaStream) => {
-      console.log('[WebRTCHostManager] Received stream from phone:', peerId);
+      log.debug('Received stream from phone:', peerId);
       this.callbacks?.onStream?.(peerId, stream);
     });
 
     dataPeer.on('close', () => {
-      console.log('[WebRTCHostManager] Data Peer closed:', peerId);
+      log.debug('Data Peer closed:', peerId);
       this.removePeer(peerId);
       if ((trackerPeer as any)._currentConnectionId === connectionId) {
         delete (trackerPeer as any)._currentConnectionId;
@@ -517,12 +514,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
    * name/hue/deviceId, replaces earlier peers of the same device and notifies `onPeerUpdated`.
    */
   private applyIdentity(remotePeer: T, identity: PeerIdentity, source: 'tracker' | 'WebRTC'): void {
-    console.log(
-      `[WebRTCHostManager] Received identity (${source}):`,
-      identity.name,
-      identity.hue,
-      identity.deviceId,
-    );
+    log.debug(`Received identity (${source}):`, identity.name, identity.hue);
     remotePeer.name = identity.name || remotePeer.name;
     remotePeer.hue = identity.hue;
     remotePeer.deviceId = identity.deviceId;
@@ -534,9 +526,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
     )) {
       const stalePeer = this.peers.get(stalePeerId);
       if (!stalePeer) continue;
-      console.log(
-        `[WebRTCHostManager] Replacing stale peer ${stalePeerId} with ${remotePeer.peerId} for deviceId ${identity.deviceId}`,
-      );
+      log.debug(`Replacing stale peer ${stalePeerId} with ${remotePeer.peerId}`);
       stalePeer.peer.destroy();
       this.peers.delete(stalePeerId);
       this.callbacks?.onPeerRemoved?.(stalePeerId, stalePeer);
