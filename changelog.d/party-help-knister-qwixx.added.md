@@ -1,0 +1,1 @@
+- **Help and "tap here" in Knister and Qwixx**: in Knister a helper can switch to the sheet of a player who allowed help and fill it in for them; in Qwixx a helper can roll for them; in both games the hand button shows where to tap on the other player's screen.

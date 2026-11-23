@@ -2,6 +2,7 @@ import { DRUM_VOICE_KEY, parseSticking, resolveDrumVoice, type DrumVoice } from 
 import { guessInstrument } from './instruments';
 import { playOrder, readBars } from './musicXmlBars';
 import { readHarmony, writeOutChords, type BarChord } from './musicXmlHarmony';
+import { xmlStrum } from './strumMarks';
 import { kid, kids, num, text } from './xmlDom';
 import type {
   ScoreChord,
@@ -65,6 +66,7 @@ export interface BarEvent {
   drum?: DrumVoice;
   hand?: 'R' | 'L';
   tab?: TabPosition;
+  strum?: ScoreNote['strum'];
 }
 
 function readPartBars(pe: Element, info: PartInfo) {
@@ -161,6 +163,7 @@ function readPartBars(pe: Element, info: PartInfo) {
           verses,
           drum,
           hand,
+          strum: xmlStrum(c),
         });
       }
     }
@@ -214,6 +217,7 @@ export function writeOutNotes(bars: BarEvent[][], order: number[], starts: numbe
       if (ev.drum) note.drum = ev.drum;
       if (ev.hand) note.hand = ev.hand;
       if (ev.tab) note.tab = ev.tab;
+      if (ev.strum) note.strum = ev.strum;
       notes.push(note);
       if (ev.tieStart) open.set(key, note);
       else open.delete(key);

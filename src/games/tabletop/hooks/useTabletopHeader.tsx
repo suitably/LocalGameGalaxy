@@ -12,7 +12,15 @@ import GroupsIcon from '@mui/icons-material/GroupsRounded';
 import SaveIcon from '@mui/icons-material/SaveRounded';
 import ReplayIcon from '@mui/icons-material/ReplayRounded';
 import MenuBookIcon from '@mui/icons-material/MenuBookRounded';
+import TuneIcon from '@mui/icons-material/TuneRounded';
 import TableRestaurantIcon from '@mui/icons-material/TableRestaurantRounded';
+import CastIcon from '@mui/icons-material/CastRounded';
+import PersonIcon from '@mui/icons-material/PersonRounded';
+import TvIcon from '@mui/icons-material/TvRounded';
+import DownloadIcon from '@mui/icons-material/DownloadRounded';
+import CodeIcon from '@mui/icons-material/CodeRounded';
+import CodeOffIcon from '@mui/icons-material/CodeOffRounded';
+import ArticleIcon from '@mui/icons-material/ArticleRounded';
 import { useHeaderLayout, type MenuItem } from '../../../context/HeaderLayoutContext';
 import { HEADER_MENU_ENTRIES, headerMenuKeys, type HeaderMenuKey } from '../logic/headerMenu';
 
@@ -23,9 +31,17 @@ export interface TabletopHeaderActions extends Partial<Record<HeaderMenuKey, () 
 
 const ICONS: Record<HeaderMenuKey, ReactNode> = {
   onBackToLobby: <GroupsIcon />,
+  onShowOnTv: <CastIcon />,
+  onPlayAlong: <PersonIcon />,
+  onShowTableOnly: <TvIcon />,
   onOpenRules: <MenuBookIcon />,
+  onOpenSettings: <TuneIcon />,
   onOpenSaves: <SaveIcon />,
   onOpenTableSettings: <TableRestaurantIcon />,
+  onExportJson: <DownloadIcon />,
+  onEnableLuaScripts: <CodeIcon />,
+  onDisableLuaScripts: <CodeOffIcon />,
+  onOpenLuaLog: <ArticleIcon />,
   onRestart: <ReplayIcon />,
 };
 

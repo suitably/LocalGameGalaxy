@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { Player, Role, RoleDefinition } from '../logic/types';
+import type { Role, RoleDefinition } from '../logic/types';
 import { DEFAULT_ROLES } from '../logic/defaultRoles';
 import { isWerewolfRole } from '../logic/utils';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
@@ -10,9 +10,12 @@ interface WerewolfSetupSettings {
 }
 
 export function useWerewolfSetup(
-  players: Player[],
+  /** Only the count matters. */
+  players: readonly unknown[],
   customRoles: RoleDefinition[],
   onStartGame: (roles: Role[]) => void,
+  /** Only these roles can be dealt (room games); others stay saved but unused. */
+  allowedRoles?: Role[],
 ) {
   const [enabledRoles, setEnabledRoles] = useState<Role[]>(() => {
     const parsed = storage.getJson<WerewolfSetupSettings | null>(
@@ -39,18 +42,21 @@ export function useWerewolfSetup(
     );
   };
 
+  const usableRoles = allowedRoles
+    ? enabledRoles.filter((role) => allowedRoles.includes(role))
+    : enabledRoles;
   const allAvailableRoles = [...DEFAULT_ROLES, ...customRoles];
-  const selectedWerewolfRolesCount = enabledRoles.filter((id) =>
+  const selectedWerewolfRolesCount = usableRoles.filter((id) =>
     isWerewolfRole(id, allAvailableRoles),
   ).length;
   const tooManyWerewolves = selectedWerewolfRolesCount > numWerewolves;
   // Villagers are added automatically; base werewolves fill up to numWerewolves.
   const baseWerewolvesToAdd = Math.max(0, numWerewolves - selectedWerewolfRolesCount);
-  const totalRolesCount = enabledRoles.length + baseWerewolvesToAdd;
+  const totalRolesCount = usableRoles.length + baseWerewolvesToAdd;
   const tooManyRoles = totalRolesCount > players.length && players.length > 0;
 
   const handleStart = () => {
-    const roles: Role[] = [...enabledRoles];
+    const roles: Role[] = [...usableRoles];
     for (let i = 0; i < baseWerewolvesToAdd; i++) roles.push('WEREWOLF');
     while (roles.length < players.length) roles.push('VILLAGER');
     onStartGame(roles.slice(0, players.length));

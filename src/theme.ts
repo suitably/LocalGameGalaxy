@@ -217,7 +217,11 @@ const sharedOptions: Omit<ThemeOptions, 'palette' | 'colorSchemes'> = {
       styleOverrides: {
         // Visual chip stays compact; an invisible overlay extends the hit area vertically.
         clickable: invisibleHitArea(TOUCH_TARGET, 'y'),
-        deletable: invisibleHitArea(TOUCH_TARGET, 'y'),
+        deletable: {
+          ...invisibleHitArea(TOUCH_TARGET, 'y'),
+          // The overlay must not cover the X, or a tap removes nothing (#798).
+          '& .MuiChip-deleteIcon': { position: 'relative', zIndex: 1 },
+        },
         outlinedPrimary: ({ theme }) => ({ color: primaryText(theme) }),
       },
     },

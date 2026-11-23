@@ -1,0 +1,1 @@
+- **Generic game names**: games now carry generic names instead of trademarked ones — Fünf Würfel (with Fünferpasch), Würfelgitter, Farbreihen, Wortraten, Zeichen-Stille-Post and Tiefstapler (in English: Five Dice, Dice Grid, Color Rows, Word Guess, Drawing Telephone, Lowball). Saved games, links and settings are unaffected.

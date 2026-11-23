@@ -26,6 +26,14 @@ describe('buildSessionLink', () => {
       'https://example.test/app/#/games/guessart?gameId=g1&player=p2&data=ABC&gameRelay=https%3A%2F%2Fntfy.sh%2Fx%20y',
     );
   });
+
+  it('appends the mailbox key inside the fragment (ADR 0009)', () => {
+    expect(
+      buildSessionLink({ ...base, roomKey: 'kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk' }),
+    ).toBe(
+      'https://example.test/app/#/games/guessart?gameId=g1&player=p2&key=kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk',
+    );
+  });
 });
 
 describe('pickQrLink', () => {

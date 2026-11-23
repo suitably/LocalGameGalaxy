@@ -13,7 +13,7 @@ export const initKniffelI18n = () => {
       {
         games: {
           kniffel: {
-            title: 'Kniffel',
+            title: 'Fünf Würfel',
             description:
               'Der Klassiker unter den Würfelspielen. Sammle Punkte durch geschicktes Kombinieren von 5 Würfeln.',
             roll: 'Würfeln',
@@ -33,6 +33,15 @@ export const initKniffelI18n = () => {
             lower_total: 'Summe unten',
             game_over: 'Spiel beendet!',
             play_again: 'Nochmal spielen',
+            room_connecting: 'Verbinde mit dem Host …',
+            room_your_turn: 'Du bist dran: würfeln und eintragen',
+            room_turn_of: '{{name}} ist dran',
+            room_playing_for: 'Du spielst für {{name}}',
+            rules_label: 'Regeln',
+            rules_kniffel: 'Standard',
+            rules_international: 'International',
+            rules_hint:
+              'International: weitere Fünferpasche zählen 100 und als Joker für Full House und Straßen.',
             points: 'Punkte eintragen',
             strike: 'Streichen (0)',
             cat: {
@@ -47,9 +56,9 @@ export const initKniffelI18n = () => {
               full_house: 'Full House',
               small_straight: 'Kleine Straße',
               large_straight: 'Große Straße',
-              kniffel: 'Kniffel',
+              kniffel: 'Fünferpasch',
               chance: 'Chance',
-              kniffel_bonus: 'Kniffel-Bonus',
+              kniffel_bonus: 'Fünferpasch-Bonus',
             },
             hint: {
               ones: 'Summe aller Einsen',
@@ -65,7 +74,7 @@ export const initKniffelI18n = () => {
               large_straight: '5 in Folge · 40',
               kniffel: '5 gleiche · 50',
               chance: 'Alle Augen zählen',
-              kniffel_bonus: 'Jeder weitere · 50',
+              kniffel_bonus: 'Jeder weitere · {{points}}',
             },
           },
         },
@@ -79,7 +88,7 @@ export const initKniffelI18n = () => {
       {
         games: {
           kniffel: {
-            title: 'Yahtzee',
+            title: 'Five Dice',
             description: 'The classic dice game. Score points by cleverly combining 5 dice.',
             roll: 'Roll',
             show_dice: 'Show dice',
@@ -98,6 +107,15 @@ export const initKniffelI18n = () => {
             lower_total: 'Lower Total',
             game_over: 'Game Over!',
             play_again: 'Play Again',
+            room_connecting: 'Connecting to the host …',
+            room_your_turn: 'Your turn: roll and score',
+            room_turn_of: "It's {{name}}'s turn",
+            room_playing_for: 'You are playing for {{name}}',
+            rules_label: 'Rules',
+            rules_kniffel: 'Standard',
+            rules_international: 'International',
+            rules_hint:
+              'International: further five of a kinds score 100 and are jokers for Full House and straights.',
             points: 'Score Points',
             strike: 'Strike (0)',
             cat: {
@@ -112,9 +130,9 @@ export const initKniffelI18n = () => {
               full_house: 'Full House',
               small_straight: 'Small Straight',
               large_straight: 'Large Straight',
-              kniffel: 'Yahtzee',
+              kniffel: 'Five of a Kind',
               chance: 'Chance',
-              kniffel_bonus: 'Yahtzee Bonus',
+              kniffel_bonus: 'Five of a Kind Bonus',
             },
             hint: {
               ones: 'Sum of all Ones',
@@ -130,7 +148,7 @@ export const initKniffelI18n = () => {
               large_straight: '5 in a row · 40',
               kniffel: '5 of a kind · 50',
               chance: 'Sum of all dice',
-              kniffel_bonus: 'Each additional · 50',
+              kniffel_bonus: 'Each additional · {{points}}',
             },
           },
         },

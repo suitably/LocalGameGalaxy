@@ -8,15 +8,18 @@ import React from 'react';
 import { CircularProgress, Stack } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { ShowOnTvDialog } from '../../../../components/common/ShowOnTvDialog';
 import { useWakeLock } from '../../../../hooks/useWakeLock';
 import { TvThemeProvider } from '../../../../components/common/TvThemeProvider';
 import { useFollowPartyLobby } from '../../../../features/party/hooks/useFollowPartyLobby';
 import { usePartyLobbyReturn } from '../../hooks/usePartyLobbyReturn';
 import { newSeed } from '../../logic/rng';
+import { buildScreenRoute } from '../../logic/tabletopRoute';
 import { getScript } from '../logic/scriptRegistry';
-import { moveAllowed, sessionView } from '../logic/session';
 import { useRoomSession } from '../hooks/useRoomSession';
 import { useScriptedHeader } from '../hooks/useScriptedHeader';
+import { useTablePreset, useTableSettings } from '../hooks/useTableSettings';
+import type { ScriptOptions } from '../logic/scriptTypes';
 import { CardTable } from './CardTable';
 import { RoomSetup } from './RoomSetup';
 
@@ -30,34 +33,68 @@ export const RoomScriptedGame: React.FC<{ scriptId: string; roomId: string }> = 
   useWakeLock(true);
   useFollowPartyLobby(roomId);
   const { returnToLobby } = usePartyLobbyReturn(roomId);
-  const { room, state, dispatch, synced, seat } = useRoomSession(scriptId, roomId);
-  const running = state.game !== null;
+  const { room, packet, dispatch, synced, seat, allowed } = useRoomSession(scriptId, roomId);
+  const view = packet?.view ?? null;
+  const running = view !== null;
+  const [tvOpen, setTvOpen] = React.useState(false);
+  const [preset, setPreset] = useTablePreset(script);
+  // The host's settings rule the table; a guest sees them read-only once a match runs.
+  const changeOptions = (next: ScriptOptions) => {
+    setPreset(next);
+    if (running) dispatch({ type: 'OPTIONS', options: next });
+  };
+  const settings = useTableSettings({
+    script,
+    value: room.isHost ? (running ? (packet?.options ?? preset) : preset) : packet?.options,
+    onChange: room.isHost ? changeOptions : undefined,
+    running,
+    shared: true,
+  });
   const rules = useScriptedHeader({
     scriptId,
     // Guests visit the lobby while the game goes on; the host ends it for everyone.
     onBack: room.isHost ? returnToLobby : () => navigate(`/party?room=${roomId}`),
     onBackToLobby: room.isHost ? returnToLobby : undefined,
     onRestart: room.isHost && running ? () => dispatch({ type: 'END' }) : undefined,
+    onOpenSettings: settings.open,
+    onShowOnTv: room.isHost ? () => setTvOpen(true) : undefined,
   });
+  const header = (
+    <>
+      {rules}
+      {settings.dialog}
+      {room.isHost && (
+        <ShowOnTvDialog
+          open={tvOpen}
+          onClose={() => setTvOpen(false)}
+          screenRoute={buildScreenRoute(roomId, scriptId)}
+          mirrorSafe={seat === null}
+        />
+      )}
+    </>
+  );
 
   if (!synced) {
     return (
       <Stack alignItems="center" py={6}>
-        {rules}
+        {header}
         <CircularProgress />
       </Stack>
     );
   }
-  const view = sessionView(state, seat);
-  if (!view) {
+  if (!view || !packet) {
     return (
       <>
-        {rules}
+        {header}
         <RoomSetup
           script={script}
           roster={room.players}
           isHost={room.isHost}
-          onStart={(players) => dispatch({ type: 'START', scriptId, players, seed: newSeed() })}
+          options={preset}
+          onOptionsChange={setPreset}
+          onStart={(players) =>
+            dispatch({ type: 'START', scriptId, players, options: preset, seed: newSeed() })
+          }
         />
       </>
     );
@@ -67,17 +104,17 @@ export const RoomScriptedGame: React.FC<{ scriptId: string; roomId: string }> = 
   const table = (
     <CardTable
       view={view}
-      names={state.players.map((p) => p.name)}
+      names={packet.players.map((p) => p.name)}
       viewer={seat}
-      step={state.step}
-      allowed={(move) => moveAllowed(state, actor, move)}
+      step={packet.step}
+      allowed={allowed}
       onMove={(move) => dispatch({ type: 'MOVE', seat: actor, move })}
       tableHint={t('games.tabletop.scripted.tableHint')}
     />
   );
   return (
     <>
-      {rules}
+      {header}
       {seat === null ? <TvThemeProvider>{table}</TvThemeProvider> : table}
     </>
   );

@@ -20,7 +20,12 @@ export interface ScoreNote {
   ultrastar?: UltraStarKind;
   /** Fretted parts: the position the score writes, so the stage shows the tab as written. */
   tab?: TabPosition;
+  /** Fretted parts: strum or pick direction the score marks (MusicXML bowing, Guitar Pro stroke). */
+  strum?: StrumDirection;
 }
+
+/** Direction of a strum or pick stroke: down = from the low string towards the high one. */
+export type StrumDirection = 'down' | 'up';
 
 /** String (0 = highest, the top line of a tab) and fret counted from the nut, capo included. */
 export interface TabPosition {

@@ -8,6 +8,7 @@ import type { AnyGameScript, ScriptMove, ScriptView } from '../scriptTypes';
 /** Moves worth trying for a view: every button, single cards, sets of one rank, pairs. */
 export function candidateMoves(view: ScriptView): ScriptMove[] {
   const moves: ScriptMove[] = view.actions.map((a) => ({ kind: 'action', id: a.id, arg: a.arg }));
+  for (const ref of view.slotTargets) moves.push({ kind: 'slot', ...ref });
   if (view.select === 'none') return moves;
   const targets: (string | undefined)[] = view.targets.length > 0 ? view.targets : [undefined];
   for (const card of view.hand) {

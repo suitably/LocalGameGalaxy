@@ -6,6 +6,7 @@
  */
 import { storage, STORAGE_PREFIXES } from '../../../../lib/storage';
 import { emptySession, type SessionState } from './session';
+import type { ScriptOptions } from './scriptTypes';
 
 interface Saved {
   scope: string;
@@ -25,4 +26,19 @@ export function loadSession(scriptId: string, scope: string): SessionState {
 export function saveSession(scope: string, state: SessionState): void {
   if (state.game === null) storage.remove(keyOf(state.scriptId));
   else storage.setJson<Saved>(keyOf(state.scriptId), { scope, state });
+}
+
+const optionsKey = (scriptId: string) => `${STORAGE_PREFIXES.TABLETOP_SCRIPT_OPTIONS}${scriptId}`;
+
+/** The table settings this device chose last for the game (only booleans survive). */
+export function loadTableOptions(scriptId: string): ScriptOptions {
+  const raw = storage.getJson<unknown>(optionsKey(scriptId), null);
+  if (!raw || typeof raw !== 'object') return {};
+  return Object.fromEntries(
+    Object.entries(raw as Record<string, unknown>).filter(([, v]) => typeof v === 'boolean'),
+  ) as ScriptOptions;
+}
+
+export function saveTableOptions(scriptId: string, options: ScriptOptions): void {
+  storage.setJson(optionsKey(scriptId), options);
 }

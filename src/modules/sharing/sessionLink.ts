@@ -12,6 +12,8 @@ export const QR_LINK_MAX_LENGTH = 700;
 /** Byte capacity of the largest QR code (version 40, error correction L). */
 export const QR_CAPACITY = 2953;
 
+import { roomKeyParam } from '../sync/roomKeys';
+
 export interface SessionLinkParts {
   /** Origin and path of the app, e.g. `https://host/app/`. */
   appUrl: string;
@@ -22,6 +24,8 @@ export interface SessionLinkParts {
   /** Compressed snapshot (already URI-safe); omitted in a short link. */
   data?: string;
   relay?: string | null;
+  /** End-to-end key of the game's mailbox; the link carries it in the fragment (ADR 0009). */
+  roomKey?: string | null;
 }
 
 export function buildSessionLink({
@@ -31,10 +35,12 @@ export function buildSessionLink({
   playerId,
   data,
   relay,
+  roomKey,
 }: SessionLinkParts): string {
   let link = `${appUrl}#${basePath}?gameId=${gameId}&player=${playerId}`;
   if (data) link += `&data=${data}`;
   if (relay) link += `&gameRelay=${encodeURIComponent(relay)}`;
+  link += roomKeyParam(roomKey);
   return link;
 }
 

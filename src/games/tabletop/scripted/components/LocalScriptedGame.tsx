@@ -19,6 +19,9 @@ import { moveAllowed, sessionReducer, sessionView } from '../logic/session';
 import { loadSession, saveSession } from '../logic/sessionStore';
 import { useScriptedHeader } from '../hooks/useScriptedHeader';
 import { CardTable } from './CardTable';
+import { ScriptOptionSwitches } from './ScriptOptionSwitches';
+import { useTablePreset, useTableSettings } from '../hooks/useTableSettings';
+import type { ScriptOptions } from '../logic/scriptTypes';
 
 const SCOPE = 'local';
 
@@ -36,10 +39,23 @@ export const LocalScriptedGame: React.FC<{ scriptId: string }> = ({ scriptId }) 
     maxPlayers: script.maxPlayers,
   });
   const running = state.game !== null;
+  const [options, setOptions] = useTablePreset(script);
+  const changeOptions = (next: ScriptOptions) => {
+    setOptions(next);
+    if (running) dispatch({ type: 'OPTIONS', options: next });
+  };
+  const settings = useTableSettings({
+    script,
+    value: running ? (state.options ?? options) : options,
+    onChange: changeOptions,
+    running,
+    shared: false,
+  });
   const rules = useScriptedHeader({
     scriptId,
     onBack: () => navigate('/games/tabletop'),
     onRestart: running ? () => dispatch({ type: 'END' }) : undefined,
+    onOpenSettings: settings.open,
   });
 
   const table = sessionView(state, null);
@@ -51,6 +67,7 @@ export const LocalScriptedGame: React.FC<{ scriptId: string }> = ({ scriptId }) 
     return (
       <Box sx={{ width: '100%', maxWidth: 560, mx: 'auto', p: 2, overflowY: 'auto' }}>
         {rules}
+        {settings.dialog}
         <PlayerManagerCard
           players={lobby.players}
           onAddPlayer={lobby.addPlayer}
@@ -63,6 +80,7 @@ export const LocalScriptedGame: React.FC<{ scriptId: string }> = ({ scriptId }) 
           })}
           sx={{ mb: 2 }}
         />
+        <ScriptOptionSwitches script={script} value={options} onChange={setOptions} />
         <Button
           variant="contained"
           size="large"
@@ -74,6 +92,7 @@ export const LocalScriptedGame: React.FC<{ scriptId: string }> = ({ scriptId }) 
               type: 'START',
               scriptId,
               seed: newSeed(),
+              options,
               players: lobby.players.map((p, i) => ({ id: `p${i}`, name: p.name })),
             });
             setViewer(-1);
@@ -92,6 +111,7 @@ export const LocalScriptedGame: React.FC<{ scriptId: string }> = ({ scriptId }) 
   return (
     <>
       {rules}
+      {settings.dialog}
       {covered ? (
         <HandoverCover
           player={handover[acting]}

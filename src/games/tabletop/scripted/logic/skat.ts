@@ -183,6 +183,7 @@ function move(s: SkatState, seat: number, m: ScriptMove, rng: Rng): SkatState {
 }
 export const skat: GameScript<SkatState> = {
   id: 'skat',
+  ranks: RANKS_32,
   minPlayers: 3,
   maxPlayers: 3,
   start: (_count, rng) => deal(Math.floor(rng() * SEATS), rng, [0, 0, 0], 0),

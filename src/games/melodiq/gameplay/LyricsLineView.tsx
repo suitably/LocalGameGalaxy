@@ -1,6 +1,6 @@
 import React from 'react';
 import { alpha, Box, lighten, Typography } from '@mui/material';
-import type { Note } from '../parser';
+import type { Note } from '../logic/songVocals';
 import { transitionOf } from '../../../lib/motion';
 import { LineWords } from './lyrics/LineWords';
 import { ACTIVE_LINE_REM } from './logic/lyricsFit';

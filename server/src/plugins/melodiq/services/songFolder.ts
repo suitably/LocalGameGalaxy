@@ -3,7 +3,8 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { serverConfig } from '../../../config';
 import { cleanUploadName, findScoreFiles, isScoreFileName } from '../../../utils/scoreFiles';
-import type { Song } from '../../../core/types';
+import { readParts } from './partSettings';
+import type { ScorePartSettings, Song } from '../../../core/types';
 
 /**
  * A song folder is the only store for Melodiq and Melodiq Notes (#568): the karaoke `.txt` with
@@ -33,8 +34,12 @@ export interface SongMeta {
   id: string;
   title: string;
   artist: string;
+  /** Album shown in the Melodiq library (#636); optional. */
+  album?: string;
   /** Free text per score file, shown instead of the file name. */
   labels: Record<string, string>;
+  /** Hidden and renamed parts per score file (#564). */
+  parts: Record<string, ScorePartSettings>;
 }
 
 /** Update body of `PUT /api/songs/:id/meta`; fields left out stay as they are. */
@@ -125,11 +130,27 @@ export async function readSongMeta(folder: string): Promise<SongMeta | null> {
       id: typeof raw.id === 'string' && SONG_ID_PATTERN.test(raw.id) ? raw.id : '',
       title: text(raw.title),
       artist: text(raw.artist),
+      ...(text(raw.album) ? { album: text(raw.album) } : {}),
       labels: typeof labels === 'string' ? {} : labels,
+      parts: readParts(raw.parts),
     };
   } catch {
     return null;
   }
+}
+
+/** The song's `song.json`, else what it would hold now (the song's current id, title, artist). */
+export async function songMetaOf(song: Song): Promise<SongMeta> {
+  return (
+    (await readSongMeta(song.folder)) ?? {
+      version: 1,
+      id: song.id,
+      title: song.title,
+      artist: song.artist,
+      labels: {},
+      parts: {},
+    }
+  );
 }
 
 export async function writeSongMeta(folder: string, meta: SongMeta): Promise<void> {
@@ -191,6 +212,7 @@ export async function createSongFolder(
     title: input.title,
     artist: input.artist,
     labels: {},
+    parts: {},
   };
   await writeSongMeta(folder, meta);
   return { folder, meta };
@@ -220,6 +242,7 @@ export async function readScoreOnlySong(dir: string, dirFiles: string[]): Promis
     id: '',
     ...metaFromFolderName(path.basename(dir)),
     labels: {},
+    parts: {},
   };
   if (!meta.title) meta = { ...meta, title: path.basename(dir) };
   if (!meta.id) {
@@ -238,6 +261,7 @@ export async function readScoreOnlySong(dir: string, dirFiles: string[]): Promis
     id: meta.id,
     title: meta.title,
     artist: meta.artist,
+    album: meta.album,
     bpm: 0,
     gap: 0,
     video: null,
@@ -256,6 +280,7 @@ export async function readScoreOnlySong(dir: string, dirFiles: string[]): Promis
     folderScores,
     recordings,
     labels: meta.labels,
+    partSettings: meta.parts,
     searchString: `${meta.title} ${meta.artist}`.toLowerCase(),
   };
 }

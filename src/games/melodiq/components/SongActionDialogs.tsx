@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { type SongMeta } from '../db';
 import { useSongActions } from '../hooks/useSongActions';
+import { useSongLibrary } from '../hooks/useSongLibrary';
 import { YouTubeSearchDialog } from './YouTubeSearchDialog';
 import { SongActionMenu } from './SongActionMenu';
 import { SongPlaylistDialogs } from './SongPlaylistDialogs';
@@ -48,6 +49,7 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
     setFeedbackMessage,
     setQueueDialogOpen,
   });
+  const library = useSongLibrary();
 
   return (
     <>
@@ -65,6 +67,8 @@ export const SongActionDialogs: React.FC<SongActionDialogsProps> = ({
         separationProgress={a.activeSepJob?.progress || 0}
         onQueueOption={a.handleQueueOption}
         onAddToPlaylist={() => a.setPlaylistDialogOpen(true)}
+        isFavorite={song ? library.isFavorite(song.id) : false}
+        onToggleFavorite={song ? () => void library.toggleFavorite(song.id) : undefined}
         onChangeVideo={() => {
           setQueueDialogOpen(false);
           a.setYouTubeSearchDialogOpen(true);

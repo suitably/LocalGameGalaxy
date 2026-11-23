@@ -11,7 +11,7 @@ verified:
   at: 2026-10-24
   method: 'excerpts copied from the listed files; export lists via grep'
 sources:
-  - 'src/lib/gameRegistry.tsx'
+  - 'src/lib/catalog/types.ts'
   - 'src/modules/player-management/types.ts'
   - 'src/modules/player-management/playerSeats.ts'
   - 'src/modules/sync/MqttMailboxService.ts'
@@ -26,7 +26,7 @@ Do **not** copy types from here into code — import them from the source file. 
 
 | Domain                    | File                                      | Main exports                                                                                                             |
 | ------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Game registry             | `src/lib/gameRegistry.tsx`                | `GameCategory`, `GameDefinition`, `GameRouteDefinition`                                                                  |
+| Game catalogue            | `src/lib/catalog/types.ts`                | `CatalogEntry`, `GameDefinition`, `Mode`, `Listing`, `GameRouteDefinition`                                               |
 | Player lobby              | `src/modules/player-management/types.ts`  | `LobbyPlayerItem`, `UseLobbyPlayersOptions`, `UseLobbyPlayersResult`, `PlayerManagerCardProps`                           |
 | MQTT sync                 | `src/modules/sync/MqttMailboxService.ts`  | `MqttEnvelope<T>`, `MqttMailboxOptions`, `MessageListener<T>`                                                            |
 | Multi-channel sync        | `src/modules/sync/useMultiChannelSync.ts` | `UseMultiChannelSyncOptions<T>`, `UseMultiChannelSyncReturn<T>`                                                          |
@@ -44,22 +44,34 @@ Do **not** copy types from here into code — import them from the source file. 
 
 ## 2. Excerpts
 
-### Game registry
+### Game catalogue
 
 ```typescript
-// src/lib/gameRegistry.tsx
-export type GameCategory =
-  'all' | 'dice' | 'drawing' | 'music' | 'social_deduction' | 'cards' | 'party' | 'puzzle';
+// src/lib/catalog/types.ts (ADR-0011)
+export type Mode = 'solo' | 'pass_and_play' | 'party_room' | 'async';
+export type EntryKind = 'game' | 'tool' | 'place';
+export type Listing = 'hub' | 'starters' | 'cards' | 'dice' | 'trackers' | 'hidden';
 
-export interface GameDefinition {
+export interface CatalogEntry {
   id: string;
-  route: string;
+  kind: EntryKind;
+  area: AreaId;
+  color?: PieceColor;
   titleKey: string;
-  descriptionKey: string;
+  title: string;
+  descKey: string;
+  modes: readonly Mode[];
+  listing: Listing;
+  launch: { type: 'route'; route: string } | { type: 'tabletop' };
+  party?: { gameType: PartyGameType; descKey?: string };
+}
+
+export interface GameDefinition extends CatalogEntry {
+  launch: { type: 'route'; route: string };
+  route: string;
   icon: React.ReactNode;
   component: React.ReactNode;
-  category: GameCategory;
-  hasSettings?: boolean;
+  settings?: { sections: GameSettingsSectionDefinition[] };
   nestedRoutes?: GameRouteDefinition[];
   standaloneRoutes?: GameRouteDefinition[];
 }
@@ -83,7 +95,7 @@ GuessArt's payload type, for example, is `GameSnapshot { game: GuessArtGameRecor
 ### UltraStar song
 
 ```typescript
-// src/modules/music-score/ultrastar.ts (Melodiq imports it via src/games/melodiq/parser.ts as Note / SongTrack / ParsedSong)
+// src/modules/music-score/ultrastar.ts (the parsed `.txt`; Melodiq sings it through ScoreSong, #604)
 export interface UltraStarNote {
   type: string; // ':' normal, '*' golden, 'F' freestyle, 'R' rap, 'G' golden rap, '-' line break
   start: number; // beats after GAP
@@ -91,17 +103,24 @@ export interface UltraStarNote {
   pitch: number; // MIDI number (0 for line breaks)
   text: string; // syllable
 }
-export interface SongTrack {
+export interface UltraStarTrack {
   name: string;
-  notes: Note[];
+  notes: UltraStarNote[];
 }
-export interface ParsedSong {
+export interface UltraStarSong {
   headers: Record<string, string>; // upper-cased #KEY: value
-  notes: Note[]; // @deprecated → tracks[0].notes
-  tracks: SongTrack[]; // duets have two
+  notes: UltraStarNote[]; // @deprecated → tracks[0].notes
+  tracks: UltraStarTrack[]; // duets have two
   bpm: number; // default 120
   gap: number; // ms, default 0
 }
+// src/modules/music-score/sungSong.ts — Melodiq's gameplay view of ScoreSong vocal parts
+export interface SungSong {
+  tracks: UltraStarTrack[]; // UltraStar grid, '-' line breaks
+  bpm: number;
+  gap: number; // ms
+}
+// src/games/melodiq/logic/songVocals.ts: SongVocals = SungSong + headers; Note / SongTrack aliases
 ```
 
 ### Tabletop

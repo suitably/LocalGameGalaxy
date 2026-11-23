@@ -8,6 +8,7 @@
  * swapped in without touching games.
  */
 import { MqttMailboxService } from '../sync/MqttMailboxService';
+import { getRoomKey } from '../sync/roomKeys';
 
 export interface RoomTransport {
   publish(channel: string, msg: unknown): void;
@@ -15,8 +16,33 @@ export interface RoomTransport {
   subscribe(channel: string, fn: (msg: unknown) => void): () => void;
 }
 
+/** Room of each channel used through `getRoomTransport(roomId)`: its key encrypts the channel. */
+const channelRooms = new Map<string, string>();
+
+const isStateMessage = (msg: unknown): boolean =>
+  typeof msg === 'object' && msg !== null && (msg as { kind?: unknown }).kind === 'state';
+
 // One mailbox per message type would be equal; the payload is untyped on the wire anyway.
-export const roomMailbox = new MqttMailboxService<unknown>({ topicPrefix: 'lgg/room' });
+export const roomMailbox = new MqttMailboxService<unknown>({
+  topicPrefix: 'lgg/room',
+  keyFor: (channel) => getRoomKey(channelRooms.get(channel)),
+  // Only the host's last state helps a late joiner; hello, actions and live events are not kept.
+  retain: isStateMessage,
+});
+
+/** Binds every channel used through `transport` to `roomId`, so the room's key applies. */
+export function bindTransportToRoom(transport: RoomTransport, roomId: string): RoomTransport {
+  return {
+    publish(channel, msg) {
+      channelRooms.set(channel, roomId);
+      transport.publish(channel, msg);
+    },
+    subscribe(channel, fn) {
+      channelRooms.set(channel, roomId);
+      return transport.subscribe(channel, fn);
+    },
+  };
+}
 
 const BROADCAST_PREFIX = 'room';
 
@@ -81,8 +107,15 @@ export function createMemoryTransport(): RoomTransport {
 type RoomTransportFactory = (roomId: string) => RoomTransport;
 
 let defaultTransport: RoomTransport | null = null;
-const defaultFactory: RoomTransportFactory = () =>
-  (defaultTransport ??= createBroadcastMqttTransport());
+const boundTransports = new Map<string, RoomTransport>();
+const defaultFactory: RoomTransportFactory = (roomId) => {
+  let bound = boundTransports.get(roomId);
+  if (!bound) {
+    bound = bindTransportToRoom((defaultTransport ??= createBroadcastMqttTransport()), roomId);
+    boundTransports.set(roomId, bound);
+  }
+  return bound;
+};
 let factory: RoomTransportFactory = defaultFactory;
 
 /** The transport for a party room. */

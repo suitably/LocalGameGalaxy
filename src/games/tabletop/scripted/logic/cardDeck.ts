@@ -2,6 +2,7 @@
  * Standard playing cards for scripted card games [ID: LOGIC-TABLETOP-SCRIPTED-CARDS]
  *
  * A card is its id: suit letter + rank (`H10`, `SA`, `CJ`). Suits: clubs, spades, hearts, diamonds.
+ * Jokers are `X1`, `X2`, …; a card of a second deck carries `~2` (`H10~2`), so ids stay unique.
  */
 import { shuffled, type Rng } from '../../logic/rng';
 
@@ -15,22 +16,31 @@ export const RANKS_52 = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q',
 export const RANKS_36 = RANKS_52.slice(4);
 export const RANKS_32 = RANKS_52.slice(5);
 
+export const isJoker = (card: CardId): boolean => card[0] === 'X';
+/** The suit; meaningless for a joker (check `isJoker` first). */
 export const suitOf = (card: CardId): Suit => card[0] as Suit;
-export const rankOf = (card: CardId): string => card.slice(1);
+/** `JOKER` for a joker; the deck copy (`~2`) is dropped. */
+export const rankOf = (card: CardId): string =>
+  isJoker(card) ? 'JOKER' : card.slice(1).split('~')[0];
 
 /** Position of the card's rank in `ranks` (low to high). */
 export const rankIndex = (card: CardId, ranks: readonly string[] = RANKS_52): number =>
   ranks.indexOf(rankOf(card));
 
-export function makeDeck(ranks: readonly string[]): CardId[] {
-  return SUITS.flatMap((suit) => ranks.map((rank) => `${suit}${rank}`));
+export function makeDeck(ranks: readonly string[], jokers = 0): CardId[] {
+  const jokerIds = Array.from({ length: jokers }, (_, i) => `X${i + 1}`);
+  return [...SUITS.flatMap((suit) => ranks.map((rank) => `${suit}${rank}`)), ...jokerIds];
 }
+
+/** The same cards as a second deck (`~2`). */
+export const secondDeck = (cards: readonly CardId[]): CardId[] => cards.map((c) => `${c}~2`);
 
 export const shuffledDeck = (ranks: readonly string[], rng: Rng): CardId[] =>
   shuffled(makeDeck(ranks), rng);
 
 /** `♥10`: for status texts. */
-export const cardText = (card: CardId): string => `${SUIT_SYMBOL[suitOf(card)]}${rankOf(card)}`;
+export const cardText = (card: CardId): string =>
+  isJoker(card) ? '🃏' : `${SUIT_SYMBOL[suitOf(card)]}${rankOf(card)}`;
 
 /** Sorted copy: by suit (in `suitOrder`), then by rank low to high. */
 export function sortCards(

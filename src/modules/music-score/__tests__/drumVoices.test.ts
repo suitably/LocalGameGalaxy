@@ -8,6 +8,13 @@ import {
   parseSticking,
   resolveDrumVoice,
 } from '../drumVoices';
+import {
+  DRUM_KICK_LANE,
+  DRUM_LANES,
+  DRUM_PERCUSSION_LANE,
+  drumLaneOf,
+  drumLaneOfVoice,
+} from '../instruments';
 import { parseMusicXml } from '../musicXml';
 import { parseXml } from './fixtures';
 
@@ -36,6 +43,29 @@ describe('drum voices', () => {
       if (v === 'snareRimshot' || v === 'snareGhost' || v === 'other') continue;
       expect(drumVoiceOfKey(DRUM_VOICE_KEY[v])).toBe(v);
     }
+  });
+
+  it('gives tambourine and other percussion their own voices (#571)', () => {
+    expect(drumVoiceOfKey(54)).toBe('tambourine');
+    for (const key of [39, 69, 70, 75, 82, 27]) expect(drumVoiceOfKey(key)).toBe('other');
+    expect(drumVoiceOfName('Hand Clap')).toBe('other');
+    expect(drumVoiceOfName('Shaker')).toBe('other');
+    expect(drumVoiceOfName('Maracas')).toBe('other');
+  });
+
+  it('puts every voice on its kit lane and non-kit sounds on the percussion lane', () => {
+    expect(DRUM_LANES[DRUM_PERCUSSION_LANE]).toBe('percussion');
+    expect(DRUM_LANES[DRUM_KICK_LANE]).toBe('kick');
+    const lanes = (
+      ['crash', 'hihatOpen', 'snare', 'tom1', 'tom2', 'tom3', 'floorTom'] as const
+    ).map(drumLaneOfVoice);
+    expect(lanes).toEqual([0, 1, 2, 3, 4, 5, 6]);
+    for (const v of ['tambourine', 'cowbell', 'other'] as const)
+      expect(drumLaneOfVoice(v)).toBe(DRUM_PERCUSSION_LANE);
+    // GM 54 tambourine, 39 clap, 56 cowbell and unknown keys: never the hi-hat lane
+    for (const key of [54, 39, 56, 69, 70, 75, 10])
+      expect(drumLaneOf(key)).toBe(DRUM_PERCUSSION_LANE);
+    expect(drumLaneOf(22)).toBe(1); // Roland hi-hat edge
   });
 
   it('reads instrument names', () => {

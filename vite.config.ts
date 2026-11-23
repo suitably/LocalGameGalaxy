@@ -85,7 +85,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,woff,woff2,wasm}'],
         // Excalidraw's fonts (13 MB, mostly CJK) are cached on first use, not precached
         globIgnores: ['**/excalidraw/fonts/**'],
         runtimeCaching: [

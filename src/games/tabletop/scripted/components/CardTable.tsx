@@ -6,13 +6,14 @@
  */
 import React, { useEffect } from 'react';
 import { alpha, Box, Button, Chip, Stack, Typography } from '@mui/material';
-import type { ScriptMove, ScriptView } from '../logic/scriptTypes';
+import type { ScriptMove, ScriptView, SlotRef } from '../logic/scriptTypes';
 import { playableAlone } from '../logic/selection';
 import { useCardSelection } from '../hooks/useCardSelection';
 import { useScriptText } from '../hooks/useScriptText';
 import { HandFan } from './HandFan';
 import { RoundSummaryPanel } from './RoundSummaryPanel';
 import { SeatBadges } from './SeatBadges';
+import { SlotGrid } from './SlotGrid';
 import { TablePiles } from './TablePiles';
 
 interface CardTableProps {
@@ -39,6 +40,8 @@ export const CardTable: React.FC<CardTableProps> = ({
   const selection = useCardSelection(view, step, allowed, onMove);
   const isTable = viewer === null;
   const myTurn = viewer !== null && view.active.includes(viewer);
+  const mySlots = viewer === null ? undefined : view.seats[viewer]?.slots;
+  const onSlot = (ref: SlotRef) => onMove({ kind: 'slot', ...ref });
 
   useEffect(() => {
     if (myTurn && typeof navigator !== 'undefined') navigator.vibrate?.(40);
@@ -76,7 +79,14 @@ export const CardTable: React.FC<CardTableProps> = ({
       }}
     >
       <Box sx={{ p: 1, flexShrink: 0, maxHeight: '34%', overflowY: 'auto' }}>
-        <SeatBadges view={view} names={names} viewer={viewer} text={text} large={isTable} />
+        <SeatBadges
+          view={view}
+          names={names}
+          viewer={viewer}
+          text={text}
+          large={isTable}
+          onSlot={isTable ? undefined : onSlot}
+        />
       </Box>
 
       <Box
@@ -146,20 +156,31 @@ export const CardTable: React.FC<CardTableProps> = ({
         }}
       >
         {actions}
-        {isTable ? (
-          tableHint && (
-            <Typography variant="body2" color="text.secondary" textAlign="center">
-              {tableHint}
-            </Typography>
-          )
-        ) : (
-          <HandFan
-            cards={view.hand}
-            picked={selection.sel.cards}
-            dimmed={(card) => view.select === 'one' && !playableAlone(card, view, allowed)}
-            onTap={view.select === 'none' ? undefined : selection.tapCard}
+        {mySlots && viewer !== null && (
+          <SlotGrid
+            seat={viewer}
+            slots={mySlots}
+            columns={view.seats[viewer].slotColumns}
+            targets={view.slotTargets}
+            onTap={onSlot}
+            width={64}
+            text={text}
           />
         )}
+        {isTable
+          ? tableHint && (
+              <Typography variant="body2" color="text.secondary" textAlign="center">
+                {tableHint}
+              </Typography>
+            )
+          : view.hand.length > 0 && (
+              <HandFan
+                cards={view.hand}
+                picked={selection.sel.cards}
+                dimmed={(card) => view.select === 'one' && !playableAlone(card, view, allowed)}
+                onTap={view.select === 'none' ? undefined : selection.tapCard}
+              />
+            )}
       </Box>
     </Box>
   );

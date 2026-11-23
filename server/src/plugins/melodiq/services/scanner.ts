@@ -190,10 +190,8 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
     }
   }
 
-  // Fallback Duration
-  if (!duration && headers['END']) {
-    duration = parseFloat(headers['END']) / 1000;
-  }
+  // Fallback duration
+  if (!duration && headers['END']) duration = parseFloat(headers['END']) / 1000;
 
   return {
     id:
@@ -204,6 +202,7 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
     bpm: parseFloat(headers['BPM']?.replace(',', '.') || '0'),
     gap: parseFloat(headers['GAP']?.replace(',', '.') || '0'),
     edition: headers['EDITION'],
+    album: headers['ALBUM'] || meta?.album || undefined,
     genre: headers['GENRE'],
     language: headers['LANGUAGE'],
     year: headers['YEAR'],
@@ -223,6 +222,7 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
     folderScores,
     recordings,
     labels: meta?.labels ?? {},
+    partSettings: meta?.parts ?? {},
     searchString:
       `${headers['TITLE']} ${headers['ARTIST']} ${headers['GENRE']} ${headers['LANGUAGE']}`.toLowerCase(),
   };

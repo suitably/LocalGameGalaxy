@@ -8,6 +8,7 @@
 import { useEffect, useRef } from 'react';
 import LZString from 'lz-string';
 import { parseGameUrlParams, cleanWindowUrlQuery } from './parseGameUrlParams';
+import { captureInviteKey } from '../sync/roomKeys';
 
 export interface UseGameJoinUrlOptions<T> {
   onSnapshotLoaded?: (snapshot: T, params: URLSearchParams) => Promise<void> | void;
@@ -40,9 +41,11 @@ export function useGameJoinUrl<T>({
     const processUrl = async () => {
       const params = parseGameUrlParams();
       if (!params.toString()) return;
+      captureInviteKey(); // before the game subscribes to its mailbox (ADR 0009)
 
       const dataParam = params.get('data');
-      const gameIdParam = params.get('gameId') || params.get('game') || params.get('room') || params.get('roomId');
+      const gameIdParam =
+        params.get('gameId') || params.get('game') || params.get('room') || params.get('roomId');
 
       if (dataParam && onSnapshotLoadedRef.current) {
         try {
