@@ -71,6 +71,7 @@ npm run check:docs              # doc-sync gate: core changes in src/games|modul
 npm run check:changelog         # validates changelog.d/ and docs/log.d/ fragments
 npm run lint                    # ESLint, 0 errors
 npm run check:lint-budget       # per-file warning ratchet (lower baselines with -- --update)
+npm run test:coverage && npm run check:coverage  # logic/ line-coverage ratchet (CI job, not a hook)
 npm test                        # Vitest
 npm run build                   # tsc -b && vite build
 npm run quality-gates           # hygiene + architecture:diff + budget + duplicates + lint + lint-budget + test

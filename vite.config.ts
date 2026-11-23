@@ -166,5 +166,20 @@ export default defineConfig({
   },
   test: {
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    // Used by `npm run test:coverage`; `scripts/check-coverage.mjs` ratchets src/**/logic/** (#850).
+    coverage: {
+      provider: 'v8',
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/**/*.{test,spec}.{ts,tsx}',
+        'src/**/*.d.ts',
+        'src/**/i18n/**',
+        'src/games/wordle/data/**',
+        'src/games/wordle/logic/allowedGuesses.ts',
+        'src/games/imposter/logic/wordPairs_*.ts',
+      ],
+      reporter: ['text-summary', 'json-summary'],
+      reportsDirectory: 'coverage',
+    },
   },
 });

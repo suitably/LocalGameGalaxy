@@ -69,3 +69,6 @@ dev-dist/
 
 # TTS compatibility harness cache (Workshop saves; never commit, Q21)
 scripts/tts-compat/.cache/
+
+# Test coverage output (npm run test:coverage)
+coverage
