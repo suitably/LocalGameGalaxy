@@ -18,7 +18,7 @@ const NO_SLEEP_MP4 =
  * @param enabled - Whether the screen lock should be active.
  */
 export function useWakeLock(enabled: boolean = true) {
-  const sentinelRef = useRef<any>(null);
+  const sentinelRef = useRef<WakeLockSentinel | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
@@ -112,7 +112,7 @@ export function useWakeLock(enabled: boolean = true) {
     const requestWakeLock = async () => {
       if ('wakeLock' in navigator) {
         try {
-          const lock = await (navigator as any).wakeLock.request('screen');
+          const lock = await navigator.wakeLock.request('screen');
           if (isMounted) {
             sentinelRef.current = lock;
             lock.addEventListener('release', () => {
@@ -122,10 +122,10 @@ export function useWakeLock(enabled: boolean = true) {
           } else {
             lock.release().catch(() => {});
           }
-        } catch (err: any) {
+        } catch (err) {
           console.debug(
             '[useWakeLock] Native wake lock rejected, falling back to video:',
-            err.message,
+            err instanceof Error ? err.message : err,
           );
         }
       }

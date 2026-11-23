@@ -2,6 +2,17 @@ import { useEffect } from 'react';
 
 export type ScreenOrientationType = 'portrait' | 'landscape' | 'any';
 
+/** `lock`/`unlock` are missing from some lib.dom versions of `ScreenOrientation`. */
+interface LockableScreenOrientation {
+    lock(orientation: 'landscape' | 'portrait-primary'): Promise<void>;
+    unlock(): void;
+}
+
+const isLockable = (
+    orientation: ScreenOrientation | undefined,
+): orientation is ScreenOrientation & LockableScreenOrientation =>
+    !!orientation && 'lock' in orientation && 'unlock' in orientation;
+
 /**
  * Hook to lock or request a specific screen orientation on supported mobile devices.
  * Gracefully ignores unsupported platforms or permission restrictions.
@@ -14,14 +25,16 @@ export function useScreenOrientation(orientation?: ScreenOrientationType) {
 
         const lockOrientation = async () => {
             try {
-                if (window.screen?.orientation && 'lock' in window.screen.orientation) {
+                const screenOrientation = window.screen?.orientation;
+                if (isLockable(screenOrientation)) {
                     const type = orientation === 'landscape' ? 'landscape' : 'portrait-primary';
-                    await (window.screen.orientation as any).lock(type);
+                    await screenOrientation.lock(type);
                 }
-            } catch (err: any) {
+            } catch (err) {
+                const error = err as { name?: string; message?: string } | null;
                 // Screen orientation lock requires fullscreen or mobile environment on standard web
-                if (err?.name !== 'SecurityError' && err?.name !== 'NotSupportedError') {
-                    console.debug('[useScreenOrientation] Orientation lock skipped/unsupported:', err?.message);
+                if (error?.name !== 'SecurityError' && error?.name !== 'NotSupportedError') {
+                    console.debug('[useScreenOrientation] Orientation lock skipped/unsupported:', error?.message);
                 }
             }
         };
@@ -30,8 +43,9 @@ export function useScreenOrientation(orientation?: ScreenOrientationType) {
 
         return () => {
             try {
-                if (window.screen?.orientation && 'unlock' in window.screen.orientation) {
-                    (window.screen.orientation as any).unlock();
+                const screenOrientation = window.screen?.orientation;
+                if (isLockable(screenOrientation)) {
+                    screenOrientation.unlock();
                 }
             } catch {}
         };

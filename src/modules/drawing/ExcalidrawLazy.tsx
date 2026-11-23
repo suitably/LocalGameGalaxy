@@ -1,4 +1,9 @@
 import React, { useCallback, useRef, useState } from 'react';
+import type { ExcalidrawImperativeAPI, LibraryItems } from '@excalidraw/excalidraw/types';
+import type {
+  LibraryPersistenceAdapter,
+  LibraryPersistedData,
+} from '@excalidraw/excalidraw/data/library';
 import { ensureStyles } from './excalidrawLazyStyles';
 import { storage, STORAGE_KEYS } from '../../lib/storage';
 
@@ -18,17 +23,21 @@ export const ExcalidrawLazy = React.lazy(async () => {
   }
 
   const ExcalidrawComponent = module.Excalidraw;
-  const useHandleLibrary = module.useHandleLibrary;
+  // older builds may not export the hook; a no-op keeps the call unconditional
+  const useHandleLibrary: typeof module.useHandleLibrary = module.useHandleLibrary ?? (() => {});
 
-  const adapter = {
+  const adapter: LibraryPersistenceAdapter = {
     load: async () => {
       try {
-        const stored = storage.getJson<any>(STORAGE_KEYS.EXCALIDRAW_LIBRARY, null);
+        const stored = storage.getJson<LibraryItems | LibraryPersistedData | null>(
+          STORAGE_KEYS.EXCALIDRAW_LIBRARY,
+          null,
+        );
         if (stored) {
           if (Array.isArray(stored)) {
             return { libraryItems: stored };
           }
-          if (stored.libraryItems) {
+          if ('libraryItems' in stored && stored.libraryItems) {
             return { libraryItems: stored.libraryItems };
           }
         }
@@ -38,7 +47,7 @@ export const ExcalidrawLazy = React.lazy(async () => {
       }
       return null;
     },
-    save: async (libraryData: any) => {
+    save: async (libraryData: LibraryPersistedData) => {
       try {
         storage.setJson(STORAGE_KEYS.EXCALIDRAW_LIBRARY, libraryData);
       } catch (err) {
@@ -48,23 +57,18 @@ export const ExcalidrawLazy = React.lazy(async () => {
   };
 
   const ExcalidrawWithLibrary: React.FC<Record<string, unknown>> = (props) => {
-    const [api, setApi] = useState<unknown>(null);
+    const [api, setApi] = useState<ExcalidrawImperativeAPI | null>(null);
     const excalidrawAPIRef = useRef(props.excalidrawAPI);
     excalidrawAPIRef.current = props.excalidrawAPI;
 
-    const handleApi = useCallback((instance: unknown) => {
-      setApi((prev: unknown) => (prev === instance ? prev : instance));
+    const handleApi = useCallback((instance: ExcalidrawImperativeAPI) => {
+      setApi((prev) => (prev === instance ? prev : instance));
       if (typeof excalidrawAPIRef.current === 'function') {
-        (excalidrawAPIRef.current as (api: unknown) => void)(instance);
+        (excalidrawAPIRef.current as (api: ExcalidrawImperativeAPI) => void)(instance);
       }
     }, []);
 
-    if (useHandleLibrary) {
-      (useHandleLibrary as any)({
-        excalidrawAPI: api as never,
-        adapter: adapter as never,
-      });
-    }
+    useHandleLibrary({ excalidrawAPI: api, adapter });
 
     return (
       <ExcalidrawComponent

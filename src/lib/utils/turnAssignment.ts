@@ -1,5 +1,20 @@
 import { storage } from '../storage';
 
+/** The player fields that decide whether two snapshots differ. */
+export interface ComparablePlayer {
+  id: string;
+  name?: string;
+  ntfyTopic?: string;
+  relayUrl?: string;
+  notificationMethod?: string;
+}
+
+export interface ComparableGame<TPlayer extends ComparablePlayer = ComparablePlayer> {
+  name?: string;
+  players?: TPlayer[];
+  updatedAt?: string | number | Date;
+}
+
 export const createPlayerAssignment = (storagePrefix: string) => {
   return {
     getLocalPlayerIds(gameId: string): string[] {
@@ -40,9 +55,9 @@ export const createPlayerAssignment = (storagePrefix: string) => {
  * `comparePlayers: false` for games with player seats: seats and channels are merged on their
  * own (`mergeSeatsInto`), so differing channels must not make a whole snapshot count as newer.
  */
-export const isGameBaseSnapshotNewer = (
-  snapshotGame: any,
-  existingGame: any,
+export const isGameBaseSnapshotNewer = <TPlayer extends ComparablePlayer>(
+  snapshotGame: ComparableGame<TPlayer>,
+  existingGame: ComparableGame<TPlayer>,
   options: { comparePlayers?: boolean } = {},
 ): boolean | null => {
   if (snapshotGame.name !== existingGame.name) return true;
@@ -51,7 +66,7 @@ export const isGameBaseSnapshotNewer = (
     snapshotGame.players &&
     existingGame.players &&
     JSON.stringify(
-      snapshotGame.players.map((p: any) => ({
+      snapshotGame.players.map((p) => ({
         id: p.id,
         name: p.name,
         ntfyTopic: p.ntfyTopic,
@@ -60,7 +75,7 @@ export const isGameBaseSnapshotNewer = (
       })),
     ) !==
       JSON.stringify(
-        existingGame.players.map((p: any) => ({
+        existingGame.players.map((p) => ({
           id: p.id,
           name: p.name,
           ntfyTopic: p.ntfyTopic,
