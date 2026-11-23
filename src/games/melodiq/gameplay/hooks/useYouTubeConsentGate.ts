@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
-import { getYouTubeVideoId } from '../YouTubeBackgroundPlayer';
+import { getYouTubeVideoId } from '../youtubeApi';
 import {
   getYouTubeConsent,
   setYouTubeConsent,

@@ -1,6 +1,6 @@
 import { type SongMeta, type Song } from '../db';
 import { melodiqFetch } from '../api/melodiqFetch';
-import { getYouTubeVideoId } from '../gameplay/YouTubeBackgroundPlayer';
+import { getYouTubeVideoId } from '../gameplay/youtubeApi';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import type { SongScore } from '../../../lib/companion/songScoresApi';
 import { isSingableServerSong } from './scoreVocals';

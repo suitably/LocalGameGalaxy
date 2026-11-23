@@ -12,7 +12,7 @@ import {
   type PeerClientLike,
 } from '../../../modules/room-game/peerTransport';
 import type { RoomTransport } from '../../../modules/room-game/roomTransport';
-import { useWebRTC } from '../audio/WebRTCContext';
+import { useWebRTC } from '../audio/webRTCContextCore';
 
 /** Room game key of every Melodiq room event channel (`melodiq_<roomId>_live`). */
 export const MELODIQ_GAME_KEY = 'melodiq';

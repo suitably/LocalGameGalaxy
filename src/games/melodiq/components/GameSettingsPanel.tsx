@@ -9,7 +9,7 @@ import {
   AccordionDetails,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
-import type { SettingsState } from '../hooks/SettingsContext';
+import type { SettingsState } from '../hooks/settingsContextCore';
 import { CustomLayoutsEditor } from './CustomLayoutsEditor';
 import { AutoplaySettings } from './AutoplaySettings';
 import { AudioSettingsSection } from './AudioSettingsSection';

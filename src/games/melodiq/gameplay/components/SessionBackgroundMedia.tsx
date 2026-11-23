@@ -1,7 +1,8 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, Typography, Snackbar, Alert } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { YouTubeBackgroundPlayer, getYouTubeVideoId } from '../YouTubeBackgroundPlayer';
+import { YouTubeBackgroundPlayer } from '../YouTubeBackgroundPlayer';
+import { getYouTubeVideoId } from '../youtubeApi';
 import { useYouTubeConsentGate } from '../hooks/useYouTubeConsentGate';
 import { YouTubeConsentDialog } from './YouTubeConsentDialog';
 

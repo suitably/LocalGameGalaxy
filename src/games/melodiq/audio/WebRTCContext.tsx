@@ -1,11 +1,7 @@
 import React from 'react';
 import { parseGameUrlParams } from '../../../modules/sharing';
-import { WebRTCHostProvider, useWebRTCHost, WebRTCHostContext } from '../../../lib/webrtc';
+import { WebRTCHostProvider, WebRTCHostContext } from '../../../lib/webrtc';
 import { WebRTCMicManager, type MicRemotePeer } from './WebRTCMicManager';
-
-export const useWebRTC = () => {
-  return useWebRTCHost<MicRemotePeer, WebRTCMicManager>();
-};
 
 const createMicManager = (partyId: string, trackerUrls: string[], callbacks: any) => {
   return new WebRTCMicManager(partyId, trackerUrls, callbacks);

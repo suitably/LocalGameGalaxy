@@ -5,7 +5,7 @@ import {
   type PresentationConnection,
   type NavigatorWithPresentation,
 } from '../types';
-import { useMelodiqSettings, type SettingsState } from './SettingsContext';
+import { useMelodiqSettings, type SettingsState } from './settingsContextCore';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { TvMediaAssembler, type TvMediaManifest } from '../logic/tvMediaTransfer';
 import { useMultiChannelSync } from '../../../modules/sync';

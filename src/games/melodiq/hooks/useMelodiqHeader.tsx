@@ -11,7 +11,7 @@ import GroupsIcon from '@mui/icons-material/GroupsRounded';
 import { universalPartyManager } from '../../../features/party/logic/universalPartyManager';
 import { parseGameUrlParams } from '../../../modules/sharing';
 
-import { type LoadingProgress } from './useSongs';
+import { type LoadingProgress } from './useSongsCore';
 import TuneIcon from '@mui/icons-material/TuneRounded';
 import { useClientEngine } from '../phoneClientContext';
 import { canEditHostSettings } from '../logic/hostSettingsRpc';

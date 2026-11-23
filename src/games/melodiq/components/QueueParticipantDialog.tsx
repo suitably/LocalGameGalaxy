@@ -14,7 +14,7 @@ import {
 import { DragDropContext, Droppable, type DropResult } from '@hello-pangea/dnd';
 import type { MelodiqProfile } from '../types';
 import { useQueue } from '../hooks/useQueue';
-import { useWebRTC } from '../audio/WebRTCContext';
+import { useWebRTC } from '../audio/webRTCContextCore';
 import { ActiveParticipantRow, AvailableProfileRow, type MicNames } from './QueueParticipantRows';
 import {
   BOT_PROFILE_ID,

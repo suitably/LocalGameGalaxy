@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Grid, Typography } from '@mui/material';
 import { useQueue } from '../hooks/useQueue';
-import { useMelodiqSettings } from '../hooks/SettingsContext';
+import { useMelodiqSettings } from '../hooks/settingsContextCore';
 import { ScoreBoardQrCode } from './ScoreBoardQrCode';
 import {
   buildHistoricalRanking,

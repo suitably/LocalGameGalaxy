@@ -12,7 +12,7 @@ import {
 import YouTubeIcon from '@mui/icons-material/YouTube';
 import { useTranslation } from 'react-i18next';
 import { privacyNoticePath } from '../../../../features/settings/privacyNotice';
-import { useMelodiqSettings } from '../../hooks/SettingsContext';
+import { useMelodiqSettings } from '../../hooks/settingsContextCore';
 import { FallbackBackgroundField } from '../../components/FallbackBackgroundField';
 
 interface YouTubeConsentDialogProps {

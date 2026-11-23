@@ -1,6 +1,4 @@
 import React, {
-  createContext,
-  useContext,
   useEffect,
   useState,
   useCallback,
@@ -9,50 +7,12 @@ import React, {
 } from 'react';
 import { WebRTCHostManager } from './WebRTCHostManager';
 import type { RemotePeerBase } from './WebRTCHostManager';
-import { DEFAULT_PUBLIC_TRACKERS, type TrackerItem } from './trackerTypes';
+import { WebRTCHostContext } from './webRTCHostContextCore';
 import { useRosterBroadcast } from './useRosterBroadcast';
 import { useTrackerConfig } from './useTrackerConfig';
 import { applyPeerConnected, applyPeerCreated, applyPeerUpdated } from './peerListUpdates';
 import { storage, STORAGE_PREFIXES } from '../storage';
 import { initialPartyId, randomPartyId } from './initialPartyId';
-
-export { DEFAULT_PUBLIC_TRACKERS, type TrackerItem };
-
-export interface WebRTCHostContextType<
-  T extends RemotePeerBase = RemotePeerBase,
-  M extends WebRTCHostManager<T> = WebRTCHostManager<T>,
-> {
-  manager: M | null;
-  peers: T[];
-  activePeers: T[];
-  inactivePeers: T[];
-  togglePeerActive: (peerId: string) => void;
-  partyId: string;
-  regeneratePartyId: () => void;
-  trackerUrls: string[];
-  activeTrackerUrls: string[];
-  disabledTrackerUrls: string[];
-  allTrackers: TrackerItem[];
-  toggleTrackerActive: (url: string, enabled?: boolean) => void;
-  addTrackerUrl: (url: string) => void;
-  removeTrackerUrl: (url: string) => void;
-  restoreDefaultTrackers: () => void;
-}
-
-// We use a generic context type but map to any under the hood.
-// Consumers can cast it or use specific typed hooks.
-export const WebRTCHostContext = createContext<WebRTCHostContextType<any, any> | null>(null);
-
-export function useWebRTCHost<
-  T extends RemotePeerBase = RemotePeerBase,
-  M extends WebRTCHostManager<T> = WebRTCHostManager<T>,
->() {
-  const context = useContext(WebRTCHostContext);
-  if (!context) {
-    throw new Error('useWebRTCHost must be used within a WebRTCHostProvider');
-  }
-  return context as WebRTCHostContextType<T, M>;
-}
 
 export interface WebRTCHostProviderProps<T extends RemotePeerBase, M extends WebRTCHostManager<T>> {
   children: React.ReactNode;

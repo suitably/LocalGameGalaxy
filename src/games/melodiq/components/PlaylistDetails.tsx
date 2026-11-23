@@ -23,7 +23,7 @@ import MusicNoteIcon from '@mui/icons-material/MusicNoteRounded';
 
 import { useTranslation } from 'react-i18next';
 import { usePlaylists } from '../hooks/usePlaylists';
-import { useSongs } from '../hooks/useSongs';
+import { useSongs } from '../hooks/useSongsCore';
 import { useQueue } from '../hooks/useQueue';
 import { songsByIds } from '../logic/songLibrary';
 

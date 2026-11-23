@@ -9,8 +9,6 @@ import { DeviceTrackerSettings } from './DeviceTrackerSettings';
 import { StunServerSettings } from './StunServerSettings';
 import type { DeviceConnectionProps } from './types';
 
-export * from './types';
-
 /**
  * QR code, connected peers and connection details for phone controllers. It renders no own top
  * bar: the host screen sets the page title (usePageTitle / setHeader) and the GlobalHeader back

@@ -6,7 +6,7 @@ import PlaylistAddIcon from '@mui/icons-material/PlaylistAddRounded';
 import { useTranslation } from 'react-i18next';
 import { MINI_PLAYER_OFFSET } from './miniPlayerLayout';
 import { useHistory } from '../hooks/useHistory';
-import { useSongs } from '../hooks/useSongs';
+import { useSongs } from '../hooks/useSongsCore';
 import { useProfiles } from '../hooks/useProfiles';
 import { usePlaylists } from '../hooks/usePlaylists';
 import { HistorySessionItem } from './HistorySessionItem';

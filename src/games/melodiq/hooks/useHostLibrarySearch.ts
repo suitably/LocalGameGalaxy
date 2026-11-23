@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useRoomEvents } from '../../../modules/room-game/useRoomEvents';
 import { handleLibrarySearchEvent, type LibraryEvent } from '../logic/librarySearch';
 import { MELODIQ_GAME_KEY, useMelodiqRoomTransport } from './useMelodiqRoomTransport';
-import { useSongs } from './useSongs';
+import { useSongs } from './useSongsCore';
 
 /** Host side of library search: answers `library.search` room events to the asking phone only. */
 export function useHostLibrarySearch(): void {
