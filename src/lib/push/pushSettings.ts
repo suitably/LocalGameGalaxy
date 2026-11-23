@@ -1,7 +1,7 @@
 /**
  * Push notification settings on this device: relay URL, method and ntfy topic [ID: LIB-PUSH-SETTINGS]
  */
-import { storage, STORAGE_KEYS } from '../storage';
+import { storage, STORAGE_KEYS } from '../storageCore';
 import type { StoredPushSubscription } from './pushTypes';
 
 export type NotificationMethod = 'auto' | 'webpush' | 'ntfy' | 'both';

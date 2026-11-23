@@ -11,7 +11,7 @@ import { useQueue } from '../hooks/useQueue';
 import { usePlaybackReporting, IDLE_PLAYBACK_STATE } from '../hooks/usePlaybackReporting';
 import { useHostPlaybackCommands } from '../hooks/useHostPlaybackCommands';
 import { createMiniPlayerNextHandler } from '../hooks/miniPlayerNext';
-import { useClientEngine } from '../PhoneClientEngine';
+import { useClientEngine } from '../phoneClientContext';
 import { useTranslation } from 'react-i18next';
 
 interface PlaybackManagerProps {

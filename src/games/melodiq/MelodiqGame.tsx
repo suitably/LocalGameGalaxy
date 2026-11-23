@@ -11,7 +11,8 @@ import { useDownloads } from './hooks/useDownloads';
 import { PhoneQueueBridge } from './components/PhoneQueueBridge';
 import { HostSettingsRpcBridge } from './components/HostSettingsRpcBridge';
 import { HostFeedbackBridge } from './components/HostFeedbackBridge';
-import { PhoneClientEngine, useClientEngine } from './PhoneClientEngine';
+import { PhoneClientEngine } from './PhoneClientEngine';
+import { useClientEngine } from './phoneClientContext';
 import { useTVMode } from './hooks/useTVMode';
 import { useSearchFilters } from './hooks/useSearchFilters';
 import { MelodiqHomeView } from './components/MelodiqHomeView';
@@ -62,7 +63,6 @@ export const MelodiqGameContent: React.FC = () => {
   );
   const { settings } = useMelodiqSettings();
   const { clientRole, clientProfile } = useClientEngine();
-
   const searchFilterState = useSearchFilters(songs, jobs);
 
   const [showQueueDrawer, setShowQueueDrawer] = useState(false);

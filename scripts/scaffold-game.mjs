@@ -92,7 +92,7 @@ const storageKeyValue = `${gameId.replace(/-/g, '_')}_game_state`;
 const rel = (p) => path.relative(ROOT_DIR, p).split(path.sep).join('/');
 const targetDir = path.join(ROOT_DIR, 'src', 'games', gameId);
 const entriesPath = path.join(ROOT_DIR, 'src', 'lib', 'catalog', 'entries.ts');
-const storagePath = path.join(ROOT_DIR, 'src', 'lib', 'storage.ts');
+const storagePath = path.join(ROOT_DIR, 'src', 'lib', 'storageCore.ts');
 const localePaths = {
   de: path.join(ROOT_DIR, 'public', 'locales', 'de', 'translation.json'),
   en: path.join(ROOT_DIR, 'public', 'locales', 'en', 'translation.json'),
@@ -259,7 +259,7 @@ function insertOnce(content, anchor, replacement, label) {
 
 const patches = []; // { file, content }
 
-// storage.ts: register the key (no unregistered keys, see Q8).
+// storageCore.ts: register the key (no unregistered keys, see Q8).
 {
   let c = fs.readFileSync(storagePath, 'utf8');
   if (c.includes(`${storageKeyName}:`)) fail(`STORAGE_KEYS.${storageKeyName} already exists.`);
@@ -267,7 +267,7 @@ const patches = []; // { file, content }
     c,
     "  DARTS_GAME_STATE: 'darts_game_state',\n",
     `  DARTS_GAME_STATE: 'darts_game_state',\n  ${storageKeyName}: '${storageKeyValue}',\n`,
-    'storage.ts',
+    'storageCore.ts',
   );
   patches.push({ file: storagePath, content: c });
 }

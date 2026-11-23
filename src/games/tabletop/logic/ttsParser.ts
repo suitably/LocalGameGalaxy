@@ -5,26 +5,13 @@
  * TabletopGameDefinition (2D widget-based) format.
  */
 import { attachStates, convertBag, convertFogOfWar, isTtsBag, tileShape } from './ttsContainers';
-import type {
-  TTSSaveFile,
-  TTSObjectState,
-  TTSCustomDeckEntry,
-  TTSSnapPoint,
-  TTSTransform,
-  TTSVector3,
-} from './ttsTypes';
+import type { TTSSaveFile, TTSObjectState, TTSCustomDeckEntry } from './ttsTypes';
 import {
   HEX_CLIP_PATH,
   CIRCLE_CLIP_PATH,
   type TabletopGameDefinition,
   type TabletopWidget,
-  type CardWidget,
-  type DeckWidget,
   type HiddenZone,
-  type DieWidget,
-  type TokenWidget,
-  type HolderWidget,
-  type CardContent,
   type ScriptZone,
 } from './types';
 import { validateAndSanitizeGame } from './gameValidator';
@@ -32,7 +19,6 @@ import { buildImportReport, extractScripts } from './ttsImportReport';
 import { applyLuaTranslation, withRuntimeMeta } from './ttsLuaImport';
 import {
   assignSeats,
-  cardOrientation,
   claimId,
   convertScriptZone,
   convertText,
@@ -41,60 +27,31 @@ import {
   resetIdClaims,
   rulesFromTabs,
 } from './ttsFidelity';
-import { resolveCardSprite, resolveBackSprite } from './ttsSpritesheet';
 
-/** Scale factor: 1 TTS unit ≈ this many pixels */
-const TTS_SCALE = 50;
-/** A standard TTS card at scale 1 is about 2.2 × 3.1 units. */
-const CARD_W = 110;
-const CARD_H = 155;
-/**
- * Play surface of the custom rectangle table (`Table_Custom`), centred on the origin; the
- * `TableURL` image is stretched over it whatever its aspect ratio.
- */
-const CUSTOM_TABLE = { width: 88, depth: 52 };
-/** Widget id of the board made from the custom table image. */
-export const TTS_TABLE_WIDGET_ID = 'tts_table';
-/** Token/figurine default size */
-const TOKEN_SIZE = 76;
-/** Die default size */
-const DIE_SIZE = 80;
+import { TTS_SCALE, CARD_W, CARD_H, CUSTOM_TABLE, TTS_TABLE_WIDGET_ID } from './tts/ttsConstants';
+import {
+  getCardShapeAndSize,
+  topLeft,
+  ttsColorToHex,
+  parseDieSides,
+  computeBounds,
+  projectPosition,
+  calculateWorldPosOfSnapPoint,
+  projectWorldPos,
+  createSnapHolderWidget,
+} from './tts/ttsGeometry';
+import { sanitizeTtsUrl, customTableImage, collectCustomDecks } from './tts/ttsUrl';
+import { convertCard, convertDeck, resetWidgetIdCounter } from './tts/ttsCardConvert';
+import {
+  convertDie,
+  convertBoard,
+  convertToken,
+  convertModel,
+  convertHandTrigger,
+} from './tts/ttsObjectConvert';
 
+export { TTS_TABLE_WIDGET_ID, getCardShapeAndSize, sanitizeTtsUrl };
 export { HEX_CLIP_PATH, CIRCLE_CLIP_PATH };
-
-export function getCardShapeAndSize(
-  deck?: TTSCustomDeckEntry,
-  transform?: TTSTransform,
-): {
-  width: number;
-  height: number;
-  clipPath?: string;
-} {
-  if (deck?.Type === 2 || deck?.Type === 3) {
-    // Hex cards: TTS hex base is ~1.15 aspect ratio
-    return { width: 210, height: 182, clipPath: HEX_CLIP_PATH };
-  }
-  if (deck?.Type === 4) {
-    // Circle cards
-    return { width: 100, height: 100, clipPath: CIRCLE_CLIP_PATH };
-  }
-  return {
-    width: Math.round(CARD_W * (transform?.scaleX || 1)),
-    height: Math.round(CARD_H * (transform?.scaleZ || 1)),
-  };
-}
-
-/** The custom table image of a save, when its table shows one. */
-function customTableImage(save: TTSSaveFile): string | undefined {
-  return save.Table === 'Table_Custom' ? sanitizeTtsUrl(save.TableURL) || undefined : undefined;
-}
-
-/** Top-left corner of a widget of the given size centred on a projected object position. */
-function topLeft(pos: { x: number; y: number }, width: number, height: number) {
-  return { x: Math.round(pos.x - width / 2), y: Math.round(pos.y - height / 2) };
-}
-
-// ─── Detection ───────────────────────────────────────────────────────
 
 /**
  * Returns true if the parsed JSON looks like a TTS save file.
@@ -106,492 +63,6 @@ export function isTtsSaveFile(json: unknown): json is TTSSaveFile {
 }
 
 // ─── Color Helpers ───────────────────────────────────────────────────
-
-function ttsColorToHex(c?: { r: number; g: number; b: number }): string {
-  if (!c) return '#ffffff';
-  const r = Math.round(Math.min(1, Math.max(0, c.r)) * 255);
-  const g = Math.round(Math.min(1, Math.max(0, c.g)) * 255);
-  const b = Math.round(Math.min(1, Math.max(0, c.b)) * 255);
-  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-}
-
-// ─── Die name → sides ────────────────────────────────────────────────
-
-function parseDieSides(name: string): number | null {
-  const match = name.match(/^Die_(\d+)$/i);
-  return match ? parseInt(match[1], 10) : null;
-}
-
-// ─── 3D → 2D coordinate projection ──────────────────────────────────
-
-interface BoundingBox {
-  minX: number;
-  maxX: number;
-  minZ: number;
-  maxZ: number;
-}
-
-function computeBounds(objects: TTSObjectState[], hasTableImage: boolean): BoundingBox {
-  let minX = hasTableImage ? -CUSTOM_TABLE.width / 2 : Infinity,
-    maxX = hasTableImage ? CUSTOM_TABLE.width / 2 : -Infinity;
-  let minZ = hasTableImage ? -CUSTOM_TABLE.depth / 2 : Infinity,
-    maxZ = hasTableImage ? CUSTOM_TABLE.depth / 2 : -Infinity;
-
-  for (const obj of objects) {
-    const { posX, posZ } = obj.Transform;
-    let halfW = 0;
-    let halfZ = 0;
-    if (obj.Name === 'Custom_Board') {
-      const scaleX = obj.Transform.scaleX || 1;
-      const scaleZ = obj.Transform.scaleZ || 1;
-      const widthScale = obj.CustomImage?.WidthScale || 1;
-      const imageScalar = obj.CustomImage?.ImageScalar || 1;
-      halfW = (24.5 * scaleX * widthScale) / 2;
-      halfZ = (24.5 * scaleZ * imageScalar) / 2;
-    }
-    if (posX - halfW < minX) minX = posX - halfW;
-    if (posX + halfW > maxX) maxX = posX + halfW;
-    if (posZ - halfZ < minZ) minZ = posZ - halfZ;
-    if (posZ + halfZ > maxZ) maxZ = posZ + halfZ;
-  }
-
-  // Fallback for single-object or empty scenes
-  if (!isFinite(minX)) {
-    minX = 0;
-    maxX = 10;
-  }
-  if (!isFinite(minZ)) {
-    minZ = 0;
-    maxZ = 10;
-  }
-
-  return { minX, maxX, minZ, maxZ };
-}
-
-function projectPosition(
-  obj: TTSObjectState,
-  bounds: BoundingBox,
-  margin: number,
-): { x: number; y: number; zIndex: number } {
-  // TTS looks down on the table with +Z away from the viewer: +Z is up on screen.
-  const x = (obj.Transform.posX - bounds.minX) * TTS_SCALE + margin;
-  const y = (bounds.maxZ - obj.Transform.posZ) * TTS_SCALE + margin;
-  // posY (height) → zIndex — higher objects are on top
-  const zIndex = Math.round(obj.Transform.posY * 100);
-  return { x: Math.round(x), y: Math.round(y), zIndex: Math.max(1, zIndex) };
-}
-
-function calculateWorldPosOfSnapPoint(
-  parentObj: TTSObjectState,
-  spPos: TTSVector3,
-): { x: number; z: number } {
-  const rotYDeg = parentObj.Transform.rotY || 0;
-  const rotYRad = (rotYDeg * Math.PI) / 180;
-  const cos = Math.cos(rotYRad);
-  const sin = Math.sin(rotYRad);
-  const scaleX = parentObj.Transform.scaleX || 1;
-  const scaleZ = parentObj.Transform.scaleZ || 1;
-  // Custom_Board snap points are stored in visual-space local coords, which include
-  // the WidthScale and ImageScalar stretch. We must apply these before rotating so
-  // the resulting world position aligns with the stretched board image in 2D.
-  const widthScale = parentObj.CustomImage?.WidthScale || 1;
-  const imageScalar = parentObj.CustomImage?.ImageScalar || 1;
-
-  const localX = spPos.x * widthScale;
-  const localZ = spPos.z * imageScalar;
-
-  const rotX = localX * cos + localZ * sin;
-  const rotZ = -localX * sin + localZ * cos;
-
-  return {
-    x: parentObj.Transform.posX + rotX * scaleX,
-    z: parentObj.Transform.posZ + rotZ * scaleZ,
-  };
-}
-
-function projectWorldPos(
-  worldPos: { x: number; z: number },
-  bounds: BoundingBox,
-  margin: number,
-): { x: number; y: number } {
-  const x = (worldPos.x - bounds.minX) * TTS_SCALE + margin;
-  const y = (bounds.maxZ - worldPos.z) * TTS_SCALE + margin;
-  return { x: Math.round(x), y: Math.round(y) };
-}
-
-function createSnapHolderWidget(
-  id: string,
-  screenX: number,
-  screenY: number,
-  zIndex: number,
-  sp: TTSSnapPoint,
-  hasHexDeck: boolean,
-): HolderWidget {
-  const isHex = sp.Tags?.some((t) => /feld|hex/i.test(t)) || hasHexDeck;
-  const snapW = isHex ? 210 : 80;
-  const snapH = isHex ? 182 : 120;
-  const label = sp.Tags?.[0];
-
-  return {
-    id,
-    type: 'holder',
-    x: Math.round(screenX - snapW / 2),
-    y: Math.round(screenY - snapH / 2),
-    width: snapW,
-    height: snapH,
-    zIndex,
-    label: label ?? 'Zone',
-    ...(label ? {} : { labelKey: 'games.tabletop.labels.zone' }),
-    dropTargetTypes: ['card', 'token'],
-    childIds: [],
-    layout: 'stack',
-    dropTarget: true,
-    pinned: true,
-    movable: false,
-    clipPath: isHex ? HEX_CLIP_PATH : undefined,
-    customCss: 'transparent',
-  };
-}
-
-// ─── Card sprite content builder ─────────────────────────────────────
-
-function buildCardFrontContent(
-  cardId: number,
-  customDecks: Record<string, TTSCustomDeckEntry>,
-): CardContent {
-  const sprite = resolveCardSprite(cardId, customDecks);
-  if (!sprite) return { type: 'text', value: '🂠' };
-  return {
-    type: 'image',
-    value: sprite.url,
-    spriteSheet: {
-      url: sprite.url,
-      col: sprite.col,
-      row: sprite.row,
-      numWidth: sprite.numWidth,
-      numHeight: sprite.numHeight,
-    },
-  };
-}
-
-function buildCardBackContent(
-  cardId: number,
-  customDecks: Record<string, TTSCustomDeckEntry>,
-): CardContent {
-  // Try UniqueBack first
-  const backSprite = resolveBackSprite(cardId, customDecks);
-  if (backSprite) {
-    return {
-      type: 'image',
-      value: backSprite.url,
-      spriteSheet: {
-        url: backSprite.url,
-        col: backSprite.col,
-        row: backSprite.row,
-        numWidth: backSprite.numWidth,
-        numHeight: backSprite.numHeight,
-      },
-    };
-  }
-  // Shared back
-  const deckIndex = Math.floor(cardId / 100);
-  const deck = customDecks[String(deckIndex)];
-  if (deck?.BackURL) {
-    return { type: 'image', value: deck.BackURL };
-  }
-  return { type: 'text', value: '🂠', color: '#1565c0' };
-}
-
-// ─── Object Converters ───────────────────────────────────────────────
-
-let widgetIdCounter = 0;
-
-function nextId(prefix: string): string {
-  return `${prefix}_${++widgetIdCounter}`;
-}
-
-function sanitizeCustomDecks(
-  decks?: Record<string, TTSCustomDeckEntry>,
-): Record<string, TTSCustomDeckEntry> {
-  if (!decks) return {};
-  const res: Record<string, TTSCustomDeckEntry> = {};
-  for (const [k, d] of Object.entries(decks)) {
-    res[k] = { ...d, FaceURL: sanitizeTtsUrl(d.FaceURL), BackURL: sanitizeTtsUrl(d.BackURL) };
-  }
-  return res;
-}
-
-function convertCard(
-  obj: TTSObjectState,
-  pos: { x: number; y: number; zIndex: number },
-  allCustomDecks: Record<string, TTSCustomDeckEntry>,
-  deckWidgetId?: string,
-): CardWidget {
-  const cardId = obj.CardID ?? 0;
-  const decks = { ...allCustomDecks, ...sanitizeCustomDecks(obj.CustomDeck) };
-  const deckIndex = Math.floor(cardId / 100);
-  const deckEntry = decks[String(deckIndex)];
-  const shapeInfo = getCardShapeAndSize(deckEntry, obj.Transform);
-
-  const { faceUp, rotation } = cardOrientation(obj.Transform);
-
-  return {
-    id: claimId(obj.GUID),
-    type: 'card',
-    ...topLeft(pos, shapeInfo.width, shapeInfo.height),
-    width: shapeInfo.width,
-    height: shapeInfo.height,
-    clipPath: shapeInfo.clipPath,
-    zIndex: pos.zIndex,
-    label: obj.Nickname || `Card ${cardId}`,
-    ...(obj.Nickname
-      ? {}
-      : { labelKey: 'games.tabletop.labels.card_n', labelParams: { n: cardId } }),
-    deckId: deckWidgetId,
-    frontContent: buildCardFrontContent(cardId, decks),
-    backContent: buildCardBackContent(cardId, decks),
-    faceUp,
-    rotation,
-    movable: !obj.Locked,
-    pinned: Boolean(obj.Locked),
-  };
-}
-
-function convertDeck(
-  obj: TTSObjectState,
-  pos: { x: number; y: number; zIndex: number },
-  allCustomDecks: Record<string, TTSCustomDeckEntry>,
-  widgets: Record<string, TabletopWidget>,
-): DeckWidget {
-  const deckId = nextId('deck');
-  const objDecks = sanitizeCustomDecks(obj.CustomDeck);
-  const mergedDecks = { ...allCustomDecks, ...objDecks };
-
-  let deckIndex: string | undefined = Object.keys(objDecks)[0];
-  if (!deckIndex && obj.DeckIDs && obj.DeckIDs.length > 0) {
-    deckIndex = String(Math.floor(obj.DeckIDs[0] / 100));
-  } else if (
-    !deckIndex &&
-    obj.ContainedObjects &&
-    obj.ContainedObjects.length > 0 &&
-    obj.ContainedObjects[0].CardID
-  ) {
-    deckIndex = String(Math.floor(obj.ContainedObjects[0].CardID / 100));
-  }
-  const thisDeck =
-    (deckIndex ? mergedDecks[deckIndex] : undefined) || Object.values(mergedDecks)[0];
-  const shapeInfo = getCardShapeAndSize(thisDeck, obj.Transform);
-  const cardIds: string[] = [];
-
-  // Create cards from ContainedObjects
-  if (obj.ContainedObjects && obj.ContainedObjects.length > 0) {
-    for (const child of obj.ContainedObjects) {
-      const card = convertCard(
-        child,
-        { x: pos.x, y: pos.y, zIndex: pos.zIndex + 1 },
-        mergedDecks,
-        deckId,
-      );
-      card.inPile = true;
-      card.pileId = deckId;
-      card.faceUp = false;
-      card.rotation = 0;
-      widgets[card.id] = card;
-      cardIds.push(card.id);
-    }
-  } else if (obj.DeckIDs) {
-    // Create cards from DeckIDs (no ContainedObjects)
-    for (const dId of obj.DeckIDs) {
-      const cId = nextId('card');
-      const dIndex = Math.floor(dId / 100);
-      const cardDeck = mergedDecks[String(dIndex)] || thisDeck;
-      const cardShape = getCardShapeAndSize(cardDeck, obj.Transform);
-      const card: CardWidget = {
-        id: cId,
-        type: 'card',
-        ...topLeft(pos, cardShape.width, cardShape.height),
-        width: cardShape.width,
-        height: cardShape.height,
-        clipPath: cardShape.clipPath,
-        zIndex: pos.zIndex + 1,
-        label: `Card ${dId}`,
-        labelKey: 'games.tabletop.labels.card_n',
-        labelParams: { n: dId },
-        deckId,
-        frontContent: buildCardFrontContent(dId, mergedDecks),
-        backContent: buildCardBackContent(dId, mergedDecks),
-        faceUp: false,
-        rotation: 0,
-        inPile: true,
-        pileId: deckId,
-        movable: true,
-        pinned: false,
-      };
-      widgets[cId] = card;
-      cardIds.push(cId);
-    }
-  }
-
-  // Get back image from CustomDeck entry
-  const backContent: CardContent = thisDeck?.BackURL
-    ? { type: 'image', value: thisDeck.BackURL }
-    : { type: 'text', value: '🂠', color: '#1565c0' };
-
-  return {
-    id: deckId,
-    type: 'deck',
-    ...topLeft(pos, shapeInfo.width, shapeInfo.height),
-    width: shapeInfo.width,
-    height: shapeInfo.height,
-    clipPath: shapeInfo.clipPath,
-    zIndex: pos.zIndex,
-    label: obj.Nickname || 'Card pile',
-    ...(obj.Nickname ? {} : { labelKey: 'games.tabletop.labels.card_pile' }),
-    cardIds,
-    backContent,
-    isPile: true,
-    cardCount: cardIds.length,
-    movable: !obj.Locked,
-    pinned: Boolean(obj.Locked),
-  };
-}
-
-function convertDie(
-  obj: TTSObjectState,
-  pos: { x: number; y: number; zIndex: number },
-  sides: number,
-): DieWidget {
-  return {
-    id: obj.GUID,
-    type: 'die',
-    ...topLeft(pos, DIE_SIZE, DIE_SIZE),
-    width: DIE_SIZE,
-    height: DIE_SIZE,
-    zIndex: pos.zIndex,
-    label: obj.Nickname || `W${sides}`,
-    currentValue: typeof obj.Value === 'number' ? obj.Value : 1,
-    sides,
-    color: ttsColorToHex(obj.ColorDiffuse),
-    pipColor: '#222222',
-    movable: !obj.Locked,
-    pinned: Boolean(obj.Locked),
-  };
-}
-
-function convertBoard(
-  obj: TTSObjectState,
-  pos: { x: number; y: number; zIndex: number },
-): TokenWidget {
-  const imageUrl = obj.CustomImage?.ImageURL ? sanitizeTtsUrl(obj.CustomImage.ImageURL) : undefined;
-  const scaleX = obj.Transform.scaleX || 1;
-  const scaleZ = obj.Transform.scaleZ || 1;
-  const widthScale = obj.CustomImage?.WidthScale || 1;
-  const imageScalar = obj.CustomImage?.ImageScalar || 1;
-  const unitW = 24.5 * scaleX * widthScale;
-  const unitH = 24.5 * scaleZ * imageScalar;
-  const width = Math.round(unitW * TTS_SCALE);
-  const height = Math.round(unitH * TTS_SCALE);
-
-  return {
-    id: obj.GUID,
-    type: 'token',
-    shape: 'rectangle',
-    x: Math.round(pos.x - width / 2),
-    y: Math.round(pos.y - height / 2),
-    width,
-    height,
-    zIndex: 0,
-    label: obj.Nickname || 'Board',
-    ...(obj.Nickname ? {} : { labelKey: 'games.tabletop.labels.board' }),
-    image: imageUrl,
-    movable: false,
-    pinned: true,
-  };
-}
-
-function convertToken(
-  obj: TTSObjectState,
-  pos: { x: number; y: number; zIndex: number },
-): TokenWidget {
-  const imageUrl = obj.CustomImage?.ImageURL ? sanitizeTtsUrl(obj.CustomImage.ImageURL) : undefined;
-  const scale = Math.max(obj.Transform.scaleX || 1, obj.Transform.scaleZ || 1);
-  const rawSize = Math.round(TOKEN_SIZE * Math.min(Math.max(scale, 0.85), 3));
-  const rawName = obj.Name || '';
-  // A unit cube keeps its real footprint, so markers stacked on a board do not cover each other.
-  const isBlock = rawName === 'BlockSquare';
-  const size = isBlock ? Math.max(24, Math.round(scale * TTS_SCALE)) : Math.max(68, rawSize);
-
-  const isGeneric = isBlock || rawName.startsWith('backgammon') || rawName.startsWith('PiecePack');
-  const label = obj.Nickname || (isGeneric ? undefined : rawName);
-  // A flat image piece is upright at rotY 180 (readable from the −Z side of the table).
-  const rotation =
-    rawName === 'Custom_Token' || rawName === 'Custom_Tile'
-      ? cardOrientation(obj.Transform).rotation
-      : 0;
-
-  return {
-    id: obj.GUID,
-    type: 'token',
-    ...topLeft(pos, size, size),
-    width: size,
-    height: size,
-    zIndex: pos.zIndex,
-    label,
-    color: ttsColorToHex(obj.ColorDiffuse),
-    image: imageUrl,
-    ...(rotation ? { rotation } : {}),
-    shape: isBlock ? 'square' : 'circle',
-    movable: !obj.Locked,
-    pinned: Boolean(obj.Locked),
-  };
-}
-
-/**
- * `Custom_Model` (D7): the mesh's diffuse texture as a sprite, else a labelled token. Same rule
- * top level, in bags and in states; a top-down render of the mesh is slice 11.
- */
-function convertModel(
-  obj: TTSObjectState,
-  pos: { x: number; y: number; zIndex: number },
-): TokenWidget {
-  const diffuse = sanitizeTtsUrl(obj.CustomMesh?.DiffuseURL) || undefined;
-  return {
-    ...convertToken(obj, pos),
-    image: diffuse,
-    // The texture is a UV atlas; the usual chip/tile layout has the front face first.
-    ...(diffuse ? { imageFit: 'atlas-front' as const } : {}),
-    label: obj.Nickname || undefined,
-    ...(obj.Nickname ? {} : { labelKey: 'games.tabletop.labels.model' }),
-  };
-}
-
-function convertHandTrigger(
-  obj: TTSObjectState,
-  pos: { x: number; y: number; zIndex: number },
-  seatIndex: number,
-): HolderWidget {
-  return {
-    id: obj.GUID,
-    type: 'holder',
-    x: pos.x,
-    y: pos.y,
-    width: 340,
-    height: 200,
-    zIndex: pos.zIndex + 1000,
-    label: `Player ${seatIndex + 1}`,
-    labelKey: 'games.tabletop.labels.hand_n',
-    labelParams: { n: seatIndex + 1 },
-    dropTargetTypes: ['card'],
-    childIds: [],
-    layout: 'fan',
-    isHand: true,
-    ownerSeat: seatIndex,
-    movable: false,
-    pinned: true,
-  };
-}
-
-// ─── Main Parser ─────────────────────────────────────────────────────
 
 export interface TtsParserOptions {
   defaultName?: string;
@@ -605,7 +76,7 @@ export function parseTtsSaveFile(
   options?: TtsParserOptions,
 ): TabletopGameDefinition {
   // Reset counter
-  widgetIdCounter = 0;
+  resetWidgetIdCounter();
   resetIdClaims();
 
   const widgets: Record<string, TabletopWidget> = {};
@@ -883,44 +354,3 @@ export function parseTtsSaveFile(
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────
-
-/**
- * Rewrites TTS asset URLs so the HTTPS PWA can load them (#693, D3):
- * - legacy Steam UGC `http(s)://cloud-N.steamusercontent.com/…` (403) → the CORS-enabled CDN
- *   `https://steamusercontent-a.akamaihd.net/…`;
- * - `http://` → `https://` for **every** host (mixed content is blocked on the PWA; a host
- *   without HTTPS shows up as dead in the asset report instead of silently blank).
- */
-export function sanitizeTtsUrl(url?: string): string {
-  const trimmed = url?.trim();
-  if (!trimmed) return '';
-  return trimmed
-    .replace(
-      /^https?:\/\/cloud-\d+\.steamusercontent\.com\//i,
-      'https://steamusercontent-a.akamaihd.net/',
-    )
-    .replace(/^http:\/\//i, 'https://');
-}
-
-/** Recursively collects all CustomDeck entries from the object tree */
-function collectCustomDecks(
-  objects: TTSObjectState[],
-  out: Record<string, TTSCustomDeckEntry>,
-): void {
-  for (const obj of objects) {
-    if (obj.CustomDeck) {
-      for (const [key, deck] of Object.entries(obj.CustomDeck)) {
-        if (!out[key]) {
-          out[key] = {
-            ...deck,
-            FaceURL: sanitizeTtsUrl(deck.FaceURL),
-            BackURL: sanitizeTtsUrl(deck.BackURL),
-          };
-        }
-      }
-    }
-    if (obj.ContainedObjects) {
-      collectCustomDecks(obj.ContainedObjects, out);
-    }
-  }
-}
