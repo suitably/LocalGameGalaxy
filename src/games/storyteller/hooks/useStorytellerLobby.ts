@@ -54,9 +54,13 @@ export const useStorytellerLobby = () => {
     }
   }, []);
 
+  // Initial load: `loadingGames` starts true, state is only set once the list resolved.
   useEffect(() => {
-    loadActiveGames();
-  }, [loadActiveGames]);
+    LocalStoryEngine.listGames()
+      .then((games) => setActiveGames(games))
+      .catch((err) => console.error('Failed to list Storyteller games', err))
+      .finally(() => setLoadingGames(false));
+  }, []);
 
   const updateModifier = <K extends keyof StoryModifierSettings>(
     key: K,

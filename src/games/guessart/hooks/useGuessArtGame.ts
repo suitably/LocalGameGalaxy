@@ -77,9 +77,30 @@ export const useGuessArtGame = (gameId: string | null, language: string): UseGue
     }
   }, [gameId, language]);
 
+  // Reset load state when the game or language changes (adjusted during render).
+  const [prevLoadKey, setPrevLoadKey] = useState({ gameId, language });
+  if (prevLoadKey.gameId !== gameId || prevLoadKey.language !== language) {
+    setPrevLoadKey({ gameId, language });
+    if (!gameId) {
+      setGame(null);
+      setRound(null);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+    setError(null);
+  }
+
   useEffect(() => {
-    loadSnapshot();
-  }, [loadSnapshot]);
+    if (!gameId) return;
+    LocalGameEngine.getGameSnapshot(gameId, language)
+      .then((snapshot) => {
+        setGame(snapshot.game);
+        setRound(snapshot.round);
+      })
+      .catch((err) => setError(err instanceof Error ? err : new Error('Failed to load game')))
+      .finally(() => setLoading(false));
+  }, [gameId, language]);
 
   // 2. This device's seats: push registration, channels, "joined" notices
   const applySnapshot = useCallback((snap: GameSnapshot) => {

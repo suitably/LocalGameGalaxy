@@ -27,7 +27,9 @@ export const useMidiInput = ({ onNoteOn, rescan = false }: MidiInputOptions = {}
   const [devices, setDevices] = useState<MidiDevice[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | null>(null);
   const selectedDeviceIdRef = useRef<string | null>(null);
-  const [isSupported, setIsSupported] = useState<boolean>(true);
+  const [isSupported, setIsSupported] = useState<boolean>(
+    () => typeof navigator === 'undefined' || !!navigator.requestMIDIAccess,
+  );
   const midiAccessRef = useRef<MIDIAccess | null>(null);
   const hasInstrumentRef = useRef(false);
   const onNoteOnRef = useRef(onNoteOn);
@@ -108,10 +110,7 @@ export const useMidiInput = ({ onNoteOn, rescan = false }: MidiInputOptions = {}
   }, [attach]);
 
   useEffect(() => {
-    if (!navigator.requestMIDIAccess) {
-      setIsSupported(false);
-      return;
-    }
+    if (!navigator.requestMIDIAccess) return;
 
     isMountedRef.current = true;
 
