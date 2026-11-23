@@ -43,16 +43,9 @@ export const useGuessArtLobby = () => {
     }
   }, []);
 
-  // Initial load: `loadingGames` starts true, state is only set once the list resolved.
   useEffect(() => {
-    LocalGameEngine.listGames()
-      .then((games) => {
-        setActiveGames(games);
-        guessArtMailbox.syncSubscribedChannels(games.map((g) => g.id));
-      })
-      .catch((err) => console.error('Failed to list GuessArt games', err))
-      .finally(() => setLoadingGames(false));
-  }, []);
+    loadActiveGames();
+  }, [loadActiveGames]);
 
   // Listen for background remote snapshots to keep active games list up to date
   useEffect(() => {
