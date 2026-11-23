@@ -5,7 +5,6 @@ import {
   HEX_CLIP_PATH,
   type TabletopGameDefinition,
   type TabletopWidget,
-  type TabletopPlayMode,
   type TabletopTableConfig,
   type HolderWidget,
   type CardWidget,
@@ -14,6 +13,7 @@ import {
   type ScriptZone,
   type TabletopGameFormat,
 } from './types';
+import type { TabletopPlayMode } from '../../../lib/catalog/tableCatalog';
 import { sanitizeImportReport, sanitizeScripts } from './importSanitizers';
 import { isPersonalHolder, isSupplyReserveHolder } from './boardFilter';
 

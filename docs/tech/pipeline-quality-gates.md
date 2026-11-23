@@ -23,6 +23,10 @@ To prevent "spaghetti code" and enforce our Anti-God-Component Architecture, we 
 
 - **jscpd (`npm run check:duplicates`)**: A deterministic copy-paste detector. It scans the codebase for duplicated blocks of code. If a developer attempts to copy-paste logic instead of extracting it into a shared module (`src/modules/`), the pipeline will fail. This actively encourages the reuse of existing elements.
 
+### Test Coverage
+
+- **Coverage ratchet (`npm run test:coverage && npm run check:coverage`)**: Measures v8 line coverage and holds every `src/**/logic/**/*.ts` file at its baseline in `scripts/coverage-baselines.json` (max drop 2 points; new files of 30+ lines need 60 %). In GitHub Actions it is the separate job "Coverage Ratchet (logic/)", deliberately not in `ci-ok` `needs` because coverage is about 2.4x slower than a plain Vitest run (#850); GitLab's `npm run ci:gates` runs it in place of the plain `npm test`. Details: [testing-guide](testing-guide.md#running-frontend-tests).
+
 ### Documentation Enforcement
 
 - **Doc-Sync Check (`check-docs-sync.mjs`)**: This script acts as a guardrail. If core logic (in `src/games/`, `src/modules/`, or `src/lib/`) is modified, the script verifies that corresponding documentation (a `changelog.d/` fragment or `CHANGELOG.md`, `docs/tech/`, `AGENTS.md`) or translations (`public/locales/`) have been updated in the same PR. This ensures that documentation never falls behind the actual code implementation.

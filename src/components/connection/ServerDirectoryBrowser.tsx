@@ -20,7 +20,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpwardRounded';
 import CloseIcon from '@mui/icons-material/CloseRounded';
 import { ErrorState } from '../common/ErrorState';
 import { ListSkeleton } from '../common/ListSkeleton';
-import { melodiqFetch } from '../../games/melodiq';
+import { melodiqFetch } from '../../lib/companion/melodiqFetch';
 import type { BrowseResponse } from './serverConfigTypes';
 
 export interface ServerDirectoryBrowserProps {

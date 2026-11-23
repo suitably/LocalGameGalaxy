@@ -18,7 +18,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircleRounded';
 import { storage } from '../../lib/storage';
 import { SettingsCardHeader } from './SettingsCardHeader';
 import { settingsCardSx } from '../../features/settings/settingsStyles';
-import { melodiqFetch } from '../../games/melodiq';
+import { melodiqFetch } from '../../lib/companion/melodiqFetch';
 import type { ServerPreferencesResponse, DownloadMode } from './serverConfigTypes';
 
 export const ServerPreferences: React.FC = () => {

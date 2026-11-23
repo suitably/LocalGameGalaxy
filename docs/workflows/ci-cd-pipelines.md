@@ -101,7 +101,8 @@ flowchart LR
    - Bypassed by `[skip docs]` / `[skip changelog]` in PR title or body, by the label `no-changelog` (read from `PR_LABELS` when the job runs; adding it later needs a re-run), by PR titles starting with `chore|refactor|style|test|docs|perf`, and for `fix:` PRs touching ≤ 3 core files / ≤ 50 lines.
 5. **ESLint (`npm run lint`)**: Zero errors allowed. The same job runs the production dependency audit (`npm run check:security`) with `continue-on-error` — advisory on PRs, blocking only in `release.yml` ([Supply chain](#supply-chain-provenance-sbom-dependency-audit)).
 6. **Vitest (`npm test`)**: All unit tests must pass.
-7. **Production Build (`npm run build`)**: `tsc -b && vite build` verifies zero TypeScript compiler errors and produces production bundles.
+7. **Coverage ratchet (`npm run test:coverage && npm run check:coverage`)**: GitHub job "Coverage Ratchet (logic/)", not required by `ci-ok`; GitLab `ci:gates` runs it instead of the plain `npm test` ([details](../tech/pipeline-quality-gates.md#test-coverage)).
+8. **Production Build (`npm run build`)**: `tsc -b && vite build` verifies zero TypeScript compiler errors and produces production bundles.
 
 #### Cloudflare Deployment Step
 

@@ -42,6 +42,15 @@ To run client-side tests once:
 npm run test
 ```
 
+To measure coverage (v8 provider, config in `vite.config.ts`, output in the git-ignored `coverage/`) and run the logic/ ratchet:
+
+```bash
+npm run test:coverage   # prints the text summary, writes coverage/coverage-summary.json
+npm run check:coverage  # fails when logic/ coverage drops; `-- --update` rewrites the baseline
+```
+
+The ratchet (`scripts/check-coverage.mjs`, comparison in `scripts/lib/coverage-ratchet.mjs`, baseline `scripts/coverage-baselines.json`) covers `src/**/logic/**/*.ts` only: a baselined file may not lose more than 2 percentage points of line coverage (baseline = whole percent, rounded down); a new `logic/` file with at least 30 lines needs at least 60 % line coverage; increases pass. After adding tests, run `npm run test:coverage && npm run check:coverage -- --update` and commit the baseline. Generated word lists and `i18n/` bundles are excluded from measurement. Coverage roughly doubles the Vitest time, so CI runs it as the separate job "Coverage Ratchet (logic/)" outside the required aggregator; it is not part of the Husky hooks.
+
 To run client-side tests in watch mode (interactive development):
 
 ```bash
