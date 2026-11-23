@@ -2,21 +2,36 @@ import { useCallback } from 'react';
 import LZString from 'lz-string';
 import { gameRelayStorage } from '../../lib/push/gameRelayStorage';
 import { inviteSeat, reclaimSeat } from '../player-management/seatActions';
+import type { SeatedPlayer } from '../player-management/playerSeats';
+import type { SessionPlayerItem } from './ShareSessionLinksDialog';
 import { buildSessionLink, pickQrLink } from './sessionLink';
 
-export interface UseSessionSharingOptions<TGame, TSnapshot> {
-  game: (TGame & { id: string; players: any[] }) | null;
+/** A snapshot that wraps the game record, whose `updatedAt` is refreshed after a seat change. */
+const hasGameWithUpdatedAt = (
+  snapshot: unknown,
+): snapshot is { game: { updatedAt?: string | number } } =>
+  typeof snapshot === 'object' &&
+  snapshot !== null &&
+  'game' in snapshot &&
+  !!snapshot.game &&
+  typeof snapshot.game === 'object';
+
+export interface UseSessionSharingOptions<TGame, TSnapshot, TPlayer extends SeatedPlayer> {
+  game: (TGame & { id: string; players: TPlayer[] }) | null;
   basePath: string; // e.g., '/games/guessart'
-  buildSnapshot: (updatedPlayers: any[]) => TSnapshot;
+  buildSnapshot: (updatedPlayers: TPlayer[]) => TSnapshot;
   onPlayerChanged?: () => void;
   /** Legacy per-device lists (games not on player seats yet). */
   removeLocalPlayerId?: (gameId: string, playerId: string) => void;
   addLocalPlayerId?: (gameId: string, playerId: string) => void;
-  updateGameDetails: (gameId: string, details: { players: any[] }) => Promise<{ game: any }>;
-  publishSync: (gameId: string, snapshot: TSnapshot) => Promise<any> | void;
+  updateGameDetails: (
+    gameId: string,
+    details: { players: TPlayer[] },
+  ) => Promise<{ game: { players: TPlayer[]; updatedAt?: string | number } }>;
+  publishSync: (gameId: string, snapshot: TSnapshot) => Promise<unknown> | void;
 }
 
-export function useSessionSharing<TGame, TSnapshot>({
+export function useSessionSharing<TGame, TSnapshot, TPlayer extends SeatedPlayer>({
   game,
   basePath,
   buildSnapshot,
@@ -25,7 +40,7 @@ export function useSessionSharing<TGame, TSnapshot>({
   addLocalPlayerId,
   updateGameDetails,
   publishSync,
-}: UseSessionSharingOptions<TGame, TSnapshot>) {
+}: UseSessionSharingOptions<TGame, TSnapshot, TPlayer>) {
   const buildPlayerLink = useCallback(
     (playerId: string, withSnapshot = true) => {
       if (!game) return '';
@@ -74,8 +89,8 @@ export function useSessionSharing<TGame, TSnapshot>({
       try {
         const { game: updatedGame } = await updateGameDetails(game.id, { players: updatedPlayers });
         const snapshot = buildSnapshot(updatedGame.players);
-        if ((snapshot as any).game) {
-          (snapshot as any).game.updatedAt = updatedGame.updatedAt;
+        if (hasGameWithUpdatedAt(snapshot)) {
+          snapshot.game.updatedAt = updatedGame.updatedAt;
         }
         // Not awaited: without a reachable broker the publish waits, the dialog must not.
         Promise.resolve(publishSync(game.id, snapshot)).catch(() => {});
@@ -145,7 +160,7 @@ export const buildShareSessionProps = <TGame extends { id: string }>(
 };
 
 export const buildShareSessionDialogProps = <
-  TGame extends { id: string; players: any[]; name?: string },
+  TGame extends { id: string; players: SessionPlayerItem[]; name?: string },
 >(
   game: TGame | null,
   isPlayerLocal: (playerId: string) => boolean,
