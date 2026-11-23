@@ -23,7 +23,9 @@ function recordSongToHistory(song: SongMeta) {
       ...filtered,
     ].slice(0, 50);
     storage.setJson(STORAGE_KEYS.SONG_HISTORY, updated);
-  } catch {}
+  } catch {
+    // History is a convenience; a storage failure must not block queueing the song
+  }
 }
 
 const QUEUE_STORAGE_KEY = 'melodiq_queue';

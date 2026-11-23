@@ -47,7 +47,9 @@ export function useScreenOrientation(orientation?: ScreenOrientationType) {
                 if (isLockable(screenOrientation)) {
                     screenOrientation.unlock();
                 }
-            } catch {}
+            } catch {
+                // unlock() is best-effort and throws on browsers without orientation lock
+            }
         };
     }, [orientation]);
 }

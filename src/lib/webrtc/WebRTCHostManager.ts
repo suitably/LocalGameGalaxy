@@ -364,7 +364,9 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
         try {
           const payload = { connectionId, signal: data };
           trackerPeer.send(JSON.stringify(payload) + '\n');
-        } catch (e) {}
+        } catch {
+          // Tracker channel closed between the connected check and send; signal is dropped
+        }
       }
     });
 
@@ -399,7 +401,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
             }
           }
         }
-      } catch (e) {
+      } catch {
         // console.error('[WebRTCHostManager] Error parsing WebRTC data:', e);
       }
     });

@@ -88,7 +88,7 @@ export function computeGridLayout(
 
   if (layoutRule && layoutRule !== 'auto' && layoutRule !== '0') {
     const rows = layoutRule
-      .split(/[\.\-]/)
+      .split(/[.-]/)
       .map(Number)
       .filter((n) => !isNaN(n) && n > 0);
     if (rows.length > 0) {

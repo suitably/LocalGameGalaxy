@@ -216,7 +216,7 @@ tabletopWorkshopRouter.get('/tabletop/proxy-image', async (c) => {
     c.header('Access-Control-Allow-Origin', '*');
 
     return c.body(new Uint8Array(arrayBuffer));
-  } catch (e: unknown) {
+  } catch {
     return c.text('Invalid URL or fetch error', 400);
   }
 });

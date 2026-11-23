@@ -70,7 +70,7 @@ export const readFileAsText = async (file: Blob): Promise<string> => {
       try {
         const text = utf8Decoder.decode(buffer);
         resolve(text);
-      } catch (e) {
+      } catch {
         // 2. Fallback to Windows-1252 (common for older UltraStar files, covers German/Danish)
         console.log('UTF-8 decoding failed, falling back to windows-1252');
         const win1252Decoder = new TextDecoder('windows-1252');

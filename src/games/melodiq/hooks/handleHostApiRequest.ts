@@ -111,7 +111,8 @@ export async function handleHostApiRequest({
         // Strip heavy fields from /api/songs to keep payload manageable
         if (isSongList && Array.isArray(resData)) {
             resData = resData.map((s: Record<string, unknown>) => {
-                const { txtContent: _txt, ...rest } = s;
+                const rest = { ...s };
+                delete rest.txtContent;
                 return rest;
             });
         }

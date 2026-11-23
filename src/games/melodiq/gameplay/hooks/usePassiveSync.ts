@@ -240,7 +240,9 @@ export function usePassiveSync({
       try {
         const parsed = JSON.parse(storedProfile);
         if (parsed.name) myName = parsed.name;
-      } catch (err) {}
+      } catch {
+        // Malformed stored profile: keep the default name 'Phone'
+      }
     }
 
     const handleLocalPitch = (e: any) => {
