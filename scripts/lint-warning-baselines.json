@@ -78,7 +78,6 @@
   "src/games/qwixx/i18n/index.ts": 1,
   "src/games/qwixx/logic/qwixxReducer.ts": 1,
   "src/games/qwixx/logic/sheetDefinitions.ts": 1,
-  "src/games/storyteller/hooks/useStorytellerGame.ts": 1,
   "src/games/storyteller/hooks/useStorytellerLobby.ts": 1,
   "src/games/storyteller/hooks/useTurnTimer.ts": 1,
   "src/games/storyteller/logic/engine.bench.test.ts": 1,
