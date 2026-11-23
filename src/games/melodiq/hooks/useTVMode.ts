@@ -11,7 +11,7 @@ import { TV_CONTROL_SYNC, type TvControlMessage } from '../logic/syncChannels';
 
 export interface TVEvent {
   type: string;
-  payload?: any;
+  payload?: unknown;
   timestamp: number;
 }
 
@@ -66,7 +66,7 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
   useEffect(() => stopTvWindowPoll, [stopTvWindowPoll]);
 
   // Forward ref to sendMessage so handlers defined prior can use it
-  const sendMessageRef = useRef<(type: string, payload?: any) => void>(() => {});
+  const sendMessageRef = useRef<(type: string, payload?: unknown) => void>(() => {});
 
   const sendSessionInfo = useCallback(() => {
     const info = getLatestSessionInfo();
@@ -77,7 +77,7 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
 
   // Unified Message Handler
   const handleMessage = useCallback(
-    (type: string, payload?: any) => {
+    (type: string, payload?: unknown) => {
       setLastEvent({ type, payload, timestamp: Date.now() });
 
       if (type === 'TV_READY' || type === 'PONG') {
@@ -85,7 +85,7 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
         sendSessionInfo();
         sendMessageRef.current('SETTINGS_UPDATE', loadTvSettings());
       } else if (type === 'MEDIA_ACK') {
-        mediaSenderRef.current.onAck(Number(payload?.received));
+        mediaSenderRef.current.onAck(Number((payload as { received?: unknown } | undefined)?.received));
       }
     },
     [sendSessionInfo],
@@ -123,14 +123,14 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
 
   // Sync settings changes to active PresentationConnection
   useEffect(() => {
-    const handleSettings = (e: any) => {
+    const handleSettings = (e: Event) => {
       if (
         presentationConnectionRef.current &&
         presentationConnectionRef.current.state === 'connected'
       ) {
         try {
           presentationConnectionRef.current.send(
-            JSON.stringify({ type: 'SETTINGS_UPDATE', payload: e.detail || {} }),
+            JSON.stringify({ type: 'SETTINGS_UPDATE', payload: (e as CustomEvent<unknown>).detail || {} }),
           );
         } catch (err) {
           console.error('Failed to send SETTINGS_UPDATE to PresentationConnection:', err);
@@ -143,7 +143,7 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
 
   // Unified Sender
   const sendMessage = useCallback(
-    (type: string, payload?: any) => {
+    (type: string, payload?: unknown) => {
       const msg = { type, payload };
 
       // Send via the local broadcast channel
@@ -298,7 +298,7 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
   }, [sendMessage]);
 
   const sendRemoteCommand = useCallback(
-    (command: string, value?: any) => {
+    (command: string, value?: unknown) => {
       sendMessage('REMOTE_COMMAND', { command, value });
     },
     [sendMessage],
@@ -307,7 +307,7 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
   // Throttled Game State Update (for Host -> TV sync)
   const lastUpdateRef = useRef<number>(0);
   const sendGameUpdate = useCallback(
-    (state: any) => {
+    (state: unknown) => {
       const now = Date.now();
       // Limit to ~60fps (15ms) to improve smoothness
       if (now - lastUpdateRef.current > 15) {

@@ -1,12 +1,16 @@
+import type { SongMeta } from '../../db';
+import type { UsdbSongItem } from '../../types';
+import type { DownloadJob } from '../../hooks/useDownloads';
+
 interface UseSongItemActionsProps {
-    song: any;
-    songs: any[];
-    jobs: any[];
+    song: UsdbSongItem;
+    songs: SongMeta[];
+    jobs: DownloadJob[];
     isSinger?: boolean;
     canDownload?: boolean;
-    handleSelectSong: (song: any) => void;
-    handleDownloadAndQueue: (song: any) => void;
-    handleDownloadOnly: (song: any) => void;
+    handleSelectSong: (song: SongMeta) => void;
+    handleDownloadAndQueue: (song: UsdbSongItem) => void;
+    handleDownloadOnly: (song: UsdbSongItem) => void;
 }
 
 export function getSongItemActions({

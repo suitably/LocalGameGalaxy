@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "type": "sharedImportsGames",
+    "file": "src/features/party/components/PartyGamePickerModal.tsx",
+    "reason": "Lists the user's saved tabletop games from the engine's IndexedDB store (listTabletopGames, TabletopGameSummary); moving the Dexie store out of the engine is a separate change (#839)."
+  },
+  {
+    "type": "sharedImportsGames",
+    "file": "src/lib/gameSettingsRegistry.tsx",
+    "reason": "Lazy registry of per-game settings sections, the settings counterpart of the catalogue; it must name each game's section component."
+  },
+  {
+    "type": "sharedImportsGames",
+    "file": "src/main.tsx",
+    "reason": "Mounts Melodiq's SettingsProvider around the whole app; only Melodiq consumes it, but it is mounted app-wide (TV sync, storage load), so moving it into the Melodiq routes is not provably behaviour-neutral (#843)."
+  }
+]

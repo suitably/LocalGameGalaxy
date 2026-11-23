@@ -14,9 +14,9 @@ import {
   routeFor,
   type PlayMode,
   type TableGameEntry,
-} from '../../logic/tableCatalog';
+} from '../../../../lib/catalog/tableCatalog';
 import { TableGameCard } from './TableGameCard';
-import { PlayModeSheet } from './PlayModeSheet';
+import { PlayModeSheet } from '../../../../components/common/PlayModeSheet';
 import { piecePalette } from '../../../../themeTokens';
 
 interface TabletopLobbyViewProps {

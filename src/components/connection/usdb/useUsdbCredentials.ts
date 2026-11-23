@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { storage } from '../../../lib/storage';
-import { melodiqFetch } from '../../../games/melodiq';
+import { melodiqFetch } from '../../../lib/companion/melodiqFetch';
 import type { UsdbCredentialsResponse } from '../serverConfigTypes';
 
 export interface UsdbFeedback {

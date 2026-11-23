@@ -24,6 +24,9 @@
  * 12. [CRITICAL] No import cycles: strongly connected components of the value-import graph of src
  *    (relative and @/ imports; `import type`, dynamic import() and tests skipped; scripts/lib/import-cycles.mjs).
  *    Always scans all of src, also with --diff, since a cycle runs through unchanged files.
+ * 13. [CRITICAL] Shared layers must not import from src/games (any file outside src/games; tests skipped).
+ *    Allowed by design: SHARED_TO_GAMES_ALLOWED below (the catalogue, ADR-0011). Leftovers are
+ *    listed with a reason in scripts/architecture-baseline.json (type `sharedImportsGames`).
  *
  * Usage:
  *   node scripts/check-architecture.mjs           # Full audit with summary
@@ -162,7 +165,20 @@ const violations = {
   headerHiddenCalls: [],
   gameLists: [],
   importCycles: [],
+  sharedImportsGames: [],
 };
+
+/** Files outside src/games that may import game modules by design (ADR-0011: the catalogue lists every game). */
+const SHARED_TO_GAMES_ALLOWED = new Set(['src/lib/catalog/entries.ts']);
+const IMPORT_SPECIFIER = /(?:\bfrom\s*|\bimport\s*\(?\s*)['"]([^'"]+)['"]/g;
+/** True when an import specifier of `filePath` points into src/games. */
+function pointsIntoGames(filePath, specifier) {
+  if (specifier.startsWith('.')) {
+    const target = path.resolve(path.dirname(filePath), specifier);
+    return target === GAMES_DIR || target.startsWith(GAMES_DIR + path.sep);
+  }
+  return /^(?:@\/|src\/)games(?:\/|$)/.test(specifier);
+}
 const CATALOG_IDS = catalogIds(ROOT_DIR);
 /** Back-icon imports / unlabeled IconButtons per file (only files with at least one). */
 const backIconCounts = {};
@@ -209,6 +225,23 @@ for (const filePath of allFiles) {
             targetGame: otherGame,
           });
         }
+      }
+    }
+  }
+
+  // Check 13: shared code must not import from src/games
+  const posixRel = relativePath.split(path.sep).join('/');
+  if (
+    !filePath.startsWith(GAMES_DIR + path.sep) &&
+    !SHARED_TO_GAMES_ALLOWED.has(posixRel) &&
+    !/\.test\.tsx?$/.test(posixRel)
+  ) {
+    for (let i = 0; i < lines.length; i++) {
+      const trimmed = lines[i].trim();
+      if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) continue;
+      for (const m of lines[i].matchAll(IMPORT_SPECIFIER)) {
+        if (!pointsIntoGames(filePath, m[1])) continue;
+        violations.sharedImportsGames.push({ file: posixRel, line: i + 1, snippet: trimmed });
       }
     }
   }
@@ -381,6 +414,24 @@ if (violations.crossGameImports.length > 0) {
   console.log('');
 } else {
   console.log(`${GREEN}✔ No Cross-Game Imports${RESET}`);
+}
+
+// Report shared code importing games
+if (violations.sharedImportsGames.length > 0) {
+  hasErrors = true;
+  console.log(
+    `${RED}${BOLD}✖ Shared Code Imports From src/games (${violations.sharedImportsGames.length})${RESET}`,
+  );
+  console.log(
+    `  Rule: files outside src/games must not import from src/games. Move the shared part to src/lib, src/modules, src/components or src/context; the catalogue (src/lib/catalog/entries.ts) is the only by-design exception. A justified leftover needs an entry with a reason in scripts/architecture-baseline.json (docs/tech/coding-conventions.md §2).`,
+  );
+  for (const v of violations.sharedImportsGames) {
+    console.log(`  ${RED}•${RESET} ${BOLD}${v.file}:${v.line}${RESET}`);
+    console.log(`    ${CYAN}${v.snippet}${RESET}`);
+  }
+  console.log('');
+} else {
+  console.log(`${GREEN}✔ Shared code does not import from src/games${RESET}`);
 }
 
 // Report Raw Storage
@@ -677,6 +728,11 @@ const allCritical = [
     type: 'crossGameImports',
     file: v.file,
     detail: `${v.currentGame} -> ${v.targetGame}`,
+  })),
+  ...[...new Map(violations.sharedImportsGames.map((v) => [v.file, v])).values()].map((v) => ({
+    type: 'sharedImportsGames',
+    file: v.file,
+    detail: `line ${v.line}: ${v.snippet}`,
   })),
   ...violations.rawStorage.map((v) => ({ type: 'rawStorage', file: v.file, detail: v.snippet })),
   ...violations.nativeDialogs.map((v) => ({

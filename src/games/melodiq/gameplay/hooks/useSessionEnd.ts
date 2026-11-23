@@ -1,9 +1,15 @@
 import { useCallback } from 'react';
 import { PlayerRuntime } from './PlayerRuntime';
 import { type Song } from '../../db';
+import type { NavigatorWithPresentation } from '../../types';
+import type { ScoreBoardPlayer } from '../logic/scoreBoardRanking';
+import type { RemoteResultEntry } from './usePeerSessionMessages';
 import { addPlayerScore, getPlayerScores } from '../../logic/melodiqRepository';
 import { useMultiChannelSync } from '../../../../modules/sync';
 import { TV_CONTROL_SYNC, type TvControlMessage } from '../../logic/syncChannels';
+
+/** One scoreboard row of the session just ended. */
+export type SessionResult = ScoreBoardPlayer & RemoteResultEntry;
 
 /** Publish-only: this hook never listens, so it opens no channel (`enabled: false`). */
 const ignoreMessages = (): void => {};
@@ -11,7 +17,7 @@ const ignoreMessages = (): void => {};
 interface UseSessionEndProps {
   playersRef: React.RefObject<PlayerRuntime[]>;
   song: Song;
-  setResults: React.Dispatch<React.SetStateAction<any[]>>;
+  setResults: React.Dispatch<React.SetStateAction<SessionResult[]>>;
   setIsFinished: React.Dispatch<React.SetStateAction<boolean>>;
   setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
   videoRef: React.RefObject<HTMLVideoElement | null>;
@@ -37,7 +43,7 @@ export function useSessionEnd({
     console.log('Song ended, showing scoreboard');
 
     const now = new Date();
-    const currentResults: any[] = [];
+    const currentResults: SessionResult[] = [];
     const isoDate = now.toISOString();
 
     if (!playersRef.current) return;
@@ -110,12 +116,12 @@ export function useSessionEnd({
       publishLocal({ type: 'SONG_ENDED' });
 
       // Also notify via Presentation API if available
-      const nav = navigator as any;
+      const nav = navigator as NavigatorWithPresentation;
       if (nav.presentation?.receiver?.connectionList) {
         nav.presentation.receiver.connectionList
-          .then((list: any) => {
+          .then((list) => {
             if (list && list.connections) {
-              list.connections.forEach((conn: any) => {
+              list.connections.forEach((conn) => {
                 try {
                   conn.send(JSON.stringify({ type: 'SONG_ENDED' }));
                 } catch (e) {
@@ -124,7 +130,7 @@ export function useSessionEnd({
               });
             }
           })
-          .catch((err: any) => {
+          .catch((err: unknown) => {
             console.error('Failed to get presentation connection list:', err);
           });
       }

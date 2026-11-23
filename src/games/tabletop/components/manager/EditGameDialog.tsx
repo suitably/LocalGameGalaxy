@@ -13,7 +13,8 @@ import {
   Box,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import type { TabletopGameDefinition, TabletopPlayMode } from '../../logic/types';
+import type { TabletopGameDefinition } from '../../logic/types';
+import type { TabletopPlayMode } from '../../../../lib/catalog/tableCatalog';
 
 interface EditGameDialogProps {
   open: boolean;

@@ -6,7 +6,7 @@ import { Box, Card, CardActionArea, Chip, Typography, useTheme } from '@mui/mate
 import { AreaSymbol } from '../../../../components/brand/AreaSymbol';
 import type { AreaId } from '../../../../lib/areas';
 import { useTranslation } from 'react-i18next';
-import type { PlayMode } from '../../logic/tableCatalog';
+import type { PlayMode } from '../../../../lib/catalog/tableCatalog';
 
 export const TableGameCard: React.FC<{
   title: string;
