@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import type { ApiKey, ApiKeyPermissions } from '../hooks/useServerApiKeys';
@@ -16,12 +16,15 @@ export const EditKeyDialog: React.FC<Props> = ({ keyData, onClose, onSave }) => 
   const [permissions, setPermissions] = useState<ApiKeyPermissions>(NO_PERMISSIONS);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  // Load the key's permissions when a different key is opened (adjust state during render).
+  const [prevKeyData, setPrevKeyData] = useState(keyData);
+  if (keyData !== prevKeyData) {
+    setPrevKeyData(keyData);
     if (keyData) {
       setPermissions(pickPermissions(keyData));
       setSaving(false);
     }
-  }, [keyData]);
+  }
 
   const handleSave = async () => {
     if (!keyData) return;

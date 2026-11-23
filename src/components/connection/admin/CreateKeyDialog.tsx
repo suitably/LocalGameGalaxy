@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Button,
@@ -25,13 +25,16 @@ export const CreateKeyDialog: React.FC<Props> = ({ open, onClose, onCreate }) =>
   const [permissions, setPermissions] = useState<ApiKeyPermissions>(NO_PERMISSIONS);
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
+  // Reset the form when the dialog opens (adjust state during render, no effect).
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setName('');
       setPermissions(NO_PERMISSIONS);
       setCreating(false);
     }
-  }, [open]);
+  }
 
   const handleCreate = async () => {
     if (!name.trim()) return;

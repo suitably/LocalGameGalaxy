@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useDartsGame } from '../useDartsGame';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import DeleteIcon from '@mui/icons-material/DeleteRounded';
 import AddIcon from '@mui/icons-material/AddRounded';
 import { ConfirmDialog } from '../../../components/common/ConfirmDialog';
@@ -36,14 +36,24 @@ export function DartsGameSetupDialog({ open, onClose, state }: Props) {
   const [doubleOut, setDoubleOut] = useState(state.settings.doubleOut);
   const [players, setPlayers] = useState(state.players);
 
-  // Sync local state when dialog opens
-  useEffect(() => {
+  // Sync local state when dialog opens or the source settings/players change (adjusted during render)
+  const [prevSource, setPrevSource] = useState({
+    open,
+    settings: state.settings,
+    players: state.players,
+  });
+  if (
+    prevSource.open !== open ||
+    prevSource.settings !== state.settings ||
+    prevSource.players !== state.players
+  ) {
+    setPrevSource({ open, settings: state.settings, players: state.players });
     if (open) {
       setMode(state.settings.mode);
       setDoubleOut(state.settings.doubleOut);
       setPlayers([...state.players]);
     }
-  }, [open, state.settings, state.players]);
+  }
 
   const [confirmOpen, setConfirmOpen] = useState(false);
 
