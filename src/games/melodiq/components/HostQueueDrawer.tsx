@@ -8,7 +8,7 @@ import DeleteSweepIcon from '@mui/icons-material/DeleteSweepRounded';
 import HistoryIcon from '@mui/icons-material/HistoryRounded';
 import { useQueue } from '../hooks/useQueue';
 import { useQueueDrag } from '../hooks/useQueueDrag';
-import { useClientEngine } from '../PhoneClientEngine';
+import { useClientEngine } from '../phoneClientContext';
 import type { MelodiqParticipant, MelodiqProfile } from '../types';
 import { QueueParticipantDialog } from './QueueParticipantDialog';
 import { QueueNowPlaying } from './QueueNowPlaying';

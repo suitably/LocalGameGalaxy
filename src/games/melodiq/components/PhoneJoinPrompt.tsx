@@ -3,7 +3,7 @@ import { Dialog, DialogTitle, DialogContent, Button, Typography, Box } from '@mu
 import MicIcon from '@mui/icons-material/MicRounded';
 import VisibilityIcon from '@mui/icons-material/VisibilityRounded';
 import { useTranslation } from 'react-i18next';
-import { useClientEngine } from '../PhoneClientEngine';
+import { useClientEngine } from '../phoneClientContext';
 import { CONTROLLER_TARGET } from '../../../lib/touchTarget';
 
 export const PhoneJoinPrompt: React.FC = () => {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, createContext, useContext, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Box, Typography } from '@mui/material';
 import { useWebRTCClient } from '../../lib/webrtc';
 import { storage, sessionStorageSafe, STORAGE_KEYS } from '../../lib/storage';
@@ -16,59 +16,8 @@ import { universalPartyManager } from '../../features/party/logic/universalParty
 import { getOrCreatePlayerName } from '../../features/party/logic/playerName';
 import { useFollowPartyLobby } from '../../features/party/hooks/useFollowPartyLobby';
 import { useWakeLock } from '../../hooks/useWakeLock';
-import { publishClientEngine, useMountedClientEngine } from './hooks/clientEngineStore';
-
-export type { ClientProfile } from './logic/clientProfile';
-
-export interface ClientEngineContextType {
-  isConnected: boolean;
-  statusMessage: string;
-  isSessionPlaying: boolean;
-  activeSongId: string | null;
-  sendClientCommand: (command: string, data?: Record<string, unknown>) => void;
-  /** Sends a typed message to the host over the data channel. */
-  sendClientData: (data: object) => void;
-  clientProfile: ClientProfile;
-  isHostSettingsOpen: boolean;
-  setHostSettingsOpen: (open: boolean) => void;
-  /** Permission role granted by the host (admin, queue manager, …; `roster.update`). */
-  clientRole: string;
-  setClientRole: (role: string) => void;
-  /** The host scores this phone in the running song, so its microphone streams pitch. */
-  isSinging: boolean;
-  setSinging: (singing: boolean) => void;
-  promptedSongId: string | null;
-  setPromptedSongId: (id: string | null) => void;
-  updateClientProfile: (updates: Partial<ClientProfile>) => void;
-}
-
-const DEFAULT_CLIENT_ENGINE: ClientEngineContextType = {
-  isConnected: false,
-  statusMessage: 'Not connected',
-  isSessionPlaying: false,
-  activeSongId: null,
-  sendClientCommand: () => {},
-  sendClientData: () => {},
-  clientProfile: { name: 'Phone', hue: 120, deviceId: '' },
-  isHostSettingsOpen: false,
-  setHostSettingsOpen: () => {},
-  clientRole: 'spectator',
-  setClientRole: () => {},
-  isSinging: false,
-  setSinging: () => {},
-  promptedSongId: null,
-  setPromptedSongId: () => {},
-  updateClientProfile: () => {},
-};
-
-const ClientEngineContext = createContext<ClientEngineContextType | null>(null);
-
-/** The phone engine: from the React tree, else the mounted one (settings sheet), else defaults. */
-export const useClientEngine = (): ClientEngineContextType => {
-  const fromTree = useContext(ClientEngineContext);
-  const mounted = useMountedClientEngine();
-  return fromTree ?? mounted ?? DEFAULT_CLIENT_ENGINE;
-};
+import { publishClientEngine } from './hooks/clientEngineStore';
+import { ClientEngineContext, type ClientEngineContextType } from './phoneClientContext';
 
 /** Blocks the phone UI until the WebRTC link to the host is up. */
 const ConnectionOverlay: React.FC<{ message: string }> = ({ message }) => (
