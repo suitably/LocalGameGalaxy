@@ -11,7 +11,7 @@ export interface Logger {
  * True when debug/info output is on for `scope`: always in dev builds, otherwise when the
  * `STORAGE_KEYS.DEBUG_LOG` flag is `1`/`true` (all scopes) or a comma-separated scope list.
  */
-export function isDebugEnabled(scope: string): boolean {
+function isDebugEnabled(scope: string): boolean {
   if (import.meta.env.DEV) return true;
   const flag = storage.get(STORAGE_KEYS.DEBUG_LOG).trim();
   if (flag === '1' || flag === 'true') return true;
