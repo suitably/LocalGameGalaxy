@@ -33,7 +33,9 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({ open, game, onCl
   const [modes, setModes] = useState<TabletopPlayMode[]>(game?.supportedModes || ['party_multi_device', 'local_pass_and_play']);
   const [saving, setSaving] = useState(false);
 
-  React.useEffect(() => {
+  const [prevGame, setPrevGame] = useState(game);
+  if (game !== prevGame) {
+    setPrevGame(game);
     if (game) {
       setName(game.name);
       setDescription(game.description || '');
@@ -42,7 +44,7 @@ export const EditGameDialog: React.FC<EditGameDialogProps> = ({ open, game, onCl
       setMaxPlayers(game.maxPlayers);
       setModes(game.supportedModes || ['party_multi_device', 'local_pass_and_play']);
     }
-  }, [game]);
+  }
 
   const toggleMode = (mode: TabletopPlayMode) => {
     if (modes.includes(mode)) {

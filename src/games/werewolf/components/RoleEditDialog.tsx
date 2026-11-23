@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -45,9 +45,11 @@ export const RoleEditDialog: React.FC<RoleEditDialogProps> = ({
   const { t } = useTranslation();
   const [currentRole, setCurrentRole] = useState<RoleDefinition | null>(initialRole);
 
-  useEffect(() => {
+  const [prevInitialRole, setPrevInitialRole] = useState(initialRole);
+  if (initialRole !== prevInitialRole) {
+    setPrevInitialRole(initialRole);
     setCurrentRole(initialRole);
-  }, [initialRole]);
+  }
 
   if (!currentRole) return null;
 

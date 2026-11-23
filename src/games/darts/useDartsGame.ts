@@ -149,29 +149,23 @@ export function parseDartsState(raw: unknown): PersistedState | null {
 }
 
 export function useDartsGame() {
-  const [settings, setSettings] = useState<GameSettings>({ mode: '501', doubleOut: true });
-  const [players, setPlayers] = useState<Player[]>([
-    { id: '1', name: 'Player 1' },
-    { id: '2', name: 'Player 2' },
-  ]);
-  const [turns, setTurns] = useState<Turn[]>([]);
-  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-  const [currentTurnThrows, setCurrentTurnThrows] = useState<DartThrow[]>([]);
-  const [winner, setWinner] = useState<string | null>(null);
-
-  // Load state from storage on mount
-  useEffect(() => {
-    const raw = storage.getJson<unknown>(STORAGE_KEY, null);
-    const parsed = parseDartsState(raw);
-    if (parsed) {
-      setSettings(parsed.settings);
-      setPlayers(parsed.players);
-      setTurns(parsed.turns);
-      setCurrentPlayerIndex(parsed.currentPlayerIndex);
-      setCurrentTurnThrows(parsed.currentTurnThrows);
-      setWinner(parsed.winner);
-    }
-  }, []);
+  // Read the saved game from storage once, on the first render
+  const [saved] = useState(() => parseDartsState(storage.getJson<unknown>(STORAGE_KEY, null)));
+  const [settings, setSettings] = useState<GameSettings>(
+    saved?.settings ?? { mode: '501', doubleOut: true },
+  );
+  const [players, setPlayers] = useState<Player[]>(
+    saved?.players ?? [
+      { id: '1', name: 'Player 1' },
+      { id: '2', name: 'Player 2' },
+    ],
+  );
+  const [turns, setTurns] = useState<Turn[]>(saved?.turns ?? []);
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(saved?.currentPlayerIndex ?? 0);
+  const [currentTurnThrows, setCurrentTurnThrows] = useState<DartThrow[]>(
+    saved?.currentTurnThrows ?? [],
+  );
+  const [winner, setWinner] = useState<string | null>(saved?.winner ?? null);
 
   // Save state whenever it changes
   useEffect(() => {

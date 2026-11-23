@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -41,9 +41,11 @@ export const QwixxRulesDialog: React.FC<QwixxRulesDialogProps> = ({
   const { t } = useTranslation();
   const [currentPreset, setCurrentPreset] = useState<number>(presetIndex);
 
-  useEffect(() => {
+  const [prevSource, setPrevSource] = useState({ presetIndex, sheetType });
+  if (prevSource.presetIndex !== presetIndex || prevSource.sheetType !== sheetType) {
+    setPrevSource({ presetIndex, sheetType });
     setCurrentPreset(presetIndex);
-  }, [presetIndex, sheetType]);
+  }
 
   if (!sheetType) return null;
 

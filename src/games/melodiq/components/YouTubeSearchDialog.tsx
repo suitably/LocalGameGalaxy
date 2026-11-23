@@ -37,6 +37,8 @@ interface YouTubeResult {
   thumbnail: string;
 }
 
+const isDirectUrl = (q: string) => q.startsWith('http://') || q.startsWith('https://');
+
 interface YouTubeSearchDialogProps {
   open: boolean;
   onClose: () => void;
@@ -58,25 +60,27 @@ export const YouTubeSearchDialog: React.FC<YouTubeSearchDialogProps> = ({
   const [selectedUrl, setSelectedUrl] = useState<string>('');
   const [skipAudio, setSkipAudio] = useState<boolean>(false);
 
-  React.useEffect(() => {
+  // Reset the search form when the dialog opens or the initial query changes (adjusted during render).
+  const [prevSource, setPrevSource] = useState({ open, initialQuery });
+  if (prevSource.open !== open || prevSource.initialQuery !== initialQuery) {
+    setPrevSource({ open, initialQuery });
     if (open) {
       setQuery(initialQuery);
       setResults([]);
       setSelectedUrl('');
       setError(null);
-
-      if (initialQuery) {
-        // Auto search when opening with initial query
-        handleSearch(initialQuery);
-      }
+      // Auto search when opening with an initial query: URLs are selected directly,
+      // anything else starts loading (the fetch itself runs in the effect below).
+      if (isDirectUrl(initialQuery)) setSelectedUrl(initialQuery);
+      else if (initialQuery.trim()) setLoading(true);
     }
-  }, [open, initialQuery]);
+  }
 
   const handleSearch = async (overrideQuery?: string) => {
     const q = overrideQuery || query;
     if (!q.trim()) return;
 
-    if (q.startsWith('http://') || q.startsWith('https://')) {
+    if (isDirectUrl(q)) {
       setSelectedUrl(q);
       setResults([]);
       return;
@@ -93,6 +97,15 @@ export const YouTubeSearchDialog: React.FC<YouTubeSearchDialogProps> = ({
       setLoading(false);
     }
   };
+
+  React.useEffect(() => {
+    if (open && initialQuery.trim() && !isDirectUrl(initialQuery)) {
+      melodiqFetch(`/api/youtube/search?q=${encodeURIComponent(initialQuery)}&limit=5`)
+        .then((data) => setResults(data))
+        .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+        .finally(() => setLoading(false));
+    }
+  }, [open, initialQuery]);
 
   const handleConfirm = () => {
     if (selectedUrl) {
