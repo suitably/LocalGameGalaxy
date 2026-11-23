@@ -23,7 +23,8 @@ export const ExcalidrawLazy = React.lazy(async () => {
   }
 
   const ExcalidrawComponent = module.Excalidraw;
-  const useHandleLibrary = module.useHandleLibrary;
+  // older builds may not export the hook; a no-op keeps the call unconditional
+  const useHandleLibrary: typeof module.useHandleLibrary = module.useHandleLibrary ?? (() => {});
 
   const adapter: LibraryPersistenceAdapter = {
     load: async () => {
@@ -67,9 +68,7 @@ export const ExcalidrawLazy = React.lazy(async () => {
       }
     }, []);
 
-    if (useHandleLibrary) {
-      useHandleLibrary({ excalidrawAPI: api, adapter });
-    }
+    useHandleLibrary({ excalidrawAPI: api, adapter });
 
     return (
       <ExcalidrawComponent
