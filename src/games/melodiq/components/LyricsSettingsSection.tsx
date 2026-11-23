@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import type { SettingsState } from '../hooks/SettingsContext';
+import type { SettingsState } from '../hooks/settingsContextCore';
 import { SettingSlider, SettingSwitch, SettingToggleGroup } from '../../../components/settings';
 import { LYRICS_MIN_FIT_OPTIONS } from '../gameplay/logic/lyricsFit';
 

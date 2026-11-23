@@ -8,7 +8,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useHeaderLayout } from '../../../context/HeaderLayoutContext';
+import { useHeaderLayout } from '../../../context/headerLayoutContextCore';
 import { useWakeLock } from '../../../hooks/useWakeLock';
 import { getRoomTransport, retainRoomPeer } from '../../../modules/room-game';
 import { SealedRoomPeer, type SealedGame } from '../../../modules/room-game/sealed/sealedRoomPeer';

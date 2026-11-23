@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Box, CircularProgress, Typography, Button } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBackRounded';
 import { useTranslation } from 'react-i18next';
-import { usePageTitle } from '../../context/TitleContext';
+import { usePageTitle } from '../../context/titleContextCore';
 import { tabletopReducer } from './logic/tabletopReducer';
 import { validateAndSanitizeGame } from './logic/gameValidator';
 import { deleteTabletopSession, sessionKey } from './logic/tabletopStorage';

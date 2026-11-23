@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { alpha, Box, Button, IconButton, Paper, Tooltip, Typography } from '@mui/material';
 import TouchAppRoundedIcon from '@mui/icons-material/TouchAppRounded';
 import { useTranslation } from 'react-i18next';
-import { useHeaderLayout } from '../../../context/HeaderLayoutContext';
+import { useHeaderLayout } from '../../../context/headerLayoutContextCore';
 import { useRoomMarkers } from '../hooks/useRoomMarkers';
 import { MARKER_ATTRIBUTE, markerSelector } from '../logic/roomMarkers';
 

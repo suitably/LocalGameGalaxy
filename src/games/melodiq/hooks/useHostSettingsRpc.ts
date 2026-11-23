@@ -3,7 +3,7 @@ import { useRoomEvents } from '../../../modules/room-game/useRoomEvents';
 import { getRoleForDevice } from '../components/useStoredRoles';
 import { handleHostSettingsEvent, type HostSettingsEvent } from '../logic/hostSettingsRpc';
 import type { HostSettings } from '../types';
-import { useMelodiqSettings } from './SettingsContext';
+import { useMelodiqSettings } from './settingsContextCore';
 import { MELODIQ_GAME_KEY, useMelodiqRoomTransport } from './useMelodiqRoomTransport';
 
 /**

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { storage } from '../../../lib/storage';
-import { useWebRTC } from '../audio/WebRTCContext';
+import { useWebRTC } from '../audio/webRTCContextCore';
 import { useHostLibrarySearch } from '../hooks/useHostLibrarySearch';
 import { useHostQueueRoom } from '../hooks/useHostQueueRoom';
 

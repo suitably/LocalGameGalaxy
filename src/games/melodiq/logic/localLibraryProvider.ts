@@ -1,6 +1,6 @@
 import { type Song } from '../db';
 import { parseUltraStarTxt, type UltraStarSong } from '../../../modules/music-score';
-import { getYouTubeVideoId } from '../gameplay/YouTubeBackgroundPlayer';
+import { getYouTubeVideoId } from '../gameplay/youtubeApi';
 import { createCoverThumbnail } from './coverThumbnail';
 
 export interface LocalSong extends Song {

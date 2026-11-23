@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { alpha, Box, Typography, Paper, Chip, type SxProps, type Theme } from '@mui/material';
 import QRCode from 'qrcode';
 import { useTranslation } from 'react-i18next';
-import { useMelodiqSettings } from '../hooks/SettingsContext';
-import { useWebRTC } from '../audio/WebRTCContext';
+import { useMelodiqSettings } from '../hooks/settingsContextCore';
+import { useWebRTC } from '../audio/webRTCContextCore';
 import { buildDeviceConnectionUrl } from '../../../components/connection/connectionUrl';
 import { isPartyRoomCode } from '../../../features/party/logic/partyRoom';
 

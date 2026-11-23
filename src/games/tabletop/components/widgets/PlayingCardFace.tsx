@@ -2,7 +2,8 @@ import React from 'react';
 import { alpha, Box, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import type { CardContent } from '../../logic/types';
-import { StandardSuitCardFace, parseCardText } from './StandardSuitCardFace';
+import { StandardSuitCardFace } from './StandardSuitCardFace';
+import { parseCardText } from './standardSuitCardFaceCore';
 import { useAssetResolver, type AssetUrlResolver } from '../../hooks/useAssetUrls';
 
 interface PlayingCardFaceProps {

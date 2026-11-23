@@ -3,9 +3,11 @@ import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Box } from '@mui/material';
 import { initMelodiqI18n } from './i18n';
-import { WebRTCProvider, WebRTCMockProvider, useWebRTC } from './audio/WebRTCContext';
-import { useMelodiqSettings } from './hooks/SettingsContext';
-import { useSongs, SongsProvider } from './hooks/useSongs';
+import { WebRTCProvider, WebRTCMockProvider } from './audio/WebRTCContext';
+import { useWebRTC } from './audio/webRTCContextCore';
+import { useMelodiqSettings } from './hooks/settingsContextCore';
+import { useSongs } from './hooks/useSongsCore';
+import { SongsProvider } from './hooks/useSongs';
 import { useQueue, QueueProvider } from './hooks/useQueue';
 import { useDownloads } from './hooks/useDownloads';
 import { PhoneQueueBridge } from './components/PhoneQueueBridge';
@@ -37,13 +39,11 @@ initMelodiqI18n();
 export const MelodiqGameContent: React.FC = () => {
   const [searchParams] = useSearchParams();
   const isClient = searchParams.get('role') === 'client';
-
   const { songs, refreshSongs, getSongById, isLoading, hasConnectionError, localLibrary } =
     useSongs();
   const { queue, popNext, setNowPlaying, addToQueue, addNext, nowPlaying, replaceItem } =
     useQueue();
   const { jobs } = useDownloads(isClient ? 0 : 2000);
-
   const { t } = useTranslation();
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 

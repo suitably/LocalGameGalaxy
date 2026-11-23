@@ -11,7 +11,7 @@ import MenuBookRoundedIcon from '@mui/icons-material/MenuBookRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import PhonelinkRingRoundedIcon from '@mui/icons-material/PhonelinkRingRounded';
 import TransferWithinAStationRoundedIcon from '@mui/icons-material/TransferWithinAStationRounded';
-import { useHeaderLayout } from '../../../context/HeaderLayoutContext';
+import { useHeaderLayout } from '../../../context/headerLayoutContextCore';
 import { StoryHeaderTitle } from '../components/StoryHeaderTitle';
 import type { StoryGameRecord } from '../types';
 

@@ -3,7 +3,7 @@
  */
 import React from 'react';
 import { alpha, Box, ButtonBase } from '@mui/material';
-import { SUIT_DATA } from '../../components/widgets/StandardSuitCardFace';
+import { SUIT_DATA } from '../../components/widgets/standardSuitCardFaceCore';
 import { SUIT_SYMBOL, cardText, isJoker, rankOf, suitOf, type CardId } from '../logic/cardDeck';
 import { transitionOf } from '../../../../lib/motion';
 

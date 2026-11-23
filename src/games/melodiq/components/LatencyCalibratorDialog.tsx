@@ -14,7 +14,7 @@ import SpeedIcon from '@mui/icons-material/SpeedRounded';
 import MicIcon from '@mui/icons-material/MicRounded';
 import CheckCircleIcon from '@mui/icons-material/CheckCircleRounded';
 import { useTranslation } from 'react-i18next';
-import { useMelodiqSettings } from '../hooks/SettingsContext';
+import { useMelodiqSettings } from '../hooks/settingsContextCore';
 import { scheduleBeep } from '../../../modules/audio/latency';
 
 interface LatencyCalibratorDialogProps {

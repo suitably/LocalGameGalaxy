@@ -6,7 +6,7 @@ import {
   isTrackerEnabledByDefault,
   usableBackendTrackerUrl,
 } from './trackerLogic';
-import { DEFAULT_PUBLIC_TRACKERS } from './WebRTCHostContext';
+import { DEFAULT_PUBLIC_TRACKERS } from './webRTCHostContextCore';
 
 describe('WebRTC Tracker Logic', () => {
   it('isTrackerEnabledByDefault respects backend presence', () => {

@@ -4,7 +4,7 @@ import { type SongWithNotes } from '../PitchVisualizer';
 import { usePlaybackControls } from './usePlaybackControls';
 import { useLocalMediaSync } from './useLocalMediaSync';
 import { useWakeLock } from '../../../../hooks/useWakeLock';
-import { useMelodiqSettings } from '../../hooks/SettingsContext';
+import { useMelodiqSettings } from '../../hooks/settingsContextCore';
 import { useYouTubeConsentGate } from './useYouTubeConsentGate';
 
 export interface UseSessionAudioControllerOptions {

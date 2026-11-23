@@ -1,9 +1,9 @@
 import React from 'react';
 import { DeviceConnection } from '../../components/connection/DeviceConnection';
-import { useWebRTC } from './audio/WebRTCContext';
+import { useWebRTC } from './audio/webRTCContextCore';
 import { useClientRoles } from './hooks/useClientRoles';
-import { useMelodiqSettings } from './hooks/SettingsContext';
-import { useSongs } from './hooks/useSongs';
+import { useMelodiqSettings } from './hooks/settingsContextCore';
+import { useSongs } from './hooks/useSongsCore';
 import { useTranslation } from 'react-i18next';
 import type { ClientRole } from './types';
 import {

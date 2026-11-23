@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { Box, Tabs, Tab } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { initKnisterI18n } from './i18n';
-import { usePageTitle } from '../../context/TitleContext';
+import { usePageTitle } from '../../context/titleContextCore';
 import { useWakeLock } from '../../hooks/useWakeLock';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';

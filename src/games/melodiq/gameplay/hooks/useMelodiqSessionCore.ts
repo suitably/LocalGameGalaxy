@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 import type React from 'react';
-import { useMelodiqSettings } from '../../hooks/SettingsContext';
-import { useWebRTC } from '../../audio/WebRTCContext';
+import { useMelodiqSettings } from '../../hooks/settingsContextCore';
+import { useWebRTC } from '../../audio/webRTCContextCore';
 import { useScreenOrientation } from '../../../../hooks/useScreenOrientation';
 import { useMediaLoaders } from './useMediaLoaders';
 import { useSessionPlayers } from './useSessionPlayers';

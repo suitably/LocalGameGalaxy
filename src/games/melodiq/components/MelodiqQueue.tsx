@@ -3,7 +3,7 @@ import { alpha, Box, Typography, Grid, Snackbar, Alert } from '@mui/material';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlayRounded';
 import { useTranslation } from 'react-i18next';
 import { useQueue } from '../hooks/useQueue';
-import { useSongs } from '../hooks/useSongs';
+import { useSongs } from '../hooks/useSongsCore';
 import { useDownloads } from '../hooks/useDownloads';
 import { useSearchFilters } from '../hooks/useSearchFilters';
 import { useSongDownloader } from '../hooks/useSongDownloader';

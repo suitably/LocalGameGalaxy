@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box } from '@mui/material';
 import { Outlet, useLocation } from 'react-router-dom';
-import { useHeaderLayout } from '../../context/HeaderLayoutContext';
+import { useHeaderLayout } from '../../context/headerLayoutContextCore';
 import { GlobalHeader } from './GlobalHeader';
 import { FeedbackDialog } from '../feedback/FeedbackDialog';
 

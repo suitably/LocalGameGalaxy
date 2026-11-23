@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, IconButton, Menu, MenuItem as MuiMenuItem } from '@mui/material';
 import MenuIcon from '@mui/icons-material/MenuRounded';
 import { useTranslation } from 'react-i18next';
-import type { MenuItem } from '../../context/HeaderLayoutContext';
+import type { MenuItem } from '../../context/headerLayoutContextCore';
 
 interface HeaderOverflowMenuProps {
   items: MenuItem[];

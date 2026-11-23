@@ -12,7 +12,7 @@ import { Box, IconButton, Typography } from '@mui/material';
 import VolumeUpIcon from '@mui/icons-material/VolumeUpRounded';
 import VolumeOffIcon from '@mui/icons-material/VolumeOffRounded';
 import { useTranslation } from 'react-i18next';
-import { usePageTitle } from '../../context/TitleContext';
+import { usePageTitle } from '../../context/titleContextCore';
 import { PartyRoomConnecting } from '../../features/party/components/PartyRoomScoreboard';
 import { GameOver } from './components/GameOver';
 import { RoomDay } from './components/room/RoomDay';

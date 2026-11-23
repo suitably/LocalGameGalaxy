@@ -7,7 +7,7 @@
 import React, { useCallback } from 'react';
 import { Box, Button, CircularProgress, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { usePageTitle } from '../../context/TitleContext';
+import { usePageTitle } from '../../context/titleContextCore';
 import { PartyRoomConnecting } from '../../features/party/components/PartyRoomScoreboard';
 import { GameSetup } from './components/GameSetup';
 import { RoomCard } from './components/room/RoomCard';

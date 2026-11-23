@@ -1,13 +1,14 @@
 export { MelodiqGame } from './MelodiqGame';
 export { MelodiqTV } from './MelodiqTV';
 export { MelodiqQueue } from './components/MelodiqQueue';
-export { useSongs, SongsProvider } from './hooks/useSongs';
+export { SongsProvider } from './hooks/useSongs';
+export { useSongs } from './hooks/useSongsCore';
+export { SettingsProvider } from './hooks/SettingsContext';
 export {
-  SettingsProvider,
   useMelodiqSettings,
   DEFAULT_SETTINGS,
   type SettingsState,
-} from './hooks/SettingsContext';
+} from './hooks/settingsContextCore';
 export { QueueProvider } from './hooks/useQueue';
 export { useProfiles } from './hooks/useProfiles';
 export { UserProfilesManager } from './components/UserProfilesManager';

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { type Song } from '../../db';
-import { getYouTubeVideoId } from '../YouTubeBackgroundPlayer';
+import { getYouTubeVideoId } from '../youtubeApi';
 import { storage, STORAGE_KEYS } from '../../../../lib/storage';
 
 const getHelperUrl = () => {

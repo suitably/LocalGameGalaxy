@@ -3,7 +3,7 @@ import { alpha, Box } from '@mui/material';
 import { LyricsDisplay } from '../LyricsDisplay';
 import { PitchVisualizer, type SongWithNotes } from '../PitchVisualizer';
 import { type PlayerRuntime } from '../hooks/PlayerRuntime';
-import { useMelodiqSettings } from '../../hooks/SettingsContext';
+import { useMelodiqSettings } from '../../hooks/settingsContextCore';
 import type { LyricsRows } from '../logic/lyricsFit';
 import { lyricsOnlyLineCount } from '../logic/lyricsLines';
 import { HostPartToggle } from './HostPartToggle';

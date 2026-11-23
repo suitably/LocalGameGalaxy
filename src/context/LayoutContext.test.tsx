@@ -1,9 +1,13 @@
 import { renderToString } from 'react-dom/server';
 import { describe, it, expect } from 'vitest';
-import { TitleProvider, useTitle } from './TitleContext';
-import { HeaderLayoutProvider, useHeaderLayout } from './HeaderLayoutContext';
-import { SettingsModeProvider, useSettingsMode } from './SettingsModeContext';
-import { LayoutProvider, useLayout, useLayoutContext } from './LayoutContext';
+import { TitleProvider } from './TitleContext';
+import { useTitle } from './titleContextCore';
+import { HeaderLayoutProvider } from './HeaderLayoutContext';
+import { useHeaderLayout } from './headerLayoutContextCore';
+import { SettingsModeProvider } from './SettingsModeContext';
+import { useSettingsMode } from './settingsModeContextCore';
+import { LayoutProvider } from './LayoutContext';
+import { useLayout, useLayoutContext } from './layoutContextCore';
 
 describe('LayoutContext Split Contexts', () => {
     describe('TitleContext', () => {

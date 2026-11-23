@@ -1,14 +1,11 @@
 import React, { useEffect, useRef, useState, useId } from 'react';
 import { Box } from '@mui/material';
 import {
-  getYouTubeVideoId,
   ensureYouTubeIframeApi,
   disableYouTubeCaptions,
   type YTPlayerInstance,
 } from './youtubeApi';
 import { createYouTubeVideoAdapter } from './createYouTubeVideoAdapter';
-
-export { getYouTubeVideoId };
 
 interface YouTubeBackgroundPlayerProps {
   videoId: string;

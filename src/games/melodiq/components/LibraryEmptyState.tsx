@@ -4,7 +4,7 @@ import FolderOpenIcon from '@mui/icons-material/FolderOpenRounded';
 import LockOpenIcon from '@mui/icons-material/LockOpenRounded';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useSongs } from '../hooks/useSongs';
+import { useSongs } from '../hooks/useSongsCore';
 import { settingsPath } from '../../../features/settings/settingsRoutes';
 
 interface LibraryEmptyStateProps {

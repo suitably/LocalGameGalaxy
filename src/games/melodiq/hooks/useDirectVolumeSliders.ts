@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import type { SettingsState } from './SettingsContext';
+import type { SettingsState } from './settingsContextCore';
 
 type VolumeKey = 'songVolume' | 'vocalsVolume' | 'masterVolume';
 

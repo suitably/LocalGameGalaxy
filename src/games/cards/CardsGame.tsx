@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { initCardsI18n } from './i18n';
-import { usePageTitle } from '../../context/TitleContext';
+import { usePageTitle } from '../../context/titleContextCore';
 import { useWakeLock } from '../../hooks/useWakeLock';
 import type { CardGameDefinition } from './logic/types';
 import { CardsLobby } from './components/CardsLobby';

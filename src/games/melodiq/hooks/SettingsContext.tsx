@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { useMultiChannelSync } from '../../../modules/sync';
 import { TV_CONTROL_SYNC, type TvControlMessage } from '../logic/syncChannels';
@@ -8,18 +8,7 @@ import {
   persistSingleSetting,
   type SettingsState,
 } from './settingsStorage';
-
-export { DEFAULT_SETTINGS, loadSettings } from './settingsStorage';
-export type { SettingsState } from './settingsStorage';
-
-interface SettingsContextValue {
-  settings: SettingsState;
-  updateSetting: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
-  resetSettings: (newState: SettingsState) => void;
-  saveSettings: () => void;
-}
-
-const SettingsContext = createContext<SettingsContextValue | null>(null);
+import { SettingsContext } from './settingsContextCore';
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<SettingsState>(loadSettings);
@@ -123,13 +112,4 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       {children}
     </SettingsContext.Provider>
   );
-};
-
-/** Consume the shared settings context. Must be used within a SettingsProvider. */
-export const useMelodiqSettings = (): SettingsContextValue => {
-  const ctx = useContext(SettingsContext);
-  if (!ctx) {
-    throw new Error('useMelodiqSettings must be used within a <SettingsProvider>');
-  }
-  return ctx;
 };

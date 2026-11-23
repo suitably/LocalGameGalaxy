@@ -17,7 +17,7 @@ vi.mock('react-i18next', () => ({
     })
 }));
 
-vi.mock('../hooks/SettingsContext', () => ({
+vi.mock('../hooks/settingsContextCore', () => ({
     useMelodiqSettings: () => ({
         settings: {
             showScoreboardQrCode: mockShowScoreboardQrCode
@@ -25,7 +25,7 @@ vi.mock('../hooks/SettingsContext', () => ({
     })
 }));
 
-vi.mock('../audio/WebRTCContext', () => ({
+vi.mock('../audio/webRTCContextCore', () => ({
     useWebRTC: () => ({
         partyId: mockPartyId,
         activeTrackerUrls: mockActiveTrackerUrls

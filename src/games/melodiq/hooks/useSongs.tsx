@@ -3,12 +3,10 @@ import React, {
   useEffect,
   useCallback,
   useRef,
-  createContext,
-  useContext,
   useMemo,
 } from 'react';
 import { type Song, type SongMeta } from '../db';
-import { useLocalLibrary, type UseLocalLibraryResult } from './useLocalLibrary';
+import { useLocalLibrary } from './useLocalLibrary';
 import { SongLibraryProvider } from './SongLibraryProvider';
 import { mergeLibraries, toLocalSongMeta } from '../logic/localSongMeta';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
@@ -20,23 +18,7 @@ import {
   fetchServerSongs,
   fetchServerSongDetails,
 } from '../logic/serverSongsProvider';
-
-export interface LoadingProgress {
-  loaded: number;
-  total: number;
-}
-
-export interface UseSongsResult {
-  songs: SongMeta[];
-  isLoading: boolean;
-  hasConnectionError: boolean;
-  loadingProgress: LoadingProgress | null;
-  refreshSongs: () => Promise<void>;
-  getSongById: (id: string) => Promise<Song | undefined>;
-  localLibrary: UseLocalLibraryResult;
-}
-
-const SongsContext = createContext<UseSongsResult | null>(null);
+import { SongsContext, type LoadingProgress, type UseSongsResult } from './useSongsCore';
 
 /**
  * Provider component managing both server-based and local song libraries.
@@ -218,12 +200,4 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       <SongLibraryProvider hasLocalFolder={localLibrary.hasFolder}>{children}</SongLibraryProvider>
     </SongsContext.Provider>
   );
-};
-
-export const useSongs = (): UseSongsResult => {
-  const context = useContext(SongsContext);
-  if (!context) {
-    throw new Error('useSongs must be used within a SongsProvider');
-  }
-  return context;
 };

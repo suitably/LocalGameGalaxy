@@ -7,7 +7,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useHeaderLayout } from '../../../context/HeaderLayoutContext';
+import { useHeaderLayout } from '../../../context/headerLayoutContextCore';
 import { useWakeLock } from '../../../hooks/useWakeLock';
 import { useRoomEvents, useRoomReducer } from '../../../modules/room-game';
 import { HELP_GAME_KEY, mayHelp, withHelp, type HelpEvent } from '../logic/partyHelp';

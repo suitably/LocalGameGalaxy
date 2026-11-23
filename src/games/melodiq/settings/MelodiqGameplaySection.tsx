@@ -3,7 +3,7 @@ import { Box } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { SettingsResetButton } from '../../../components/settings';
 import { GameSettingsPanel } from '../components/GameSettingsPanel';
-import { DEFAULT_SETTINGS, useMelodiqSettings } from '../hooks/SettingsContext';
+import { DEFAULT_SETTINGS, useMelodiqSettings } from '../hooks/settingsContextCore';
 import { initMelodiqI18n } from '../i18n';
 
 initMelodiqI18n();

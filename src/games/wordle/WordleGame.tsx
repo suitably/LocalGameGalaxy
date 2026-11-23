@@ -6,7 +6,7 @@ import React from 'react';
 import { Alert, Box, Button, ButtonGroup } from '@mui/material';
 import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
 import { useTranslation } from 'react-i18next';
-import { usePageTitle } from '../../context/TitleContext';
+import { usePageTitle } from '../../context/titleContextCore';
 import { useGameSettingsHost } from '../../context/GameSettingsContext';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { useWordleScreen } from './hooks/useWordleScreen';

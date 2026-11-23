@@ -3,7 +3,7 @@ import { alpha, Box, Typography, Button, IconButton, Tooltip } from '@mui/materi
 import ReplayIcon from '@mui/icons-material/ReplayRounded';
 import CasinoIcon from '@mui/icons-material/CasinoRounded';
 import { useTranslation } from 'react-i18next';
-import { usePageTitle } from '../../context/TitleContext';
+import { usePageTitle } from '../../context/titleContextCore';
 import { storage, STORAGE_KEYS } from '../../lib/storage';
 import { GameLayout } from '../../components/Layout/GameLayout';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';

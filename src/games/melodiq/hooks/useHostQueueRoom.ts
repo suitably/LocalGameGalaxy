@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useRoomEvents } from '../../../modules/room-game/useRoomEvents';
 import { useRoomReducer } from '../../../modules/room-game/useRoomReducer';
-import { useWebRTC } from '../audio/WebRTCContext';
+import { useWebRTC } from '../audio/webRTCContextCore';
 import { getRoleForDevice } from '../components/useStoredRoles';
 import {
   handleQueueEvent,
@@ -16,7 +16,7 @@ import {
 } from '../logic/queueRoom';
 import { MELODIQ_GAME_KEY, useMelodiqRoomTransport } from './useMelodiqRoomTransport';
 import { useQueue } from './useQueue';
-import { useSongs } from './useSongs';
+import { useSongs } from './useSongsCore';
 
 /**
  * Host side of the song queue room: mirrors `useQueue`'s queue and now-playing song into the

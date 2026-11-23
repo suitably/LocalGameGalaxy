@@ -1,31 +1,10 @@
-import React, { createContext, useContext, useReducer, useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useReducer, useEffect, useState, useMemo, useCallback } from 'react';
 import { gameReducer } from '../logic/gameReducer';
 import { INITIAL_STATE } from '../logic/types';
-import type { GameState, Action, Role, RoleDefinition, NightAction, PlayerId } from '../logic/types';
+import type { Role, RoleDefinition, NightAction, PlayerId } from '../logic/types';
 import { useGameStatePersistence, type SavedGameInfo } from '../hooks/useGameStatePersistence';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
-
-export interface WerewolfContextType {
-    gameState: GameState;
-    dispatch: React.Dispatch<Action>;
-    isInitialized: boolean;
-    showContinueDialog: boolean;
-    savedGameInfo: SavedGameInfo | null;
-    handleContinueGame: () => void;
-    handleNewGame: () => void;
-    addPlayer: (name: string) => void;
-    removePlayer: (id: PlayerId) => void;
-    clearAllPlayers: () => void;
-    startGame: (roles: Role[]) => void;
-    nextPhase: () => void;
-    killPlayer: (id: PlayerId) => void;
-    resetGame: () => void;
-    saveCustomRoles: (roles: RoleDefinition[]) => void;
-    executeNightAction: (action: NightAction, role: Role) => void;
-    executeHunterShot: (targetId: string) => void;
-}
-
-const WerewolfGameContext = createContext<WerewolfContextType | null>(null);
+import { WerewolfGameContext, type WerewolfContextType } from './werewolfGameContextCore';
 
 export const WerewolfGameProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { saveGameState, loadGameState, getSavedGameInfo, clearSavedGame, hasSavedGame } = useGameStatePersistence();
@@ -171,12 +150,4 @@ export const WerewolfGameProvider: React.FC<{ children: React.ReactNode }> = ({ 
             {children}
         </WerewolfGameContext.Provider>
     );
-};
-
-export const useWerewolfGame = (): WerewolfContextType => {
-    const context = useContext(WerewolfGameContext);
-    if (!context) {
-        throw new Error('useWerewolfGame must be used within a WerewolfGameProvider');
-    }
-    return context;
 };
