@@ -1,0 +1,1 @@
+- **Unused Gartic Phone storage keys** (#661): `GARTIC_STATE_PREFIX` and `GARTIC_HOST_PREFIX` are gone; Gartic Phone keeps its state on the party host since #650.

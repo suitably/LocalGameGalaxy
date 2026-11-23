@@ -16,7 +16,7 @@ import {
 } from './types';
 import { validateAndSanitizeGame } from './gameValidator';
 import { buildImportReport, extractScripts } from './ttsImportReport';
-import { applyLuaTranslation } from './ttsLuaImport';
+import { applyLuaTranslation, withRuntimeMeta } from './ttsLuaImport';
 import {
   assignSeats,
   claimId,
@@ -318,7 +318,8 @@ export function parseTtsSaveFile(
   const tableHeight = Math.round((bounds.maxZ - bounds.minZ) * TTS_SCALE + margin * 2 + 200);
 
   const ruleText = rulesFromTabs(save, noteTexts);
-  const scripts = extractScripts(save);
+  const projection = { ...bounds, scale: TTS_SCALE, margin };
+  const scripts = withRuntimeMeta(extractScripts(save), projection, seats);
   const luaReport = applyLuaTranslation({
     save,
     scripts,

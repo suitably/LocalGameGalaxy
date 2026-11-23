@@ -3,6 +3,7 @@ import LZString from 'lz-string';
 import { gameRelayStorage } from '../../lib/push/gameRelayStorage';
 import { inviteSeat, reclaimSeat } from '../player-management/seatActions';
 import { buildSessionLink, pickQrLink } from './sessionLink';
+import { ensureRoomKey } from '../sync/roomKeys';
 
 export interface UseSessionSharingOptions<TGame, TSnapshot> {
   game: (TGame & { id: string; players: any[] }) | null;
@@ -42,6 +43,8 @@ export function useSessionSharing<TGame, TSnapshot>({
             )
           : undefined,
         relay: gameRelayStorage.getEffectiveRelay(game.id, playerObj?.relayUrl),
+        // Games created before ADR 0009 get their key when they are shared again.
+        roomKey: ensureRoomKey(game.id, 'local'),
       });
     },
     [game, basePath, buildSnapshot],

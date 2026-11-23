@@ -1,6 +1,6 @@
 import { type PlayerRuntime } from './PlayerRuntime';
 import { type ScoreDisplayHandle } from '../ScoreDisplay';
-import { type Note, type ParsedSong } from '../../parser';
+import { type Note } from '../../logic/songVocals';
 import { type SongWithNotes } from '../PitchVisualizer';
 import { type PassiveGameState, type PassivePlayerState } from '../../types';
 
@@ -30,8 +30,8 @@ export interface UseScoringEngineProps {
   progressLineRef: React.RefObject<HTMLDivElement | null>;
   /** Ref flag indicating whether audio is actively playing (used to skip scoring when paused). */
   isPlayingRef: React.RefObject<boolean>;
-  /** The fully parsed UltraStar song data (tracks, notes, BPM, GAP). */
-  parsedSong: ParsedSong | SongWithNotes | null;
+  /** The song's sung view from its ScoreSong (tracks, BPM, GAP). */
+  parsedSong: SongWithNotes | null;
   /** Multiplier applied to BPM for slower/faster lyric scroll (default 1.0). */
   bpmMultiplier: number;
   /** Per-track score weights: `[1.0]` for single singer, `[0.5, 0.5]` for duets. */

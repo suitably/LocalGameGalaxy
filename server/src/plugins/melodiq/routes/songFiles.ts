@@ -23,9 +23,11 @@ import {
   parseSongMetaBody,
   readSongMeta,
   songCreationRoot,
+  songMetaOf,
   writeSongMeta,
-  type SongMeta,
 } from '../services/songFolder';
+import { parsePartSettings, withScoreParts } from '../services/partSettings';
+import { mergeRefusal, mergeSongInto } from '../services/songMerge';
 import { toClientSong } from './songs';
 import type { HonoEnv, Song } from '../../../core/types';
 
@@ -91,15 +93,8 @@ songFilesRouter.put('/api/songs/:id/meta', async (c) => {
   if (typeof input === 'string') return c.json({ error: input }, 400);
   const unknown = Object.keys(input.labels ?? {}).find((f) => !scoreOf(song, f));
   if (unknown) return c.json({ error: `Unknown score file: ${unknown}` }, 400);
-  const current: SongMeta = (await readSongMeta(song.folder)) ?? {
-    version: 1,
-    id: song.id,
-    title: song.title,
-    artist: song.artist,
-    labels: {},
-  };
   try {
-    await writeSongMeta(song.folder, mergeSongMeta(current, input));
+    await writeSongMeta(song.folder, mergeSongMeta(await songMetaOf(song), input));
     return c.json(client(c, await refreshed(song)));
   } catch (e: unknown) {
     return c.json({ error: `Failed to update song: ${errorText(e)}` }, 500);
@@ -112,7 +107,8 @@ songFilesRouter.post('/api/songs/:id/files', async (c) => {
   if (!found.ok) return found.response;
   const song = found.value;
   try {
-    const upload = (await c.req.parseBody())['file'];
+    const body = await c.req.parseBody();
+    const upload = body['file'];
     if (!(upload instanceof File)) return c.json({ error: 'No file uploaded (field "file")' }, 400);
     const kind = classifyUpload(upload.name);
     if (!kind) {
@@ -135,6 +131,12 @@ songFilesRouter.post('/api/songs/:id/files', async (c) => {
       path.join(song.folder, target),
       Buffer.from(await upload.arrayBuffer()),
     );
+    // optional free-text name of a score (#563), stored in `song.json`
+    const label = typeof body['label'] === 'string' ? body['label'].trim() : '';
+    if (label && kind.kind === 'score') {
+      const meta = mergeSongMeta(await songMetaOf(song), { labels: { [target]: label } });
+      await writeSongMeta(song.folder, meta);
+    }
     return c.json({
       success: true,
       file: target,
@@ -143,6 +145,26 @@ songFilesRouter.post('/api/songs/:id/files', async (c) => {
     });
   } catch (e: unknown) {
     return c.json({ error: `Failed to store file: ${errorText(e)}` }, 500);
+  }
+});
+
+// POST /api/songs/:id/merge — move the scores and recordings of a song without `.txt` into another
+// song ({ into }), e.g. a Melodiq song (#563); the emptied source folder is removed
+songFilesRouter.post('/api/songs/:id/merge', async (c) => {
+  const found = findSong(c);
+  if (!found.ok) return found.response;
+  const body = (await c.req.json().catch(() => null)) as { into?: unknown } | null;
+  const target = getSongCache().find((s) => s.id === body?.into);
+  if (!target) return c.json({ error: 'Target song not found' }, 404);
+  if (!resolveSecurePath(target.folder)) return c.json({ error: 'Access denied' }, 403);
+  const refusal = mergeRefusal(found.value, target);
+  if (refusal) return c.json({ error: refusal }, 400);
+  try {
+    const names = await mergeSongInto(found.value, target);
+    await refreshSongFolder(found.value.folder);
+    return c.json({ song: client(c, await refreshed(target)), files: Object.fromEntries(names) });
+  } catch (e: unknown) {
+    return c.json({ error: `Failed to move files: ${errorText(e)}` }, 500);
   }
 });
 
@@ -190,8 +212,9 @@ songFilesRouter.delete('/api/songs/:id/files/:file', async (c) => {
     if (score) {
       await fs.promises.rm(marksPathFor(filePath), { force: true });
       const meta = await readSongMeta(song.folder);
-      if (meta?.labels[file]) {
-        await writeSongMeta(song.folder, mergeSongMeta(meta, { labels: { [file]: '' } }));
+      if (meta && (meta.labels[file] || meta.parts[file])) {
+        const cleared = mergeSongMeta(meta, { labels: { [file]: '' } });
+        await writeSongMeta(song.folder, withScoreParts(cleared, file, {}));
       }
     }
     await refreshed(song);
@@ -213,6 +236,25 @@ songFilesRouter.get('/api/songs/:id/scores/:file/marks', async (c) => {
     return c.json(JSON.parse(await fs.promises.readFile(score.marksPath, 'utf-8')));
   } catch (e: unknown) {
     return c.json({ error: `Failed to read marks: ${errorText(e)}` }, 500);
+  }
+});
+
+// PUT /api/songs/:id/scores/:file/parts — hidden and renamed parts of a score in `song.json`
+// ({ parts: { <part id>: { hidden?, playback?, name? } } }, replaces the score's settings; #564)
+songFilesRouter.put('/api/songs/:id/scores/:file/parts', async (c) => {
+  const found = findSong(c);
+  if (!found.ok) return found.response;
+  const song = found.value;
+  const score = scoreOf(song, c.req.param('file'));
+  if (!score) return c.json({ error: 'Score not found' }, 404);
+  const body = (await c.req.json().catch(() => null)) as { parts?: unknown } | null;
+  const parts = parsePartSettings(body?.parts);
+  if (typeof parts === 'string') return c.json({ error: parts }, 400);
+  try {
+    await writeSongMeta(song.folder, withScoreParts(await songMetaOf(song), score.file, parts));
+    return c.json(client(c, await refreshed(song)));
+  } catch (e: unknown) {
+    return c.json({ error: `Failed to store part settings: ${errorText(e)}` }, 500);
   }
 });
 

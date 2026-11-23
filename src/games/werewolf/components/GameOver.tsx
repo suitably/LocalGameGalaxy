@@ -15,10 +15,12 @@ interface GameOverProps {
     | 'SURVIVOR'
     | 'PYROMANIAC'
     | 'EASTER_BUNNY';
-  onPlayAgain: () => void;
+  /** Without it there is no play-again button (room guests). */
+  onPlayAgain?: () => void;
+  children?: React.ReactNode;
 }
 
-export const GameOver: React.FC<GameOverProps> = ({ winner, onPlayAgain }) => {
+export const GameOver: React.FC<GameOverProps> = ({ winner, onPlayAgain, children }) => {
   const { t } = useTranslation();
 
   const getWinnerInfo = () => {
@@ -117,9 +119,13 @@ export const GameOver: React.FC<GameOverProps> = ({ winner, onPlayAgain }) => {
         </Typography>
       </Paper>
 
-      <Button variant="contained" size="large" fullWidth onClick={onPlayAgain} sx={{ mt: 2 }}>
-        {t('games.werewolf.play_again')}
-      </Button>
+      {children}
+
+      {onPlayAgain && (
+        <Button variant="contained" size="large" fullWidth onClick={onPlayAgain} sx={{ mt: 2 }}>
+          {t('games.werewolf.play_again')}
+        </Button>
+      )}
     </Box>
   );
 };

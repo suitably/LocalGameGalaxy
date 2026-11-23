@@ -33,4 +33,11 @@ describe('pass and play handover', () => {
       phase: 'playing',
     });
   });
+
+  it('covers for a player the game already picked', () => {
+    expect(handoverReducer({ phase: 'playing' }, { type: 'COVER', playerId: 'c' })).toEqual({
+      phase: 'covered',
+      playerId: 'c',
+    });
+  });
 });

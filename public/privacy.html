@@ -16,7 +16,7 @@
       </p>
       <h1>Privacy Notice</h1>
       <p class="meta">
-        for games.nexumia.de and the Nexumia Android app · Last updated: 15 November 2026
+        for games.nexumia.de and the Nexumia Android app · Last updated: 22 November 2026
       </p>
 
       <section class="summary" aria-labelledby="short">
@@ -96,9 +96,21 @@
           game (player names, texts, drawings, moves) and a random device id.
         </li>
         <li>
-          <strong>Important:</strong> these servers are public. Anyone who knows the room code can
-          read the game state. The latest state stays on the server until it is overwritten. Do not
-          enter real names or confidential content.
+          <strong>Encryption:</strong> new rooms and games are end-to-end encrypted (AES-GCM). The
+          key is created on the host's device and is only in the invite link or QR code after the
+          <code>#</code>; that part is never sent to a server. The MQTT servers therefore see only
+          encrypted data, the room code or game id, the time and your IP address – not the game
+          state.
+        </li>
+        <li>
+          <strong>Storage:</strong> only the latest game state that a device joining later needs
+          stays (encrypted) on the server until it is overwritten; everything else is only passed
+          on.
+        </li>
+        <li>
+          <strong>Transition:</strong> rooms from older invite links without a key still run
+          unencrypted for one release; there anyone who knows the room code can read the game
+          state. Do not enter real names or confidential content there.
         </li>
       </ul>
 

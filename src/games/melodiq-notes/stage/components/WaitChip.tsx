@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { StageEngine } from '../engine/StageEngine';
 import { useStageLive } from '../useStage';
 import { noteName } from '../logic/charts';
+import { drumColorLane } from '../logic/drumLanes';
 import { DRUM_LANE_META } from '../logic/instruments';
 import { STRING_TUNINGS } from '../../../../modules/music-score';
 
@@ -19,7 +20,7 @@ export function WaitChip({ engine }: { engine: StageEngine }) {
   if (p.instrument.view === 'keys')
     what = k('play_note', { notes: notes.map((n) => noteName(n.pitch)).join(' + ') });
   else if (p.instrument.view === 'drums')
-    what = notes.map((n) => k(`drums.${DRUM_LANE_META[n.lane].id}`)).join(' + ');
+    what = notes.map((n) => k(`drums.${DRUM_LANE_META[drumColorLane(n)].id}`)).join(' + ');
   else if (p.instrument.view === 'pitch')
     what =
       k('sing_note', { note: noteName(notes[0].pitch) }) +

@@ -1,0 +1,1 @@
+- **The card score tracker moved to the Spieltisch**: "Kartenspiel-Zähler" (scores, lives and bids for games played with real cards) is now listed there under "Punktezähler" instead of in the hub.

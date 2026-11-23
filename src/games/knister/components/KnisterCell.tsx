@@ -14,6 +14,8 @@ interface KnisterCellProps {
   activeSum: number | null;
   isTargetPicker: boolean;
   onActivate: () => void;
+  /** Name for party "tap here" markers (`data-room-target`). */
+  target?: string;
 }
 
 export const KnisterCell: React.FC<KnisterCellProps> = ({
@@ -25,6 +27,7 @@ export const KnisterCell: React.FC<KnisterCellProps> = ({
   activeSum,
   isTargetPicker,
   onActivate,
+  target,
 }) => {
   const isEmpty = value === null;
   const offersPlacement = hasActiveSum && interactive;
@@ -33,6 +36,7 @@ export const KnisterCell: React.FC<KnisterCellProps> = ({
   return (
     <Paper
       elevation={0}
+      data-room-target={target}
       onClick={() => interactive && onActivate()}
       sx={{
         aspectRatio: '1',

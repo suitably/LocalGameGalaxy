@@ -1,0 +1,1 @@
+- **Hub shows every game**: a party-room entry comes first; card, dice and board games from the Spieltisch, Gartic Phone and all other games follow, grouped by area, with a filter for games everyone plays on their own phone; Darts, the card score tracker and the draw pot are listed as helpers.

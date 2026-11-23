@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   createShakeTracker,
   deckShowsFront,
+  flipTopActionFor,
   nextSourceItemId,
   shakeActionFor,
   sourceKind,
@@ -103,5 +104,20 @@ describe('createShakeTracker', () => {
   it('ignores jitter below the travel threshold', () => {
     const tracker = createShakeTracker();
     expect([0, 5, 0, 5, 0, 5, 0, 5].some((x, i) => tracker.push(x, 0, i * 40))).toBe(false);
+  });
+});
+
+describe('flipTopActionFor', () => {
+  it('draws the top card face up next to the deck', () => {
+    expect(flipTopActionFor(deck(['a', 'b']))).toEqual({
+      type: 'DRAW_CARD',
+      payload: { deckId: 'd', position: { x: 66, y: 0 }, faceUp: true },
+    });
+  });
+
+  it('ignores empty decks and other widgets', () => {
+    expect(flipTopActionFor(deck([]))).toBeNull();
+    expect(flipTopActionFor(card)).toBeNull();
+    expect(flipTopActionFor(undefined)).toBeNull();
   });
 });

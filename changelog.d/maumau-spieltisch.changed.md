@@ -1,0 +1,1 @@
+- **Mau-Mau is now played on the Spieltisch**: it uses the shared card table and can be played with everyone on their own phone in a party room (hands stay private) or on one device. The separate Mau-Mau tile in the hub is gone.

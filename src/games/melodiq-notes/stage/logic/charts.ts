@@ -1,6 +1,7 @@
 import {
   assignTab,
-  drumLaneOf,
+  DRUM_KICK_LANE,
+  drumLaneOfVoice,
   drumVoiceOfKey,
   STRING_TUNINGS,
   topLine,
@@ -8,6 +9,7 @@ import {
   type Hand,
   type InstrumentKind,
   type ScorePart,
+  type StrumDirection,
 } from '../../../../modules/music-score';
 import { STAGE_INSTRUMENTS } from './instruments';
 
@@ -26,6 +28,8 @@ export interface StageNote {
   drum?: DrumVoice;
   /** Drums: sticking, when the score has it. */
   hand?: Hand;
+  /** Guitar strokes: strum direction (#634, `strumDirection.ts`). */
+  strum?: StrumDirection;
   judged: Judgement | null;
   /** Beats sung on pitch (pitch view). */
   acc: number;
@@ -51,11 +55,12 @@ export function buildChart(part: ScorePart, kind: InstrumentKind): StageNote[] {
   } else if (view === 'drums') {
     const seen = new Set<string>();
     notes = part.notes
-      .map((n) => ({
-        ...n,
-        lane: part.isDrum ? drumLaneOf(n.pitch) : [4, 2, 1, 3, 0][n.pitch % 5],
-        drum: part.isDrum ? (n.drum ?? drumVoiceOfKey(n.pitch)) : undefined,
-      }))
+      .map((n) => {
+        const drum = part.isDrum ? (n.drum ?? drumVoiceOfKey(n.pitch)) : undefined;
+        // the written voice picks the lane (a MusicXML "Tambourine" is percussion whatever its key)
+        const lane = drum ? drumLaneOfVoice(drum) : [DRUM_KICK_LANE, 2, 1, 3, 0][n.pitch % 5];
+        return { ...n, lane, drum };
+      })
       .filter((n) => {
         const key = `${Math.round(n.t * 1000)}:${n.lane}:${n.drum ?? ''}`;
         if (seen.has(key)) return false;

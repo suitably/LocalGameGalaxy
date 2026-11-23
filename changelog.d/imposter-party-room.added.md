@@ -1,0 +1,1 @@
+- **Imposter in the party room**: everyone gets their word or the imposter hint on their own phone, confirms it, discusses against a shared timer and votes on their own device; no phone receives anyone else's card.

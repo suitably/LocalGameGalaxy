@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
-import type { Note } from '../../parser';
+import type { Note } from '../../logic/songVocals';
 import { LyricsLine, LeadInIndicator, type LineGroup } from '../LyricsLineView';
 import { LineWords } from './LineWords';
 import { ACTIVE_LINE_REM, type LyricsRows } from '../logic/lyricsFit';

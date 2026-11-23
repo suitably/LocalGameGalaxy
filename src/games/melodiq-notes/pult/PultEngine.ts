@@ -14,6 +14,7 @@ import { advanceMisses, advanceSinging } from '../stage/engine/advance';
 import { playLane, playPitch, type PlayAt } from '../stage/engine/input';
 import { StageEngine } from '../stage/engine/StageEngine';
 import type { StageSound } from '../stage/engine/types';
+import { padLane } from '../stage/logic/drumLanes';
 import { pendingNotes } from '../stage/logic/judging';
 import { toStageTime } from './logic/clockSync';
 import type { JudgedMark, PultInput, PultScore, StageClock } from './logic/protocol';
@@ -41,6 +42,8 @@ export class PultEngine extends StageEngine {
     super(sound);
     this.now = now;
     this.band = 'none';
+    // a phone has room for four pads plus the kick: one tom pad, no percussion pad (#571)
+    this.drumOptions = { judgePercussion: false, mergeToms: true };
     const judge = this.judge;
     this.judge = (p, n, kind) => {
       judge(p, n, kind);
@@ -136,11 +139,13 @@ export class PultEngine extends StageEngine {
   }
 
   hitPitch(midi: number, silent = false) {
-    const view = this.focus?.instrument.view;
+    const focus = this.focus;
+    const view = focus?.instrument.view;
     playPitch(this, midi, { ...this.inputAt(), silent });
     this.onTap?.(this.now());
     if (view === 'keys') this.onInput?.({ kind: 'lane', lane: midi });
-    else if (view === 'drums') this.onInput?.({ kind: 'lane', lane: drumLaneOf(midi) });
+    else if (view === 'drums')
+      this.onInput?.({ kind: 'lane', lane: padLane(focus?.drumKit, drumLaneOf(midi)) });
   }
 
   setVoice(pitch: number, singing: boolean) {

@@ -35,5 +35,6 @@ How the code works **right now**. One topic, one file. Start with the architectu
 - [Server security](server-security.md) — token, API keys, protected routes, CORS/PNA, **known gaps**.
 - [Secrets & configuration](secrets-management.md) — `config.json`, env vars, HTTPS for phones.
 - [Deployment](deployment.md) — Cloudflare hosting, Android, Docker, server binaries, tracker.
+- [Licensing & dependency licences](dependencies.md) — REUSE annotations, third-party files, licence allow-list, release notices.
 - [Privacy notice](privacy-notice.md) — the public privacy pages, the data flows they describe, the update rule.
 - [Onboarding FAQ](onboarding-faq.md) — common local-setup problems.

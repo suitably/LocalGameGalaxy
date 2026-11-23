@@ -1,16 +1,13 @@
 import React, { useState } from 'react';
-import { Box, Button, Paper, Typography, Alert, Dialog, IconButton } from '@mui/material';
+import { Box, Button, Paper, Typography, Alert, Dialog } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
-import InfoIcon from '@mui/icons-material/InfoRounded';
 import SettingsIcon from '@mui/icons-material/SettingsRounded';
-import AddIcon from '@mui/icons-material/AddRounded';
-import RemoveIcon from '@mui/icons-material/RemoveRounded';
 import { useTranslation } from 'react-i18next';
 import type { Player, Role, RoleDefinition } from '../logic/types';
 import { RoleEditor } from './RoleEditor';
-import { RoleIcon } from './RoleIcon';
 import { RoleSelectionGrid } from './setup/RoleSelectionGrid';
 import { RoleDescriptionDialog } from './setup/RoleDescriptionDialog';
+import { WerewolfCountStepper } from './setup/WerewolfCountStepper';
 import { DEFAULT_ROLES } from '../logic/defaultRoles';
 import { useWerewolfSetup } from '../hooks/useWerewolfSetup';
 import { PlayerManagerCard } from '../../../modules/player-management';
@@ -87,60 +84,12 @@ export const GameSetup: React.FC<GameSetupProps> = ({
           </Alert>
         )}
 
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
-          <Typography
-            variant="body1"
-            sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}
-          >
-            <RoleIcon icon="WEREWOLF" fontSize="1.25rem" /> {t('games.werewolf.ui.num_werewolves')}:
-            <IconButton
-              size="small"
-              aria-label={t('games.werewolf.ui.role_info', 'Role info')}
-              onClick={() =>
-                setSelectedRoleForDesc(DEFAULT_ROLES.find((r) => r.id === 'WEREWOLF') || null)
-              }
-              sx={{ ml: 0.5, p: 0.5, color: 'text.secondary', opacity: 0.5 }}
-            >
-              <InfoIcon fontSize="inherit" />
-            </IconButton>
-          </Typography>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              border: '1px solid',
-              borderColor: 'divider',
-              borderRadius: 2,
-            }}
-          >
-            <IconButton
-              size="small"
-              aria-label={t('common.a11y.decrease', 'Decrease')}
-              onClick={() => setNumWerewolves((prev: number) => Math.max(1, prev - 1))}
-              disabled={numWerewolves <= 1}
-            >
-              <RemoveIcon />
-            </IconButton>
-            <Typography
-              sx={{
-                mx: 2,
-                minWidth: '1.5rem',
-                textAlign: 'center',
-                fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              {numWerewolves}
-            </Typography>
-            <IconButton
-              size="small"
-              aria-label={t('common.a11y.increase', 'Increase')}
-              onClick={() => setNumWerewolves((prev: number) => prev + 1)}
-              disabled={numWerewolves >= players.length - 1 && players.length > 0}
-            >
-              <AddIcon />
-            </IconButton>
-          </Box>
-        </Box>
+        <WerewolfCountStepper
+          value={numWerewolves}
+          playerCount={players.length}
+          onChange={setNumWerewolves}
+          onShowInfo={setSelectedRoleForDesc}
+        />
 
         <RoleSelectionGrid
           customRoles={customRoles}

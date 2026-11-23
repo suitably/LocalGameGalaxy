@@ -14,13 +14,14 @@ import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import { QRCodeSVG } from 'qrcode.react';
 import { useTranslation } from 'react-i18next';
+import { getRoomKey, roomKeyParam } from '../../../modules/sync/roomKeys';
 
 const buildShareUrl = (roomId: string) => {
   const isProd = window.location.hostname.includes('github.io');
   const base = isProd
     ? `${window.location.origin}${window.location.pathname}`
     : `${window.location.protocol}//${window.location.hostname}:${window.location.port}${window.location.pathname}`;
-  return `${base}#/party?room=${roomId}`;
+  return `${base}#/party?room=${roomId}${roomKeyParam(getRoomKey(roomId))}`;
 };
 
 interface GarticShareDialogProps {

@@ -12,6 +12,9 @@ const MAX_VOICES = 48;
 const MAX_OUTPUT_LATENCY_SEC = 0.5;
 
 /** StageSound on a real AudioContext: soundfont instruments, synthesised drums and click. */
+/** Start pitch of tom 1, 2, 3 and the floor tom. */
+const TOM_HZ = [240, 200, 165, 130];
+
 export class BrowserStageSound implements StageSound {
   readonly ctx: AudioContext;
   private master: GainNode;
@@ -65,13 +68,17 @@ export class BrowserStageSound implements StageSound {
     setTimeout(() => this.stoppers.delete(voice.stop), (durationSec + 0.2) * 1000);
   }
 
+  /** A synthesised hit per lane (DRUM_LANES order); toms fall in pitch from tom 1 to the floor tom. */
   playDrum(lane: number, volume: number) {
     if (lane === 0) this.burst(1.0, 0.2 * volume, 'highpass', 5000);
     else if (lane === 1) this.burst(0.06, 0.22 * volume, 'highpass', 7000);
     else if (lane === 2) {
       this.burst(0.18, 0.38 * volume, 'bandpass', 1800);
       this.sweep(220, 160, 0.1, 0.18 * volume);
-    } else if (lane === 3) this.sweep(200, 95, 0.32, 0.5 * volume);
+    } else if (lane >= 3 && lane <= 6) {
+      const top = TOM_HZ[lane - 3];
+      this.sweep(top, top * 0.47, 0.32, 0.5 * volume);
+    } else if (lane === 7) this.burst(0.12, 0.2 * volume, 'bandpass', 6000);
     else this.sweep(150, 42, 0.28, 0.9 * volume);
   }
 

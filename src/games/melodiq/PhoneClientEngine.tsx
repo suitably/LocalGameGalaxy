@@ -4,8 +4,10 @@ import { useWebRTCClient } from '../../lib/webrtc';
 import { storage, sessionStorageSafe, STORAGE_KEYS } from '../../lib/storage';
 import { usePhoneClientMessages } from './hooks/usePhoneClientMessages';
 import { RemoteHostSettingsModal } from './components/RemoteHostSettingsModal';
-import type { HostSettings } from './types';
+import { usePhoneRemoteCommands } from './hooks/usePhoneRemoteCommands';
+import { isRemoteCommandName } from './logic/remoteCommands';
 import { useFeedbackRelay } from './hooks/useFeedbackRelay';
+import { PhoneRoomTransportProvider, usePhoneRoomTransport } from './hooks/useMelodiqRoomTransport';
 import { usePhoneMicStreaming } from './hooks/usePhoneMicStreaming';
 import { loadClientProfile, resolveTrackerUrls, type ClientProfile } from './logic/clientProfile';
 import { parseGameUrlParams } from '../../modules/sharing';
@@ -27,8 +29,6 @@ export interface ClientEngineContextType {
   /** Sends a typed message to the host over the data channel. */
   sendClientData: (data: object) => void;
   clientProfile: ClientProfile;
-  /** Host settings last reported by the host (admin phones only). */
-  hostSettings: HostSettings | null;
   isHostSettingsOpen: boolean;
   setHostSettingsOpen: (open: boolean) => void;
   /** Permission role granted by the host (admin, queue manager, …; `roster.update`). */
@@ -50,7 +50,6 @@ const DEFAULT_CLIENT_ENGINE: ClientEngineContextType = {
   sendClientCommand: () => {},
   sendClientData: () => {},
   clientProfile: { name: 'Phone', hue: 120, deviceId: '' },
-  hostSettings: null,
   isHostSettingsOpen: false,
   setHostSettingsOpen: () => {},
   clientRole: 'spectator',
@@ -133,18 +132,19 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     [],
   );
 
-  const { handleMessage, isSessionPlaying, activeSongId, hostSettings } = usePhoneClientMessages({
+  const { handleMessage, isSessionPlaying, activeSongId } = usePhoneClientMessages({
     getDeviceId,
     setClientRole,
     setSinging,
     updateClientProfile,
   });
 
-  const { isConnected, statusMessage, sendData, resendIdentity } = useWebRTCClient(
-    partyId,
-    trackerUrls,
-    { autoConnect: true, onMessage: handleMessage, getIdentity },
-  );
+  const { isConnected, statusMessage, sendData, addMessageListener, resendIdentity } =
+    useWebRTCClient(partyId, trackerUrls, {
+      autoConnect: true,
+      onMessage: handleMessage,
+      getIdentity,
+    });
 
   // Signal connection state for melodiqFetch waitForConnection()
   useEffect(() => {
@@ -159,17 +159,25 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   }, [isConnected]);
 
-  // Request initial data on connect
+  // Ask for the helper URL on connect (a direct message; the queue comes as room state)
   useEffect(() => {
     if (isConnected) {
       setTimeout(() => {
-        sendData({ type: 'queue.get' });
+        sendData({ type: 'helper_config.get' });
       }, 500);
     }
   }, [isConnected, sendData]);
 
+  // Room events (feedback, host settings, …) over the host link; the id is the one the host sees from `identify`
+  const roomTransport = usePhoneRoomTransport({
+    link: { send: sendData, onMessage: addMessageListener },
+    roomId: partyId ?? '',
+    selfId: clientProfile.deviceId,
+    isConnected,
+  });
+
   // Route feedback through the host (its PAT) while connected
-  useFeedbackRelay(isConnected, sendData);
+  useFeedbackRelay(roomTransport);
 
   // Forward events from UI components (like useQueue) to the host
   useEffect(() => {
@@ -191,8 +199,9 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
   // A locked screen suspends the browser and with it the microphone and the connection.
   useWakeLock(isConnected && isSessionPlaying && isSinging);
 
+  const sendRoomCommand = usePhoneRemoteCommands(roomTransport);
   const sendClientCommand = (command: string, data: Record<string, unknown> = {}) => {
-    sendData({ type: 'remote.command', command, ...data });
+    if (isRemoteCommandName(command)) sendRoomCommand(command, data);
   };
 
   // Re-send identity if profile changes while connected
@@ -212,7 +221,6 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     sendClientCommand,
     sendClientData: sendData,
     clientProfile,
-    hostSettings,
     isHostSettingsOpen,
     setHostSettingsOpen,
     updateClientProfile,
@@ -229,8 +237,8 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
   return (
     <ClientEngineContext.Provider value={value}>
       {!isConnected && <ConnectionOverlay message={statusMessage} />}
-      {children}
-      {clientRole === 'admin' && <RemoteHostSettingsModal />}
+      <PhoneRoomTransportProvider value={roomTransport}>{children}</PhoneRoomTransportProvider>
+      {clientRole === 'admin' && <RemoteHostSettingsModal room={roomTransport} />}
     </ClientEngineContext.Provider>
   );
 };

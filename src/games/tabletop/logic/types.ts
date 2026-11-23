@@ -317,7 +317,7 @@ export interface ScriptZone {
   label?: string;
 }
 
-import type { ImportReport, GameScripts } from './importTypes';
+import type { ImportReport, GameScripts, RuleScriptRef } from './importTypes';
 export type {
   ImportTypeCount,
   ImportReport,
@@ -329,9 +329,9 @@ export type {
 /** Source format of a game; `tts-workshop` marks third-party Tabletop Simulator content (D4). */
 export type TabletopGameFormat = 'flat-json' | 'pcio-folder' | 'tts-workshop' | 'unknown';
 
-export interface TabletopGameDefinition extends TabletopGameMetadata {
+export interface TabletopGameDefinition extends TabletopGameMetadata, RuleScriptRef {
   version: string;
-  /** Set by the TTS importer; such games never leave the device as published content. */
+  /** Set by the TTS importer; such games are never exported as a share file (`shareRules.ts`). */
   format?: TabletopGameFormat;
   /** Companion copy of an imported third-party game: private to that server (D4). */
   companionPrivate?: boolean;
@@ -344,6 +344,7 @@ export interface TabletopGameDefinition extends TabletopGameMetadata {
   updatedAt?: number;
   ruleText?: string;
   hiddenZones?: Record<string, HiddenZone>;
+  // `handRequests` (#557) is added in `handRequests.ts` (interface merging; line budget).
   scriptZones?: Record<string, ScriptZone>;
   importReport?: ImportReport;
   scripts?: GameScripts;

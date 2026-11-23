@@ -42,17 +42,18 @@ export const STRING_COLORS = [
   piecePalette.purple,
 ];
 
-/** Drum lanes left to right (see DRUM_LANES in music-score); `key` is the computer-keyboard fallback. */
+/**
+ * Drum lanes left to right (index = DRUM_LANES in music-score). Toms 1–3 and the floor tom are told
+ * apart by colour, so a fill moving across the kit reads at a glance; percussion is a muted lane.
+ */
 export const DRUM_LANE_META = [
-  { id: 'cymbal', key: 'D', code: 'KeyD', color: piecePalette.yellow },
-  { id: 'hihat', key: 'F', code: 'KeyF', color: piecePalette.blue },
-  { id: 'snare', key: 'J', code: 'KeyJ', color: piecePalette.red },
-  { id: 'tom', key: 'K', code: 'KeyK', color: piecePalette.green },
-  { id: 'kick', key: '␣', code: 'Space', color: piecePalette.orange },
+  { id: 'cymbal', color: piecePalette.yellow },
+  { id: 'hihat', color: piecePalette.blue },
+  { id: 'snare', color: piecePalette.red },
+  { id: 'tom1', color: piecePalette.green },
+  { id: 'tom2', color: piecePalette.teal },
+  { id: 'tom3', color: piecePalette.purple },
+  { id: 'floorTom', color: piecePalette.pink },
+  { id: 'percussion', color: darkTokens.text.secondary },
+  { id: 'kick', color: piecePalette.orange },
 ] as const;
-
-export const JUDGEMENT_COLORS = {
-  perfect: darkTokens.primary.main,
-  good: darkTokens.accent.main,
-  miss: darkTokens.error,
-} as const;

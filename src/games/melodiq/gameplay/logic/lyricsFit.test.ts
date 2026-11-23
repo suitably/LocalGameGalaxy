@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Note } from '../../parser';
+import type { Note } from '../../logic/songVocals';
 import {
   groupNotesIntoWords,
   DEFAULT_LYRICS_MIN_FIT,

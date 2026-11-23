@@ -1,0 +1,1 @@
+- **Party games keep going when the host leaves**: in Kniffel, Knister and Qwixx another player takes over and the match continues where it stopped instead of being dealt again; in a Stammtisch the match can even be finished on another day.

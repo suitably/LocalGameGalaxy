@@ -89,6 +89,8 @@ Not planned: physics, animations, AssetBundles, `WebRequest`, 3D camera, voice/c
 3. Slice 7, then 8 — ≈ 3–4 weeks. Tier B for most flat mods; Q15 closed.
 4. Slice 9 — ≈ 6–8 weeks MVP; 10 ongoing; 11–12 by data.
 
+_Status 2026-11-22:_ slice 9's MVP is implemented behind a per-device flag (#705; [tabletop engine §3](../tech/tabletop-engine.md#3-routines-and-scripts) "Lua runtime"); its acceptance on a corpus mod with a scripted setup is still open (needs Steam Workshop data).
+
 Each stage is shippable on its own; stopping after stage 3 is a valid product (setup automation without an interpreter).
 
 ## 6. Risks and mitigations

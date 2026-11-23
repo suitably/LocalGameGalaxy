@@ -12,15 +12,17 @@ import type { HandoverPlayer } from './handover';
 
 interface HandoverCoverProps {
   player: HandoverPlayer;
-  players: HandoverPlayer[];
+  /** Other players offered as "someone else is up". Omit for games with a fixed turn order. */
+  players?: HandoverPlayer[];
   onReveal: () => void;
-  onRetarget: (playerId: string) => void;
-  onCancel: () => void;
+  onRetarget?: (playerId: string) => void;
+  /** Close button; omit when the cover must only open through the reveal button. */
+  onCancel?: () => void;
 }
 
 export const HandoverCover: React.FC<HandoverCoverProps> = ({
   player,
-  players,
+  players = [],
   onReveal,
   onRetarget,
   onCancel,
@@ -47,13 +49,15 @@ export const HandoverCover: React.FC<HandoverCoverProps> = ({
         textAlign: 'center',
       }}
     >
-      <IconButton
-        onClick={onCancel}
-        aria-label={t('common.cancel', 'Abbrechen')}
-        sx={{ position: 'absolute', top: 'max(8px, env(safe-area-inset-top))', right: 8 }}
-      >
-        <CloseRoundedIcon />
-      </IconButton>
+      {onCancel && (
+        <IconButton
+          onClick={onCancel}
+          aria-label={t('common.cancel', 'Abbrechen')}
+          sx={{ position: 'absolute', top: 'max(8px, env(safe-area-inset-top))', right: 8 }}
+        >
+          <CloseRoundedIcon />
+        </IconButton>
+      )}
 
       <Box
         sx={{
@@ -79,7 +83,7 @@ export const HandoverCover: React.FC<HandoverCoverProps> = ({
         {t('common.passAndPlay.reveal', 'Ich bin {{name}} – aufdecken', { name: player.name })}
       </Button>
 
-      {players.length > 2 && (
+      {onRetarget && players.length > 2 && (
         <Stack spacing={1} alignItems="center">
           <Typography variant="body2" color="text.secondary">
             {t('common.passAndPlay.otherPlayer', 'Jemand anderes ist dran?')}
