@@ -12,7 +12,7 @@ import { parseGameUrlParams } from '../../../modules/sharing';
 
 import { type LoadingProgress } from './useSongs';
 import TuneIcon from '@mui/icons-material/TuneRounded';
-import { useClientEngine } from '../PhoneClientEngine';
+import { useClientEngine } from '../phoneClientContext';
 import { canEditHostSettings } from '../logic/hostSettingsRpc';
 import { TVModeButton } from '../components/TVModeButton';
 

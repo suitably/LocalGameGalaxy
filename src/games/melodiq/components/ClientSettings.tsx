@@ -11,7 +11,7 @@ import {
   Paper,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { useClientEngine } from '../PhoneClientEngine';
+import { useClientEngine } from '../phoneClientContext';
 import { MicrophoneManager } from '../audio/MicrophoneManager';
 import { RemoteLatencyCalibrator } from './RemoteLatencyCalibrator';
 import { LiveMicTest } from './LiveMicTest';

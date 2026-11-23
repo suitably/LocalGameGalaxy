@@ -8,10 +8,11 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-11-22
+  at: 2026-11-23
   method: '2026-11-22: melodiq-library.json and MELODIQ_FAVORITES (#636); 2026-11-09: tabletopStorage.ts v6 `asset_cache` (#693); read src/lib/storage.ts, all db.ts / tabletopStorage.ts files, server/src/config.ts, server/src/plugins/melodiq/services/{scanner,songLibrary,download,separator}.ts'
 sources:
   - 'src/lib/storage.ts'
+  - 'src/lib/storageCore.ts'
   - 'src/lib/companion/companionSettings.ts'
   - 'src/lib/webrtc/signalingSettings.ts'
   - 'src/lib/push/pushSettings.ts'
@@ -25,7 +26,7 @@ Update this document whenever you add a storage key, an IndexedDB database/store
 
 ## 1. Key/value: `src/lib/storage.ts`
 
-The only file allowed to touch `localStorage` / `sessionStorage` (enforced by `npm run check:architecture`).
+The only code allowed to touch `localStorage` / `sessionStorage` (enforced by `npm run check:architecture`). The implementation (`STORAGE_KEYS`, `STORAGE_PREFIXES`, `storage`, `sessionStorageSafe`) lives in the leaf `src/lib/storageCore.ts`; `storage.ts` re-exports it and adds the deprecated feature-settings delegates (`storage.getHelperUrl()` …). The settings modules (`companionSettings`, `signalingSettings`, `pushSettings`) import `storageCore` directly, so there is no import cycle. Import from `storage.ts`; new keys go into `storageCore.ts`.
 
 | API                                                         | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

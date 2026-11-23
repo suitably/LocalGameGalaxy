@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import type { ClientEngineContextType } from '../PhoneClientEngine';
+import type { ClientEngineContextType } from '../phoneClientContext';
 
 /**
  * The mounted phone engine, for UI rendered outside its React tree (the app-level game

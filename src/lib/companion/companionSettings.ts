@@ -1,7 +1,7 @@
 /**
  * Companion server (helper) connection settings on this device [ID: LIB-COMPANION-SETTINGS]
  */
-import { storage, STORAGE_KEYS } from '../storage';
+import { storage, STORAGE_KEYS } from '../storageCore';
 
 export const DEFAULT_HELPER_URL = 'http://localhost:3000';
 

@@ -1,0 +1,362 @@
+/**
+ * Storage core [ID: LIB-STORAGE]: keys, `storage` and `sessionStorageSafe`. Leaf module that the feature
+ * settings modules import; everyone else imports `./storage` (adds the deprecated delegates).
+ * Provides unified, type-safe access to localStorage and app preference configurations.
+ */
+
+export const STORAGE_KEYS = {
+  // This device's stable id (player seats, src/lib/deviceIdentity.ts)
+  DEVICE_ID: 'lgg_device_id',
+
+  // Companion helper configuration
+  HELPER_URL: 'melodiq_helper_url',
+  HELPER_TOKEN: 'melodiq_helper_token',
+  HELPER_ACTIVE: 'melodiq_enable_helper',
+  /** Docker compose generator choices in Settings → Server. */
+  COMPOSE_GENERATOR: 'galaxy_compose_generator',
+  SIGNALING_URL: 'galaxy_signaling_url',
+  /** Tracker built into the companion server, as last detected: `{ helperUrl, url }`. */
+  SIGNALING_DETECTED: 'galaxy_signaling_detected',
+  WEBRTC_STUN_CUSTOM_URLS: 'galaxy_stun_custom_urls',
+  WEBRTC_STUN_PREFERENCES: 'galaxy_stun_preferences',
+  /** Optional TURN relay `{ url, username, credential }`, off when absent (#652). */
+  WEBRTC_TURN_SERVER: 'galaxy_turn_server',
+
+  // Client connection states
+  CLIENT_PROFILE: 'melodiq_client_profile',
+  /** Set once the phone has seen the Melodiq welcome page (first join). */
+  MELODIQ_CLIENT_WELCOMED: 'melodiq_client_welcomed',
+  PROFILES: 'melodiq_profiles',
+  ACTIVE_SESSION: 'melodiq_active_session',
+  CURRENT_SONG_PARTICIPANTS: 'melodiq_current_song_participants',
+  MELODIQ_TRACKER_URLS: 'melodiq_tracker_urls',
+  MELODIQ_DISABLED_TRACKER_URLS: 'melodiq_disabled_tracker_urls',
+  MELODIQ_TRACKER_PREFERENCES: 'melodiq_tracker_preferences',
+  MELODIQ_CARD_SIZE: 'melodiq_card_size',
+  MELODIQ_MIC_SLOTS: 'melodiq_mic_slots',
+  MELODIQ_MIC_NAMES: 'melodiq_mic_names',
+  MELODIQ_MIC_ORIGINAL_NAMES: 'melodiq_mic_original_names',
+  MELODIQ_CLIENT_ROLES: 'melodiq_client_roles',
+  MELODIQ_SAVED_TIME: 'melodiq_saved_time',
+  MELODIQ_PARTY_ID: 'melodiq_party_id',
+  MELODIQ_HOST_BASE_URL: 'melodiq_host_base_url',
+  DARTS_GAME_STATE: 'darts_game_state',
+
+  // Queue & play state
+  NOW_PLAYING: 'melodiq_now_playing',
+  QUEUE: 'melodiq_queue',
+  SONG_HISTORY: 'melodiq_song_history',
+
+  // Melodiq Legacy Profile Migration
+  MELODIQ_P1_NAME: 'melodiq_p1_name',
+  MELODIQ_P2_NAME: 'melodiq_p2_name',
+  MELODIQ_P1_HUE: 'melodiq_p1_hue',
+  MELODIQ_P2_HUE: 'melodiq_p2_hue',
+  MELODIQ_P1_DEVICE: 'melodiq_p1_device',
+  MELODIQ_P2_DEVICE: 'melodiq_p2_device',
+
+  // Melodiq Playlists & Session
+  /** Favourite song ids (JSON array) when the song library is stored on this device (#636). */
+  MELODIQ_FAVORITES: 'melodiq_favorites',
+  MELODIQ_META_CACHE: 'melodiq_meta_cache',
+  MELODIQ_RTC_CONNECTED: 'melodiq_rtc_connected',
+
+  // Melodiq Settings
+  MELODIQ_SHOW_OVERLAY: 'melodiq_show_overlay',
+  MELODIQ_SHOW_SLIDER: 'melodiq_show_slider',
+  MELODIQ_SHOW_NOTE_LABELS: 'melodiq_show_note_labels',
+  MELODIQ_SHOW_VIDEO_ERRORS: 'melodiq_show_video_errors',
+  MELODIQ_CUSTOM_LAYOUTS: 'melodiq_custom_layouts',
+  MELODIQ_CUSTOM_TARGET_COLUMNS: 'melodiq_custom_target_columns',
+  MELODIQ_SONG_VOLUME: 'melodiq_song_volume',
+  MELODIQ_MASTER_VOLUME: 'melodiq_master_volume',
+  MELODIQ_VOCALS_VOLUME: 'melodiq_vocals_volume',
+  MELODIQ_GOLDEN_NOTE_MULTIPLIER: 'melodiq_golden_note_multiplier',
+  MELODIQ_DEFAULT_SONG_CLICK_ACTION: 'melodiq_default_song_click_action',
+  MELODIQ_DEFAULT_VIEW_MODE: 'melodiq_default_view_mode',
+  MELODIQ_AUTOPLAY_NO_PLAYERS: 'melodiq_autoplay_no_players',
+  MELODIQ_AUTOPLAY_WITH_PLAYERS: 'melodiq_autoplay_with_players',
+  MELODIQ_HIDE_BACKGROUND_VIDEO: 'melodiq_hide_background_video',
+  /** '1' once the player allowed YouTube background videos on this device (#645). */
+  MELODIQ_YOUTUBE_CONSENT: 'melodiq_youtube_consent',
+  MELODIQ_FALLBACK_BACKGROUND_URL: 'melodiq_fallback_background_url',
+  MELODIQ_LYRICS_SCALE: 'melodiq_lyrics_scale',
+  MELODIQ_ENABLE_LYRICS_ZOOM: 'melodiq_enable_lyrics_zoom',
+  MELODIQ_LYRICS_LINES: 'melodiq_lyrics_lines',
+  MELODIQ_LYRICS_ROWS: 'melodiq_lyrics_rows',
+  MELODIQ_LYRICS_MIN_FIT: 'melodiq_lyrics_min_fit',
+  MELODIQ_LYRICS_POSITION: 'melodiq_lyrics_position',
+  MELODIQ_AUDIO_PLAYBACK_MODE: 'melodiq_audio_playback_mode',
+  MELODIQ_SHOW_SCOREBOARD_QR_CODE: 'melodiq_show_scoreboard_qr_code',
+  MELODIQ_MIC_LATENCY: 'melodiq_mic_latency',
+
+  // Melodiq Notes preferences
+  MELODIQ_NOTES_SOUND_CONFIG: 'melodiq_notes_sound_config',
+  MELODIQ_NOTES_SEEK_LEAD_IN: 'melodiq_notes_seek_lead_in',
+  /** This device's input latency as a pult (ms, calibrated against the stage). */
+  MELODIQ_NOTES_INPUT_LATENCY: 'melodiq_notes_input_latency',
+  /** Whether notes played on a MIDI instrument sound through the browser ('0' = off, default on). */
+  MELODIQ_NOTES_MIDI_SOUND: 'melodiq_notes_midi_sound',
+  /** The song last on stage (`LastSong` JSON), opened again on the next visit (#635). */
+  MELODIQ_NOTES_LAST_SONG: 'melodiq_notes_last_song',
+  /** The instrument the player last picked; a new song seats them on a matching part (#635). */
+  MELODIQ_NOTES_INSTRUMENT: 'melodiq_notes_instrument',
+  /** Best result per player and song (`SongResult[]` JSON, #699). */
+  MELODIQ_NOTES_RESULTS: 'melodiq_notes_results',
+  /** Colours of the judgements on the stage ('standard' | 'colorblind', #699). */
+  MELODIQ_NOTES_JUDGEMENT_PALETTE: 'melodiq_notes_judgement_palette',
+  /** Whether the drum percussion lane is judged ('1'); default display-only (#571). */
+  MELODIQ_NOTES_JUDGE_PERCUSSION: 'melodiq_notes_judge_percussion',
+
+  // Werewolf game state
+  WEREWOLF_STATE: 'werewolf-game-state',
+  WEREWOLF_SETUP_PLAYERS: 'werewolf-setup-players',
+  WEREWOLF_CUSTOM_ROLES: 'werewolf-custom-roles',
+  WEREWOLF_SETTINGS: 'werewolf-setup-settings',
+  WEREWOLF_TTS_ENABLED: 'werewolf_narrator_tts_enabled',
+
+  // Imposter game settings
+  IMPOSTER_SETTINGS: 'imposter-setup-settings',
+  IMPOSTER_SETUP_PLAYERS: 'imposter-setup-players',
+  IMPOSTER_SEEN_INFO: 'imposter-has-seen-info',
+
+  // GitHub direct integration
+  GITHUB_TOKEN: 'nexumia_github_token',
+  GITHUB_OWNER: 'nexumia_github_owner',
+  GITHUB_REPO: 'nexumia_github_repo',
+
+  // Push notification relay for async games (GuessArt, etc.)
+  PUSH_RELAY_URL: 'galaxy_push_relay_url',
+  /** This device's Web Push subscription with the site's own sender (`lib/push/siteWebPush.ts`). */
+  PUSH_SITE_SUBSCRIPTION: 'galaxy_push_site_subscription',
+  NOTIFICATION_METHOD: 'galaxy_notification_method',
+  NOTIFICATION_CHOICE_DISMISSED: 'galaxy_notification_choice_dismissed',
+  NTFY_SERVER_URL: 'galaxy_ntfy_server_url',
+  NTFY_TOPIC: 'galaxy_ntfy_topic',
+
+  // Sudoku
+  SUDOKU_STATE: 'galaxy_sudoku_state',
+  SUDOKU_STATS: 'galaxy_sudoku_stats',
+
+  // Wordle
+  WORDLE_STATS: 'galaxy_wordle_stats',
+  /** Wordle setting "Only dictionary words" (JSON boolean, default true). */
+  WORDLE_DICTIONARY_ONLY: 'galaxy_wordle_dictionary_only',
+
+  // Cards
+  CARDS_LOBBY_PLAYERS: 'cards_lobby_players',
+  /** Player names for scripted card games on one device (Spieltisch). */
+  TABLETOP_CARD_PLAYERS: 'tabletop_card_players',
+  /** '1' = run the Lua scripts of imported Workshop games on this host (experimental, #705). */
+  TABLETOP_LUA_RUNTIME: 'tabletop_lua_runtime',
+
+  // Knister & Qwixx
+  KNISTER_CURRENT_GAME: 'knister_current_game',
+  KNISTER_SHOW_DICE: 'knister_show_dice',
+  KNISTER_HIGHSCORE: 'knister_highscore',
+  QWIXX_MY_SHEET: 'qwixx_my_sheet',
+  QWIXX_SHOW_DICE: 'qwixx_show_dice',
+  /** Qwixx on one device for several players: every sheet + whose sheet is open (#467). */
+  QWIXX_LOCAL_TABLE: 'qwixx_local_table',
+
+  // Kniffel
+  KNIFFEL_CURRENT_GAME: 'kniffel_current_game',
+  KNIFFEL_SHOW_DICE: 'kniffel_show_dice',
+  /** Rules the host picked last for Kniffel in a party room (`kniffel` | `international`). */
+  KNIFFEL_ROOM_RULES: 'kniffel_room_rules',
+
+  // GuessArt
+  GUESSART_SEEN_INFO: 'guessart_seen_info',
+  GUESSART_LOBBY_PLAYERS: 'guessart_lobby_players_v2',
+  /** Pre-v2 roster key, only read as a migration source by `useLobbyPlayers`. */
+  GUESSART_LOBBY_PLAYERS_LEGACY: 'guessart_lobby_players',
+
+  // Storyteller
+  STORYTELLER_LOBBY_PLAYERS: 'storyteller_lobby_players',
+  STORYTELLER_LOBBY_MODIFIERS: 'storyteller_lobby_modifiers',
+
+  // Universal Party
+  PARTY_MY_PLAYER_ID: 'party_my_player_id',
+  /** Player name shared by the party lobby and party games (historical key name). */
+  PARTY_PLAYER_NAME: 'guessart_player_name',
+  HOST_ROOM_CODE: 'galaxy_host_room_code',
+  /** Saved Stammtisch rooms (`features/party/logic/stammtisch.ts`). */
+  STAMMTISCH_ROOMS: 'galaxy_stammtisch_rooms',
+  /** Room id of the Stammtisch this device opens on app start. */
+  STAMMTISCH_AUTO_OPEN: 'galaxy_stammtisch_auto_open',
+  /** Session flag: the auto-open already happened in this app session. */
+  STAMMTISCH_AUTO_OPENED: 'galaxy_stammtisch_auto_opened',
+
+  // Draw pot (Lostopf): pots this device hosts (with admin keys) and its own draw history
+  DRAWPOT_HOSTED: 'drawpot_hosted',
+  DRAWPOT_HISTORY: 'drawpot_history',
+
+  // Connection & WebApp
+  SHARE_WEBAPP_URL: 'nexumia_share_webapp_url',
+
+  // App & Environment
+  PWA_BANNER_DISMISSED: 'pwa-banner-dismissed',
+  LANGUAGE: 'lgg_language',
+  LANGUAGE_LEGACY: 'language',
+  /** Colour mode setting: `system` | `dark` | `light` (src/lib/colorMode.ts, DESIGN.md §9). */
+  COLOR_MODE: 'lgg_color_mode',
+  EXCALIDRAW_LIBRARY: 'guessart_excalidraw_library',
+} as const;
+
+export const STORAGE_PREFIXES = {
+  PARTY_STATE: 'galaxy_party_state_',
+  PARTY_HOST_ID: 'party_host_id_',
+  /**
+   * MQTT end-to-end key per party room (session storage) or per "play over days" game id
+   * (local storage), base64url AES-GCM 256 (`src/modules/sync/roomKeys.ts`, ADR 0009).
+   */
+  ROOM_KEY: 'galaxy_room_key_',
+  /** Last state of a room game per party room (Stammtisch resume, `modules/room-game/roomSnapshot.ts`). */
+  ROOM_GAME_SNAPSHOT: 'galaxy_room_game_snapshot_',
+  GAME_RELAY: 'galaxy_game_relay_',
+  /** Running scripted card game per game id (local table or the room this device hosts). */
+  TABLETOP_SCRIPTED: 'tabletop_scripted_',
+  /** Last table settings (house rules) of a scripted card game per game id, preset for the next match. */
+  TABLETOP_SCRIPT_OPTIONS: 'tabletop_script_options_',
+  /** This device's own Qwixx sheet in a party room, per room id (#467). */
+  QWIXX_ROOM_SHEET: 'qwixx_room_sheet_',
+  GUESSART_GAME_ALIAS: 'guessart_game_alias_',
+  GUESSART_LOCAL_PLAYERS: 'guessart_local_players_',
+  GUESSART_TEMP_LOCAL_PLAYERS: 'guessart_temp_local_players_',
+  STORYTELLER_LOCAL_PLAYERS: 'storyteller_local_players_',
+  WEBRTC_PARTY_ID: '_party_id',
+  WEBRTC_TRACKER_URLS: '_tracker_urls',
+  WEBRTC_TRACKER_PREF: '_tracker_preferences',
+  WEBRTC_ACTIVE_PEERS: '_active_peer_ids',
+  HOST_BASE_URL: '_host_base_url',
+  ENABLE_HELPER: '_enable_helper',
+} as const;
+
+const memoryFallback = new Map<string, string>();
+
+function parseJsonOr<T>(val: string | null | undefined, fallback: T): T {
+  if (!val) return fallback;
+  try {
+    return JSON.parse(val) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+export const storage = {
+  get(key: string, fallback = ''): string {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        return localStorage.getItem(key) ?? fallback;
+      }
+      return memoryFallback.get(key) ?? fallback;
+    } catch {
+      return memoryFallback.get(key) ?? fallback;
+    }
+  },
+
+  set(key: string, value: string): void {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(key, value);
+      }
+      memoryFallback.set(key, value);
+    } catch (e) {
+      memoryFallback.set(key, value);
+    }
+  },
+
+  remove(key: string): void {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(key);
+      }
+      memoryFallback.delete(key);
+    } catch (e) {
+      memoryFallback.delete(key);
+    }
+  },
+
+  clear(): void {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.clear();
+      }
+      memoryFallback.clear();
+    } catch (e) {
+      memoryFallback.clear();
+    }
+  },
+
+  getJson<T>(key: string, fallback: T): T {
+    return parseJsonOr(this.get(key), fallback);
+  },
+
+  setJson<T>(key: string, value: T): void {
+    this.set(key, JSON.stringify(value));
+  },
+
+  get session() {
+    return sessionStorageSafe;
+  },
+
+  findKeysWithPrefix(prefix: string): string[] {
+    const matching: string[] = [];
+    try {
+      if (typeof localStorage !== 'undefined') {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith(prefix)) {
+            matching.push(key);
+          }
+        }
+        return matching;
+      }
+    } catch {
+      // fallback below
+    }
+    for (const key of memoryFallback.keys()) {
+      if (key.startsWith(prefix)) {
+        matching.push(key);
+      }
+    }
+    return matching;
+  },
+};
+
+const sessionMemoryFallback = new Map<string, string>();
+
+export const sessionStorageSafe = {
+  get(key: string, fallback = ''): string {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        return sessionStorage.getItem(key) ?? fallback;
+      }
+      return sessionMemoryFallback.get(key) ?? fallback;
+    } catch {
+      return sessionMemoryFallback.get(key) ?? fallback;
+    }
+  },
+  set(key: string, value: string): void {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem(key, value);
+      }
+      sessionMemoryFallback.set(key, value);
+    } catch {
+      sessionMemoryFallback.set(key, value);
+    }
+  },
+  remove(key: string): void {
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem(key);
+      }
+      sessionMemoryFallback.delete(key);
+    } catch {
+      sessionMemoryFallback.delete(key);
+    }
+  },
+  getJson: <T>(key: string, fallback: T): T => parseJsonOr(sessionStorageSafe.get(key), fallback),
+  setJson: <T>(key: string, value: T): void => sessionStorageSafe.set(key, JSON.stringify(value)),
+};

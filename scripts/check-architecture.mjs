@@ -21,6 +21,9 @@
  * 10. [CRITICAL] IconButton without aria-label/title/Tooltip: per-file count ratchet in
  *    scripts/icon-button-label-baselines.json, may only go down
  * 11. [CRITICAL] No hand-kept game lists outside the catalogue (ADR-0011, scripts/lib/game-lists.mjs)
+ * 12. [CRITICAL] No import cycles: strongly connected components of the value-import graph of src
+ *    (relative and @/ imports; `import type`, dynamic import() and tests skipped; scripts/lib/import-cycles.mjs).
+ *    Always scans all of src, also with --diff, since a cycle runs through unchanged files.
  *
  * Usage:
  *   node scripts/check-architecture.mjs           # Full audit with summary
@@ -49,6 +52,7 @@ import {
 } from './lib/header-rules.mjs';
 import { compareToBaseline, lowerBaseline, sortCounts } from './lib/lint-budget.mjs';
 import { catalogIds, findGameLists, isGameListCheckedFile } from './lib/game-lists.mjs';
+import { buildImportGraph, cyclePath, findCycles } from './lib/import-cycles.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -157,6 +161,7 @@ const violations = {
   appBarInGames: [],
   headerHiddenCalls: [],
   gameLists: [],
+  importCycles: [],
 };
 const CATALOG_IDS = catalogIds(ROOT_DIR);
 /** Back-icon imports / unlabeled IconButtons per file (only files with at least one). */
@@ -209,7 +214,7 @@ for (const filePath of allFiles) {
   }
 
   // Check 2: Raw localStorage / sessionStorage outside storage.ts
-  const isStorageLib = relativePath === 'src/lib/storage.ts';
+  const isStorageLib = relativePath === 'src/lib/storage.ts' || relativePath === 'src/lib/storageCore.ts';
   const isTestFile = relativePath.endsWith('.test.ts') || relativePath.endsWith('.test.tsx');
 
   if (!isStorageLib && !isTestFile) {
@@ -328,6 +333,35 @@ if (isDiff) {
 }
 
 let hasErrors = false;
+
+// Import cycles (whole src, independent of --diff)
+{
+  const sources = new Map(
+    getSourceFiles(SRC_DIR).map((f) => [
+      path.relative(ROOT_DIR, f).split(path.sep).join('/'),
+      fs.readFileSync(f, 'utf-8'),
+    ]),
+  );
+  const graph = buildImportGraph(sources);
+  for (const component of findCycles(graph)) {
+    violations.importCycles.push({ files: component, chain: cyclePath(component, graph) });
+  }
+}
+
+// Report Import Cycles
+if (violations.importCycles.length > 0) {
+  hasErrors = true;
+  console.log(`${RED}${BOLD}✖ Import Cycles Found (${violations.importCycles.length})${RESET}`);
+  console.log(
+    `  Rule: no import cycles in src. Move the shared part into a leaf module that both sides import (docs/tech/coding-conventions.md).`,
+  );
+  for (const v of violations.importCycles) {
+    console.log(`  ${RED}•${RESET} ${v.files.length} files: ${v.chain.join(' -> ')}`);
+  }
+  console.log('');
+} else {
+  console.log(`${GREEN}✔ No import cycles${RESET}`);
+}
 
 // Report Cross-Game Imports
 if (violations.crossGameImports.length > 0) {
@@ -659,6 +693,11 @@ const allCritical = [
     type: 'headerHiddenCalls',
     file: v.file,
     detail: `line ${v.line}: setHeaderHidden( is reserved for Melodiq Notes immersive mode`,
+  })),
+  ...violations.importCycles.map((v) => ({
+    type: 'importCycles',
+    file: v.files[0],
+    detail: `${v.files.length} files import each other: ${v.chain.join(' -> ')}`,
   })),
   ...violations.trackedServerMedia.map((f) => ({
     type: 'trackedServerMedia',

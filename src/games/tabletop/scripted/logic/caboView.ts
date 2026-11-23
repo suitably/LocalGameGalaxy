@@ -5,7 +5,7 @@
  * one: its bottom two in the start peek, a peeked card during `reveal`. All open after a round.
  */
 import { cardText } from './cardDeck';
-import { PENALTY, START_PEEK, TARGET, powerOf, type CaboState } from './cabo';
+import { PENALTY, START_PEEK, TARGET, powerOf, type CaboState } from './caboRules';
 import { emptyView, msg, type ActionView, type ScriptView, type SlotRef } from './scriptTypes';
 
 /** What `viewer` sees of `seat`'s slot. */

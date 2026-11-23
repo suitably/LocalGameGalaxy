@@ -8,7 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { useClientEngine } from '../PhoneClientEngine';
+import { useClientEngine } from '../phoneClientContext';
 import { SettingSlider, SettingSwitch, SettingToggleGroup } from '../../../components/settings';
 import { LYRICS_MIN_FIT_OPTIONS } from '../gameplay/logic/lyricsFit';
 import type { HostSettings } from '../types';
