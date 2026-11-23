@@ -4,18 +4,21 @@ import { ListSkeleton } from '../../../components/common/ListSkeleton';
 import { VirtuosoGrid, Virtuoso } from 'react-virtuoso';
 import { SongCard } from './SongCard';
 import { SongListItem } from './SongListItem';
+import type { SongMeta } from '../db';
+import type { UsdbSongItem } from '../types';
+import type { DownloadJob } from '../hooks/useDownloads';
 import { getSongItemActions } from './hooks/useSongItemActions';
 
 interface OnlineSongsViewProps {
   isSearchingOnline: boolean;
   viewMode: 'list' | 'grid';
-  filteredOnlineSongs: any[];
-  songs: any[];
-  jobs: any[];
-  handleSelectSong: (song: any) => void;
-  handleDownloadAndQueue: (song: any) => void;
-  handleSongLongPress: (song: any) => void;
-  handleDownloadOnly: (song: any) => void;
+  filteredOnlineSongs: UsdbSongItem[];
+  songs: SongMeta[];
+  jobs: DownloadJob[];
+  handleSelectSong: (song: SongMeta) => void;
+  handleDownloadAndQueue: (song: UsdbSongItem) => void;
+  handleSongLongPress: (song: SongMeta) => void;
+  handleDownloadOnly: (song: UsdbSongItem) => void;
   isSinger?: boolean;
   canDownload?: boolean;
 }
@@ -59,10 +62,10 @@ export const OnlineSongsView: React.FC<OnlineSongsViewProps> = ({
           totalCount={filteredOnlineSongs.length}
           components={{
             List: React.forwardRef((props, ref) => (
-              <Grid container spacing={2} {...props} ref={ref as any} />
+              <Grid container spacing={2} {...props} ref={ref} />
             )),
             Item: React.forwardRef((props, ref) => (
-              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} {...props} ref={ref as any} />
+              <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} {...props} ref={ref} />
             )),
           }}
           itemContent={(index) => {

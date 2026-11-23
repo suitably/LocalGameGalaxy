@@ -1,14 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { melodiqFetch } from '../api/melodiqFetch';
+import type { SongMeta } from '../db';
+import type { DownloadJob } from './useDownloads';
+import type { QueueItem } from './useQueue';
 
 interface UseDownloadSyncProps {
     isClient: boolean;
-    jobs: any[];
-    queue: any[];
+    jobs: DownloadJob[];
+    queue: QueueItem[];
     refreshSongs: () => Promise<void>;
-    replaceItem: (id: string, song: any) => void;
-    selectedSong?: any;
-    onCurrentSongDownloaded?: (realSong: any) => void;
+    replaceItem: (id: string, song: SongMeta) => void;
+    selectedSong?: SongMeta | null;
+    onCurrentSongDownloaded?: (realSong: SongMeta) => void;
 }
 
 export const useDownloadSync = ({
@@ -33,13 +36,13 @@ export const useDownloadSync = ({
                 }
 
                 try {
-                    const freshSongs = await melodiqFetch('/api/songs');
+                    const freshSongs = await melodiqFetch<SongMeta[]>('/api/songs');
 
                     newlyCompletedJobIds.forEach(jobId => {
                         const job = jobs.find(j => j.jobId === jobId);
                         if (!job) return;
 
-                        const realSong = freshSongs.find((s: any) => {
+                        const realSong = freshSongs.find((s) => {
                             const sTitle = s.title || "";
                             const jTitle = job.title || "";
                             const sArtist = s.artist || "";
