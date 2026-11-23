@@ -238,7 +238,7 @@ export const storage = {
         localStorage.setItem(key, value);
       }
       memoryFallback.set(key, value);
-    } catch (e) {
+    } catch {
       memoryFallback.set(key, value);
     }
   },
@@ -249,7 +249,7 @@ export const storage = {
         localStorage.removeItem(key);
       }
       memoryFallback.delete(key);
-    } catch (e) {
+    } catch {
       memoryFallback.delete(key);
     }
   },
@@ -260,7 +260,7 @@ export const storage = {
         localStorage.clear();
       }
       memoryFallback.clear();
-    } catch (e) {
+    } catch {
       memoryFallback.clear();
     }
   },

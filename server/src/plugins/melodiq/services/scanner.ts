@@ -91,11 +91,11 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
     }
   };
 
-  let [
+  const [
     audioPath,
-    instrumentalPath,
-    vocalsPath,
-    originalAudioPath,
+    instrumentalHeaderPath,
+    vocalsHeaderPath,
+    originalAudioHeaderPath,
     videoPath,
     coverPath,
     backgroundPath,
@@ -108,6 +108,9 @@ export async function parseSongFile(txtPath: string, libraryPath?: string): Prom
     getServeUrl(headers['COVER']),
     getServeUrl(headers['BACKGROUND']),
   ]);
+  let instrumentalPath = instrumentalHeaderPath;
+  let vocalsPath = vocalsHeaderPath;
+  let originalAudioPath = originalAudioHeaderPath;
 
   if (
     !instrumentalPath &&

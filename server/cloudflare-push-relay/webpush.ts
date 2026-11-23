@@ -277,9 +277,7 @@ export async function encryptPayload(
   );
 
   // Derive IKM using auth_secret as salt
-  const authHkdfKey = await crypto.subtle.importKey('raw', authSecret, { name: 'HKDF' }, false, [
-    'deriveBits',
-  ]);
+  await crypto.subtle.importKey('raw', authSecret, { name: 'HKDF' }, false, ['deriveBits']);
 
   // Actually: IKM = HKDF(salt=authSecret, IKM=sharedSecret, info=ikmInfo, len=32)
   // We need to use the shared secret as the input and auth as salt

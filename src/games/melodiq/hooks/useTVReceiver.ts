@@ -50,7 +50,9 @@ export const useTVReceiver = () => {
       const params = new URLSearchParams(window.location.search);
       party = params.get('party') || params.get('partyId') || '';
       base = params.get('baseUrl') || '';
-    } catch {}
+    } catch {
+      // Unparseable location.search: keep the empty defaults
+    }
     const storedParty = storage.get(STORAGE_KEYS.MELODIQ_PARTY_ID);
     const storedBase =
       storage.get(STORAGE_KEYS.MELODIQ_HOST_BASE_URL) ||

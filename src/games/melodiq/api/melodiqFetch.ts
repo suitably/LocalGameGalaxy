@@ -24,7 +24,7 @@ export const melodiqFetchDirect = async <T = any>(path: string, options: Request
     let data;
     try {
         data = JSON.parse(text);
-    } catch (e) {
+    } catch {
         data = text;
     }
     
@@ -70,8 +70,6 @@ export const melodiqFetch = async <T = any>(path: string, options: RequestInit =
 
         return new Promise((resolve, reject) => {
             const reqId = generateUUID();
-            let timer: ReturnType<typeof setTimeout> | undefined;
-            
             const handleResponse = (e: Event) => {
                 const customEvent = e as CustomEvent;
                 if (timer) {
@@ -89,7 +87,7 @@ export const melodiqFetch = async <T = any>(path: string, options: RequestInit =
             window.addEventListener(`melodiq_api_response_${reqId}`, handleResponse);
             
             // Timeout after 60 seconds (chunked large responses need more time, and wait for WebRTC)
-            timer = setTimeout(() => {
+            const timer = setTimeout(() => {
                 window.removeEventListener(`melodiq_api_response_${reqId}`, handleResponse);
                 reject(new Error('API Request Timeout'));
             }, 60000);

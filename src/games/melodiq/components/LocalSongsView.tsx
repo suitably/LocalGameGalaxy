@@ -96,8 +96,19 @@ const LocalSongsViewComponent: React.FC<LocalSongsViewProps> = ({
                     totalCount={filteredSongs.length}
                     components={virtuosoComponents}
                     itemContent={(index) => {
-                        const { onMenuClick, ...itemProps } = getItemProps(index);
-                        return <SongCard {...itemProps} />;
+                        // The grid card has no long-press menu, so onMenuClick is not passed
+                        const { song, isDownloading, hasActiveJob, activeJobType, downloadProgress, onClick } =
+                            getItemProps(index);
+                        return (
+                            <SongCard
+                                song={song}
+                                isDownloading={isDownloading}
+                                hasActiveJob={hasActiveJob}
+                                activeJobType={activeJobType}
+                                downloadProgress={downloadProgress}
+                                onClick={onClick}
+                            />
+                        );
                     }}
                 />
             </Box>

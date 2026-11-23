@@ -129,7 +129,9 @@ export function useWebRTCClient(
     candidatePeersRef.current.forEach((p) => {
       try {
         p.destroy();
-      } catch (e) {}
+      } catch {
+        // Candidate already destroyed or failed; nothing left to clean up
+      }
     });
     candidatePeersRef.current.clear();
     isWebRTCConnectedRef.current = false;
@@ -246,7 +248,7 @@ export function useWebRTCClient(
                   if (peerRef.current === peer) {
                     optionsRef.current.onMessage?.(parsed);
                   }
-                } catch (e) {
+                } catch {
                   // Ignore non-json parts
                 }
               }
@@ -280,7 +282,9 @@ export function useWebRTCClient(
             candidatePeersRef.current.forEach((p) => {
               try {
                 p.destroy();
-              } catch (e) {}
+              } catch {
+                // Candidate already destroyed or failed; nothing left to clean up
+              }
             });
             candidatePeersRef.current.clear();
             pendingPeerCandidatesRef.current = [];
@@ -331,7 +335,7 @@ export function useWebRTCClient(
               processNextPendingPeer(trackerPeerId);
             }
           });
-        } catch (err) {
+        } catch {
           if (connectionTimeout) clearTimeout(connectionTimeout);
           processNextPendingPeer(trackerPeerId);
         }
@@ -400,9 +404,13 @@ export function useWebRTCClient(
                   }
                 }
               }
-            } catch (e) {}
+            } catch {
+              // Malformed message in the discovery stream; ignore it and keep listening
+            }
           }
-        } catch (e) {}
+        } catch {
+          // Discovery data is best-effort; a bad chunk must not break the listener
+        }
       };
 
       trackerPeer.on('data', onTrackerDiscoveryData);

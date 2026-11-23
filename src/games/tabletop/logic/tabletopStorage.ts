@@ -64,11 +64,16 @@ export async function openTabletopDb(): Promise<IDBDatabase> {
   });
 }
 
+/** Copy of a game without assetFiles, so IDB only stores layout/widget snapshot state. */
+function withoutAssetFiles(game: TabletopGameDefinition): TabletopGameDefinition {
+  const copy = { ...game };
+  delete (copy as Partial<TabletopGameDefinition>).assetFiles;
+  return copy;
+}
+
 export async function saveTabletopGame(game: TabletopGameDefinition): Promise<void> {
-  // Strip assetFiles so IDB only stores layout/widget snapshot state
-  const { assetFiles: _unused, ...gameSnapshot } = game;
   const updated: TabletopGameDefinition = {
-    ...gameSnapshot,
+    ...withoutAssetFiles(game),
     updatedAt: Date.now(),
   };
 
@@ -81,8 +86,7 @@ export async function getTabletopGame(id: string): Promise<TabletopGameDefinitio
   return runWithStore(openTabletopDb, STORE_GAMES, 'readonly', async (store) => {
     const res = await requestToPromise<TabletopGameDefinition | undefined>(store.get(id));
     if (!res) return null;
-    const { assetFiles: _unused, ...clean } = res;
-    return clean;
+    return withoutAssetFiles(res);
   });
 }
 

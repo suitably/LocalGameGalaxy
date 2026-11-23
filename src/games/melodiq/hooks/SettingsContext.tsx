@@ -35,7 +35,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       if (channelRef.current) {
         try {
           channelRef.current.postMessage({ type: 'SETTINGS_UPDATE', payload: { [key]: value } });
-        } catch (e) {}
+        } catch {
+          // Channel already closed; other tabs still sync through the storage event
+        }
       }
       window.dispatchEvent(
         new CustomEvent('melodiq_settings_updated', { detail: { [key]: value } }),
@@ -54,7 +56,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (channelRef.current) {
       try {
         channelRef.current.postMessage({ type: 'SETTINGS_UPDATE', payload: newState });
-      } catch (e) {}
+      } catch {
+        // Channel already closed; other tabs still sync through the storage event
+      }
     }
     window.dispatchEvent(new CustomEvent('melodiq_settings_updated', { detail: newState }));
   }, []);
@@ -81,7 +85,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           }
         };
         channelRef.current = channel;
-      } catch (e) {}
+      } catch {
+        // BroadcastChannel unavailable in this context; the storage event still syncs
+      }
     }
 
     return () => {
