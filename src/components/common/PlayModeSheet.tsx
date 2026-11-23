@@ -9,7 +9,7 @@ import { Box, Button, Drawer, Typography } from '@mui/material';
 import SwapHorizRoundedIcon from '@mui/icons-material/SwapHorizRounded';
 import QrCode2RoundedIcon from '@mui/icons-material/QrCode2Rounded';
 import { useTranslation } from 'react-i18next';
-import type { PlayMode } from '../../logic/tableCatalog';
+import type { PlayMode } from '../../lib/catalog/tableCatalog';
 
 export const PlayModeSheet: React.FC<{
   gameTitle: string | null;

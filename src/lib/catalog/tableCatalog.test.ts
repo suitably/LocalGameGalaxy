@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { playModesOf, routeFor, spieltischSection, tableModesOf } from '../tableCatalog';
+import { playModesOf, routeFor, spieltischSection, tableModesOf } from './tableCatalog';
 
 describe('table catalog', () => {
   it('maps tabletop modes to shared device / own devices', () => {

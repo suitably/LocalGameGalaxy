@@ -13,7 +13,8 @@ export type {
   RoutineTrigger,
 } from './routineTypes';
 
-export type TabletopPlayMode = 'party_multi_device' | 'local_pass_and_play' | 'solo';
+import type { TabletopPlayMode } from '../../../lib/catalog/tableCatalog';
+export type { TabletopPlayMode };
 
 export type WidgetType =
   | 'card'

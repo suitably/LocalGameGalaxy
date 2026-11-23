@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { hubGames, hubTools, routeOf } from '../../lib/catalog/views';
 import { areasFor } from '../../lib/areas';
 import { PWAInstallBanner } from '../../components/pwa';
-import { PlayModeSheet } from '../../games/tabletop/components/views/PlayModeSheet';
+import { PlayModeSheet } from '../../components/common/PlayModeSheet';
 import nexumiaBanner from '../../assets/nexumia-banner.svg';
 import nexumiaBannerInk from '../../assets/nexumia-banner-ink.svg';
 import { HubAreaFilter, type AreaFilter } from './HubAreaFilter';
