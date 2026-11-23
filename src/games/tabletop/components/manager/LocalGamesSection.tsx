@@ -13,7 +13,6 @@ interface LocalGamesSectionProps {
   onEdit: (id: string) => void;
   onExportJson: (id: string) => void;
   onExportPcio: (id: string) => void;
-  onPublish: (id: string) => void;
   onDelete: (id: string) => void;
   onSaveToServer: (id: string) => void;
 }

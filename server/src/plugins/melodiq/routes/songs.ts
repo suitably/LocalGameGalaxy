@@ -25,7 +25,7 @@ export const toClientSong = (s: Song, token: string): ClientSong => {
     return `/media?path=${encodeURIComponent(absPath)}&token=${encodeURIComponent(token)}`;
   };
 
-  const { folderScores, folder, recordings, labels, ...rest } = s;
+  const { folderScores, folder, recordings, labels, partSettings, ...rest } = s;
   void folder;
   return {
     ...rest,
@@ -42,6 +42,7 @@ export const toClientSong = (s: Song, token: string): ClientSong => {
       url: secureUrl(score.path),
       hasMarks: !!score.marksPath,
       label: labels[score.file] || null,
+      parts: partSettings[score.file] ?? {},
     })),
     recordings: recordings.map((r) => ({ file: r.file, url: secureUrl(r.path) })),
   };

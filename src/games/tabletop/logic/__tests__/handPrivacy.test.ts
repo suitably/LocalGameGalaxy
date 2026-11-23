@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { privateCardOwners, redactDelta, redactGame, restoreCards } from '../handPrivacy';
-import { deriveSealKey, exportPublicKey, generateSealKeyPair, seal, unseal } from '../sealCrypto';
+import {
+  deriveSealKey,
+  exportPublicKey,
+  generateSealKeyPair,
+  seal,
+  unseal,
+} from '../../../../modules/room-game/sealed/sealCrypto';
 import type { CardWidget, TabletopGameDefinition, TabletopWidget } from '../types';
 
 const card = (id: string, front: string): CardWidget =>

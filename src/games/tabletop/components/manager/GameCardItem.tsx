@@ -30,7 +30,6 @@ export const GameCardItem: React.FC<GameCardItemProps> = ({
   onEdit,
   onExportJson,
   onExportPcio,
-  onPublish,
   onDelete,
   onSaveToServer,
   busy = false,
@@ -145,7 +144,6 @@ export const GameCardItem: React.FC<GameCardItemProps> = ({
             onEdit={onEdit}
             onExportJson={onExportJson}
             onExportPcio={onExportPcio}
-            onPublish={onPublish}
             onDelete={onDelete}
             onSaveToServer={onSaveToServer}
             busy={busy}

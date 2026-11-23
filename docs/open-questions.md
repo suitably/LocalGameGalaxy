@@ -4,25 +4,22 @@ Living list. Each item: what is unclear or broken, the evidence, what would reso
 
 Found by the [2026-10-18 docs-vs-code audit](reports/2026-10-18-docs-vs-code-audit.md) unless noted.
 
-## Q4 — Melodiq uses inline `BroadcastChannel`
+## Open
 
-The anti-pattern matrix forbids inline `BroadcastChannel` sync in games, but Melodiq creates channels directly in `hooks/useTVMode.ts`, `hooks/useTVReceiver.ts`, `hooks/SettingsContext.tsx`, `gameplay/hooks/useSessionEnd.ts` (channel `melodiq_tv_control`) and `hooks/useQueue.ts` (queue sync). `check-architecture.mjs` does not check this rule.
-Resolve: migrate to `useMultiChannelSync` or document Melodiq TV sync as an explicit exception.
+- Q25 **[user]** copyright holder wording for own files (#594). `REUSE.toml` names `LocalGameGalaxy` as holder of everything that is not third-party, because the repository has no copyright line anywhere (LICENSE is the bare AGPL text, `package.json` files have no `author`, README §8 names no holder) and `LocalGameGalaxy` is the only author wording in use (`public/games/tabletop/manifest.json`). A project name is not a legal person. Resolve: the maintainer picks the holder line (e.g. their name, or "<name> and LocalGameGalaxy contributors") and confirms that the brand and icon images (`design/`, `public/pwa/`, `public/og-image.png`, Android launcher/splash PNGs) are own work; then update the default annotation in `REUSE.toml`. [dependencies](tech/dependencies.md)
 
-## Q22 — Tabletop p95 frame time at 800 widgets above 16 ms under emulation [user]
+## Resolved 2026-11-22
 
-TTS plan D5: optimise the DOM renderer, measure at 800 widgets, and consider a Canvas renderer only if p95 stays above 16 ms. After #684 (`npm run perf:tabletop`, headless Chromium in a 4-vCPU cloud container): a token drag reaches p95 16.7 ms unthrottled (`main`: 100–150 ms), but 50–67 ms at 4× CPU throttling (`main`: 580–750 ms); panning stays at 16.8 ms. The acceptance criterion names a real mid-range phone, and the 4× emulation is only an approximation of one.
-Resolve: measure on a real mid-range phone (manual). If p95 stays above 16 ms there, the maintainer decides between further DOM work (remaining cost: re-rendering the whole table tree on each 50 ms commit, layout of ~5,500 layout objects per commit, layerization) and the Canvas renderer of D5.
+- Q26 Melodiq live sync (GAME-CATALOG-RESTRUCTURE 6.1) → maintainer decision (2026-11-22, option 2): a `RoomTransport` over Melodiq's WebRTC connection, not MQTT. Standalone Melodiq has no party room key (ADR-0009) and must work offline over the local tracker. Done in #813 (steps 1-7): [melodiq-architecture §2.16](tech/melodiq-architecture.md#216-room-protocol-at-a-glance-813), [ADR-0011 item 7](adr/0011-one-game-catalogue.md).
 
-## Q23 — Wordle's `i18n` bundle is never registered
+## Resolved 2026-11-20
 
-`src/games/wordle/i18n/index.ts` exports a flat-key `wordleTranslations` that nothing imports (only `src/games/wordle/index.ts` re-exports it); live Wordle strings come from the top-level `wordle` section of `public/locales`. Same situation Sudoku had before 2026-11-16, where the dead bundle was deleted. [i18n-strategy](tech/i18n-strategy.md) no longer lists Wordle as a bundle game.
-Resolve: check that every bundle key exists in `public/locales`, then delete the bundle like Sudoku's, or register it via an `initWordleI18n()` like Kniffel and remove the duplicates from the locale files.
+- Q23 Wordle's unregistered `i18n` bundle → maintainer decision (2026-11-20): deleted, like Sudoku's. `src/games/wordle/i18n/index.ts` and its re-export are gone; ten keys the code calls via `t()` but `public/locales` lacked (`not_in_dictionary`, `settings.dictionary_only` and `_hint`, `key_enter`, `key_delete`, `letter_state.*`) were added to both locale files (before, they fell back to the inline defaults or showed the key). [i18n-strategy](tech/i18n-strategy.md)
+- Q22 tabletop drag p95 at 800 widgets → maintainer measured it on a real mid-range phone (2026-11-20) and found it fast enough (p95 at or below 16 ms; exact figure not recorded). The DOM renderer stays; the Canvas renderer of TTS plan D5 is not needed. [tabletop-engine, Performance](tech/tabletop-engine.md#performance-684)
 
-## Q24 — Scripted card games send all hands to every device [user]
+## Resolved 2026-11-17
 
-`src/games/tabletop/scripted` syncs through `useRoomReducer`, which publishes the host's whole state (all hands, stock, skat) to every device in the room; only the UI hides other players' cards. The free tabletop seals hands per seat (`logic/privateHandChannel.ts`). Fine among friends, but a player who reads the room traffic sees every card.
-Resolve: the maintainer decides whether that is acceptable; otherwise the host sends `script.view(state, seat)` per seat, sealed with `logic/sealCrypto.ts`, and `moveAllowed` moves to the host. [scripted card games](tech/tabletop-scripted-games.md) §3.
+- Q24 scripted card games sent all hands to every device → maintainer decision (2026-11-17): seal hands per seat. The host keeps the state and sends each seat only `script.view(state, seat)`, sealed with the seat's key (`PrivateHandChannel`); `moveAllowed` for single-card picks runs on the host (`hints`). [scripted card games](tech/tabletop-scripted-games.md)
 
 ## Resolved 2026-11-15
 
@@ -31,6 +28,7 @@ Resolve: the maintainer decides whether that is acceptable; otherwise the host s
 - Q5 root `config.example.json` → maintainer decision (2026-11-15): deleted; README step 2 copies `server/config.example.json`. [secrets-management](tech/secrets-management.md)
 - Q6 dead `imposter.json` locale files → maintainer decision (2026-11-15): deleted. They held a legacy word/hint list (1066 keys per language) superseded by `src/games/imposter/logic/wordPairs_{de,en}.ts`; none of the keys is referenced.
 - Q13 ADR-0004 vs. separation stack → maintainer decision (2026-11-15, "whichever is more stable"): the running stack is documented. [ADR-0006](adr/0006-audio-separator-onnx-whisper-alignment.md) supersedes ADR-0004 (`audio-separator[cpu]` + `UVR-MDX-NET-Inst_HQ_3.onnx`, `whisper-timestamped`, CPU PyTorch kept for Whisper); the Demucs → ONNX rationale is marked **Unverified:** there.
+- Q4 Melodiq inline `BroadcastChannel` → maintainer decision (2026-11-15): migrate. TV control (`melodiq_tv_control`), settings, session end and queue sync (`melodiq_queue_channel`) now use `useMultiChannelSync` with the new `selfEcho: false` option; channel names and messages are unchanged. [sync-protocol §3](tech/sync-protocol.md#3-multi-channel-sync-usemultichannelsynct)
 
 ## Resolved 2026-11-08
 

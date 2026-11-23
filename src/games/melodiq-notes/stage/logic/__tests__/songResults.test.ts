@@ -9,6 +9,8 @@ import {
   readResults,
   runResults,
   saveResults,
+  subscribeResults,
+  getResultsVersion,
   type FinishedRun,
   type SongResult,
 } from '../songResults';
@@ -106,6 +108,19 @@ describe('song results (#699)', () => {
       result({ player: null, seat: 2 }),
     ]);
     expect(readResults()).toHaveLength(4);
+  });
+
+  it('tells subscribers when a save stored something new', () => {
+    let calls = 0;
+    const off = subscribeResults(() => calls++);
+    const before = getResultsVersion();
+    saveResults([result({ score: 1000 })]);
+    saveResults([result({ score: 800, at: 2 })]);
+    expect(calls).toBe(1);
+    expect(getResultsVersion()).toBe(before + 1);
+    off();
+    saveResults([result({ score: 1500 })]);
+    expect(calls).toBe(1);
   });
 
   it('drops the oldest results beyond the limit', () => {

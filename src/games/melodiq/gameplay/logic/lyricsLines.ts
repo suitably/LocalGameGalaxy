@@ -1,4 +1,4 @@
-import type { Note } from '../../parser';
+import type { Note } from '../../logic/songVocals';
 import type { LineGroup } from '../LyricsLineView';
 
 /** Splits a note stream into lyric lines; a `-` note ends the current line. */

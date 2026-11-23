@@ -11,17 +11,21 @@ import { resolveTableGame, type TableOrigin } from './logic/gameSource';
 import { createGameSourceLoaders } from './logic/gameSourceLoaders';
 import { decksToShuffleOnStart } from './logic/startShuffle';
 import { localizeLabels } from './logic/localizeLabels';
+import { ruleScriptOf } from './scripted/logic/scriptExport';
 import { TabletopEditor } from './components/editor/TabletopEditor';
 import { HandDockStrip } from './components/surface/HandDockStrip';
 import { TabletopControllerView } from './components/controller/TabletopControllerView';
 import { TabletopLobbyView } from './components/views/TabletopLobbyView';
 import { useTabletopSync } from './hooks/useTabletopSync';
+import { useLuaRuntime } from './hooks/useLuaRuntime';
 import { usePartyLobbyReturn } from './hooks/usePartyLobbyReturn';
 import { useTabletopAutosave } from './hooks/useTabletopAutosave';
 import { AssetUrlContext, useAssetUrls } from './hooks/useAssetUrls';
 import { TabletopPassAndPlay } from './components/views/TabletopPassAndPlay';
 import { TableGameMenu } from './components/views/TableGameMenu';
-import { TvThemeProvider } from '../../components/common/TvThemeProvider';
+import { parseTabletopRoute } from './logic/tabletopRoute';
+import { TabletopHostView } from './components/views/TabletopHostView';
+import { TabletopScreenView } from './components/views/TabletopScreenView';
 import type { TabletopGameDefinition } from './logic/types';
 import { useFollowPartyLobby } from '../../features/party/hooks/useFollowPartyLobby';
 
@@ -30,13 +34,8 @@ export function TabletopGame() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const roomId = searchParams.get('room');
-  const role = searchParams.get('role'); // 'tv' | 'player' | 'spectator'
-  const seatParam = searchParams.get('seat');
-  const isSpectator = role === 'spectator';
-  const seat = seatParam !== null && !isSpectator ? Number(seatParam) : null;
-  const gameId = searchParams.get('gameId') || 'standard-cards';
-  const isLocal = searchParams.get('local') === '1';
+  const { roomId, gameId, isLocal, isHost, isScreen, isSpectator, seat } =
+    parseTabletopRoute(searchParams);
 
   usePageTitle(t('games.tabletop.title', 'Virtueller Spieltisch'));
 
@@ -45,7 +44,6 @@ export function TabletopGame() {
   const [restartCount, setRestartCount] = useState(0);
   const [origin, setOrigin] = useState<TableOrigin | null>(null);
   const [tableSettingsOpen, setTableSettingsOpen] = useState(false);
-  const isHost = role === 'tv';
   /** Host and local play own the state, so they save and resume it; phones get snapshots. */
   const ownsState = isLocal || isHost;
   const saveKey = sessionKey(roomId, gameId);
@@ -75,6 +73,14 @@ export function TabletopGame() {
           gameId,
           createGameSourceLoaders(gameId, ownsState ? saveKey : null),
         );
+        // A game file naming a built-in rule script plays with enforced rules.
+        const scriptId = resolved && ruleScriptOf(resolved.game);
+        if (scriptId) {
+          const next = new URLSearchParams(searchParams);
+          next.set('gameId', scriptId);
+          navigate({ search: next.toString() }, { replace: true });
+          return;
+        }
         if (resolved) {
           setOrigin(resolved.origin);
           const game = localizeLabels(resolved.game, (key, options) => String(t(key, options)));
@@ -110,12 +116,12 @@ export function TabletopGame() {
     setRestartCount((n) => n + 1);
   };
 
-  // Sync setup
+  const lua = useLuaRuntime(gameState.game, dispatch, ownsState && !loading && !error, seat);
   const { broadcastAction, syncedDispatch } = useTabletopSync({
     roomId,
     isHost,
     game: gameState.game,
-    dispatch,
+    dispatch: lua.dispatch,
     onReturnToLobby: returnToLobby,
     seat,
     spectator: isSpectator,
@@ -167,26 +173,32 @@ export function TabletopGame() {
     onLoad: loadSavedTable,
     onRestart: restartGame,
     onOpenTableSettings: () => setTableSettingsOpen(true),
+    lua: lua.lua,
   };
   const tableSettings = {
     tableSettingsOpen,
     onCloseTableSettings: () => setTableSettingsOpen(false),
   };
 
-  // 1. In Room: TV / Shared Table Mode
-  if (roomId && role === 'tv') {
+  // 1. In Room: host (shared table on this device, or playing a seat while a TV shows the table)
+  if (roomId && isHost) {
     const backToLobby = () => {
       broadcastAction({ type: 'RETURN_TO_LOBBY' });
       returnToLobby();
     };
     return withAssets(
-      <TvThemeProvider>
-        <Box position="relative" width="100%" height="100%">
-          <TableGameMenu {...ownerMenu} onBack={backToLobby} onBackToLobby={backToLobby} />
-          <TabletopEditor state={gameState} dispatch={syncedDispatch} isTvMode {...tableSettings} />
-        </Box>
-      </TvThemeProvider>,
+      <TabletopHostView
+        {...{ roomId, gameId, seat, broadcastAction, syncedDispatch, dispatch, ownerMenu }}
+        state={gameState}
+        tableSettings={tableSettings}
+        onBackToLobby={backToLobby}
+      />,
     );
+  }
+
+  // 1b. In Room: read-only table on a TV (`role=screen`)
+  if (roomId && isScreen) {
+    return withAssets(<TabletopScreenView state={gameState} origin={origin} />);
   }
 
   // 2. In Room: Smartphone Controller Mode (`role=spectator`: no seat, no hand, no drawing)

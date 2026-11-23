@@ -1,4 +1,5 @@
-import { DRUM_LANE_META, type StageView } from './instruments';
+import { DEFAULT_DRUM_PADS, drumLaneOfKey } from './drumLanes';
+import type { StageView } from './instruments';
 
 const KEY_OFFSETS: Record<string, number> = {
   KeyA: 0,
@@ -25,7 +26,8 @@ export type KeyAction =
 
 /**
  * Computer-keyboard stand-in for an instrument (physical key codes, so it works on QWERTZ and QWERTY):
- * keys A–K play an octave, digits pick strings, D F J K Space hit drums, arrows and Space sing.
+ * keys A–K play an octave, digits pick strings, D F J K L ; ' G Space hit drums (the tom keys play
+ * the shown toms left to right, see drumLanes), arrows and Space sing.
  */
 export function keyAction(
   code: string,
@@ -33,6 +35,7 @@ export function keyAction(
   octaveBase: number,
   stringCount: number,
   down: boolean,
+  drumPads: readonly number[] = DEFAULT_DRUM_PADS,
 ): KeyAction {
   if (view === 'pitch') {
     if (code === 'Space') return { kind: 'sing', on: down };
@@ -49,7 +52,7 @@ export function keyAction(
     return i >= 0 && i < stringCount ? { kind: 'lane', lane: i } : null;
   }
   if (view === 'drums') {
-    const lane = DRUM_LANE_META.findIndex((d) => d.code === code);
+    const lane = drumLaneOfKey(code, drumPads);
     return lane >= 0 ? { kind: 'lane', lane } : null;
   }
   return null;

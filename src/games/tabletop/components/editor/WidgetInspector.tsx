@@ -7,6 +7,7 @@ import {
   Button,
   Collapse,
   Divider,
+  IconButton,
   MenuItem,
   Paper,
   Stack,
@@ -17,6 +18,8 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopyRounded';
 import DeleteIcon from '@mui/icons-material/DeleteRounded';
 import DataObjectIcon from '@mui/icons-material/DataObjectRounded';
 import LayersIcon from '@mui/icons-material/LayersRounded';
+import ExpandLessIcon from '@mui/icons-material/ExpandLessRounded';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMoreRounded';
 import { useTranslation } from 'react-i18next';
 import type { TabletopGameDefinition } from '../../logic/types';
 import { InspectorFields } from './InspectorFields';
@@ -34,6 +37,8 @@ export const WidgetInspector: React.FC<WidgetInspectorProps> = ({ game, editor }
   const [showJson, setShowJson] = useState(false);
   const { selected } = editor;
   const [showGlobal, setShowGlobal] = useState(false);
+  /** Folded to its title bar so it no longer covers the right part of the board (#672). */
+  const [collapsed, setCollapsed] = useState(false);
   const globalScript = game.scripts?.global;
   const selectedScript = selected ? game.scripts?.objects[selected.id] : undefined;
 
@@ -53,99 +58,119 @@ export const WidgetInspector: React.FC<WidgetInspectorProps> = ({ game, editor }
         position: 'absolute',
         top: 72,
         right: 12,
-        bottom: 12,
+        bottom: collapsed ? 'auto' : 12,
         width: { xs: 'calc(100% - 24px)', sm: 320 },
         zIndex: 1100,
         p: 2,
         overflowY: 'auto',
       }}
     >
-      <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
-        {t('games.tabletop.editor.inspector')}
-      </Typography>
-      <TextField
-        select
-        fullWidth
-        size="small"
-        label={t('games.tabletop.editor.widget')}
-        value={selected?.id ?? ''}
-        onChange={(e) => editor.setSelectedId(e.target.value || null)}
-        sx={{ mb: 2 }}
-      >
-        <MenuItem value="">{t('games.tabletop.editor.none')}</MenuItem>
-        {options.map((o) => (
-          <MenuItem key={o.id} value={o.id}>
-            {o.name}
-          </MenuItem>
-        ))}
-      </TextField>
-
-      {selected ? (
-        <>
-          <InspectorFields
-            widget={selected}
-            game={game}
-            onPatch={(p) => editor.patch(selected.id, p)}
-          />
-          <Divider sx={{ my: 2 }} />
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            <Button size="small" startIcon={<ContentCopyIcon />} onClick={editor.duplicateSelected}>
-              {t('games.tabletop.editor.duplicate')}
-            </Button>
-            <Button
-              size="small"
-              color="error"
-              startIcon={<DeleteIcon />}
-              onClick={editor.deleteSelected}
-            >
-              {t('games.tabletop.editor.delete')}
-            </Button>
-            {(selected.states?.length ?? 0) > 1 && (
-              <Button size="small" startIcon={<LayersIcon />} onClick={editor.nextStateSelected}>
-                {t('games.tabletop.editor.next_state', {
-                  current: (selected.stateIndex ?? 0) + 1,
-                  total: selected.states?.length,
-                })}
-              </Button>
-            )}
-            <Button
-              size="small"
-              startIcon={<DataObjectIcon />}
-              onClick={() => setShowJson((v) => !v)}
-            >
-              {t('games.tabletop.editor.json')}
-            </Button>
-          </Stack>
-          <Collapse in={showJson} unmountOnExit>
-            <Box sx={{ mt: 1.5 }}>
-              <WidgetJsonEditor
-                key={selected.id}
-                widget={selected}
-                onApply={(p) => editor.patch(selected.id, p)}
-              />
-            </Box>
-          </Collapse>
-          {selectedScript && (
-            <Box sx={{ mt: 2 }}>
-              <ScriptViewer title={t('games.tabletop.scripts.widget')} entry={selectedScript} />
-            </Box>
-          )}
-        </>
-      ) : (
-        <Typography variant="body2" color="text.secondary">
-          {t('games.tabletop.editor.select_hint')}
+      <Stack direction="row" alignItems="center" sx={{ mb: collapsed ? 0 : 1.5 }}>
+        <Typography variant="subtitle1" fontWeight={700} sx={{ flex: 1 }}>
+          {t('games.tabletop.editor.inspector')}
         </Typography>
-      )}
-      {globalScript && (
-        <Box sx={{ mt: 2 }}>
-          <Button size="small" onClick={() => setShowGlobal((v) => !v)}>
-            {t('games.tabletop.scripts.global_toggle')}
-          </Button>
-          <Collapse in={showGlobal} unmountOnExit>
-            <ScriptViewer title={t('games.tabletop.scripts.global')} entry={globalScript} />
-          </Collapse>
-        </Box>
-      )}
+        <IconButton
+          size="small"
+          aria-label={t(
+            collapsed
+              ? 'games.tabletop.editor.inspector_expand'
+              : 'games.tabletop.editor.inspector_collapse',
+          )}
+          aria-expanded={!collapsed}
+          onClick={() => setCollapsed((v) => !v)}
+        >
+          {collapsed ? <ExpandMoreIcon /> : <ExpandLessIcon />}
+        </IconButton>
+      </Stack>
+      <Box sx={{ display: collapsed ? 'none' : 'block' }}>
+        <TextField
+          select
+          fullWidth
+          size="small"
+          label={t('games.tabletop.editor.widget')}
+          value={selected?.id ?? ''}
+          onChange={(e) => editor.setSelectedId(e.target.value || null)}
+          sx={{ mb: 2 }}
+        >
+          <MenuItem value="">{t('games.tabletop.editor.none')}</MenuItem>
+          {options.map((o) => (
+            <MenuItem key={o.id} value={o.id}>
+              {o.name}
+            </MenuItem>
+          ))}
+        </TextField>
+
+        {selected ? (
+          <>
+            <InspectorFields
+              widget={selected}
+              game={game}
+              onPatch={(p) => editor.patch(selected.id, p)}
+            />
+            <Divider sx={{ my: 2 }} />
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Button
+                size="small"
+                startIcon={<ContentCopyIcon />}
+                onClick={editor.duplicateSelected}
+              >
+                {t('games.tabletop.editor.duplicate')}
+              </Button>
+              <Button
+                size="small"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={editor.deleteSelected}
+              >
+                {t('games.tabletop.editor.delete')}
+              </Button>
+              {(selected.states?.length ?? 0) > 1 && (
+                <Button size="small" startIcon={<LayersIcon />} onClick={editor.nextStateSelected}>
+                  {t('games.tabletop.editor.next_state', {
+                    current: (selected.stateIndex ?? 0) + 1,
+                    total: selected.states?.length,
+                  })}
+                </Button>
+              )}
+              <Button
+                size="small"
+                startIcon={<DataObjectIcon />}
+                onClick={() => setShowJson((v) => !v)}
+              >
+                {t('games.tabletop.editor.json')}
+              </Button>
+            </Stack>
+            <Collapse in={showJson} unmountOnExit>
+              <Box sx={{ mt: 1.5 }}>
+                <WidgetJsonEditor
+                  key={selected.id}
+                  widget={selected}
+                  onApply={(p) => editor.patch(selected.id, p)}
+                />
+              </Box>
+            </Collapse>
+            {selectedScript && (
+              <Box sx={{ mt: 2 }}>
+                <ScriptViewer title={t('games.tabletop.scripts.widget')} entry={selectedScript} />
+              </Box>
+            )}
+          </>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            {t('games.tabletop.editor.select_hint')}
+          </Typography>
+        )}
+        {globalScript && (
+          <Box sx={{ mt: 2 }}>
+            <Button size="small" onClick={() => setShowGlobal((v) => !v)}>
+              {t('games.tabletop.scripts.global_toggle')}
+            </Button>
+            <Collapse in={showGlobal} unmountOnExit>
+              <ScriptViewer title={t('games.tabletop.scripts.global')} entry={globalScript} />
+            </Collapse>
+          </Box>
+        )}
+      </Box>
     </Paper>
   );
 };

@@ -1,0 +1,1 @@
+- **Schwimmen house rules**: two new setup switches on the Spieltisch — "Pass only once" (each player may pass only once per round) and "Only the first one swims" (only the first player out of lives swims, everyone after that is out at once). Both are off by default, so the game plays as before.

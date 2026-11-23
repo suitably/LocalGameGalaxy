@@ -141,6 +141,6 @@ Agents (Claude Code, Copilot) follow [AGENTS.md](AGENTS.md); Claude Code loads i
 
 LocalGameGalaxy (web app, Android app, companion server and signaling tracker) is free software under the [GNU Affero General Public License v3.0 or later](LICENSE) (`AGPL-3.0-or-later`). You may use, change and share it; if you distribute a changed version or run it as a service for others, you must publish your source code under the same licence.
 
-Exceptions: dependencies keep their own licences, and some files in this repository come from third parties and are not covered (see [open question Q21](docs/open-questions.md)). The licence does not grant the right to use the name Nexumia or its logo for other projects.
+Exceptions: dependencies and a few third-party files in this repository keep their own licences. Every file's licence is recorded in [`REUSE.toml`](REUSE.toml) and [`LICENSES/`](LICENSES/); details in [docs/tech/dependencies.md](docs/tech/dependencies.md). The licence does not grant the right to use the name Nexumia or its logo for other projects.
 
 If you want to support development, you can do so on [Liberapay](https://liberapay.com/suitably).

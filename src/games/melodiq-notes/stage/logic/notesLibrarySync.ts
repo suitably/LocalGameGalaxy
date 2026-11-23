@@ -10,6 +10,7 @@ import {
   type StoredBarMarks,
 } from '../../../../lib/companion/songScoresApi';
 import { findSongFolder } from './scoreCatalog';
+import type { SaveTarget } from './songLink';
 
 /** The parts of the stage that go to a song folder on the companion server. */
 export interface NotesSaveInput {
@@ -31,6 +32,8 @@ export interface NotesSaveInput {
   offsetSec: number;
   /** Where the marks come from and how they play (alignment version, mode, corrected by hand). */
   marksMeta?: Pick<StoredBarMarks, 'aligner' | 'mode' | 'edited'>;
+  /** The song (or a new one) the user chose for a score not stored yet, and its label (#563). */
+  target?: SaveTarget;
 }
 
 export interface NotesSaveResult {
@@ -43,7 +46,7 @@ export interface NotesSaveResult {
 export interface NotesApi {
   listSongs: () => Promise<CompanionSong[]>;
   createSong: typeof createLibrarySong;
-  upload: (songId: string, file: File) => Promise<{ file: string }>;
+  upload: (songId: string, file: File, label?: string) => Promise<{ file: string }>;
   saveMarks: typeof saveSongMarks;
 }
 
@@ -60,9 +63,18 @@ export const musicXmlFile = (xml: string, title: string) =>
     type: 'application/vnd.recordare.musicxml+xml',
   });
 
+/** The song folder a new score goes to: the chosen one, else the one with the same artist + title. */
+async function targetSong(input: NotesSaveInput, title: string, api: NotesApi) {
+  const chosen = input.target?.songId;
+  if (chosen) return { id: chosen };
+  const match = input.target ? null : findSongFolder(await api.listSongs(), title, input.artist);
+  return match ?? (await api.createSong({ title, artist: input.artist }));
+}
+
 /**
- * Stores what is missing on the server: a score that is not stored yet (into the song folder with
- * the same artist and title, else a new song folder with `song.json`), a recording that is still
+ * Stores what is missing on the server: a score that is not stored yet (into the song the user
+ * chose, else the song folder with the same artist and title, else a new song folder with
+ * `song.json`; a chosen label goes to `song.json`), a recording that is still
  * local, and the bar marks next to the score. Safe to call again — stored parts are not uploaded
  * twice. The song folder is the only place the stage saves to (#568); marks for the song's mix
  * are stored with `recordingName: null`.
@@ -76,10 +88,8 @@ export async function saveToNotesLibrary(
     const score = input.scoreFile ?? (input.xml ? musicXmlFile(input.xml, input.title) : null);
     if (!score) throw new Error('no score to store');
     const title = input.title || 'Score';
-    const song =
-      findSongFolder(await api.listSongs(), title, input.artist) ??
-      (await api.createSong({ title, artist: input.artist }));
-    const uploaded = await api.upload(song.id, score);
+    const song = await targetSong(input, title, api);
+    const uploaded = await api.upload(song.id, score, input.target?.label);
     stored = { songId: song.id, scoreFile: uploaded.file };
   }
 

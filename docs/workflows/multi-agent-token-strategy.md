@@ -20,7 +20,7 @@ sources:
 
 # Multi-agent workflow for lower token use
 
-Worked example: [ISSUE-539 tabletop hidden space](../tasks/ISSUE-539-tabletop-hidden-space.md).
+Worked example: [ISSUE-539 tabletop hidden space](../archive/issue-specs/ISSUE-539-tabletop-hidden-space.md).
 
 ## 1. Where the tokens go
 
@@ -81,7 +81,7 @@ Fewer main-session turns is the main lever: batch independent tool calls in one 
 
 Entry point: **`/issue <number> [decisions]`** ([`.claude/skills/issue/SKILL.md`](../../.claude/skills/issue/SKILL.md)) runs this flow; on an issue that already has a spec it resumes at the first unchecked item of the spec's Progress list.
 
-- **One session per ticket.** A new ticket never continues an old session: the old context would be re-sent on every turn. Start with the spec path, e.g. "Implement `docs/tasks/ISSUE-539-…md`, decisions §3: …".
+- **One session per ticket.** A new ticket never continues an old session: the old context would be re-sent on every turn. Start with the spec path, e.g. "Implement `docs/archive/issue-specs/ISSUE-539-…md`, decisions §3: …".
 - **Stay in that session for the whole ticket.**
 - **Session model:** routine tickets may run on Sonnet (`/model`), which costs half of Opus per token; keep Opus for design-heavy work. **Unverified:** quality impact not measured yet.
 - **Context grew large or was compacted** → write the state into the spec ("slice 1 done, commit abc"), then continue in a new session from the spec.

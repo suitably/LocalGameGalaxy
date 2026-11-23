@@ -70,6 +70,21 @@ describe('partySession (#467 S2)', () => {
     expect(shouldTakeOverHost(state, 'a', seen(times), NOW)).toBe(false);
   });
 
+  it('a silent host is taken over by a lone member only in a Stammtisch', () => {
+    const players = [p('h', 0), p('a', 1)];
+    const times = { h: NOW - HOST_TIMEOUT_MS - 1, a: NOW };
+    expect(shouldTakeOverHost(room(players), 'a', seen(times), NOW)).toBe(false);
+    const stammtisch = room(players, { stammtisch: 'Stammtisch' });
+    expect(shouldTakeOverHost(stammtisch, 'a', seen(times), NOW)).toBe(true);
+  });
+
+  it('keeps the Stammtisch name when a copy without it arrives', () => {
+    const named = room([p('h', 0), p('a', 1)], { stammtisch: 'Familie' });
+    const plain = room([p('h', 0), p('a', 1)]);
+    const opts = { myId: 'a', isRoomCreator: false, now: NOW };
+    expect(mergeIncomingState(named, plain, opts).stammtisch).toBe('Familie');
+  });
+
   it('the live player with the lowest seat takes over a silent host', () => {
     const state = room([p('h', 0), p('a', 2), p('b', 1)]);
     const times = { h: NOW - HOST_TIMEOUT_MS - 1, a: NOW, b: NOW };

@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import {
   deleteSongFile,
+  mergeLibrarySong,
   updateSongMeta,
   uploadSongFile,
 } from '../../../lib/companion/notesLibraryApi';
@@ -78,12 +79,14 @@ export function useSongFilesManager(initial: CompanionSong) {
     [update.kind, save],
   );
 
+  /** Uploads files; `label` names a single score in `song.json` (#563). */
   const upload = useCallback(
-    (files: File[]) =>
+    (files: File[], label?: string) =>
       run(async () => {
         let latest: CompanionSong | null = null;
+        const name = files.length === 1 ? label : undefined;
         for (const file of files) {
-          latest = (await uploadSongFile(song.id, file)).song ?? latest;
+          latest = (await uploadSongFile(song.id, file, name)).song ?? latest;
           // a later file may fail; the stored ones still need a library reload
           setChanged(true);
         }
@@ -97,6 +100,16 @@ export function useSongFilesManager(initial: CompanionSong) {
       run(async () => {
         await deleteSongFile(song.id, row.file);
         return getCompanionSong(song.id);
+      }),
+    [run, song.id],
+  );
+
+  /** Moves this song's files into another song (#563); this song is gone afterwards. */
+  const merge = useCallback(
+    (intoId: string) =>
+      run(async () => {
+        await mergeLibrarySong(song.id, intoId);
+        return null;
       }),
     [run, song.id],
   );
@@ -124,6 +137,7 @@ export function useSongFilesManager(initial: CompanionSong) {
     storeAll,
     upload,
     remove,
+    merge,
     adopt,
   };
 }

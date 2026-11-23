@@ -18,7 +18,21 @@ export interface UseMultiChannelSyncOptions<T> {
   broadcastPrefix: string;
   mailbox?: MqttMailboxService<T>;
   onMessage: (payload: T, source: 'broadcast' | 'mqtt') => Promise<void> | void;
+  /**
+   * When false, no listener is opened. `publish` still sends (publish-only use): via a transient
+   * BroadcastChannel and the mailbox, if any.
+   */
   enabled?: boolean;
+  /**
+   * Default true: every `publish` posts through a transient BroadcastChannel, so this instance's own
+   * listener receives its own messages too (existing consumers rely on that).
+   * When false, publishes to the instance's own channel go through its open listening channel: the
+   * instance never receives its own messages (like a hand-held `BroadcastChannel`), and no channel
+   * is allocated per message, which suits high-frequency streams. While no listening channel is open
+   * (disabled, not yet started, unmounted) or for another `targetChannelId`, a transient channel is
+   * used as in the default mode. Read at publish time; changing it does not restart the channel.
+   */
+  selfEcho?: boolean;
 }
 
 export interface UseMultiChannelSyncReturn<T> {
@@ -99,7 +113,13 @@ export class MultiChannelSyncCoordinator<T> {
     if (!effectiveChannelId) return;
 
     try {
-      if (typeof BroadcastChannel !== 'undefined') {
+      const ownChannel =
+        this.options.selfEcho === false && effectiveChannelId === this.options.channelId
+          ? this.bc
+          : null;
+      if (ownChannel) {
+        ownChannel.postMessage(payload);
+      } else if (typeof BroadcastChannel !== 'undefined') {
         const bc = new BroadcastChannel(`${this.options.broadcastPrefix}_${effectiveChannelId}`);
         bc.postMessage(payload);
         bc.close();
@@ -121,7 +141,7 @@ export class MultiChannelSyncCoordinator<T> {
 }
 
 export function useMultiChannelSync<T>(
-  options: UseMultiChannelSyncOptions<T>
+  options: UseMultiChannelSyncOptions<T>,
 ): UseMultiChannelSyncReturn<T> {
   const [coordinator] = useState(() => new MultiChannelSyncCoordinator(options));
 
@@ -140,7 +160,7 @@ export function useMultiChannelSync<T>(
     (payload: T, targetChannelId?: string) => {
       coordinator.publish(payload, targetChannelId);
     },
-    [coordinator]
+    [coordinator],
   );
 
   return { publish };

@@ -17,25 +17,41 @@ import {
   Typography,
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrowRounded';
+import PersonAddAltRoundedIcon from '@mui/icons-material/PersonAddAltRounded';
 import { useTranslation } from 'react-i18next';
 import type { RoomPlayer } from '../../../../features/party/hooks/usePartyRoomPlayers';
-import type { AnyGameScript } from '../logic/scriptTypes';
+import type { AnyGameScript, ScriptOptions } from '../logic/scriptTypes';
+import { ScriptOptionSwitches } from './ScriptOptionSwitches';
 import { seatPlayers, type SessionPlayer } from '../logic/session';
 
 interface RoomSetupProps {
   script: AnyGameScript;
   roster: RoomPlayer[];
   isHost: boolean;
+  /** Table settings for the match (the host's stored preset). */
+  options: ScriptOptions;
+  onOptionsChange: (next: ScriptOptions) => void;
   onStart: (players: SessionPlayer[]) => void;
 }
 
-export const RoomSetup: React.FC<RoomSetupProps> = ({ script, roster, isHost, onStart }) => {
+export const RoomSetup: React.FC<RoomSetupProps> = ({
+  script,
+  roster,
+  isHost,
+  options,
+  onOptionsChange,
+  onStart,
+}) => {
   const { t } = useTranslation();
-  const guests = roster.filter((p) => !p.isHost);
+  // Players the host took out of this match with the chip's X (they stay in the room, #798).
+  const [benched, setBenched] = useState<string[]>([]);
+  const present = roster.filter((p) => !benched.includes(p.id));
+  const guests = present.filter((p) => !p.isHost);
   // Enough players without the host: its screen is the table by default.
   const [choice, setChoice] = useState<boolean | null>(null);
   const tableOnly = choice ?? guests.length >= script.minPlayers;
-  const candidates = (tableOnly ? guests : roster).map(({ id, name }) => ({ id, name }));
+  const candidates = (tableOnly ? guests : present).map(({ id, name }) => ({ id, name }));
+  const benchedPlayers = roster.filter((p) => benched.includes(p.id));
   const players = seatPlayers(script.id, candidates);
 
   if (!isHost) {
@@ -60,6 +76,7 @@ export const RoomSetup: React.FC<RoomSetupProps> = ({ script, roster, isHost, on
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {t('games.tabletop.scripted.setup.tableOnlyHint')}
       </Typography>
+      <ScriptOptionSwitches script={script} value={options} onChange={onOptionsChange} />
       <Stack direction="row" gap={0.75} flexWrap="wrap" mb={2}>
         {candidates.map((p, i) => (
           <Chip
@@ -67,6 +84,18 @@ export const RoomSetup: React.FC<RoomSetupProps> = ({ script, roster, isHost, on
             label={p.name}
             color={i < script.maxPlayers ? 'primary' : 'default'}
             variant={i < script.maxPlayers ? 'filled' : 'outlined'}
+            onDelete={() => setBenched((b) => [...b, p.id])}
+          />
+        ))}
+        {benchedPlayers.map((p) => (
+          <Chip
+            key={p.id}
+            label={p.name}
+            variant="outlined"
+            icon={<PersonAddAltRoundedIcon />}
+            onClick={() => setBenched((b) => b.filter((id) => id !== p.id))}
+            aria-label={t('games.tabletop.scripted.setup.addBack', { name: p.name })}
+            sx={{ opacity: 0.7 }}
           />
         ))}
       </Stack>

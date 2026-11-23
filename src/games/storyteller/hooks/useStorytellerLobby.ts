@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
+import { ensureRoomKey } from '../../../modules/sync/roomKeys';
 import { LocalStoryEngine } from '../logic/engine';
 import { deleteStoryGame } from '../logic/repository';
 import { DEFAULT_MODIFIER_SETTINGS } from '../logic/modifiers';
@@ -84,6 +85,7 @@ export const useStorytellerLobby = () => {
       language: options.language,
       modifiers: options.modifiers,
     });
+    ensureRoomKey(record.id, 'local'); // the game's mailbox is end-to-end encrypted (ADR 0009)
 
     await loadActiveGames();
     return record;

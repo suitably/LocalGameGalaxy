@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import type { Note } from '../../parser';
+import type { Note } from '../../logic/songVocals';
 import { LyricsLane, type LyricsLaneProps } from './LyricsLane';
 import { PartMicButton } from './PartMicButton';
 import { useIsTvMode } from '../../../../hooks/useIsTvMode';

@@ -104,3 +104,17 @@ export const EditRoomCodeDialog: React.FC<EditRoomCodeDialogProps> = (props) => 
     />
   );
 };
+
+export const StammtischNameDialog: React.FC<EditPlayerNameDialogProps> = (props) => {
+  const { t } = useTranslation();
+
+  return (
+    <SingleFieldDialog
+      {...props}
+      title={t('party.stammtisch.saveTitle')}
+      description={t('party.stammtisch.saveDesc')}
+      label={t('party.stammtisch.nameLabel')}
+      maxLength={40}
+    />
+  );
+};

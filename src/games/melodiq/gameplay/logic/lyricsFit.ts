@@ -1,4 +1,4 @@
-import type { Note } from '../../parser';
+import type { Note } from '../../logic/songVocals';
 
 /**
  * Preferred screen rows per lyric line: 1 shrinks a line to stay whole, 2 wraps it at a space and

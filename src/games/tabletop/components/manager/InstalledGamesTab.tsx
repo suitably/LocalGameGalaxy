@@ -37,7 +37,6 @@ interface InstalledGamesTabProps {
   onEdit?: (id: string) => void;
   onExportJson?: (id: string) => void;
   onExportPcio?: (id: string) => void;
-  onPublish?: (id: string) => void;
   onDelete?: (id: string) => void;
   onOpenSettings?: () => void;
   /** Game whose server action is running. */
@@ -58,7 +57,6 @@ export const InstalledGamesTab: React.FC<InstalledGamesTabProps> = ({
   onEdit,
   onExportJson,
   onExportPcio,
-  onPublish,
   onDelete,
   onOpenSettings,
   busyId = null,
@@ -172,7 +170,6 @@ export const InstalledGamesTab: React.FC<InstalledGamesTabProps> = ({
                   onEdit={onEdit ?? (() => {})}
                   onExportJson={onExportJson ?? (() => {})}
                   onExportPcio={onExportPcio ?? (() => {})}
-                  onPublish={onPublish ?? (() => {})}
                   onDelete={onDelete ?? (() => {})}
                   canDelete={g.serverSaved === true}
                   busy={busyId === g.id}

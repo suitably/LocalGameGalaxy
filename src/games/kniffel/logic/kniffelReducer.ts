@@ -1,7 +1,7 @@
 import type { KniffelAction, KniffelState, KniffelPlayer, KniffelScores } from './types';
 import { generateUUID } from '../../../lib/uuid';
 
-const createEmptyScores = (): KniffelScores => ({
+export const createEmptyScores = (): KniffelScores => ({
   ones: null,
   twos: null,
   threes: null,

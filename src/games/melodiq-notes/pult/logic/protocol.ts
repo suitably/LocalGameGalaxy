@@ -9,7 +9,8 @@
  * single player; when that player is on a pult, the stage waits for the pult's judgement.
  *
  * Two kinds of traffic, both over `modules/room-game`:
- * - room state (`PultRoomState`, host-run reducer): who plays which part, the song, play state;
+ * - room state (`PultRoomState`, host-run reducer): who plays which part, the song, play state and
+ *   the song's leaderboard (`board`, the stage's stored best results, #699);
  * - live events (`PultEvent`, fire-and-forget): clock, charts, input, judgements, calibration.
  */
 import type { InstrumentKind } from '../../../../modules/music-score';
@@ -17,6 +18,12 @@ import type { Judgement } from '../../stage/logic/charts';
 import type { BeatRange } from '../../stage/logic/judging';
 import type { PlayState, StageMode } from '../../stage/engine/types';
 import type { PackedChart } from './pultSong';
+import {
+  leaderboard,
+  toLeaderboardRow,
+  type LeaderboardRow,
+  type SongResult,
+} from '../../stage/logic/songResults';
 
 /** A part of the stage's song as a pult can pick it. */
 export interface PultPart {
@@ -42,18 +49,27 @@ export interface PultSong {
   parts: PultPart[];
 }
 
+/** The stage's leaderboard of one song (#699): its best results, top `PULT_BOARD_ROWS` only. */
+export interface PultBoard {
+  songKey: string;
+  rows: LeaderboardRow[];
+}
+
 export interface PultRoomState {
-  /** Player id of the stage; only it may change song and play state. */
+  /** Player id of the stage; only it may change song, play state and leaderboard. */
   hostId: string;
   song: PultSong | null;
   play: PlayState;
   members: PultMember[];
+  /** Leaderboard of the song on stage; null before the stage sent one or after a song change. */
+  board: PultBoard | null;
 }
 
 export type PultRoomAction =
   | { type: 'JOIN'; member: PultMember }
   | { type: 'LEAVE'; id: string }
-  | { type: 'STAGE'; song: PultSong | null; play: PlayState };
+  | { type: 'STAGE'; song: PultSong | null; play: PlayState }
+  | { type: 'BOARD'; board: PultBoard };
 
 /** What a player did on their pult, for the stage's display: a lane (key, string, drum lane) or their voice. */
 export type PultInput = { kind: 'lane'; lane: number } | { kind: 'voice'; pitch: number | null };
@@ -105,6 +121,8 @@ export type PultEvent =
   | { kind: 'click-plan'; from: string; to: string; id: number; times: number[] };
 
 export const PULT_MAX_MEMBERS = 4;
+/** Rows of the leaderboard the stage shares; keeps the room state small. */
+export const PULT_BOARD_ROWS = 10;
 export const PULT_GAME_KEY = 'melodiq-notes-pult';
 
 export const initialPultRoom = (hostId: string): PultRoomState => ({
@@ -112,6 +130,7 @@ export const initialPultRoom = (hostId: string): PultRoomState => ({
   song: null,
   play: 'idle',
   members: [],
+  board: null,
 });
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
@@ -138,12 +157,47 @@ export function pultRoomReducer(state: PultRoomState, action: PultRoomAction): P
       if (state.play === action.play && same(state.song, action.song)) return state;
       const parts = new Set(action.song?.parts.map((p) => p.id) ?? []);
       const members = state.members.filter((m) => parts.has(m.partId));
-      return { ...state, song: action.song, play: action.play, members };
+      const board = state.board?.songKey === action.song?.key ? state.board : null;
+      return { ...state, song: action.song, play: action.play, members, board };
+    }
+    case 'BOARD': {
+      const board = parsePultBoard(action.board);
+      if (!board || board.songKey !== state.song?.key || same(state.board, board)) return state;
+      return { ...state, board };
     }
   }
 }
 
-/** A pult may only join or leave as itself; song and play state belong to the stage. */
+/** The leaderboard the stage shares for a song: its best `PULT_BOARD_ROWS` results. */
+export const pultBoardOf = (results: SongResult[], songKey: string): PultBoard => ({
+  songKey,
+  rows: leaderboard(results, songKey).slice(0, PULT_BOARD_ROWS).map(toLeaderboardRow),
+});
+
+const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+
+function isBoardRow(v: unknown): v is LeaderboardRow {
+  if (!v || typeof v !== 'object') return false;
+  const r = v as Record<string, unknown>;
+  return (
+    isNum(r.rank) &&
+    (r.player === null || (typeof r.player === 'string' && r.player.length > 0)) &&
+    isNum(r.seat) &&
+    typeof r.inst === 'string' &&
+    isNum(r.score)
+  );
+}
+
+/** Checks a leaderboard that came over the network; drops it when malformed or too long. */
+export function parsePultBoard(raw: unknown): PultBoard | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const b = raw as Record<string, unknown>;
+  if (typeof b.songKey !== 'string' || !Array.isArray(b.rows)) return null;
+  if (b.rows.length > PULT_BOARD_ROWS || !b.rows.every(isBoardRow)) return null;
+  return { songKey: b.songKey, rows: b.rows };
+}
+
+/** A pult may only join or leave as itself; song, play state and leaderboard belong to the stage. */
 export function pultRoomAllows(state: PultRoomState, action: PultRoomAction, from: string) {
   if (action.type === 'JOIN') return action.member.id === from;
   if (action.type === 'LEAVE') return action.id === from || from === state.hostId;

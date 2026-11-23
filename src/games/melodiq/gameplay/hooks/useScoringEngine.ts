@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { type PlayerRuntime } from './PlayerRuntime';
 import { type PitchResult } from '../../audio/MicrophoneManager';
 import { type RatingType } from '../ScoreDisplay';
-import { type Note } from '../../parser';
+import { activeNoteIndex, pointsPerBeat } from '../logic/noteScoring';
 import { notesOfTrack, type UseScoringEngineProps } from './scoringEngineTypes';
 
 export type { PlaybackUpdateState } from './scoringEngineTypes';
@@ -88,14 +88,7 @@ export function useScoringEngine({
           const notesSource = notesOfTrack(parsedSong, tIdx);
 
           if (notesSource) {
-            const activeNote = notesSource.find(
-              (n: Note) =>
-                n.type !== '-' &&
-                n.type !== 'R' &&
-                n.type !== 'G' &&
-                currentBeat >= n.start &&
-                currentBeat <= n.start + n.duration,
-            );
+            const activeNote = notesSource[activeNoteIndex(notesSource, currentBeat)];
 
             if (activeNote) {
               pitch = {
@@ -132,17 +125,10 @@ export function useScoringEngine({
         const currentScoreWeight =
           trackScoreWeights.length > tIdx ? trackScoreWeights[tIdx] : trackScoreWeights[0] || 1;
 
-        const activeNoteIndex = notesSource.findIndex(
-          (n) =>
-            n.type !== '-' &&
-            n.type !== 'R' &&
-            n.type !== 'G' &&
-            currentBeat >= n.start &&
-            currentBeat <= n.start + n.duration,
-        );
+        const activeIndex = activeNoteIndex(notesSource, currentBeat);
 
-        if (activeNoteIndex !== -1) {
-          const note = notesSource[activeNoteIndex];
+        if (activeIndex !== -1) {
+          const note = notesSource[activeIndex];
           const targetPitch = note.pitch;
           const sungPitch = pitch.note;
 
@@ -150,17 +136,11 @@ export function useScoringEngine({
           const semitoneDiff = Math.min(diff, 12 - diff);
 
           if (semitoneDiff < 1.2) {
-            // Standard UltraStar target score is 10,000, we limit it to 1,000 points per track
-            const totalTrackBeats = notesSource
-              .filter((n) => n.type !== '-' && n.type !== 'R' && n.type !== 'G')
-              .reduce(
-                (sum, n) => sum + n.duration * (n.type === '*' ? goldenNoteMultiplier : 1),
-                0,
-              );
-            const pointsPerBeat = totalTrackBeats > 0 ? 1000 / totalTrackBeats : 10;
-
             const durationUnitsCovered = deltaTimeMs / beatDuration;
-            let points = durationUnitsCovered * pointsPerBeat * currentScoreWeight;
+            let points =
+              durationUnitsCovered *
+              pointsPerBeat(notesSource, goldenNoteMultiplier) *
+              currentScoreWeight;
             if (note.type === '*') points *= goldenNoteMultiplier;
 
             if (!player.trackScores[tIdx]) player.trackScores[tIdx] = 0;
@@ -168,7 +148,7 @@ export function useScoringEngine({
             player.score = Math.round(Object.values(player.trackScores).reduce((a, b) => a + b, 0));
 
             const activeSegment = player.activeSegments[tIdx];
-            const wasHitting = activeSegment ? activeSegment.noteIndex === activeNoteIndex : false;
+            const wasHitting = activeSegment ? activeSegment.noteIndex === activeIndex : false;
 
             if (!wasHitting) {
               player.combo += 1;
@@ -206,20 +186,20 @@ export function useScoringEngine({
               if (
                 activeSeg &&
                 activeSeg.trackIndex === tIdx &&
-                activeSeg.noteIndex === activeNoteIndex
+                activeSeg.noteIndex === activeIndex
               ) {
                 activeSeg.endBeat = currentBeat;
               } else {
                 const newSegment = {
-                  noteIndex: activeNoteIndex,
+                  noteIndex: activeIndex,
                   startBeat: currentBeat,
                   endBeat: currentBeat,
                   trackIndex: tIdx,
                 };
                 player.activeSegments[tIdx] = newSegment;
 
-                if (!record[activeNoteIndex]) record[activeNoteIndex] = [];
-                record[activeNoteIndex].push(newSegment);
+                if (!record[activeIndex]) record[activeIndex] = [];
+                record[activeIndex].push(newSegment);
               }
             }
           } else {

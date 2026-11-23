@@ -150,11 +150,11 @@ flowchart LR
 ```
 
 - **Execution Flow**:
-  1. **`gates`**: Runs the blocking production dependency audit (`npm run check:security`), hygiene, scripts unit tests, component budget check, architecture check, ESLint, vitest frontend tests, production web build, and companion server tests. If any gate fails, no release artifacts are produced.
+  1. **`gates`**: Runs the blocking production dependency audit (`npm run check:security`), hygiene, the dependency licence allow-list (`npm run check:licences`), scripts unit tests, component budget check, architecture check, ESLint, vitest frontend tests, production web build, and companion server tests. If any gate fails, no release artifacts are produced.
   2. **`create-release`**: Atomically creates a single GitHub Release in `--draft` mode with generated release notes.
   3. **Parallel artifact build**:
      - **Android APK (`build-android`)**: Compiles web bundle, runs `npx cap sync android`. If `ANDROID_KEYSTORE_BASE64` secret is configured, signs `nexumia.apk` with the production release keystore via `./gradlew assembleRelease`; without it a tag release fails with an error, so no debug-signed APK is ever published; a manual run builds `nexumia-debug.apk` and keeps it as a workflow artifact (#590). Uploads the signed `nexumia.apk` to the draft release.
-     - **Server Binaries (`build-server-binaries`)**: runs `npm run package` in `server/` and bundles Linux (`tar.gz`), Windows (`.zip`) and macOS (`tar.gz`) archives with the launchers from `server/release-scripts/`. Also ships `scripts/align_lyrics.py` per archive. (Broken between 2026-09-13 and PR #394, when `server/package.json` had no `package` script.)
+     - **Server Binaries (`build-server-binaries`)**: runs `npm run package` in `server/` and bundles Linux (`tar.gz`), Windows (`.zip`) and macOS (`tar.gz`) archives with the launchers from `server/release-scripts/`. Also ships `scripts/align_lyrics.py` per archive. Every archive also gets `LICENSE` and a generated `THIRD_PARTY_LICENSES.txt` (`node scripts/check-licences.mjs --notice server`, #594). (Broken between 2026-09-13 and PR #394, when `server/package.json` had no `package` script.)
      - **SBOMs (`sbom`)**: `anchore/sbom-action` writes one CycloneDX SBOM per lockfile (`nexumia-sbom.cdx.json`, `nexumia-server-sbom.cdx.json`, `nexumia-signaling-sbom.cdx.json`), attests and attaches them.
      - **Docker Publishing (`build-docker`)**: Calls the reusable `.github/workflows/docker-publish.yml` to build and push `base`, `full` and signaling images to Docker Hub and GHCR. The caller job grants `packages: write`, `id-token: write` and `attestations: write`, which a called workflow cannot raise on its own.
   4. **`publish-release`**: Once all parallel packaging jobs succeed, undrafts the release via `gh release edit "$TAG" --draft=false`. Releases never appear in half-baked or corrupted states.
@@ -238,7 +238,7 @@ The `main` branch is protected via a repository ruleset (`.github/rulesets/main.
 
 - **Pull Request Required**: Direct pushes to `main` are restricted; code enters through reviewed and tested PRs.
 - **Required Status Checks**:
-  1. `Deterministic Prechecks (no install)`: Repository hygiene, actionlint, i18n parity, test:scripts.
+  1. `Deterministic Prechecks (no install)`: Repository hygiene, actionlint, i18n parity, test:scripts, `reuse lint` (`fsfe/reuse-action`) and `npm run check:licences` ([dependencies](../tech/dependencies.md)).
   2. `CI Quality Gate (Aggregator)`: Single immutable aggregator check verifying that `static-analysis`, `lint`, `test`, `build`, and `server-validate` all completed successfully.
 - **Non-Fast-Forward Blocked**: Force pushes and branch deletions are disabled.
 

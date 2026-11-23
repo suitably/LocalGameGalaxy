@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { EmptyState } from '../../../components/common/EmptyState';
 import StarsRoundedIcon from '@mui/icons-material/StarsRounded';
+import VolunteerActivismRoundedIcon from '@mui/icons-material/VolunteerActivismRounded';
 import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import PersonRemoveRoundedIcon from '@mui/icons-material/PersonRemoveRounded';
@@ -25,6 +26,7 @@ import { transitionOf } from '../../../lib/motion';
 export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ lobby }) => {
   const { t } = useTranslation();
   const { setEditNameOpen, setEditNameInput, players, amIHost, removePlayer, setWatching } = lobby;
+  const { setAcceptHelp } = lobby;
   const me = players.find((p) => p.id === universalPartyManager.getMyPlayerId());
   return (
     <>
@@ -57,7 +59,19 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
                     <Typography variant="body2" fontWeight={isMe ? 800 : 600} component="span">
                       {p.name} {isMe ? `(${t('common.you', 'Du')})` : ''}
                     </Typography>
+                    {lobby.stammtisch.isAway(p.id) && (
+                      <Typography variant="caption" color="text.secondary" component="span">
+                        {t('party.stammtisch.away')}
+                      </Typography>
+                    )}
                     {p.isHost && <StarsRoundedIcon sx={{ color: 'warning.main', fontSize: 18 }} />}
+                    {p.helpers && (
+                      <Tooltip title={t('party.help.badge')}>
+                        <VolunteerActivismRoundedIcon
+                          sx={{ color: 'primary.text', fontSize: 18 }}
+                        />
+                      </Tooltip>
+                    )}
                     {p.spectator && (
                       <Tooltip title={t('party.spectatorBadge', 'Zuschauer')}>
                         <VisibilityRoundedIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
@@ -107,6 +121,7 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
                       : theme.palette.background.default,
                   boxShadow: 'none',
                   cursor: isMe ? 'pointer' : 'default',
+                  opacity: lobby.stammtisch.isAway(p.id) ? 0.55 : 1,
                   transition: transitionOf(['background-color', 'border-color', 'box-shadow']),
                   '&:hover': isMe
                     ? {
@@ -122,6 +137,26 @@ export const PartyPlayerRoster: React.FC<{ lobby: PartyLobbyController }> = ({ l
             <EmptyState dense message={t('party.waitingForGuests', 'Warte auf Mitspieler...')} />
           )}
         </Box>
+
+        {me && !me.spectator && (
+          <FormControlLabel
+            sx={{ mt: 1.5, display: 'flex' }}
+            control={
+              <Switch
+                checked={Boolean(me.helpers)}
+                onChange={(e) => setAcceptHelp(e.target.checked)}
+              />
+            }
+            label={
+              <Typography variant="body2">
+                {t('party.help.accept')}
+                <Typography variant="caption" color="text.secondary" component="span" ml={1}>
+                  {t('party.help.acceptHint')}
+                </Typography>
+              </Typography>
+            }
+          />
+        )}
 
         {me && (
           <FormControlLabel

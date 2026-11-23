@@ -137,6 +137,7 @@ export const QwixxRow: React.FC<QwixxRowProps> = ({
                         cell={cell}
                         color={seg.color}
                         chainKey={cell.chainId ? `${rowDef.id}-${num}` : undefined}
+                        target={`qwixx.cell.${rowDef.id}.${num}`}
                         isCrossed={isCrossed}
                         isSubCrossed={!!rowState.subCrossed?.includes(num)}
                         isClickable={isCellClickable(cell, numbers, rowState)}

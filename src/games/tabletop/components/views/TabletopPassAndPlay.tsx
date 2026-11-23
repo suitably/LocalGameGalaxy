@@ -21,6 +21,8 @@ import {
   seatsForHands,
   SPECTATOR_SEAT_ID,
 } from '../../logic/seatLogic';
+import { seatIndexOf } from '../../logic/turnOrder';
+import { HandRequestsLayer } from '../requests/HandRequestsLayer';
 
 export const TabletopPassAndPlay: React.FC<{
   state: TabletopGameState;
@@ -92,6 +94,23 @@ export const TabletopPassAndPlay: React.FC<{
         currentName={current?.name}
         sx={{ position: 'absolute', left: 12, bottom: { xs: 76, sm: 12 }, zIndex: 1100 }}
       />
+      {/* #557: requests act for the revealed seat only; the cover hides them during handover */}
+      {!coveredFor && (
+        <HandRequestsLayer
+          game={state.game}
+          seat={seatIndexOf(state.game.widgets, currentId ?? undefined)}
+          dispatch={dispatch}
+          buttonSx={{
+            position: 'absolute',
+            left: 12,
+            bottom: { xs: 128, sm: 64 },
+            zIndex: 1100,
+            bgcolor: 'background.paper',
+            boxShadow: 3,
+            '&:hover': { bgcolor: 'background.paper' },
+          }}
+        />
+      )}
       {coveredFor && (
         <HandoverCover
           player={coveredFor}

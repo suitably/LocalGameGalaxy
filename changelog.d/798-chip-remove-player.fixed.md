@@ -1,0 +1,1 @@
+- **Player lists: removing a player with the X works again** (#798): the enlarged touch area of chips covered their X, so tapping it removed nobody. In a party room the card-game setup now also lets the host take a player out of the match with the X.

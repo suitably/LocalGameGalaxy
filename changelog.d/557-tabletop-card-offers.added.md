@@ -1,0 +1,1 @@
+- **Tabletop: give cards to another player** (#557): the "Give cards" tab offers chosen or random cards from your hand to another player, who takes them into their hand or says no; a waiting offer can be changed or withdrawn.

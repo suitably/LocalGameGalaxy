@@ -1,0 +1,1 @@
+- **Spieltisch: share games by file or companion library**: the share button of a game card exports it as `.pcio` / `.json` or saves it to the companion server's library. Submitting a game as a GitHub pull request is gone, so the tabletop no longer needs a GitHub token. Imported Workshop games still cannot be exported (#703).

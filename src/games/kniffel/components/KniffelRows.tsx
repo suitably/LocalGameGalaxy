@@ -53,6 +53,8 @@ interface ScoreCellProps {
   clickable: boolean;
   highlight: boolean;
   onClick: () => void;
+  /** Name for party "tap here" markers (`data-room-target`). */
+  target?: string;
 }
 
 export const KniffelScoreCell: React.FC<ScoreCellProps> = ({
@@ -61,10 +63,12 @@ export const KniffelScoreCell: React.FC<ScoreCellProps> = ({
   clickable,
   highlight,
   onClick,
+  target,
 }) => {
   const scored = value !== null;
   return (
     <Box
+      data-room-target={target}
       onClick={onClick}
       sx={{
         flex: 1,
@@ -139,18 +143,25 @@ export const KniffelSumRow: React.FC<{ label: string; values: (number | string)[
 
 interface BonusRowProps {
   players: KniffelPlayer[];
+  /** Points per further Kniffel (house rules 50, international 100). */
+  points: number;
   canScore: (playerIdx: number) => boolean;
   onClick: (playerIdx: number) => void;
 }
 
 /** Extra-Kniffel bonus: custom row because it can be scored several times. */
-export const KniffelBonusRow: React.FC<BonusRowProps> = ({ players, canScore, onClick }) => {
+export const KniffelBonusRow: React.FC<BonusRowProps> = ({
+  players,
+  points,
+  canScore,
+  onClick,
+}) => {
   const { t } = useTranslation();
   return (
     <Box sx={rowSx}>
       <KniffelLabelCell
-        label={t('games.kniffel.cat.kniffel_bonus', 'Kniffel-Bonus')}
-        hint={t('games.kniffel.hint.kniffel_bonus', 'Jeder weitere · 50')}
+        label={t('games.kniffel.cat.kniffel_bonus', 'Fünferpasch-Bonus')}
+        hint={t('games.kniffel.hint.kniffel_bonus', { points })}
       />
       {players.map((p, idx) => {
         const count = p.scores.kniffel_bonus;
@@ -159,7 +170,7 @@ export const KniffelBonusRow: React.FC<BonusRowProps> = ({ players, canScore, on
           <KniffelScoreCell
             key={p.id}
             playerIdx={idx}
-            value={count ? `${count}x (50)` : null}
+            value={count ? `${count}x (${points})` : null}
             clickable={can}
             highlight={can}
             onClick={() => onClick(idx)}

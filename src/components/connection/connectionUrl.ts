@@ -2,6 +2,8 @@
  * Builds the full client connection URL for a phone to scan and join via WebRTC.
  * Swaps localhost/127.0.0.1 tracker IPs with the actual reachable host domain/IP if available.
  */
+import { getRoomKey, roomKeyParam } from '../../modules/sync/roomKeys';
+
 export interface BuildDeviceConnectionUrlOptions {
   baseUrl?: string;
   clientPath: string;
@@ -12,6 +14,8 @@ export interface BuildDeviceConnectionUrlOptions {
    * and the lobby forwards the phone to the game; trackers ride along in the link.
    */
   lobby?: boolean;
+  /** Lobby links: the room's end-to-end key for the fragment (ADR 0009); default: stored key. */
+  roomKey?: string | null;
 }
 
 export function buildDeviceConnectionUrl({
@@ -20,6 +24,7 @@ export function buildDeviceConnectionUrl({
   partyId,
   trackerUrls = [],
   lobby = false,
+  roomKey = lobby ? getRoomKey(partyId) : null,
 }: BuildDeviceConnectionUrlOptions): string {
   const defaultOrigin =
     typeof window !== 'undefined' && window.location?.origin
@@ -40,7 +45,7 @@ export function buildDeviceConnectionUrl({
 
   if (lobby && partyId) {
     url = new URL(`${url.origin}/`);
-    url.hash = `/party?room=${encodeURIComponent(partyId)}`;
+    url.hash = `/party?room=${encodeURIComponent(partyId)}${roomKeyParam(roomKey)}`;
   } else if (partyId) {
     url.searchParams.set('party', partyId);
   }

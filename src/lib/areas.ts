@@ -1,7 +1,6 @@
-import type { GameCategory } from './gameRegistry';
 import type { PiecePalette } from '../themeTokens';
 
-/** Hub areas (DESIGN.md §8.2): five umbrella groups over the game categories. */
+/** Hub areas (DESIGN.md §8.2): the groups every catalogue entry belongs to. */
 export type AreaId = 'music' | 'dice' | 'cards' | 'party' | 'puzzle';
 
 export interface AreaDefinition {
@@ -20,23 +19,10 @@ export const AREAS: readonly AreaDefinition[] = [
   { id: 'puzzle', color: 'purple', labelKey: 'hub.categories.puzzle' },
 ];
 
-const AREA_BY_CATEGORY: Record<Exclude<GameCategory, 'all'>, AreaId> = {
-  music: 'music',
-  dice: 'dice',
-  cards: 'cards',
-  party: 'party',
-  drawing: 'party',
-  social_deduction: 'party',
-  puzzle: 'puzzle',
-};
+export const areaById = (id: AreaId): AreaDefinition => AREAS.find((a) => a.id === id) ?? AREAS[0];
 
-export function areaOfCategory(category: Exclude<GameCategory, 'all'>): AreaDefinition {
-  const id = AREA_BY_CATEGORY[category];
-  return AREAS.find((a) => a.id === id) ?? AREAS[0];
-}
-
-/** Areas that contain at least one of the given categories, in `AREAS` order. */
-export function areasFor(categories: readonly Exclude<GameCategory, 'all'>[]): AreaDefinition[] {
-  const used = new Set(categories.map((c) => AREA_BY_CATEGORY[c]));
+/** Areas that contain at least one of the given entries, in `AREAS` order. */
+export function areasFor(entries: readonly { area: AreaId }[]): AreaDefinition[] {
+  const used = new Set(entries.map((e) => e.area));
   return AREAS.filter((a) => used.has(a.id));
 }

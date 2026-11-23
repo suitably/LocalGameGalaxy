@@ -1,11 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { getYouTubeVideoId } from './youtubeApi';
-import { parseUltraStarTxt } from '../parser';
+import { parseUltraStarTxt } from '../../../modules/music-score';
 
 describe('Video Dual-Path: YouTube ID Extraction', () => {
   it('extracts ID from standard watch URL', () => {
     expect(getYouTubeVideoId('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ');
-    expect(getYouTubeVideoId('https://www.youtube.com/watch?feature=related&v=dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ');
+    expect(getYouTubeVideoId('https://www.youtube.com/watch?feature=related&v=dQw4w9WgXcQ')).toBe(
+      'dQw4w9WgXcQ',
+    );
   });
 
   it('extracts ID from short youtu.be URL', () => {
@@ -15,7 +17,9 @@ describe('Video Dual-Path: YouTube ID Extraction', () => {
 
   it('extracts ID from embed URLs including nocookie', () => {
     expect(getYouTubeVideoId('https://www.youtube.com/embed/dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ');
-    expect(getYouTubeVideoId('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ')).toBe('dQw4w9WgXcQ');
+    expect(getYouTubeVideoId('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ')).toBe(
+      'dQw4w9WgXcQ',
+    );
   });
 
   it('extracts ID from USDB tags', () => {
@@ -30,9 +34,9 @@ describe('Video Dual-Path: YouTube ID Extraction', () => {
   });
 
   it('handles URL-encoded values', () => {
-    expect(
-      getYouTubeVideoId('https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DdQw4w9WgXcQ')
-    ).toBe('dQw4w9WgXcQ');
+    expect(getYouTubeVideoId('https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DdQw4w9WgXcQ')).toBe(
+      'dQw4w9WgXcQ',
+    );
   });
 
   it('returns null for local media filenames or invalid strings', () => {

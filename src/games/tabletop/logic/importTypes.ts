@@ -23,6 +23,8 @@ export interface ImportReport {
   buttons?: { total: number; translated: number };
   /** Script functions the Lua translator left out, with the reason (#704). */
   untranslated?: UntranslatedScriptFunction[];
+  /** TTS API names the Lua runtime met without a shim (#705, `luaShim.ts`). */
+  unshimmed?: string[];
 }
 
 /**
@@ -53,10 +55,23 @@ export interface ScriptEntry {
   xmlUi?: string;
   tags?: string[];
   gmNotes?: string;
+  /** TTS `Description`; only the Lua runtime reads and writes it (#705). */
+  description?: string;
 }
 
 /** Script sidecar of an imported game: Global plus per-object entries keyed by TTS GUID. */
 export interface GameScripts {
   global?: ScriptEntry;
   objects: Record<string, ScriptEntry>;
+  /** World bounds the importer projected with, for script positions (`luaProjection.ts`, #705). */
+  projection?: { minX: number; maxZ: number; scale: number; margin: number };
+  /** TTS player colour of each seat index (`assignSeats`), for `Player[color]` (#705). */
+  seatColors?: string[];
+  /** TTS `Notes` panel text the Lua runtime keeps (#705). */
+  notes?: string;
+}
+
+/** A game file that names a built-in rule script (`scripted/`, e.g. `maumau`); never code. */
+export interface RuleScriptRef {
+  ruleScript?: string;
 }

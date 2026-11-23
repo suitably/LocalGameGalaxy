@@ -1,4 +1,4 @@
-import type { KniffelCategory } from './types';
+import type { KniffelCategory, KniffelRules, KniffelScores } from './types';
 
 // Returns the count of each die face (1-6)
 const getCounts = (dice: number[]) => {
@@ -72,7 +72,22 @@ export const calculateChance = (dice: number[]): number => {
   return getSum(dice);
 };
 
-export const evaluatePossibleScores = (dice: number[]): Record<KniffelCategory, number> => {
+/** Points of each further Kniffel under the rules. */
+export const kniffelBonusPoints = (rules: KniffelRules = 'kniffel'): number =>
+  rules === 'international' ? 100 : 50;
+
+/**
+ * Scores the dice would give per category. `international`: a five of a kind is a joker for Full
+ * House and the straights once the Kniffel box is filled, and only a scored 50 earns the bonus.
+ */
+export const evaluatePossibleScores = (
+  dice: number[],
+  rules: KniffelRules = 'kniffel',
+  scores?: Pick<KniffelScores, 'kniffel'>,
+): Record<KniffelCategory, number> => {
+  const fiveOfAKind = calculateKniffel(dice) > 0;
+  const joker = rules === 'international' && fiveOfAKind && scores?.kniffel != null;
+  const bonusAllowed = rules !== 'international' || scores?.kniffel == null || scores.kniffel > 0;
   return {
     ones: calculateUpperScore(dice, 1),
     twos: calculateUpperScore(dice, 2),
@@ -82,12 +97,12 @@ export const evaluatePossibleScores = (dice: number[]): Record<KniffelCategory, 
     sixes: calculateUpperScore(dice, 6),
     three_of_a_kind: calculateThreeOfAKind(dice),
     four_of_a_kind: calculateFourOfAKind(dice),
-    full_house: calculateFullHouse(dice),
-    small_straight: calculateSmallStraight(dice),
-    large_straight: calculateLargeStraight(dice),
+    full_house: joker ? 25 : calculateFullHouse(dice),
+    small_straight: joker ? 30 : calculateSmallStraight(dice),
+    large_straight: joker ? 40 : calculateLargeStraight(dice),
     kniffel: calculateKniffel(dice),
     chance: calculateChance(dice),
-    kniffel_bonus: calculateKniffel(dice) > 0 ? 50 : 0,
+    kniffel_bonus: fiveOfAKind && bonusAllowed ? kniffelBonusPoints(rules) : 0,
   };
 };
 
@@ -100,7 +115,10 @@ export const getUpperSectionBonus = (scores: Record<string, number | null>): num
   return getUpperSectionSum(scores) >= 63 ? 35 : 0;
 };
 
-export const getLowerSectionSum = (scores: Record<string, number | null>): number => {
+export const getLowerSectionSum = (
+  scores: Record<string, number | null>,
+  rules: KniffelRules = 'kniffel',
+): number => {
   const lowerKeys = [
     'three_of_a_kind',
     'four_of_a_kind',
@@ -111,10 +129,15 @@ export const getLowerSectionSum = (scores: Record<string, number | null>): numbe
     'chance',
   ];
   const sum = lowerKeys.reduce((sum, key) => sum + (scores[key] || 0), 0);
-  const bonusScore = (scores['kniffel_bonus'] || 0) * 50;
+  const bonusScore = (scores['kniffel_bonus'] || 0) * kniffelBonusPoints(rules);
   return sum + bonusScore;
 };
 
-export const getTotalScore = (scores: Record<string, number | null>): number => {
-  return getUpperSectionSum(scores) + getUpperSectionBonus(scores) + getLowerSectionSum(scores);
+export const getTotalScore = (
+  scores: Record<string, number | null>,
+  rules: KniffelRules = 'kniffel',
+): number => {
+  return (
+    getUpperSectionSum(scores) + getUpperSectionBonus(scores) + getLowerSectionSum(scores, rules)
+  );
 };

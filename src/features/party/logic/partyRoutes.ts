@@ -2,9 +2,13 @@
  * Party lobby routing and share links [ID: LOGIC-PARTY-ROUTES]
  */
 import { parseGameUrlParams } from '../../../modules/sharing';
+import { roomKeyParam } from '../../../modules/sync/roomKeys';
+import { launchablePartyTypes } from '../../../lib/catalog/views';
 import type { PartyGameType, RoomDiceGame } from './universalPartyManager';
 
-const ROOM_DICE_GAMES: readonly RoomDiceGame[] = ['knister'];
+/** Wire values of the room dice games; the catalogue test checks they match the dice entries. */
+// game-list-ok
+export const ROOM_DICE_GAMES: readonly RoomDiceGame[] = ['knister', 'kniffel', 'qwixx'];
 
 /** Dice games that run in the party room with a sheet on every device. */
 export const isRoomDiceGame = (id: string | null | undefined): id is RoomDiceGame =>
@@ -22,16 +26,6 @@ export function resolveLobbyEntry(
   return fromUrl ? { kind: 'join', roomId: fromUrl.toUpperCase().trim() } : { kind: 'create' };
 }
 
-/** Party games the lobby can preselect via `launch=` (tabletop additionally needs `gameId`). */
-const LAUNCHABLE_GAMES: readonly PartyGameType[] = [
-  'guessart',
-  'garticphone',
-  'storyteller',
-  'melodiq-notes',
-  'melodiq',
-  ...ROOM_DICE_GAMES,
-];
-
 export type PendingLaunch = { gameType: PartyGameType; gameId?: string };
 
 /**
@@ -45,7 +39,7 @@ export function resolvePendingLaunch(
   const launch = params.get('launch');
   const gameId = params.get('gameId');
   if (launch === 'tabletop') return gameId ? { gameType: 'tabletop', gameId } : null;
-  return LAUNCHABLE_GAMES.includes(launch as PartyGameType)
+  return launchablePartyTypes().includes(launch as PartyGameType)
     ? { gameType: launch as PartyGameType }
     : null;
 }
@@ -105,22 +99,29 @@ export function getGameRoute({
     return `/games/melodiq?role=client&party=${roomId}${extra}`;
   }
   if (gameType === 'storyteller') return `/games/storyteller?room=${roomId}`;
+  if (gameType === 'imposter') return `/games/imposter?room=${roomId}`;
+  if (gameType === 'werewolf') return `/games/werewolf?room=${roomId}`;
   if (isRoomDiceGame(gameType)) return `/games/${gameType}?room=${roomId}`;
   return '/games/guessart';
 }
 
-/** Invite link for the lobby; carries the companion server as `gameRelay` when it is active. */
+/**
+ * Invite link for the lobby; carries the room key in the fragment (never sent to a server,
+ * ADR 0009) and the companion server as `gameRelay` when it is active.
+ */
 export function buildPartyShareUrl({
   origin,
   pathname,
   roomId,
+  roomKey,
   relayUrl,
 }: {
   origin: string;
   pathname: string;
   roomId: string;
+  roomKey?: string | null;
   relayUrl?: string | null;
 }): string {
-  const url = `${origin}${pathname}#/party?room=${roomId}`;
+  const url = `${origin}${pathname}#/party?room=${roomId}${roomKeyParam(roomKey)}`;
   return relayUrl ? `${url}&gameRelay=${encodeURIComponent(relayUrl)}` : url;
 }
