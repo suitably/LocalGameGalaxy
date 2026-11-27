@@ -1,0 +1,1 @@
+Melodiq: the TV now follows the host's lyrics position, size, zoom and line count while casting, also when they are changed from an admin phone's host settings (no more flipped or one-step-late values).
