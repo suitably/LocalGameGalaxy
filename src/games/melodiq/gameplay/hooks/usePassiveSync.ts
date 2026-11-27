@@ -5,6 +5,7 @@ import { type PassiveGameState } from '../../types';
 import { type ScoreDisplayHandle } from '../ScoreDisplay';
 import { PASSIVE_PLAY_RETRY_MS, shouldRetryPassivePlay } from '../logic/passivePlayback';
 import { createRemoteClock } from '../logic/remoteClock';
+import { applySungSegments } from '../../logic/tvStateStream';
 import {
   correctDrift,
   type DriftDirection,
@@ -97,7 +98,11 @@ export function usePassiveSync({
           rt.pitchRef.current = pState.currentPitch;
           rt.activeSegments = pState.activeSegments;
           if (pState.sungSegments) {
-            rt.segmentsRef.current = pState.sungSegments;
+            rt.segmentsRef.current = applySungSegments(
+              rt.segmentsRef.current,
+              pState.sungSegments,
+              pState.sungSegmentsDelta,
+            );
           }
           rt.trackScores = pState.trackScores;
           rt.score = pState.score;

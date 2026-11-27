@@ -4,6 +4,10 @@ import { type PitchResult } from '../../audio/MicrophoneManager';
 import { type RatingType } from '../ScoreDisplay';
 import { activeNoteIndex, pointsPerBeat } from '../logic/noteScoring';
 import { notesOfTrack, type UseScoringEngineProps } from './scoringEngineTypes';
+import { startSteadyTicker } from '../../../../lib/utils/steadyTicker';
+
+/** Pace of the scoring loop while the host window gets no animation frames (hidden/covered). */
+const BACKGROUND_TICK_MS = 33;
 
 export type { PlaybackUpdateState } from './scoringEngineTypes';
 
@@ -235,6 +239,13 @@ export function useScoringEngine({
     ],
   );
 
+  // One pending frame at most: the background ticker below also calls the loop, and frames
+  // requested while the page is hidden must not pile up into parallel loops.
+  const scheduleNextFrame = useCallback(() => {
+    cancelAnimationFrame(requestRef.current);
+    requestRef.current = requestAnimationFrame(() => updateLoopRef.current?.());
+  }, []);
+
   const updateLoop = useCallback(() => {
     const now = performance.now();
     let deltaTime = now - lastTimeRef.current;
@@ -297,7 +308,7 @@ export function useScoringEngine({
     }
 
     if (isPassive) {
-      requestRef.current = requestAnimationFrame(() => updateLoopRef.current?.());
+      scheduleNextFrame();
       return;
     }
 
@@ -316,7 +327,7 @@ export function useScoringEngine({
       lastScoreUpdateRef.current = now;
     }
 
-    requestRef.current = requestAnimationFrame(() => updateLoopRef.current?.());
+    scheduleNextFrame();
   }, [
     audioRef,
     isPassive,
@@ -330,6 +341,7 @@ export function useScoringEngine({
     processPlayer,
     setScores,
     virtualTimeRef,
+    scheduleNextFrame,
   ]);
 
   useEffect(() => {
@@ -342,8 +354,19 @@ export function useScoringEngine({
 
     requestRef.current = requestAnimationFrame(() => updateLoopRef.current?.());
 
+    // The host scores and feeds the TV from this loop. A minimized or covered host window gets no
+    // animation frames, so a worker ticker keeps it running then (it idles while frames come).
+    const stopTicker = isPassive
+      ? null
+      : startSteadyTicker(BACKGROUND_TICK_MS, () => {
+          if (performance.now() - lastTimeRef.current > BACKGROUND_TICK_MS * 1.5) {
+            updateLoopRef.current?.();
+          }
+        });
+
     return () => {
+      stopTicker?.();
       cancelAnimationFrame(requestRef.current);
     };
-  }, [ready]);
+  }, [ready, isPassive]);
 }

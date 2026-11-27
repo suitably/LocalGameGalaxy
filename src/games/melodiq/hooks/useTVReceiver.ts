@@ -10,6 +10,7 @@ import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { TvMediaAssembler, type TvMediaManifest } from '../logic/tvMediaTransfer';
 import { useMultiChannelSync } from '../../../modules/sync';
 import { TV_CONTROL_SYNC, type TvControlMessage } from '../logic/syncChannels';
+import { shouldRenderTvState } from '../logic/tvStateStream';
 import {
   parseTvSessionResults,
   SESSION_RESULTS_MESSAGE,
@@ -45,6 +46,10 @@ export const useTVReceiver = () => {
 
   const [activeSong, setActiveSong] = useState<(Song & { initialTime?: number }) | null>(null);
   const [passiveState, setPassiveState] = useState<PassiveGameState | null>(null);
+  const renderedStateRef = useRef<{ state: PassiveGameState | null; at: number }>({
+    state: null,
+    at: 0,
+  });
   const [isConnected, setIsConnected] = useState(false);
   const [downloadingSong, setDownloadingSong] = useState<{ title: string; artist: string } | null>(
     null,
@@ -141,6 +146,7 @@ export const useTVReceiver = () => {
         setDownloadingSong(null);
         setActiveSong(null);
         setPassiveState(null);
+        renderedStateRef.current = { state: null, at: 0 };
         setSessionResults(null);
       } else if (type === SESSION_RESULTS_MESSAGE) {
         setSessionResults(parseTvSessionResults(payload));
@@ -157,8 +163,15 @@ export const useTVReceiver = () => {
         });
       } else if (type === 'GAME_STATE' && payload) {
         const state = payload as unknown as PassiveGameState;
-        setPassiveState(state);
+        // usePassiveSync takes every state from the event; React re-renders only for visible
+        // changes (logic/tvStateStream.ts), not ~30 times a second
         window.dispatchEvent(new CustomEvent('melodiq_tv_game_state', { detail: payload }));
+        const now = performance.now();
+        const last = renderedStateRef.current;
+        if (shouldRenderTvState(last.state, state, now - last.at)) {
+          renderedStateRef.current = { state, at: now };
+          setPassiveState(state);
+        }
       } else if (type === 'PING') {
         publishLocal({ type: 'PONG' });
       }
