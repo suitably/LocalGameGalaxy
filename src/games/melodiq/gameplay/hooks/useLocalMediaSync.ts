@@ -9,6 +9,8 @@ import {
 
 /** Shortest time between two corrective seeks of the vocal stem. */
 const STEM_SEEK_COOLDOWN_MS = 1000;
+/** Shortest time between two corrective seeks (or start attempts) of the background video. */
+const VIDEO_SEEK_COOLDOWN_MS = 2000;
 
 interface UseLocalMediaSyncProps {
   audioRef: React.RefObject<HTMLAudioElement | null>;
@@ -29,6 +31,11 @@ export function useLocalMediaSync({
   // Running rate corrections (hysteresis state of `correctDrift`)
   const stemDirectionRef = useRef<DriftDirection>(0);
   const videoDirectionRef = useRef<DriftDirection>(0);
+  // The video follows the audio and never the other way round; its corrections are rate limited
+  // so a slow decoder is not kept busy with seeks (which can starve the audio on weak devices).
+  const smoothedVideoDriftRef = useRef<number | null>(null);
+  const lastVideoSeekRef = useRef(0);
+  const videoPlayPendingRef = useRef(false);
   // The instrumental is buffering: its clock stands still although it is not paused
   const masterStalledRef = useRef(false);
 
@@ -113,6 +120,7 @@ export function useLocalMediaSync({
         videoRef.current.pause();
       }
       smoothedDriftRef.current = null;
+      smoothedVideoDriftRef.current = null;
       stemDirectionRef.current = 0;
       videoDirectionRef.current = 0;
       return;
@@ -129,26 +137,51 @@ export function useLocalMediaSync({
         const baseRate = audio.playbackRate || 1.0;
         const isAudioPlaying = !audio.paused && !audio.ended && !masterStalledRef.current;
 
-        // Sync Video Play/Pause & Timing
+        // Sync Video Play/Pause & Timing (the video follows; audio and lyrics never wait for it)
         if (video) {
-          if (isAudioPlaying && video.paused && video.readyState >= 2) {
+          if (
+            isAudioPlaying &&
+            video.paused &&
+            video.readyState >= 2 &&
+            !videoPlayPendingRef.current &&
+            now - lastVideoSeekRef.current > VIDEO_SEEK_COOLDOWN_MS
+          ) {
+            // One start attempt at a time: re-seeking every frame while play() is pending
+            // would restart the decoder again and again
+            lastVideoSeekRef.current = now;
+            videoPlayPendingRef.current = true;
+            smoothedVideoDriftRef.current = null;
             video.currentTime = masterTime;
-            video.play().catch(() => {});
+            video
+              .play()
+              .catch(() => {})
+              .finally(() => {
+                videoPlayPendingRef.current = false;
+              });
           } else if (!isAudioPlaying && !video.paused) {
             video.pause();
           }
 
-          if (video.readyState >= 2 && isAudioPlaying && !video.seeking) {
+          if (video.readyState >= 2 && isAudioPlaying && !video.paused && !video.seeking) {
+            const rawDrift = masterTime - video.currentTime;
+            // A video's clock moves in frame steps: smooth it, or the rate flips every frame
+            const jumped = Math.abs(rawDrift) > VIDEO_DRIFT_POLICY.seekAboveSec;
+            const drift = jumped ? rawDrift : smoothDrift(smoothedVideoDriftRef.current, rawDrift);
+            smoothedVideoDriftRef.current = drift;
             const correction = correctDrift(
-              masterTime - video.currentTime,
+              drift,
               baseRate,
               VIDEO_DRIFT_POLICY,
               videoDirectionRef.current,
             );
             if (correction.kind === 'seek') {
-              videoDirectionRef.current = 0;
-              video.currentTime = masterTime;
-              if (video.playbackRate !== baseRate) video.playbackRate = baseRate;
+              if (now - lastVideoSeekRef.current > VIDEO_SEEK_COOLDOWN_MS) {
+                lastVideoSeekRef.current = now;
+                videoDirectionRef.current = 0;
+                smoothedVideoDriftRef.current = null;
+                video.currentTime = masterTime;
+                if (video.playbackRate !== baseRate) video.playbackRate = baseRate;
+              }
             } else {
               videoDirectionRef.current = correction.direction;
               if (video.playbackRate !== correction.rate) video.playbackRate = correction.rate;
@@ -200,6 +233,8 @@ export function useLocalMediaSync({
       rAFRef.current = requestAnimationFrame(syncLoop);
     };
 
+    // Playback was just started (safePlay also starts the video): give that start a moment
+    lastVideoSeekRef.current = performance.now();
     rAFRef.current = requestAnimationFrame(syncLoop);
 
     return () => {

@@ -41,6 +41,12 @@ sources:
 
 - **"Asynchronous" transport:** BroadcastChannel and PresentationConnection deliver in order with low latency; the TV derives a smooth host clock from the timestamps (`createRemoteClock`). Asynchrony adds a constant delay, which the drift policy absorbs. The problem is the volume per message and the work on both ends.
 
+## Status
+
+- #3 done: the YouTube adapter skips `setPlaybackRate` when the rounded rate is unchanged (no iframe call per frame); the drift is then fixed by seeks, at least 2 s apart (`useLocalMediaSync.ts`).
+- #4 done: `usePassiveSync.seekAll` seeks audio and vocal stem only; the video follows the screen's own audio.
+- Related: `safePlay` and `handlePassiveUnblock` no longer wait for the video's `play()`, so audio, lyrics and scoring start without it.
+
 ## Suggested order
 
 1. #3 + #4 (small, YouTube only, no protocol change).

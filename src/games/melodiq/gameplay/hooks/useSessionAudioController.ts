@@ -406,7 +406,8 @@ export function useSessionAudioController({
       const playPromises: Promise<void>[] = [];
       if (audioRef.current) playPromises.push(audioRef.current.play());
       if (vocalsRef.current) playPromises.push(vocalsRef.current.play().catch(() => {}));
-      if (videoRef.current) playPromises.push(videoRef.current.play().catch(() => {}));
+      // The video never holds back audio and lyrics; the media sync aligns it
+      videoRef.current?.play().catch(() => {});
       await Promise.all(playPromises);
       setIsPlaying(true);
       setPassivePlayBlocked(false);

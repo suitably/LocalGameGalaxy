@@ -121,10 +121,11 @@ export function usePassiveSync({
       const hostClock = hostClockRef.current;
       hostClock.update(passiveState.currentTime, passiveState.isPlaying, perfNow);
       const hostTime = hostClock.now(perfNow);
+      // Audio only: the video follows this screen's own audio (useLocalMediaSync), so an audio
+      // resync does not also make the video (e.g. YouTube) seek and rebuffer.
       const seekAll = (time: number) => {
         if (audioRef.current) audioRef.current.currentTime = time;
         if (vocalsRef?.current) vocalsRef.current.currentTime = time;
-        if (videoRef.current) videoRef.current.currentTime = time;
       };
       const retryPlay =
         !isClient &&
