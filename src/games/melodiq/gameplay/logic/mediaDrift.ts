@@ -38,6 +38,18 @@ export const VIDEO_DRIFT_POLICY: DriftPolicy = {
   rateDelta: 0.05,
 };
 
+/**
+ * A YouTube background against the audio. The IFrame API only offers the rates 0.25…2 in
+ * quarter steps, so a 5 % correction rounds back to 1 and never happens; the offset is fixed
+ * with a seek only, at the adapter's own seek tolerance (`createYouTubeVideoAdapter`).
+ */
+export const YOUTUBE_DRIFT_POLICY: DriftPolicy = {
+  engageSec: 0.4,
+  releaseSec: 0.4,
+  seekAboveSec: 0.4,
+  rateDelta: 0,
+};
+
 /** A passive screen's audio (TV) against the host's song clock, which scores the singers. */
 export const FOLLOWER_DRIFT_POLICY: DriftPolicy = {
   engageSec: 0.04,

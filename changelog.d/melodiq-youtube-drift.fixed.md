@@ -1,0 +1,1 @@
+- **Melodiq: smoother YouTube backgrounds**: the background video no longer jumps and rebuffers every few seconds. YouTube cannot speed up or slow down by a few percent, so it is now only re-synced when it is clearly off (more than 0.4 s), never while it buffers, and the TV no longer seeks the video when it re-syncs its audio.

@@ -121,9 +121,13 @@ export function usePassiveSync({
       const hostClock = hostClockRef.current;
       hostClock.update(passiveState.currentTime, passiveState.isPlaying, perfNow);
       const hostTime = hostClock.now(perfNow);
-      const seekAll = (time: number) => {
+      /** Audio and stem only: the video follows the audio (`useLocalMediaSync`), a YouTube seek rebuffers. */
+      const seekAudio = (time: number) => {
         if (audioRef.current) audioRef.current.currentTime = time;
         if (vocalsRef?.current) vocalsRef.current.currentTime = time;
+      };
+      const seekAll = (time: number) => {
+        seekAudio(time);
         if (videoRef.current) videoRef.current.currentTime = time;
       };
       const retryPlay =
@@ -206,7 +210,7 @@ export function usePassiveSync({
             followerDriftRef.current = null;
             followerDirectionRef.current = 0;
             if (audio.playbackRate !== 1) audio.playbackRate = 1;
-            seekAll(hostTime);
+            seekAudio(hostTime);
           }
         }
       }

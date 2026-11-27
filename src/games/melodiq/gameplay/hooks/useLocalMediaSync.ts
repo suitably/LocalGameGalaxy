@@ -5,7 +5,9 @@ import {
   smoothDrift,
   STEM_DRIFT_POLICY,
   VIDEO_DRIFT_POLICY,
+  YOUTUBE_DRIFT_POLICY,
 } from '../logic/mediaDrift';
+import { isYouTubeVideoAdapter } from '../createYouTubeVideoAdapter';
 
 /** Shortest time between two corrective seeks of the vocal stem. */
 const STEM_SEEK_COOLDOWN_MS = 1000;
@@ -142,7 +144,7 @@ export function useLocalMediaSync({
             const correction = correctDrift(
               masterTime - video.currentTime,
               baseRate,
-              VIDEO_DRIFT_POLICY,
+              isYouTubeVideoAdapter(video) ? YOUTUBE_DRIFT_POLICY : VIDEO_DRIFT_POLICY,
               videoDirectionRef.current,
             );
             if (correction.kind === 'seek') {

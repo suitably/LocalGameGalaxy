@@ -5,6 +5,7 @@ import {
   smoothDrift,
   STEM_DRIFT_POLICY,
   VIDEO_DRIFT_POLICY,
+  YOUTUBE_DRIFT_POLICY,
 } from './mediaDrift';
 
 describe('correctDrift', () => {
@@ -99,5 +100,24 @@ describe('smoothDrift', () => {
   it('starts with the first reading and then moves towards new ones', () => {
     expect(smoothDrift(null, 0.02)).toBe(0.02);
     expect(smoothDrift(0.02, 0.01, 0.5)).toBeCloseTo(0.015);
+  });
+});
+
+describe('YOUTUBE_DRIFT_POLICY', () => {
+  it('never changes the rate (the IFrame API would round it back to 1)', () => {
+    for (const drift of [0.05, 0.2, 0.39, -0.39]) {
+      for (const direction of [-1, 0, 1] as const) {
+        expect(correctDrift(drift, 1, YOUTUBE_DRIFT_POLICY, direction)).toEqual({
+          kind: 'rate',
+          rate: 1,
+          direction: 0,
+        });
+      }
+    }
+  });
+
+  it('seeks only above the adapter tolerance', () => {
+    expect(correctDrift(0.41, 1, YOUTUBE_DRIFT_POLICY)).toEqual({ kind: 'seek' });
+    expect(correctDrift(-0.6, 1, YOUTUBE_DRIFT_POLICY)).toEqual({ kind: 'seek' });
   });
 });

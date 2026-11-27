@@ -41,6 +41,10 @@ sources:
 
 - **"Asynchronous" transport:** BroadcastChannel and PresentationConnection deliver in order with low latency; the TV derives a smooth host clock from the timestamps (`createRemoteClock`). Asynchrony adds a constant delay, which the drift policy absorbs. The problem is the volume per message and the work on both ends.
 
+## Status
+
+- #3 and #4 fixed on 2026-11-27 (`YOUTUBE_DRIFT_POLICY`, adapter `seeking` while buffering, no repeated `setPlaybackRate`, follower seek moves audio and stem only).
+
 ## Suggested order
 
 1. #3 + #4 (small, YouTube only, no protocol change).
