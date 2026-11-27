@@ -5,6 +5,8 @@ import { canTryPresentation, currentScreenPlatform } from '../../../lib/secondSc
 import type { Song, SongMeta } from '../db';
 import { TvMediaSender, withAbsoluteMediaUrls } from '../logic/tvMediaTransfer';
 import type { PresentationConnection } from './presentationTypes';
+import { createTvStateStream } from '../logic/tvStateStream';
+import type { PassiveGameState } from '../types';
 import { loadTvSettings } from './settingsStorage';
 import { useMultiChannelSync } from '../../../modules/sync';
 import { TV_CONTROL_SYNC, type TvControlMessage } from '../logic/syncChannels';
@@ -70,6 +72,9 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
   }, []);
   useEffect(() => stopTvWindowPoll, [stopTvWindowPoll]);
 
+  // Game state stream to the TV; a (re)connecting TV gets a keyframe next
+  const tvStream = useRef(createTvStateStream());
+
   // Forward ref to sendMessage so handlers defined prior can use it
   const sendMessageRef = useRef<(type: string, payload?: unknown) => void>(() => {});
 
@@ -87,6 +92,7 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
 
       if (type === 'TV_READY' || type === 'PONG') {
         setIsTVConnected(true);
+        tvStream.current.reset();
         sendSessionInfo();
         sendMessageRef.current('SETTINGS_UPDATE', loadTvSettings());
       } else if (type === 'MEDIA_ACK') {
@@ -308,16 +314,11 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
     [sendMessage],
   );
 
-  // Throttled Game State Update (for Host -> TV sync)
-  const lastUpdateRef = useRef<number>(0);
+  // Host -> TV game state: ~30/s, sung segments as deltas (logic/tvStateStream.ts)
   const sendGameUpdate = useCallback(
     (state: unknown) => {
-      const now = Date.now();
-      // Limit to ~60fps (15ms) to improve smoothness
-      if (now - lastUpdateRef.current > 15) {
-        sendMessage('GAME_STATE', state);
-        lastUpdateRef.current = now;
-      }
+      const next = tvStream.current.next(state as Partial<PassiveGameState>, Date.now());
+      if (next) sendMessage('GAME_STATE', next);
     },
     [sendMessage],
   );

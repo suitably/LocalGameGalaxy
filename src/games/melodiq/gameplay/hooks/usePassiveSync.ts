@@ -5,6 +5,7 @@ import { type PassiveGameState } from '../../types';
 import { type ScoreDisplayHandle } from '../ScoreDisplay';
 import { PASSIVE_PLAY_RETRY_MS, shouldRetryPassivePlay } from '../logic/passivePlayback';
 import { createRemoteClock } from '../logic/remoteClock';
+import { applySungSegments } from '../../logic/tvStateStream';
 import {
   correctDrift,
   type DriftDirection,
@@ -76,8 +77,11 @@ export function usePassiveSync({
       const remoteIds = remotePlayers.map((p) => p.id).join(',');
 
       if (currentIds !== remoteIds) {
+        // A phone joining or leaving keeps the other singers (and their drawn segments)
+        const existing = new Map((playersRef.current || []).map((rt) => [rt.config.id, rt]));
         const newPlayers = remotePlayers.map(
           (p) =>
+            existing.get(p.id) ??
             new PlayerRuntime({
               id: p.id,
               name: p.name,
@@ -97,7 +101,11 @@ export function usePassiveSync({
           rt.pitchRef.current = pState.currentPitch;
           rt.activeSegments = pState.activeSegments;
           if (pState.sungSegments) {
-            rt.segmentsRef.current = pState.sungSegments;
+            rt.segmentsRef.current = applySungSegments(
+              rt.segmentsRef.current,
+              pState.sungSegments,
+              pState.sungSegmentsDelta,
+            );
           }
           rt.trackScores = pState.trackScores;
           rt.score = pState.score;
@@ -121,10 +129,11 @@ export function usePassiveSync({
       const hostClock = hostClockRef.current;
       hostClock.update(passiveState.currentTime, passiveState.isPlaying, perfNow);
       const hostTime = hostClock.now(perfNow);
+      // Audio only: the video follows this screen's own audio (useLocalMediaSync), so an audio
+      // resync does not also make the video (e.g. YouTube) seek and rebuffer.
       const seekAll = (time: number) => {
         if (audioRef.current) audioRef.current.currentTime = time;
         if (vocalsRef?.current) vocalsRef.current.currentTime = time;
-        if (videoRef.current) videoRef.current.currentTime = time;
       };
       const retryPlay =
         !isClient &&

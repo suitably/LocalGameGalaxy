@@ -1,0 +1,1 @@
+Melodiq: the TV no longer lags more and more during a song: the host sends only new sung notes (full update every 2 s) at 30 instead of 60 messages a second, the TV redraws only on visible changes, and the stream keeps running while the host window is minimized or covered.

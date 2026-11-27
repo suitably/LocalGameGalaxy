@@ -1,4 +1,10 @@
-import { type PitchResult, computeRMS, autoCorrelate, freqToMidi } from './AudioUtils';
+import {
+  type PitchResult,
+  computeRMS,
+  autoCorrelate,
+  freqToMidi,
+  MIN_PITCH_RMS,
+} from './AudioUtils';
 
 export { type PitchResult };
 
@@ -22,6 +28,8 @@ export class MicrophoneManager {
   private gainNode: GainNode | null = null;
   /** Software input gain (1 = unchanged); boosts quiet microphones before analysis. */
   private gain = 1;
+  /** Removes the pending "resume on next tap" listeners, if any. */
+  private disarmGestureResume: (() => void) | null = null;
 
   constructor() {}
 
@@ -60,10 +68,16 @@ export class MicrophoneManager {
 
       this.audioContext = new AudioContext({ latencyHint: 'interactive' });
 
-      // Critical: Resume context if suspended
-      if (this.audioContext.state === 'suspended') {
-        await this.audioContext.resume();
-        if (!this.audioContext) return;
+      // A context made outside a tap starts suspended on many phones, and an analyser of a
+      // suspended context only reads silence. resume() may stay pending until the next user
+      // gesture, so it is never awaited: the next tap resumes it (also after an interruption).
+      const context = this.audioContext;
+      context.onstatechange = () => {
+        if (context.state !== 'running' && context.state !== 'closed') this.resumeOnGesture();
+      };
+      if (context.state !== 'running') {
+        void context.resume().catch(() => {});
+        this.resumeOnGesture();
       }
 
       this.analyser = this.audioContext.createAnalyser();
@@ -82,12 +96,38 @@ export class MicrophoneManager {
     }
   }
 
+  /** Resumes the context on the next tap / key press; the listeners remove themselves. */
+  private resumeOnGesture(): void {
+    if (this.disarmGestureResume || typeof window === 'undefined') return;
+    const events = ['pointerdown', 'touchend', 'keydown'] as const;
+    const onGesture = () => {
+      const context = this.audioContext;
+      if (!context || context.state === 'running' || context.state === 'closed') {
+        this.disarmGestureResume?.();
+        return;
+      }
+      context
+        .resume()
+        .then(() => {
+          if (context.state === 'running') this.disarmGestureResume?.();
+        })
+        .catch(() => {});
+    };
+    events.forEach((type) => window.addEventListener(type, onGesture, true));
+    this.disarmGestureResume = () => {
+      events.forEach((type) => window.removeEventListener(type, onGesture, true));
+      this.disarmGestureResume = null;
+    };
+  }
+
   public async stop(): Promise<void> {
+    this.disarmGestureResume?.();
     if (this.mediaStream) {
       this.mediaStream.getTracks().forEach((track) => track.stop());
       this.mediaStream = null;
     }
     if (this.audioContext) {
+      this.audioContext.onstatechange = null;
       if (this.audioContext.state !== 'closed') {
         try {
           await this.audioContext.close();
@@ -129,7 +169,7 @@ export class MicrophoneManager {
     this.analyser.getFloatTimeDomainData(this.buffer);
 
     const volume = computeRMS(this.buffer);
-    if (volume < 0.01) {
+    if (volume < MIN_PITCH_RMS) {
       return null;
     }
 

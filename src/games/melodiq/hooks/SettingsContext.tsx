@@ -25,12 +25,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const updateSetting = useCallback(
     <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => {
-      setSettings((prev) => {
-        if (prev[key] === value) return prev;
-        const next = { ...prev, [key]: value };
-        persistSingleSetting(key, value);
-        return next;
-      });
+      // Persist before telling other windows: they reload from storage on SETTINGS_UPDATE, and a
+      // write inside the state updater may run after that, so they would load the old value.
+      persistSingleSetting(key, value);
+      setSettings((prev) => (prev[key] === value ? prev : { ...prev, [key]: value }));
 
       publishLocal({ type: 'SETTINGS_UPDATE', payload: { [key]: value } });
       window.dispatchEvent(
