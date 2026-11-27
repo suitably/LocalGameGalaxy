@@ -8,6 +8,7 @@ import {
   type CurrentParticipantsHostDeps,
 } from './currentParticipantsRoom';
 import { moveParticipant, toggleParticipant } from './queueParticipantUtils';
+import { buildSelectableProfiles } from '../components/queueParticipantTypes';
 
 const peers: Record<string, { peerId: string; name: string; hue: number }> = {
   admin: { peerId: 'p-admin', name: 'Admin', hue: 10 },
@@ -26,10 +27,11 @@ const deps = () => ({
 describe('currentParticipantsRoom', () => {
   it('mirrors the host list and accepts it only from the host', () => {
     const list = [{ deviceId: 'a' }];
-    const action = { type: 'HOST_CURRENT_PARTICIPANTS' as const, participants: list };
-    expect(currentParticipantsReducer(INITIAL_CURRENT_PARTICIPANTS, action).participants).toBe(
-      list,
-    );
+    const selectable = [{ id: 'a', name: 'A' }];
+    const action = { type: 'HOST_CURRENT_PARTICIPANTS' as const, participants: list, selectable };
+    const next = currentParticipantsReducer(INITIAL_CURRENT_PARTICIPANTS, action);
+    expect(next.participants).toBe(list);
+    expect(next.selectable).toBe(selectable);
     const allows = currentParticipantsAllows('host');
     expect(allows(INITIAL_CURRENT_PARTICIPANTS, action, 'host')).toBe(true);
     expect(allows(INITIAL_CURRENT_PARTICIPANTS, action, 'admin')).toBe(false);
@@ -106,5 +108,22 @@ describe('toggleParticipant / moveParticipant', () => {
     const list = [{ deviceId: 'a' }, { deviceId: 'b' }, { deviceId: 'c' }];
     expect(moveParticipant(list, 0, 2).map((p) => p.deviceId)).toEqual(['b', 'c', 'a']);
     expect(moveParticipant(list, 5, 0)).toBe(list);
+  });
+});
+
+describe('buildSelectableProfiles', () => {
+  it('lists the host profiles and the connected phones (device id preferred)', () => {
+    const result = buildSelectableProfiles(
+      [{ id: 'prof-1', name: 'Anna', hue: 40 }],
+      [
+        { peerId: 'peer-1', deviceId: 'dev-1', name: 'Phone 1', hue: 100 },
+        { peerId: 'peer-2', name: 'Phone 2' },
+      ],
+    );
+    expect(result).toEqual([
+      { id: 'prof-1', name: 'Anna', hue: 40 },
+      { id: 'dev-1', peerId: 'peer-1', name: 'Phone 1', hue: 100, isRemote: true },
+      { id: 'peer-2', peerId: 'peer-2', name: 'Phone 2', hue: 0, isRemote: true },
+    ]);
   });
 });

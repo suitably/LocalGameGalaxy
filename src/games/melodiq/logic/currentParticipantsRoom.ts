@@ -2,10 +2,12 @@
  * Singers of the playing song as host-run room state [ID: GAME-MELODIQ-CURRENT-PARTICIPANTS-ROOM]
  *
  * The host's `useActiveParticipants` stays the source of truth and mirrors its list into the
- * `melodiq-current-participants` room (`HOST_CURRENT_PARTICIPANTS`). Phones render that list and
+ * `melodiq-current-participants` room (`HOST_CURRENT_PARTICIPANTS`), together with everyone who
+ * can be added (`selectable`: the host's local profiles and the connected phones). Phones render that list and
  * change it only by request events on the Melodiq room events channel; the host checks the role
  * of the transport-stamped `from` (managers edit everyone, anyone may toggle themselves).
  */
+import type { ParticipantProfile } from '../components/queueParticipantTypes';
 import type { MelodiqParticipant } from '../types';
 import {
   isIndex,
@@ -22,20 +24,26 @@ export const CURRENT_PARTICIPANTS_ROOM_GAME_KEY = 'melodiq-current-participants'
 
 export interface CurrentParticipantsState {
   participants: MelodiqParticipant[];
+  /** Who can be added as a singer (bot excluded), for phones' participant dialogs. */
+  selectable: ParticipantProfile[];
 }
 
-export interface CurrentParticipantsAction {
+export interface CurrentParticipantsAction extends CurrentParticipantsState {
   type: 'HOST_CURRENT_PARTICIPANTS';
-  participants: MelodiqParticipant[];
 }
 
-export const INITIAL_CURRENT_PARTICIPANTS: CurrentParticipantsState = { participants: [] };
+export const INITIAL_CURRENT_PARTICIPANTS: CurrentParticipantsState = {
+  participants: [],
+  selectable: [],
+};
 
 export function currentParticipantsReducer(
   state: CurrentParticipantsState,
   action: CurrentParticipantsAction,
 ): CurrentParticipantsState {
-  if (action.type === 'HOST_CURRENT_PARTICIPANTS') return { participants: action.participants };
+  if (action.type === 'HOST_CURRENT_PARTICIPANTS') {
+    return { participants: action.participants, selectable: action.selectable };
+  }
   return state;
 }
 

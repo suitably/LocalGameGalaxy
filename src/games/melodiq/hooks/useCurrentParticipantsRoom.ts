@@ -16,16 +16,19 @@ import {
 } from '../logic/currentParticipantsRoom';
 import type { QueueParticipantProfile } from '../logic/queueRoom';
 import type { MelodiqParticipant } from '../types';
+import type { ParticipantProfile } from '../components/queueParticipantTypes';
 import { MELODIQ_GAME_KEY, useMelodiqRoomTransport } from './useMelodiqRoomTransport';
 
 interface HostSide {
   participants: MelodiqParticipant[];
+  selectable: ParticipantProfile[];
   toggle: (deviceId: string, profile: QueueParticipantProfile) => void;
   reorder: (startIndex: number, endIndex: number) => void;
 }
 
 /**
- * Singers of the playing song shared with phones. Host: mirrors `host.participants` into the
+ * Singers of the playing song shared with phones. Host: mirrors `host.participants` and
+ * `host.selectable` into the
  * `melodiq-current-participants` room and applies permitted phone requests through
  * `host.toggle` / `host.reorder`. Phone: returns the host's list and a request sender.
  */
@@ -34,6 +37,7 @@ export function useCurrentParticipantsRoom(
   host: HostSide,
 ): {
   participants: MelodiqParticipant[];
+  selectable: ParticipantProfile[];
   sendRequest: (request: CurrentParticipantsRequestPayload) => boolean;
 } {
   const room = useMelodiqRoomTransport();
@@ -60,9 +64,13 @@ export function useCurrentParticipantsRoom(
 
   useEffect(() => {
     if (room && isHost) {
-      dispatch({ type: 'HOST_CURRENT_PARTICIPANTS', participants: host.participants });
+      dispatch({
+        type: 'HOST_CURRENT_PARTICIPANTS',
+        participants: host.participants,
+        selectable: host.selectable,
+      });
     }
-  }, [room, isHost, dispatch, host.participants]);
+  }, [room, isHost, dispatch, host.participants, host.selectable]);
 
   const latest = useRef({ host, manager });
   useEffect(() => {
@@ -97,5 +105,5 @@ export function useCurrentParticipantsRoom(
     [isClient, send, selfId],
   );
 
-  return { participants: state.participants, sendRequest };
+  return { participants: state.participants, selectable: state.selectable, sendRequest };
 }

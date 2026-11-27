@@ -6,6 +6,11 @@ import {
   type ToggleParticipantProfile,
 } from '../logic/queueParticipantUtils';
 import { type MelodiqParticipant, type MelodiqProfile } from '../types';
+import { useWebRTC } from '../audio/webRTCContextCore';
+import {
+  buildSelectableProfiles,
+  type ParticipantProfile,
+} from '../components/queueParticipantTypes';
 import { useCurrentParticipantsRoom } from './useCurrentParticipantsRoom';
 
 const isClient = new URLSearchParams(window.location.search).get('role') === 'client';
@@ -47,8 +52,23 @@ export function useActiveParticipants() {
     [activeParticipants],
   );
 
+  // Re-read when phones come or go and when the list changes (profiles have no change event)
+  const { activePeers } = useWebRTC();
+  const hostSelectable = useMemo(
+    () =>
+      isClient
+        ? []
+        : buildSelectableProfiles(
+            storage.getJson<ParticipantProfile[]>(STORAGE_KEYS.PROFILES, []),
+            activePeers,
+          ),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- hostParticipants triggers a re-read
+    [activePeers, hostParticipants],
+  );
+
   const room = useCurrentParticipantsRoom(isClient, {
     participants: hostParticipants,
+    selectable: hostSelectable,
     toggle: toggleLocal,
     reorder: reorderLocal,
   });
@@ -83,6 +103,8 @@ export function useActiveParticipants() {
     activeParticipants,
     setActiveParticipants,
     currentDisplayParticipants: isClient ? room.participants : hostParticipants,
+    /** Phones: the host's selectable singers; host: undefined (its dialog reads them live). */
+    selectableProfiles: isClient ? room.selectable : undefined,
     handleToggleCurrentParticipant,
     handleReorderCurrentParticipant,
   };
