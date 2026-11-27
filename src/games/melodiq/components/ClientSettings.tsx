@@ -15,6 +15,7 @@ import { useClientEngine } from '../phoneClientContext';
 import { MicrophoneManager } from '../audio/MicrophoneManager';
 import { RemoteLatencyCalibrator } from './RemoteLatencyCalibrator';
 import { LiveMicTest } from './LiveMicTest';
+import { MIC_GAIN_DEFAULT } from '../logic/clientProfile';
 
 type DisplayMode = 'lyrics' | 'self' | 'all';
 
@@ -36,6 +37,7 @@ export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack, backLabe
     clientProfile.displayMode || 'lyrics',
   );
   const [latency, setLatency] = useState(clientProfile.latency || 0);
+  const [micGain, setMicGain] = useState(clientProfile.micGain ?? MIC_GAIN_DEFAULT);
 
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [permissionError, setPermissionError] = useState(false);
@@ -75,6 +77,7 @@ export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack, backLabe
       micDeviceId: deviceId || undefined,
       displayMode,
       latency,
+      micGain,
     });
     onBack?.();
   };
@@ -189,7 +192,7 @@ export const ClientSettings: React.FC<ClientSettingsProps> = ({ onBack, backLabe
           )}
         </Box>
 
-        <LiveMicTest deviceId={deviceId} />
+        <LiveMicTest deviceId={deviceId} gain={micGain} onGainChange={setMicGain} />
 
         <Box sx={{ flex: 1 }} />
 
