@@ -99,13 +99,8 @@ export function usePeerSessionMessages<R extends RemoteResultEntry>(
           if (videoRef.current) videoRef.current.currentTime = 0;
         }
         break;
-      case 'next':
-        if (audioRef.current?.duration) {
-          const endTime = audioRef.current.duration - 0.1;
-          audioRef.current.currentTime = endTime;
-          if (vocalsRef?.current) vocalsRef.current.currentTime = endTime;
-        }
-        break;
+      // 'next' is handled once by the host's playback (useHostPlaybackCommands: score, then the
+      // next queued song); seeking to the end here as well raced with that.
       case 'exit':
         onExit();
         break;

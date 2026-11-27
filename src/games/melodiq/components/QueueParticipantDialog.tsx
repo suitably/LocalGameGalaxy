@@ -18,6 +18,7 @@ import { useWebRTC } from '../audio/webRTCContextCore';
 import { ActiveParticipantRow, AvailableProfileRow, type MicNames } from './QueueParticipantRows';
 import {
   BOT_PROFILE_ID,
+  buildSelectableProfiles,
   isParticipating,
   type ParticipantEntry,
   type ParticipantProfile,
@@ -34,6 +35,8 @@ interface QueueParticipantDialogProps {
   onDirectToggle?: (deviceId: string, profile: MelodiqProfile) => void;
   /** Called when reordering participants in direct mode. */
   onDirectReorder?: (startIndex: number, endIndex: number) => void;
+  /** Who can be added (bot excluded). Phones pass the host's list; the host builds its own. */
+  selectableProfiles?: ParticipantProfile[];
 }
 
 const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -51,6 +54,7 @@ export const QueueParticipantDialog: React.FC<QueueParticipantDialogProps> = ({
   directParticipants,
   onDirectToggle,
   onDirectReorder,
+  selectableProfiles,
 }) => {
   const { t } = useTranslation();
   const { queue, toggleQueueParticipant, reorderQueueParticipant } = useQueue();
@@ -60,15 +64,13 @@ export const QueueParticipantDialog: React.FC<QueueParticipantDialogProps> = ({
   const isDirectMode = !queueItemId && directParticipants !== undefined;
   const item = isDirectMode ? null : queue.find((q) => q.id === queueItemId);
 
-  // Combine local profiles and connected remote peers
-  const localProfiles = storage.getJson<ParticipantProfile[]>(STORAGE_KEYS.PROFILES, []);
-  const remoteProfiles: ParticipantProfile[] = activePeers.map((peer) => ({
-    id: peer.deviceId || peer.peerId, // Prefer deviceId to match what is stored in queue participants
-    peerId: peer.peerId,
-    name: peer.name,
-    hue: peer.hue || 0,
-    isRemote: true,
-  }));
+  // Host: its local profiles and connected phones; phones get the host's list as a prop
+  const selectable =
+    selectableProfiles ??
+    buildSelectableProfiles(
+      storage.getJson<ParticipantProfile[]>(STORAGE_KEYS.PROFILES, []),
+      activePeers,
+    );
 
   // Explicitly add the bot so it can be toggled
   const botProfile: ParticipantProfile = {
@@ -77,7 +79,7 @@ export const QueueParticipantDialog: React.FC<QueueParticipantDialogProps> = ({
     hue: 330,
     isRemote: false,
   };
-  const allProfiles = [botProfile, ...localProfiles, ...remoteProfiles];
+  const allProfiles = [botProfile, ...selectable];
 
   // In queue-item mode, bail out if the item is not found
   if (!isDirectMode && !item) return null;

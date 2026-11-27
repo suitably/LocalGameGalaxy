@@ -72,13 +72,14 @@ export type QueueRequest =
 type WithoutFrom<R> = R extends unknown ? Omit<R, 'from'> : never;
 export type QueueRequestPayload = WithoutFrom<QueueRequest>;
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
+export const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;
-const nonEmptyString = (value: unknown): value is string =>
+export const nonEmptyString = (value: unknown): value is string =>
   typeof value === 'string' && value.length > 0;
-const isIndex = (value: unknown): value is number => Number.isInteger(value) && Number(value) >= 0;
+export const isIndex = (value: unknown): value is number =>
+  Number.isInteger(value) && Number(value) >= 0;
 
-function parseProfile(raw: unknown): QueueParticipantProfile | undefined {
+export function parseProfile(raw: unknown): QueueParticipantProfile | undefined {
   if (!isRecord(raw)) return undefined;
   const profile: QueueParticipantProfile = {};
   if (typeof raw.name === 'string') profile.name = raw.name;
@@ -130,7 +131,7 @@ export function parseQueueRequest(data: unknown): QueueRequest | null {
 
 type Role = string | undefined;
 
-const isQueueManager = (role: Role) => role === 'admin' || role === 'queue_manager';
+export const isQueueManager = (role: Role) => role === 'admin' || role === 'queue_manager';
 
 /** Everyone but singers may add or select songs. */
 export const canRequestSong = (role: Role): boolean => role !== 'singer';

@@ -31,7 +31,6 @@ interface UseMelodiqGlobalEventsProps {
   ) => void;
   manager: WebRTCMicManager | null;
   isTVConnected: boolean;
-  sendRemoteCommand: (command: string, value?: unknown) => void;
   currentView: string;
   isClient: boolean;
   getSongById: (id: string) => Promise<Song | undefined>;
@@ -53,7 +52,6 @@ export const useMelodiqGlobalEvents = ({
   handleSelectSong,
   manager,
   isTVConnected,
-  sendRemoteCommand,
   currentView,
   isClient,
   getSongById,
@@ -101,7 +99,8 @@ export const useMelodiqGlobalEvents = ({
       processedEventRef.current = lastEvent.timestamp;
       if (selectedSong && !remoteSong) {
         log.debug('TV_READY received while playing locally, switching to TV...');
-        const currentTime = (window as Window & { __melodiq_current_time?: number }).__melodiq_current_time || 0;
+        const currentTime =
+          (window as Window & { __melodiq_current_time?: number }).__melodiq_current_time || 0;
         playSongOnTV(selectedSong.id, selectedSong, currentTime);
         setRemoteSong(selectedSong as unknown as SongMeta);
         if (currentView === 'Session') setCurrentView('Home'); // The song now plays on the TV
@@ -167,7 +166,7 @@ export const useMelodiqGlobalEvents = ({
     };
   }, [manager]);
 
-  useHostRemoteCommands({ enabled: !!manager && !isClient, isTVConnected, sendRemoteCommand });
+  useHostRemoteCommands({ enabled: !!manager && !isClient });
   useRemoteConfigListener(manager, currentView, setFeedbackMessage);
   // FIXME(#847): MelodiqParticipant.profileId is optional, ActivePlayer.profileId is required
   useHostPhoneJoin({

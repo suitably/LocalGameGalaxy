@@ -11,6 +11,7 @@ import { useQueueDrag } from '../hooks/useQueueDrag';
 import { useClientEngine } from '../phoneClientContext';
 import type { MelodiqParticipant, MelodiqProfile } from '../types';
 import { QueueParticipantDialog } from './QueueParticipantDialog';
+import type { ParticipantProfile } from './queueParticipantTypes';
 import { QueueNowPlaying } from './QueueNowPlaying';
 import { QueueDrawerItem } from './QueueDrawerItem';
 import { HistoryDrawer } from './HistoryDrawer';
@@ -24,6 +25,8 @@ interface HostQueueDrawerProps {
   onToggleCurrentParticipant?: (deviceId: string, profile: MelodiqProfile) => void;
   /** Called when participants are reordered for the current song. */
   onReorderCurrentParticipant?: (startIndex: number, endIndex: number) => void;
+  /** Phones: the host's list of who can be added as a singer. */
+  selectableProfiles?: ParticipantProfile[];
 }
 
 export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({
@@ -32,6 +35,7 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({
   activeParticipants,
   onToggleCurrentParticipant,
   onReorderCurrentParticipant,
+  selectableProfiles,
 }) => {
   const { t } = useTranslation();
   const { queue, nowPlaying, removeFromQueue, moveItem, clearQueue, toggleQueueParticipant } =
@@ -185,6 +189,7 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({
         open={!!manageParticipantsId}
         onClose={() => setManageParticipantsId(null)}
         queueItemId={manageParticipantsId}
+        selectableProfiles={selectableProfiles}
       />
 
       <QueueParticipantDialog
@@ -194,6 +199,7 @@ export const HostQueueDrawer: React.FC<HostQueueDrawerProps> = ({
         directParticipants={activeParticipants}
         onDirectToggle={onToggleCurrentParticipant}
         onDirectReorder={onReorderCurrentParticipant}
+        selectableProfiles={selectableProfiles}
       />
 
       <HistoryDrawer open={historyOpen} onClose={() => setHistoryOpen(false)} />

@@ -35,3 +35,30 @@ export const isParticipating = (
       p.deviceId === profile.id ||
       (!!profile.peerId && p.deviceId === profile.peerId),
   );
+
+/** A connected phone as the host's WebRTC context lists it. */
+interface SelectablePeer {
+  peerId: string;
+  deviceId?: string;
+  name: string;
+  hue?: number;
+}
+
+/**
+ * Everyone who can be added as a singer (without the bot): the host's local profiles and the
+ * connected phones. Phones get this list from the host, since they know neither.
+ */
+export function buildSelectableProfiles(
+  localProfiles: ParticipantProfile[],
+  peers: SelectablePeer[],
+): ParticipantProfile[] {
+  const remote = peers.map((peer) => ({
+    id: peer.deviceId || peer.peerId, // deviceId matches what queue participants store
+    peerId: peer.peerId,
+    name: peer.name,
+    hue: peer.hue || 0,
+    isRemote: true,
+  }));
+  const local = localProfiles.map((p) => ({ id: p.id, name: p.name, hue: p.hue }));
+  return [...local, ...remote];
+}

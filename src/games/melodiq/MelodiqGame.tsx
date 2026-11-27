@@ -187,13 +187,13 @@ export const MelodiqGameContent: React.FC = () => {
         clientDeviceId={clientProfile?.deviceId}
         onPlayingChange={playback.handlePlayingChange}
       />
-
       <HostQueueDrawer
         open={showQueueDrawer}
         onClose={() => setShowQueueDrawer(false)}
         activeParticipants={playback.currentDisplayParticipants}
         onToggleCurrentParticipant={playback.handleToggleCurrentParticipant}
         onReorderCurrentParticipant={playback.handleReorderCurrentParticipant}
+        selectableProfiles={playback.selectableProfiles}
       />
 
       <SongActionDialogs
