@@ -77,7 +77,7 @@ export function createSegmentDeltaEncoder(keyframeMs = TV_KEYFRAME_MS): SegmentD
 }
 
 /** Shortest time between two game states to the TV (~30/s; the TV interpolates the clock). */
-export const TV_GAME_STATE_INTERVAL_MS = 33;
+const TV_GAME_STATE_INTERVAL_MS = 33;
 
 export interface TvStateStream {
   /** The state to send now (segments encoded), or null when throttled away. */
