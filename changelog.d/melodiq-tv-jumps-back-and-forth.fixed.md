@@ -1,0 +1,1 @@
+Melodiq: the TV no longer jumps back and forward again when a host update arrives late, and the stream stays smooth with many phones joining and leaving (state serialized once for all phones, only new sung notes sent, other singers kept when one leaves).

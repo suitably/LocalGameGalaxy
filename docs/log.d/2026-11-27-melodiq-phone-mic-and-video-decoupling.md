@@ -5,3 +5,4 @@
 - `docs/reports/2026-11-27-melodiq-tv-lag-analysis.md`: status section, #3 and #4 done.
 - Code outside `docs/` changed (`AudioUtils.ts`, `MicrophoneManager.ts`, `useLocalMediaSync.ts`, `usePlaybackControls.ts`, `usePassiveSync.ts`, `createYouTubeVideoAdapter.ts`).
 - `docs/tech/melodiq-architecture.md` §2.9 and the lag report: host → TV stream (30/s, segment deltas, render gate, background ticker); report #1, #2, #7 done.
+- Lag report and §2.9: remote clock confirms backward jumps (500 ms), phones get segment deltas, broadcast serialized once, TV keeps singers on roster changes.

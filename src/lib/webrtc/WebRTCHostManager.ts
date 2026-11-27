@@ -498,10 +498,13 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
   }
 
   broadcast(data: any): void {
+    // Serialized once, not per peer: with many phones this runs 20 times a second
+    let json: string | null = null;
     this.peers.forEach((p) => {
       if (p.peer && (p.peer as any).connected) {
         try {
-          p.peer.send(JSON.stringify(data));
+          json ??= JSON.stringify(data);
+          p.peer.send(json);
         } catch (e) {
           console.error(`[WebRTCHostManager] Failed to broadcast to ${p.peerId}:`, e);
         }

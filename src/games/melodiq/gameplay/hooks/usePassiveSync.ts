@@ -77,8 +77,11 @@ export function usePassiveSync({
       const remoteIds = remotePlayers.map((p) => p.id).join(',');
 
       if (currentIds !== remoteIds) {
+        // A phone joining or leaving keeps the other singers (and their drawn segments)
+        const existing = new Map((playersRef.current || []).map((rt) => [rt.config.id, rt]));
         const newPlayers = remotePlayers.map(
           (p) =>
+            existing.get(p.id) ??
             new PlayerRuntime({
               id: p.id,
               name: p.name,

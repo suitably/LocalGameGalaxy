@@ -48,6 +48,8 @@ sources:
 - #1 done: `useTVMode.sendGameUpdate` sends ~30/s (33 ms, play/stop changes never dropped; `createTvStateStream`) and encodes sung segments as deltas with a full keyframe every 2 s and on `TV_READY` / `PONG` (`logic/tvStateStream.ts`, `createSegmentDeltaEncoder`); `usePassiveSync` merges them (`applySungSegments`). Phones still get the full state.
 - #2 done: `useTVReceiver` dispatches every `GAME_STATE` as the window event but calls `setPassiveState` only when a rendered value changes or after 1 s (`shouldRenderTvState`).
 - #7 done: `useScoringEngine` runs its loop from `startSteadyTicker` (33 ms) when the host gets no animation frame for 50 ms (minimized or covered window); one pending frame at most (`scheduleNextFrame`).
+- Found later (TV jumped back, then forward a few seconds later): `remoteClock.ts` treated one report arriving > 0.3 s late as a backward seek on the host, so the clock (and the TV audio via the follower seek) went back and, with the next normal report, forward again. Now a backward jump needs the lower position to hold for `confirmBackMs` (500 ms) with no normal report in between; forward seeks are still followed at once.
+- Found later (worse with more phones): `WebRTCHostManager.broadcast` serialized the state once per phone, 20×/s, with all sung segments; now once per broadcast, and phones get segment deltas too (`useHostGameUpdate`). The TV keeps existing singers when a phone joins or leaves instead of rebuilding all (`usePassiveSync`).
 - Open: #5 (host keeps rendering the hidden session), #6 only if jumps remain.
 - Related: `safePlay` and `handlePassiveUnblock` no longer wait for the video's `play()`, so audio, lyrics and scoring start without it.
 
