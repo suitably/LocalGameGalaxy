@@ -7,8 +7,20 @@ export interface ClientProfile {
   micDeviceId?: string;
   displayMode?: 'lyrics' | 'self' | 'all';
   latency?: number;
+  /** Microphone input gain in percent (0–200, default 100). */
+  micGain?: number;
   deviceId: string;
 }
+
+export const MIC_GAIN_MIN = 0;
+export const MIC_GAIN_MAX = 200;
+export const MIC_GAIN_DEFAULT = 100;
+
+/** Gain factor for `MicrophoneManager` from a stored percentage (missing/invalid → 1, clamped 0–2). */
+export const micGainFactor = (percent: number | undefined): number => {
+  if (typeof percent !== 'number' || !Number.isFinite(percent)) return MIC_GAIN_DEFAULT / 100;
+  return Math.min(MIC_GAIN_MAX, Math.max(MIC_GAIN_MIN, percent)) / 100;
+};
 
 export const DEFAULT_TRACKER_URLS = [
   'wss://tracker.openwebtorrent.com',

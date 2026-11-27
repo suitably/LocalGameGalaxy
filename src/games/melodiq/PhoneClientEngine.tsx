@@ -143,6 +143,7 @@ export const PhoneClientEngine: React.FC<{ children: React.ReactNode }> = ({ chi
     isSessionPlaying,
     isSinging,
     micDeviceId: clientProfile.micDeviceId,
+    micGain: clientProfile.micGain,
     sendData,
   });
   // A locked screen suspends the browser and with it the microphone and the connection.
