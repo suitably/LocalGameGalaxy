@@ -1,0 +1,1 @@
+- **Melodiq: YouTube background on the TV**: a cast TV now plays the song's YouTube video like the host. The host's YouTube consent was never part of the game state the TV receives, so a TV that had never been asked showed the fallback background.

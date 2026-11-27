@@ -2,6 +2,7 @@
 
 Dated snapshots, audits and evaluations. Not maintained after writing (only corrections are added as notes). Living docs link here for evidence. Name files `YYYY-MM-DD-topic.md`, newest first.
 
+- [2026-11-27 Melodiq TV lag analysis](2026-11-27-melodiq-tv-lag-analysis.md) — why the TV lags: the GAME_STATE stream grows with every sung segment and is sent ~60×/s, the TV re-renders per message, YouTube drift correction rounds to rate 1 and falls back to seeks, the host keeps rendering its hidden session; ranked fixes.
 - [2026-11-16 UI/UX audit](2026-11-16-ui-ux-audit.md) — second top bars, own back buttons, settings containers, missing confirmations, icon-button labels, i18n literals and safe areas across all games; Melodiq Notes settings pilot; PR sequence and open decisions.
 - [2026-11-21 TV second screen](2026-11-21-tv-second-screen.md) — why Chrome on Android and the app cannot cast a page to a Chromecast, and the URL/QR flow: the TV joins as a read-only client while the host phone plays its own hand.
 - [2026-11-08 TTS compatibility plan](2026-11-08-tts-compatibility-plan.md) — tiers of "a Workshop game runs", the compatibility harness, nine decisions taken (ADR-0005, Cloudflare Worker for Steam, per-device asset cache, no publishing of imports, DOM renderer, wasmoon) and 13 slices with acceptance criteria.

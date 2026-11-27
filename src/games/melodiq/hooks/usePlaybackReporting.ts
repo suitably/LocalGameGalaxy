@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { type Song } from '../db';
+import { useYouTubeConsent } from '../gameplay/hooks/useYouTubeConsentGate';
 
 export interface PlaybackState {
   isPlaying: boolean;
@@ -33,11 +34,15 @@ export function usePlaybackReporting(
   const sendGameUpdateRef = useRef(sendGameUpdate);
   const selectedSongRef = useRef(selectedSong);
   const isSessionFinishedRef = useRef(isSessionFinished);
+  // The host's YouTube answer travels with every game state: TV and phones follow it (#645)
+  const youTubeConsent = useYouTubeConsent();
+  const youTubeConsentRef = useRef(youTubeConsent);
 
   useEffect(() => {
     sendGameUpdateRef.current = sendGameUpdate;
     selectedSongRef.current = selectedSong;
     isSessionFinishedRef.current = isSessionFinished;
+    youTubeConsentRef.current = youTubeConsent;
   });
 
   // Send stop state when song is deselected or sendGameUpdate changes
@@ -70,6 +75,7 @@ export function usePlaybackReporting(
           ...(isSessionFinishedRef.current ? { isFinished: isSessionFinishedRef.current() } : {}),
           activeSongId: song.id,
           activeSong: { id: song.id, title: song.title, artist: song.artist },
+          youTubeConsent: youTubeConsentRef.current,
         });
       }
 
