@@ -342,6 +342,10 @@ export const melodiqResources = {
         undo_session: 'Undo session changes',
         reset_defaults: 'Reset defaults',
         live_test: 'Live Test',
+        mic_gain: 'Microphone gain: {{percent}} %',
+        mic_gain_label: 'Microphone gain',
+        mic_gain_hint:
+          'Raise it if the meter barely moves while you sing; lower it if it is always full.',
         sync_latency: 'Sync & Latency',
         latency_offset: 'Current latency offset: {{ms}} ms',
         calibrate_blocked: 'Cannot calibrate while a song is playing.',
@@ -843,6 +847,10 @@ export const melodiqResources = {
         undo_session: 'Sitzung rückgängig machen',
         reset_defaults: 'Standardwerte',
         live_test: 'Live-Test',
+        mic_gain: 'Mikrofon-Verstärkung: {{percent}} %',
+        mic_gain_label: 'Mikrofon-Verstärkung',
+        mic_gain_hint:
+          'Höher stellen, wenn sich die Anzeige beim Singen kaum bewegt; niedriger, wenn sie ständig voll ist.',
         sync_latency: 'Sync & Latenz',
         latency_offset: 'Aktueller Latenz-Versatz: {{ms}} ms',
         calibrate_blocked: 'Kalibrierung ist nicht möglich, während ein Song läuft.',

@@ -1,23 +1,39 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Typography } from '@mui/material';
+import React, { useEffect, useRef, useState } from 'react';
+import { Box, Slider, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { MicrophoneManager, type PitchResult } from '../audio/MicrophoneManager';
 import { getNoteName } from '../gameplay/logic/pitchLayout';
+import { MIC_GAIN_MAX, MIC_GAIN_MIN, micGainFactor } from '../logic/clientProfile';
 
-/** Volume meter and detected note for the selected microphone. */
-export const LiveMicTest: React.FC<{ deviceId: string }> = ({ deviceId }) => {
+interface LiveMicTestProps {
+  deviceId: string;
+  /** Input gain in percent (0–200). */
+  gain: number;
+  onGainChange: (percent: number) => void;
+}
+
+/** Volume meter, detected note and input-gain slider for the selected microphone. */
+export const LiveMicTest: React.FC<LiveMicTestProps> = ({ deviceId, gain, onGainChange }) => {
   const { t } = useTranslation();
   const [volume, setVolume] = useState(0);
   const [pitch, setPitch] = useState<PitchResult | null>(null);
+  const micRef = useRef<MicrophoneManager | null>(null);
+  const gainRef = useRef(micGainFactor(gain));
+
+  useEffect(() => {
+    gainRef.current = micGainFactor(gain);
+    micRef.current?.setGain(gainRef.current);
+  }, [gain]);
 
   useEffect(() => {
     let mounted = true;
     let animFrame = 0;
     let lastTime = 0;
     const mic = new MicrophoneManager();
+    micRef.current = mic;
 
     mic
-      .start(deviceId || undefined)
+      .start(deviceId || undefined, gainRef.current)
       .then(() => {
         if (!mounted) {
           mic.stop();
@@ -43,6 +59,7 @@ export const LiveMicTest: React.FC<{ deviceId: string }> = ({ deviceId }) => {
     return () => {
       mounted = false;
       cancelAnimationFrame(animFrame);
+      if (micRef.current === mic) micRef.current = null;
       mic.stop();
     };
   }, [deviceId]);
@@ -83,6 +100,28 @@ export const LiveMicTest: React.FC<{ deviceId: string }> = ({ deviceId }) => {
           {pitch ? getNoteName(pitch.note) : '--'}
         </Typography>
       </Box>
+      <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+        {t('melodiq.settings_panel.mic_gain', 'Microphone gain: {{percent}} %', {
+          percent: gain,
+        })}
+      </Typography>
+      <Slider
+        value={gain}
+        min={MIC_GAIN_MIN}
+        max={MIC_GAIN_MAX}
+        step={5}
+        marks={[{ value: 100 }]}
+        onChange={(_, v) => onGainChange(Array.isArray(v) ? v[0] : v)}
+        aria-label={t('melodiq.settings_panel.mic_gain_label', 'Microphone gain')}
+        valueLabelDisplay="auto"
+        valueLabelFormat={(v) => `${v} %`}
+      />
+      <Typography variant="caption" color="text.secondary">
+        {t(
+          'melodiq.settings_panel.mic_gain_hint',
+          'Raise it if the meter barely moves while you sing; lower it if it is always full.',
+        )}
+      </Typography>
     </Box>
   );
 };

@@ -82,6 +82,7 @@ export interface MelodiqProfile {
   micDeviceId?: string;
   displayMode?: 'lyrics' | 'self' | 'all';
   latency?: number;
+  micGain?: number;
 }
 
 export interface MelodiqParticipant {

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { MicrophoneManager } from '../audio/MicrophoneManager';
 import { startSteadyTicker } from '../../../lib/utils/steadyTicker';
 import { createLogger } from '../../../lib/logger';
+import { micGainFactor } from '../logic/clientProfile';
 
 const log = createLogger('PhoneClientEngine');
 
@@ -12,6 +13,8 @@ interface Options {
   /** The host scores this phone in the running song (see `logic/phoneSinging.ts`). */
   isSinging: boolean;
   micDeviceId?: string;
+  /** Input gain in percent (see `ClientProfile.micGain`). */
+  micGain?: number;
   sendData: (data: Record<string, unknown>) => void;
 }
 
@@ -24,9 +27,18 @@ export const usePhoneMicStreaming = ({
   isSessionPlaying,
   isSinging,
   micDeviceId,
+  micGain,
   sendData,
 }: Options) => {
   const lastSendRef = useRef(0);
+  const micRef = useRef<MicrophoneManager | null>(null);
+  const gainRef = useRef(micGainFactor(micGain));
+
+  // Gain changes apply to the running microphone without restarting it.
+  useEffect(() => {
+    gainRef.current = micGainFactor(micGain);
+    micRef.current?.setGain(gainRef.current);
+  }, [micGain]);
 
   useEffect(() => {
     if (!isSessionPlaying || !isSinging) return;
@@ -57,8 +69,9 @@ export const usePhoneMicStreaming = ({
     const start = async () => {
       const next = new MicrophoneManager();
       mic = next;
+      micRef.current = next;
       try {
-        await next.start(micDeviceId);
+        await next.start(micDeviceId, gainRef.current);
         if (!mounted) {
           next.stop();
           return;
@@ -74,6 +87,7 @@ export const usePhoneMicStreaming = ({
     return () => {
       mounted = false;
       stopTicker?.();
+      if (micRef.current === mic) micRef.current = null;
       mic?.stop();
     };
   }, [isSessionPlaying, sendData, micDeviceId, isSinging]);
