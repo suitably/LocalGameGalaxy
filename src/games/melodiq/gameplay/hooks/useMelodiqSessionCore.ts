@@ -10,6 +10,7 @@ import { usePassiveSync } from './usePassiveSync';
 import { useSessionAudioController } from './useSessionAudioController';
 import { useSessionScoringController } from './useSessionScoringController';
 import { useSongVocals } from './useSongVocals';
+import { getYouTubeConsent } from '../youtubeConsent';
 import type { MelodiqSessionHandle, MelodiqSessionProps } from '../types';
 import type { PlayerRuntime } from './PlayerRuntime';
 import type { SessionResult } from './useSessionEnd';
@@ -183,6 +184,7 @@ export function useMelodiqSessionCore(
         lyricsScale: settings.lyricsScale ?? 1.0,
         enableLyricsZoom: settings.enableLyricsZoom ?? false,
         lyricsPosition: settings.lyricsPosition ?? 'bottom',
+        youTubeConsent: getYouTubeConsent(),
         players: playersRef.current.map((p) => ({
           config: p.config,
           id: p.config.id,

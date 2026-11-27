@@ -5,6 +5,7 @@ import { YouTubeBackgroundPlayer } from '../YouTubeBackgroundPlayer';
 import { getYouTubeVideoId } from '../youtubeApi';
 import { useYouTubeConsentGate } from '../hooks/useYouTubeConsentGate';
 import { YouTubeConsentDialog } from './YouTubeConsentDialog';
+import type { YouTubeConsent } from '../youtubeConsent';
 
 export interface SessionBackgroundMediaProps {
   videoSrc?: string | null;
@@ -17,6 +18,8 @@ export interface SessionBackgroundMediaProps {
   setVideoError: (err: string | null) => void;
   passivePlayBlocked: boolean;
   isPassive: boolean;
+  /** The host's YouTube answer, followed by a passive display (TV, phone). */
+  hostYouTubeConsent?: YouTubeConsent;
   onPassiveUnblock: () => void;
 }
 
@@ -31,12 +34,16 @@ export const SessionBackgroundMedia: React.FC<SessionBackgroundMediaProps> = ({
   setVideoError,
   passivePlayBlocked,
   isPassive,
+  hostYouTubeConsent,
   onPassiveUnblock,
 }) => {
   const { t } = useTranslation();
   const youTubeVideoId = useMemo(() => getYouTubeVideoId(videoSrc || undefined), [videoSrc]);
   const [youTubeFailed, setYouTubeFailed] = useState(false);
-  const youTubeConsent = useYouTubeConsentGate(videoSrc, hideBackgroundVideo);
+  const youTubeConsent = useYouTubeConsentGate(videoSrc, hideBackgroundVideo, {
+    isPassive,
+    hostConsent: hostYouTubeConsent,
+  });
   const youTubeAllowed = youTubeConsent.allowed;
   // without consent a YouTube background is skipped like a failed one: the fallback shows
   const youTubeBlocked = !!youTubeVideoId && (youTubeFailed || !youTubeAllowed);

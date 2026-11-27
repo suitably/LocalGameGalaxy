@@ -89,6 +89,7 @@ export const SessionStage: React.FC<SessionStageProps> = ({ session, core }) => 
         setVideoError={setVideoError}
         passivePlayBlocked={audioCtrl.passivePlayBlocked}
         isPassive={isPassive}
+        hostYouTubeConsent={passiveState?.youTubeConsent}
         onPassiveUnblock={audioCtrl.handlePassiveUnblock}
       />
 

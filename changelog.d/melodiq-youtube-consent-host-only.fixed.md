@@ -1,0 +1,1 @@
+- **Melodiq asks about YouTube backgrounds on the host only**: the TV (and phone displays) no longer show the YouTube consent dialog; they follow the host's answer, which is sent along in `GAME_STATE` (`youTubeConsent`).

@@ -1,6 +1,7 @@
 /**
  * Shared types for Melodiq game
  */
+import type { YouTubeConsent } from './gameplay/youtubeConsent';
 
 // Color presets for player customization
 export const COLOR_PRESETS = [
@@ -66,6 +67,8 @@ export interface PassiveGameState {
   enableLyricsZoom?: boolean;
   lyricsLines?: number;
   lyricsPosition?: 'bottom' | 'center';
+  /** The host's YouTube answer: a TV or phone never asks itself and follows it (#645). */
+  youTubeConsent?: YouTubeConsent;
 }
 
 export interface MelodiqProfile {

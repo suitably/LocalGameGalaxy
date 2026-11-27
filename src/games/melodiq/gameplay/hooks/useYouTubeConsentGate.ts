@@ -2,6 +2,7 @@ import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { getYouTubeVideoId } from '../youtubeApi';
 import {
   getYouTubeConsent,
+  resolveYouTubeConsentGate,
   setYouTubeConsent,
   subscribeYouTubeConsent,
   type YouTubeConsent,
@@ -11,22 +12,35 @@ import {
 export const useYouTubeConsent = (): YouTubeConsent =>
   useSyncExternalStore(subscribeYouTubeConsent, getYouTubeConsent);
 
+/** A passive display (TV, phone) follows the host's answer instead of asking itself. */
+export interface PassiveConsentSource {
+  isPassive: boolean;
+  /** Sent by the host in `GAME_STATE`; until it arrives the device's own choice applies. */
+  hostConsent?: YouTubeConsent;
+}
+
 /**
- * Asks once per device before a song with a YouTube background starts (#645).
+ * Asks once per device before a song with a YouTube background starts (#645), on the host only.
  * `pending` holds playback until the player answers; afterwards the choice lives in the game settings.
  */
 export function useYouTubeConsentGate(
   videoSrc: string | null | undefined,
   hideBackgroundVideo: boolean,
+  passive: PassiveConsentSource = { isPassive: false },
 ) {
-  const consent = useYouTubeConsent();
+  const localConsent = useYouTubeConsent();
   const hasYouTubeVideo = useMemo(() => !!getYouTubeVideoId(videoSrc || undefined), [videoSrc]);
   const allow = useCallback(() => setYouTubeConsent('granted'), []);
   const deny = useCallback(() => setYouTubeConsent('denied'), []);
 
   return {
-    allowed: consent === 'granted',
-    pending: hasYouTubeVideo && !hideBackgroundVideo && consent === 'unset',
+    ...resolveYouTubeConsentGate({
+      localConsent,
+      hasYouTubeVideo,
+      hideBackgroundVideo,
+      isPassive: passive.isPassive,
+      hostConsent: passive.hostConsent,
+    }),
     allow,
     deny,
   };

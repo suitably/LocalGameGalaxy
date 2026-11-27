@@ -55,7 +55,9 @@ export function useSessionAudioController({
 }: UseSessionAudioControllerOptions) {
   const { settings } = useMelodiqSettings();
   // playback waits until the player answered the YouTube question (#645)
-  const consentPending = useYouTubeConsentGate(videoSrc, settings.hideBackgroundVideo).pending;
+  const consentPending = useYouTubeConsentGate(videoSrc, settings.hideBackgroundVideo, {
+    isPassive,
+  }).pending;
   const [isPlaying, setIsPlaying] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [isPausedForScore, setIsPausedForScore] = useState(false);

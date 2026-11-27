@@ -31,3 +31,28 @@ export const setYouTubeConsent = (consent: Exclude<YouTubeConsent, 'unset'>) => 
 
 /** Whether a YouTube background may be loaded on this device. */
 export const hasYouTubeConsent = () => getYouTubeConsent() === 'granted';
+
+export interface YouTubeConsentGateInput {
+  localConsent: YouTubeConsent;
+  hasYouTubeVideo: boolean;
+  hideBackgroundVideo: boolean;
+  /** A TV or phone display: it never asks and follows the host's answer. */
+  isPassive: boolean;
+  /** The host's answer from `GAME_STATE`; until it arrives the device's own choice applies. */
+  hostConsent?: YouTubeConsent;
+}
+
+/** Whether the YouTube background may load, and whether this device has to ask first (host only). */
+export const resolveYouTubeConsentGate = ({
+  localConsent,
+  hasYouTubeVideo,
+  hideBackgroundVideo,
+  isPassive,
+  hostConsent,
+}: YouTubeConsentGateInput) => {
+  const consent = isPassive ? (hostConsent ?? localConsent) : localConsent;
+  return {
+    allowed: consent === 'granted',
+    pending: !isPassive && hasYouTubeVideo && !hideBackgroundVideo && consent === 'unset',
+  };
+};
