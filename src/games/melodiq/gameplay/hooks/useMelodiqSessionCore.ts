@@ -10,6 +10,7 @@ import { usePassiveSync } from './usePassiveSync';
 import { useSessionAudioController } from './useSessionAudioController';
 import { useSessionScoringController } from './useSessionScoringController';
 import { useSongVocals } from './useSongVocals';
+import { useSessionResultsBroadcast } from './useSessionResultsBroadcast';
 import { getYouTubeConsent } from '../youtubeConsent';
 import type { MelodiqSessionHandle, MelodiqSessionProps } from '../types';
 import type { PlayerRuntime } from './PlayerRuntime';
@@ -162,6 +163,13 @@ export function useMelodiqSessionCore(
     setIsPausedForScore: audioCtrl.setIsPausedForScore,
     setPassivePlayBlocked: audioCtrl.setPassivePlayBlocked,
     virtualTimeRef: audioCtrl.virtualTimeRef,
+  });
+
+  useSessionResultsBroadcast({
+    enabled: hasTv && !isPassive && !isClient,
+    isFinished: audioCtrl.isFinished,
+    songId: song.id,
+    results,
   });
 
   useImperativeHandle(

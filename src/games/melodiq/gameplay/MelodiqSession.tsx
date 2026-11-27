@@ -12,7 +12,14 @@ export type { MelodiqSessionHandle, MelodiqSessionProps } from './types';
 
 const MelodiqSessionContent = forwardRef(
   (props: MelodiqSessionProps, ref: React.ForwardedRef<MelodiqSessionHandle>): React.ReactNode => {
-    const { song, onExit, onMinimize, isPassive = false, suppressResults = false } = props;
+    const {
+      song,
+      onExit,
+      onMinimize,
+      isPassive = false,
+      suppressResults = false,
+      passiveResults,
+    } = props;
     const { t } = useTranslation();
     const core = useMelodiqSessionCore(props, ref);
     const { parsedSong, contentLoading, loadError, needsFolderAccess, folderInputRef } = core;
@@ -78,12 +85,14 @@ const MelodiqSessionContent = forwardRef(
           players={
             results.length > 0
               ? results
-              : players.map((p) => ({
-                  config: p.config,
-                  score: p.score,
-                  history: [],
-                  isNewRecord: false,
-                }))
+              : passiveResults && passiveResults.length > 0
+                ? passiveResults
+                : players.map((p) => ({
+                    config: p.config,
+                    score: p.score,
+                    history: [],
+                    isNewRecord: false,
+                  }))
           }
           onExit={onExit}
           isPassive={isPassive}

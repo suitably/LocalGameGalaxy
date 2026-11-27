@@ -10,6 +10,11 @@ import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { TvMediaAssembler, type TvMediaManifest } from '../logic/tvMediaTransfer';
 import { useMultiChannelSync } from '../../../modules/sync';
 import { TV_CONTROL_SYNC, type TvControlMessage } from '../logic/syncChannels';
+import {
+  parseTvSessionResults,
+  SESSION_RESULTS_MESSAGE,
+  type TvSessionResults,
+} from '../logic/tvSessionResults';
 
 export interface TVSessionPayload {
   partyId?: string;
@@ -68,6 +73,9 @@ export const useTVReceiver = () => {
     };
   });
 
+  /** The host's scoreboard of the last finished song (see `tvSessionResults.ts`). */
+  const [sessionResults, setSessionResults] = useState<TvSessionResults | null>(null);
+
   const mediaRef = useRef(new TvMediaAssembler());
 
   const updateSessionInfo = useCallback((info?: TVSessionPayload) => {
@@ -116,6 +124,7 @@ export const useTVReceiver = () => {
         }
         if (payload.songData) {
           setDownloadingSong(null);
+          setSessionResults(null);
           const song = mediaRef.current.applyTo(payload.songData as Song);
           setActiveSong((prev) => {
             if (prev && prev.id === song.id && payload.currentTime === undefined) {
@@ -132,6 +141,9 @@ export const useTVReceiver = () => {
         setDownloadingSong(null);
         setActiveSong(null);
         setPassiveState(null);
+        setSessionResults(null);
+      } else if (type === SESSION_RESULTS_MESSAGE) {
+        setSessionResults(parseTvSessionResults(payload));
       } else if (
         type === 'REMOTE_COMMAND' &&
         payload?.command === 'WAIT_FOR_DOWNLOAD' &&
@@ -198,5 +210,6 @@ export const useTVReceiver = () => {
     isConnected,
     downloadingSong,
     sessionInfo,
+    sessionResults,
   };
 };

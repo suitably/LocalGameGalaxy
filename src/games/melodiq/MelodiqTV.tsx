@@ -22,8 +22,15 @@ const MelodiqTVScreen: React.FC = () => {
   useWakeLock(true);
   useScreenOrientation('landscape');
 
-  const { activeSong, setActiveSong, passiveState, isConnected, downloadingSong, sessionInfo } =
-    useTVReceiver();
+  const {
+    activeSong,
+    setActiveSong,
+    passiveState,
+    isConnected,
+    downloadingSong,
+    sessionInfo,
+    sessionResults,
+  } = useTVReceiver();
 
   if (downloadingSong) {
     return (
@@ -66,6 +73,9 @@ const MelodiqTVScreen: React.FC = () => {
               isTVMode={isTvMode}
               isPassive={true}
               passiveState={passiveState}
+              passiveResults={
+                sessionResults?.songId === activeSong.id ? sessionResults.results : undefined
+              }
               onExit={() => setActiveSong(null)}
               muteAudio={false}
               uiScale={2.0}

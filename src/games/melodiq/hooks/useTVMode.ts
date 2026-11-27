@@ -9,6 +9,8 @@ import { loadTvSettings } from './settingsStorage';
 import { useMultiChannelSync } from '../../../modules/sync';
 import { TV_CONTROL_SYNC, type TvControlMessage } from '../logic/syncChannels';
 import { createLogger } from '../../../lib/logger';
+import { useWindowEventForward } from './useWindowEventForward';
+import { SESSION_RESULTS_EVENT, SESSION_RESULTS_MESSAGE } from '../logic/tvSessionResults';
 
 const log = createLogger('TVMode');
 
@@ -88,7 +90,9 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
         sendSessionInfo();
         sendMessageRef.current('SETTINGS_UPDATE', loadTvSettings());
       } else if (type === 'MEDIA_ACK') {
-        mediaSenderRef.current.onAck(Number((payload as { received?: unknown } | undefined)?.received));
+        mediaSenderRef.current.onAck(
+          Number((payload as { received?: unknown } | undefined)?.received),
+        );
       }
     },
     [sendSessionInfo],
@@ -125,24 +129,16 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
   }, []);
 
   // Sync settings changes to active PresentationConnection
-  useEffect(() => {
-    const handleSettings = (e: Event) => {
-      if (
-        presentationConnectionRef.current &&
-        presentationConnectionRef.current.state === 'connected'
-      ) {
-        try {
-          presentationConnectionRef.current.send(
-            JSON.stringify({ type: 'SETTINGS_UPDATE', payload: (e as CustomEvent<unknown>).detail || {} }),
-          );
-        } catch (err) {
-          console.error('Failed to send SETTINGS_UPDATE to PresentationConnection:', err);
-        }
-      }
-    };
-    window.addEventListener('melodiq_settings_updated', handleSettings);
-    return () => window.removeEventListener('melodiq_settings_updated', handleSettings);
-  }, []);
+  useWindowEventForward('melodiq_settings_updated', (detail) => {
+    if (presentationConnectionRef.current?.state !== 'connected') return;
+    try {
+      presentationConnectionRef.current.send(
+        JSON.stringify({ type: 'SETTINGS_UPDATE', payload: detail || {} }),
+      );
+    } catch (err) {
+      console.error('Failed to send SETTINGS_UPDATE to PresentationConnection:', err);
+    }
+  });
 
   // Unified Sender
   const sendMessage = useCallback(
@@ -170,6 +166,11 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
   useEffect(() => {
     sendMessageRef.current = sendMessage;
   }, [sendMessage]);
+
+  // Stream the host's session results (scoreboard) to the TV
+  useWindowEventForward(SESSION_RESULTS_EVENT, (detail) =>
+    sendMessageRef.current(SESSION_RESULTS_MESSAGE, detail),
+  );
 
   // Re-sync session info whenever TV connects or host session info changes
   useEffect(() => {
