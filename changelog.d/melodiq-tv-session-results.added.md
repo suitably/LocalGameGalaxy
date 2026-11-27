@@ -1,0 +1,1 @@
+- **Melodiq: session results on the TV**: the TV now shows the full session results of a finished song (new records, all-time ranking, phone singers' history), not only the live scores.

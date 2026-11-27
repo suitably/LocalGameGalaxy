@@ -1,5 +1,6 @@
 import { type Song } from '../db';
 import { type PassiveGameState, type ActivePlayer } from '../types';
+import type { ScoreBoardPlayer } from './logic/scoreBoardRanking';
 
 export interface MelodiqSessionHandle {
   togglePlay: () => void;
@@ -33,6 +34,8 @@ export interface MelodiqSessionProps {
   muteAudio?: boolean;
   isPassive?: boolean;
   passiveState?: PassiveGameState | null;
+  /** Passive TV: the host's scoreboard rows (records, history); live scores are the fallback. */
+  passiveResults?: ScoreBoardPlayer[];
   activeSessionOverride?: ActivePlayer[] | null;
   suppressResults?: boolean;
   uiScale?: number;

@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-11-22
+  at: 2026-11-27
   method: 'read src/modules/sync/*.ts, src/lib/webrtc/*, src/games/melodiq/{PhoneClientEngine.tsx,hooks/usePhoneClientMessages.ts,hooks/usePhoneMicStreaming.ts,hooks/useTVMode.ts,hooks/useTVReceiver.ts,hooks/useMelodiqGlobalEvents.tsx}, public/sw-push.js, server/cloudflare-push-relay/worker.ts, cloudflare/webPushSend.ts, src/lib/push/siteWebPush.ts'
 sources:
   - 'src/modules/sync/MqttMailboxService.ts'
@@ -145,10 +145,12 @@ Details and sequence diagram: [webrtc-signaling.md](webrtc-signaling.md).
 
 ### 4.3 TV control (`melodiq_tv_control` / Presentation API)
 
-| Message                                                                                                                        | Direction |
-| ------------------------------------------------------------------------------------------------------------------------------ | --------- |
-| `HOST_SESSION_INFO`, `PLAY_SONG`, `STOP_SONG`, `GAME_STATE`, `SETTINGS_UPDATE`, `REMOTE_COMMAND` (`WAIT_FOR_DOWNLOAD`), `PING` | host → TV |
-| `TV_READY`, `PONG`, `SONG_ENDED`                                                                                               | TV → host |
+| Message                                                                                                                                           | Direction |
+| ------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| `HOST_SESSION_INFO`, `PLAY_SONG`, `STOP_SONG`, `GAME_STATE`, `SETTINGS_UPDATE`, `REMOTE_COMMAND` (`WAIT_FOR_DOWNLOAD`), `SESSION_RESULTS`, `PING` | host → TV |
+| `TV_READY`, `PONG`, `SONG_ENDED`                                                                                                                  | TV → host |
+
+`SESSION_RESULTS` `{songId, results}` carries the host's scoreboard of the song that just ended (score, new-record flag, best 50 history entries per singer; `logic/tvSessionResults.ts`). The host session fires it as the DOM event `melodiq_session_results` once finished with a TV connected, again whenever a row changes (a phone singer's history arrives later); `useTVMode` forwards it. The TV shows these rows on its scoreboard and falls back to the live scores from `GAME_STATE`; `PLAY_SONG` and `STOP_SONG` clear them.
 
 Host-internal events (`PLAYBACK_STARTED`, `SONG_ENDED`, `TV_READY`) are also dispatched as DOM `CustomEvent`s (`melodiq_client_send_data` and friends) inside the host page.
 
