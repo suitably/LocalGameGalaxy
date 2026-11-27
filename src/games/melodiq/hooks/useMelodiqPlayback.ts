@@ -123,7 +123,6 @@ export function useMelodiqPlayback(a: UseMelodiqPlaybackArgs) {
     handleSelectSong,
     manager: a.manager,
     isTVConnected,
-    sendRemoteCommand: a.sendRemoteCommand,
     currentView: a.currentView,
     isClient: a.isClient,
     getSongById: a.getSongById,

@@ -9,7 +9,7 @@ generated:
   at: 2026-09-27T10:00:00Z
   by: previous-agent
 verified:
-  at: 2026-11-22
+  at: 2026-11-27
   method: '2026-11-22: §2.16 table checked against event names in logic/ and hooks (#820); §2.12 written from code (#636); §2.11 written from code (#604); 2026-11-14: §2.9 / §2.10 written from code and measurements; rest 2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
@@ -160,6 +160,8 @@ The host's `useQueue.ts` (`QueueProvider`, host storage) stays the source of tru
 | `{ type: 'queue.reorder_participant', from, itemId, startIndex, endIndex }` | as `queue.remove`                                                           | `reorderQueueParticipant`                                            |
 | `{ type: 'queue.toggle_participant', from, itemId, deviceId, profile? }`    | the sender toggling itself (device or peer id), otherwise as `queue.remove` | `toggleQueueParticipant` (profile defaults to the peer's name / hue) |
 
+- Singers of the playing song (`useActiveParticipants.ts`, the "current participants" dialog of the queue drawer) are a second host-run room, logic `logic/currentParticipantsRoom.ts` [ID: GAME-MELODIQ-CURRENT-PARTICIPANTS-ROOM], hook `hooks/useCurrentParticipantsRoom.ts`: state `{ participants }` on `melodiq-current-participants_<roomId>`, action `HOST_CURRENT_PARTICIPANTS` (host only). Phones show that list and send `{ type: 'current_participants.toggle', from, deviceId, profile? }` (the sender itself, or anyone for `admin` / `queue_manager`) and `{ type: 'current_participants.reorder', from, startIndex, endIndex }` (`admin` / `queue_manager`). Before, a phone edited only its own local copy, so singers an admin phone removed stayed in the host's session. Add/remove logic shared with queue entries: `toggleParticipant` / `moveParticipant` in `logic/queueParticipantUtils.ts`.
+- Phone MiniPlayer shows the host's `nowPlaying` (room state) before the first queued song (`PlaybackManager.tsx`).
 - `helper_config` stays a direct data-channel message (#813 decision 7): the phone asks with `{ type: 'helper_config.get' }` 500 ms after connecting (`PhoneClientEngine.tsx`, replaces `queue.get`) and `PhoneQueueBridge.tsx` answers that peer with `helper_config`. Besides the queue room and this reply, `PhoneQueueBridge` only mounts `useHostLibrarySearch` (§2.14). The old `queue.update`, `queue.get` and `remote.select_song` messages are gone.
 
 ### 2.14 Library search (room events)
@@ -172,9 +174,9 @@ The host's `useQueue.ts` (`QueueProvider`, host storage) stays the source of tru
 
 - Pure logic `logic/remoteCommands.ts` [ID: GAME-MELODIQ-REMOTE-COMMANDS]: `parseRemoteCommand` accepts `{ type: 'remote.command', from, command, value?, to? }` with `command` one of `REMOTE_COMMANDS` (`play`, `pause`, `toggle`, `next`, `restart`, `exit`, `UPDATE_PROFILE`, `session.join_mode`, `CALIBRATE_PLAY_BEEP`, `CALIBRATE_BEEP`, `PING`, `PONG`); unknown commands and a missing `from` are rejected. Extra fields travel in `value` (`{ latency }`, `{ mode }`); `profileLatencyOf` / `joinModeOf` read them.
 - Phone: `hooks/usePhoneRemoteCommands.ts` (used by `sendClientCommand` of `PhoneClientEngine.tsx`, which ignores names outside the list) publishes on the room events channel (`gameKey: 'melodiq'`). It goes to the host only.
-- Host: `hooks/useHostRemoteCommands.ts` (mounted by `useMelodiqGlobalEvents`) runs `handleRemoteCommandEvent`: `PING` is answered with a `PONG` whose `to` is the pinging phone; `CALIBRATE_BEEP` plays the beep; everything else goes to the TV window via `sendRemoteCommand`, or to `melodiq_host_command` without a TV (`useHostPlaybackCommands`). `usePeerSessionMessages.ts` subscribes to the same events during a session for `UPDATE_PROFILE`, `restart`, `next`, `exit` and `session.join_mode`; it finds the phone's player by `from` (`deviceId`, else peer id). Both handlers run on the host only (`manager` is null on a phone).
+- Host: `hooks/useHostRemoteCommands.ts` (mounted by `useMelodiqGlobalEvents`) runs `handleRemoteCommandEvent`: `PING` is answered with a `PONG` whose `to` is the pinging phone; `CALIBRATE_BEEP` plays the beep; everything else goes to `melodiq_host_command` (`useHostPlaybackCommands`), also with a TV connected: the host runs the real session and the queue, and the TV window ignores `REMOTE_COMMAND` except `WAIT_FOR_DOWNLOAD` (`useTVReceiver.ts`), so forwarding there made phone `play` / `pause` / `next` dead in TV mode. `next` runs the MiniPlayer next handler (`hooks/miniPlayerNext.ts`: first press shows the score, the next one pops the queue); `useHostPlaybackCommands` calls the latest handler through a ref. `usePeerSessionMessages.ts` subscribes to the same events during a session for `UPDATE_PROFILE`, `restart`, `exit` and `session.join_mode` (no longer `next`: its seek to the song end raced with the host's handler); it finds the phone's player by `from` (`deviceId`, else peer id). Both handlers run on the host only (`manager` is null on a phone).
 - No role check: every phone could send every command before, and still can (`exit` and `restart` included). **Unverified:** whether any phone UI should be limited by `getRoleForDevice`.
-- Dead ends kept as they were: no phone sends `PING` or consumes `PONG` today, and `CALIBRATE_PLAY_BEEP` (sent by `RemoteLatencyCalibrator`) is forwarded to the TV, which has no handler for it. The connection-layer ping (`pongFor` in `useWebRTCClient`) is unrelated and unchanged.
+- Dead ends kept as they were: no phone sends `PING` or consumes `PONG` today, and `CALIBRATE_PLAY_BEEP` (sent by `RemoteLatencyCalibrator`) reaches `melodiq_host_command`, which has no handler for it. The connection-layer ping (`pongFor` in `useWebRTCClient`) is unrelated and unchanged.
 
 ### 2.16 Room protocol at a glance (#813)
 
@@ -187,11 +189,13 @@ All phone-to-host traffic except the direct messages below runs on the room API 
 |                                           | `settings.get`, `settings.set` (admin only)                                                               | phone to host            | no   | 2.7     |
 |                                           | `settings.state`                                                                                          | host to one phone        | yes  | 2.7     |
 |                                           | `queue.add`, `queue.select_song`, `queue.remove`, `queue.reorder_participant`, `queue.toggle_participant` | phone to host            | no   | 2.13    |
+|                                           | `current_participants.toggle`, `current_participants.reorder`                                             | phone to host            | no   | 2.13    |
 |                                           | `library.search`                                                                                          | phone to host            | no   | 2.14    |
 |                                           | `library.results`                                                                                         | host to one phone        | yes  | 2.14    |
 |                                           | `remote.command` (`play`, `pause`, `toggle`, `next`, `restart`, `exit`, `UPDATE_PROFILE`, ...)            | phone to host            | no   | 2.15    |
 |                                           | `remote.command` with `command: 'PONG'` (answer to `PING`)                                                | host to one phone        | yes  | 2.15    |
 | `melodiq-queue_<room>` (`useRoomReducer`) | state `{ queue, nowPlaying }`, action `HOST_QUEUE` (host only), hello/state handshake of `roomSync.ts`    | host state to all phones | no   | 2.13    |
+| `melodiq-current-participants_<room>`     | state `{ participants }`, action `HOST_CURRENT_PARTICIPANTS` (host only)                                  | host state to all phones | no   | 2.13    |
 
 Still direct WebRTC data channel messages (not room events, #813 decision 7): `identify` and the connection ping/pong, microphone audio, the song proxy (`api_request` and its replies, `useSongs.tsx`), `helper_config.get` / `helper_config` (carries the helper token, answered per peer by `PhoneQueueBridge.tsx`), and two leftovers that are not part of the room API yet: `trackSelect` (phone to host, `useHostPhoneJoin.ts`, `usePeerSessionMessages.ts`) and the `configure` handler of `useRemoteConfigListener.ts` plus the `history_report` branch of `usePeerSessionMessages.ts`, which no code in the repository sends. Same-device TV and tab sync (`useMultiChannelSync`: TV control, settings, queue between windows) is local `BroadcastChannel`, not WebRTC.
 

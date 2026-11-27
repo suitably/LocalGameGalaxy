@@ -70,7 +70,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     } = props;
 
     const { t } = useTranslation();
-    const { queue, popNext, setNowPlaying } = useQueue();
+    const { queue, popNext, setNowPlaying, nowPlaying } = useQueue();
 
     const sessionRef = useRef<MelodiqSessionHandle>(null);
     const { playbackState, setPlaybackState, handlePlaybackUpdate } = usePlaybackReporting(
@@ -148,11 +148,10 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     // Determine if we are in "restored" mode (page was reloaded while a song was playing)
     const isInRestoredMode = !selectedSong && !remoteSong && !!restoredSong;
 
-    // The song to display in the MiniPlayer
+    // The song to display in the MiniPlayer (a phone: the host's now-playing song, then the queue)
+    const queuedSong = (isClient ? nowPlaying : null) ?? queue[0]?.song ?? null;
     const miniPlayerSong =
-      selectedSong ||
-      remoteSong ||
-      (isInRestoredMode ? restoredSong : queue.length > 0 ? queue[0].song : null);
+      selectedSong || remoteSong || (isInRestoredMode ? restoredSong : queuedSong);
 
     return (
       <>

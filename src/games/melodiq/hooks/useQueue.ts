@@ -5,7 +5,11 @@ import type { ActivePlayer, MelodiqParticipant, MelodiqProfile } from '../types'
 import type { QueueParticipantProfile } from '../logic/queueRoom';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { generateUUID } from '../../../lib/uuid';
-import { enrichQueueParticipants } from '../logic/queueParticipantUtils';
+import {
+  enrichQueueParticipants,
+  moveParticipant,
+  toggleParticipant,
+} from '../logic/queueParticipantUtils';
 import { useMultiChannelSync } from '../../../modules/sync';
 import { QUEUE_SYNC } from '../logic/syncChannels';
 import { usePhoneQueueRoom } from './usePhoneQueueRoom';
@@ -67,7 +71,11 @@ interface QueueContextValue {
   clearQueue: () => void;
   moveItem: (fromIndex: number, toIndex: number) => void;
   replaceItem: (itemId: string, newSong: SongMeta) => void;
-  toggleQueueParticipant: (itemId: string, deviceId: string, profile: QueueParticipantProfile) => void;
+  toggleQueueParticipant: (
+    itemId: string,
+    deviceId: string,
+    profile: QueueParticipantProfile,
+  ) => void;
   reorderQueueParticipant: (itemId: string, startIndex: number, endIndex: number) => void;
   setNowPlaying: (song: SongMeta | null) => void;
   playPlaylistNow: (songs: SongMeta[], requester?: string) => void;
@@ -281,42 +289,14 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       }
 
       setQueue((prev) => {
-        const next = prev.map((item) => {
-          if (item.id === itemId) {
-            const participants = item.participants || [];
-            const exists = participants.find(
-              (p) =>
-                p.deviceId === deviceId ||
-                p.profileId === deviceId ||
-                (profile?.peerId && p.deviceId === profile.peerId),
-            );
-            let newParticipants;
-            if (exists) {
-              newParticipants = participants.filter(
-                (p) =>
-                  p.deviceId !== deviceId &&
-                  p.profileId !== deviceId &&
-                  !(profile?.peerId && p.deviceId === profile.peerId),
-              );
-            } else {
-              newParticipants = [
-                ...participants,
-                {
-                  profileId: deviceId, // Phone guests use deviceId as profileId
-                  deviceId: deviceId,
-                  volume: 0.8,
-                  muted: false,
-                  latency: 0,
-                  isRemote: profile?.isRemote || false,
-                  name: profile?.name,
-                  hue: profile?.hue,
-                },
-              ];
-            }
-            return { ...item, participants: newParticipants };
-          }
-          return item;
-        });
+        const next = prev.map((item) =>
+          item.id === itemId
+            ? {
+                ...item,
+                participants: toggleParticipant(item.participants || [], deviceId, profile),
+              }
+            : item,
+        );
         storage.setJson(QUEUE_STORAGE_KEY, next);
         broadcastQueue(next);
         return next;
@@ -332,15 +312,14 @@ export const QueueProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return;
       }
       setQueue((prev) => {
-        const next = prev.map((item) => {
-          if (item.id === itemId) {
-            const participants = Array.from(item.participants || []);
-            const [removed] = participants.splice(startIndex, 1);
-            participants.splice(endIndex, 0, removed);
-            return { ...item, participants };
-          }
-          return item;
-        });
+        const next = prev.map((item) =>
+          item.id === itemId
+            ? {
+                ...item,
+                participants: moveParticipant(item.participants || [], startIndex, endIndex),
+              }
+            : item,
+        );
         storage.setJson(QUEUE_STORAGE_KEY, next);
         broadcastQueue(next);
         return next;

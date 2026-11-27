@@ -1,0 +1,3 @@
+- **Melodiq: phones can skip to the next song again, also with a TV connected**: the host forwarded phone `play` / `pause` / `next` to the TV window, which ignores them; the host now handles them itself (first press shows the score, the next one starts the next queued song). A second handler no longer races it by seeking to the song end.
+- **Melodiq: singers an admin phone removes from the playing song are really removed**: the phone only changed its own local list; the host now owns the list, shares it with phones and applies their changes (admins and queue managers edit everyone, others only themselves).
+- **Melodiq: the phone mini player shows the song that is playing** instead of the next queued one.
