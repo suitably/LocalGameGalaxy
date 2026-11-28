@@ -5,6 +5,7 @@ import {
   type RemoteCommandEvent,
   type RemoteCommandName,
 } from '../logic/remoteCommands';
+import { getRoleForDevice } from '../components/useStoredRoles';
 import { MELODIQ_GAME_KEY, useMelodiqRoomTransport } from './useMelodiqRoomTransport';
 
 interface Options {
@@ -37,6 +38,7 @@ export function useHostRemoteCommands({ enabled }: Options): void {
         send,
         now: Date.now,
         selfId: room?.selfId ?? '',
+        getRole: getRoleForDevice,
       }),
   });
 }

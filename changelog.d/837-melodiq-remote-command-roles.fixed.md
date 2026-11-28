@@ -1,0 +1,1 @@
+Melodiq: phone commands follow the phone's role: only admins can end the session, admins and queue managers control playback (play, pause, next, restart), singers and queue contributors see no playback buttons. The phone's latency calibration beep now plays on the host.
