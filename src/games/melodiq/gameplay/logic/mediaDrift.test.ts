@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  COARSE_RATE_VIDEO_DRIFT_POLICY,
   correctDrift,
   FOLLOWER_DRIFT_POLICY,
   smoothDrift,
@@ -53,6 +54,20 @@ describe('correctDrift', () => {
     expect(correctDrift(0.2, 1, STEM_DRIFT_POLICY)).toEqual({ kind: 'seek' });
     expect(correctDrift(-0.3, 1, FOLLOWER_DRIFT_POLICY)).toEqual({ kind: 'seek' });
     expect(correctDrift(0.4, 1, VIDEO_DRIFT_POLICY).kind).toBe('rate');
+  });
+
+  it('steers a YouTube video with a 1.25x / 0.75x run and seeks only past a second', () => {
+    // Measured: YouTube sits ~150 ms behind after a start or seek
+    expect(correctDrift(0.15, 1, COARSE_RATE_VIDEO_DRIFT_POLICY)).toEqual({
+      kind: 'rate',
+      rate: 1.25,
+      direction: 1,
+    });
+    expect(correctDrift(-0.15, 1, COARSE_RATE_VIDEO_DRIFT_POLICY)).toMatchObject({ rate: 0.75 });
+    expect(correctDrift(0.05, 1, COARSE_RATE_VIDEO_DRIFT_POLICY)).toEqual(idle);
+    expect(correctDrift(0.05, 1, COARSE_RATE_VIDEO_DRIFT_POLICY, 1)).toMatchObject({ rate: 1.25 });
+    expect(correctDrift(0.9, 1, COARSE_RATE_VIDEO_DRIFT_POLICY).kind).toBe('rate');
+    expect(correctDrift(1.2, 1, COARSE_RATE_VIDEO_DRIFT_POLICY)).toEqual({ kind: 'seek' });
   });
 
   it('scales with the master rate', () => {

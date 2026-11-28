@@ -1,0 +1,1 @@
+Melodiq: YouTube background videos stay in time with the music: small offsets are closed by a short, unnoticeable speed change instead of being ignored up to half a second (measured: from ~150 ms behind to ~5 ms), and a video that stopped by itself is started again instead of standing still for the rest of the song.

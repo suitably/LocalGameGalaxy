@@ -39,14 +39,15 @@ export const VIDEO_DRIFT_POLICY: DriftPolicy = {
 };
 
 /**
- * Background video that cannot change its rate in small steps (YouTube rounds to 0.25 steps):
- * corrected by seeks only, which rebuffer, so only well past lip-sync tolerance.
+ * Background video that only takes coarse rates (YouTube: 0.25 steps). The video is muted, so a
+ * short run at 1.25× or 0.75× is not noticed, and unlike a seek it does not rebuffer (each YouTube
+ * seek lands late again). Seeks only for large jumps.
  */
-export const SEEK_ONLY_VIDEO_DRIFT_POLICY: DriftPolicy = {
-  engageSec: 0.5,
-  releaseSec: 0.5,
-  seekAboveSec: 0.5,
-  rateDelta: 0,
+export const COARSE_RATE_VIDEO_DRIFT_POLICY: DriftPolicy = {
+  engageSec: 0.08,
+  releaseSec: 0.02,
+  seekAboveSec: 1,
+  rateDelta: 0.25,
 };
 
 /** A passive screen's audio (TV) against the host's song clock, which scores the singers. */

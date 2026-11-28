@@ -8,8 +8,9 @@ export interface YouTubeVideoAdapterOptions {
 }
 
 /**
- * YouTube seeks are imprecise and rebuffer, so smaller corrections are ignored. When and how
- * often to seek is decided by the media sync (`SEEK_ONLY_VIDEO_DRIFT_POLICY` in `mediaDrift.ts`).
+ * YouTube seeks are imprecise and rebuffer, so smaller corrections are ignored. When to seek or
+ * change the rate is decided by the media sync (`COARSE_RATE_VIDEO_DRIFT_POLICY` in
+ * `mediaDrift.ts`).
  */
 const MIN_SEEK_SEC = 0.4;
 
@@ -23,8 +24,8 @@ export interface YouTubeVideoAdapter {
   muted: boolean;
   seeking: boolean;
   ended: boolean;
-  /** The player cannot change its rate in small steps: drift is corrected by seeks only. */
-  seekOnly: true;
+  /** The player takes only 0.25 rate steps (`COARSE_RATE_VIDEO_DRIFT_POLICY`). */
+  coarseRate: true;
   play: () => Promise<void>;
   pause: () => void;
   addEventListener: () => void;
@@ -98,7 +99,7 @@ export function createYouTubeVideoAdapter({
       const player = getPlayer();
       if (isPlayerReady() && player && typeof player.setPlaybackRate === 'function') {
         try {
-          const supportedRates = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2];
+          const supportedRates = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
           let closest = 1;
           let minDiff = 999;
           for (const rate of supportedRates) {
@@ -123,8 +124,9 @@ export function createYouTubeVideoAdapter({
           const state = player.getPlayerState();
           // 1: PLAYING, 3: BUFFERING -> Definitely NOT paused
           if (state === 1 || state === 3) return false;
-          // 2: PAUSED, 0: ENDED -> Definitely paused
-          if (state === 2 || state === 0) return true;
+          // 2: PAUSED, 0: ENDED, -1: UNSTARTED, 5: CUED -> not playing. Unstarted and cued count
+          // as paused so the media sync starts them again instead of seeking a stopped player.
+          if (state === 2 || state === 0 || state === -1 || state === 5) return true;
         } catch {
           // ignore API read errors
         }
@@ -171,7 +173,7 @@ export function createYouTubeVideoAdapter({
       }
     },
     muted: true,
-    seekOnly: true,
+    coarseRate: true,
     seeking: false,
     ended: false,
     addEventListener: () => {},
