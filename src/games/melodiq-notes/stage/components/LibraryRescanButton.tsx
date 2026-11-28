@@ -17,7 +17,7 @@ type RescanState =
 export function LibraryRescanButton({ onDone }: { onDone: () => void }) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const [state, setState] = useState<RescanState>({ kind: 'idle' });
 
   const run = async () => {

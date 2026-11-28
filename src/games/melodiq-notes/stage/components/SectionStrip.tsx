@@ -54,7 +54,7 @@ export function SectionStrip({ engine, open }: { engine: StageEngine; open: bool
   const { t } = useTranslation();
   const sectionName = useSectionName(engine);
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const { sections, song, focus, mode } = engine;
   const [state, setState] = useState<StripState>({ song: null, path: [], pick: null });
   // a new song starts with closed rows and no pick

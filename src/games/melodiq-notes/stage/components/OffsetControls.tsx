@@ -19,7 +19,7 @@ const NUDGES = [
 export function OffsetControls({ state }: { state: StageSongState }) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const nudge = (n: (typeof NUDGES)[number]) => (
     <Button
       key={n.sec}

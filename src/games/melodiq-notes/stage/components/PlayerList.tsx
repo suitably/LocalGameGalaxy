@@ -23,7 +23,7 @@ interface PlayerListProps {
 export function PlayerList({ engine, onInvite, onRemoveRemote }: PlayerListProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const song = engine.song;
   if (!song) return null;
   const canAdd = !!nextSeat(song, engine.seats);

@@ -45,7 +45,7 @@ export const StageParts: React.FC<StagePartsProps> = ({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.pult.${key}`, opts);
+    t(`games.melodiq_notes.pult.${key}`, opts ?? {});
   const { members, remove } = useStageRoom(engine, roomId);
   useEffect(() => onRoom(remove), [onRoom, remove]);
   const { players, isHost } = usePartyRoomPlayers(roomId);

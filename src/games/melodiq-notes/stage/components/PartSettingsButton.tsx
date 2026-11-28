@@ -35,7 +35,7 @@ interface PartSettingsButtonProps {
 export function PartSettingsButton({ song, parts }: PartSettingsButtonProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const [open, setOpen] = useState(false);
   if (!song || (song.parts.length < 2 && !song.parts.some((p) => isStrummed(p.guess)))) {
     return null;

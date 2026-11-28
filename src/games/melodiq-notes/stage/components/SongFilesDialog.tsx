@@ -40,7 +40,7 @@ interface SongFilesDialogProps {
 export function SongFilesDialog({ song: initial, onClose }: SongFilesDialogProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const phone = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
   const m = useSongFilesManager(initial);
   const aligner = useFolderAlignment(m.song);

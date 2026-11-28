@@ -1,0 +1,1 @@
+- **i18next 27 and react-i18next 18** (supersedes #811, #812): both majors are taken together because react-i18next 18 requires `i18next >= 27.0.1`. The stricter `t()` typings no longer accept `undefined` as the options argument, so the per-component key-prefix helpers (Melodiq Notes, latency calibration, DrawPot status alert) pass `opts ?? {}`; runtime behaviour is unchanged.

@@ -34,7 +34,7 @@ export function YouTubeResults({
 }: YouTubeResultsProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<YouTubeResult[] | null>(null);
   const [searching, setSearching] = useState(() => canSearch(initialQuery));

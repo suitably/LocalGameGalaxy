@@ -48,7 +48,7 @@ export function SessionBar(props: SessionBarProps) {
     props;
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const [playersOpen, setPlayersOpen] = useState(false);
   const song = engine.song;
 

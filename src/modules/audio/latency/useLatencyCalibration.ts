@@ -21,7 +21,7 @@ export function useLatencyCalibration(
 ) {
   const { t } = useTranslation();
   const k = useCallback(
-    (key: string, opts?: Record<string, unknown>) => t(`latencyCalibrator.${key}`, opts),
+    (key: string, opts?: Record<string, unknown>) => t(`latencyCalibrator.${key}`, opts ?? {}),
     [t],
   );
   const [status, setStatus] = useState<'idle' | 'running' | 'success' | 'failed'>('idle');

@@ -17,7 +17,7 @@ const ARROW: Partial<Record<StrumMode, string>> = { down: '↓', up: '↑' };
 export function StrumSettings({ setting, barCount, onChange }: StrumSettingsProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const [bar, setBar] = useState('');
   const [barMode, setBarMode] = useState<StrumMode>('down');
   const barNo = Number(bar);

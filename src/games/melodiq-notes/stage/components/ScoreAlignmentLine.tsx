@@ -13,7 +13,7 @@ interface ScoreAlignmentLineProps {
 export function ScoreAlignmentLine({ row, disabled, onAlign }: ScoreAlignmentLineProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   if (!row?.status) return null;
 
   let text = k(`align_status_${row.pending ? 'pending' : row.status}`);

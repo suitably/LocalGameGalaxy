@@ -34,7 +34,7 @@ interface BatchImportDialogProps {
 export function BatchImportDialog({ onClose }: BatchImportDialogProps) {
   const { t } = useTranslation();
   const k = (key: string, opts?: Record<string, unknown>) =>
-    t(`games.melodiq_notes.stage.${key}`, opts);
+    t(`games.melodiq_notes.stage.${key}`, opts ?? {});
   const phone = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
   const batch = useBatchImport();
   const input = useRef<HTMLInputElement>(null);
