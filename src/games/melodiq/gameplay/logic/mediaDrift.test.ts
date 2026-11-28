@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   COARSE_RATE_VIDEO_DRIFT_POLICY,
   correctDrift,
+  isPastVideoEnd,
   FOLLOWER_DRIFT_POLICY,
   smoothDrift,
   STEM_DRIFT_POLICY,
@@ -114,5 +115,19 @@ describe('smoothDrift', () => {
   it('starts with the first reading and then moves towards new ones', () => {
     expect(smoothDrift(null, 0.02)).toBe(0.02);
     expect(smoothDrift(0.02, 0.01, 0.5)).toBeCloseTo(0.015);
+  });
+});
+
+describe('isPastVideoEnd', () => {
+  it('leaves a video shorter than the song alone after its end', () => {
+    expect(isPastVideoEnd(250, 240)).toBe(true);
+    expect(isPastVideoEnd(239.9, 240)).toBe(true);
+    expect(isPastVideoEnd(200, 240)).toBe(false);
+  });
+
+  it('keeps following while the length is unknown', () => {
+    expect(isPastVideoEnd(250, Number.NaN)).toBe(false);
+    expect(isPastVideoEnd(250, 0)).toBe(false);
+    expect(isPastVideoEnd(250, Number.POSITIVE_INFINITY)).toBe(false);
   });
 });

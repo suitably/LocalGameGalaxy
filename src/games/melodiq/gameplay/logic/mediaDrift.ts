@@ -93,3 +93,15 @@ export function correctDrift(
 /** Exponential smoothing of a drift reading; `null` starts a new series (after a seek). */
 export const smoothDrift = (previous: number | null, raw: number, weight = 0.3): number =>
   previous === null ? raw : previous + (raw - previous) * weight;
+
+/** Within this much of a background video's end it is left to finish, not restarted or seeked. */
+const VIDEO_END_MARGIN_SEC = 0.25;
+
+/**
+ * Whether the song is past the end of its (shorter) background video: seeking it there only ends
+ * it again, so the media sync leaves it alone. `durationSec` NaN/0 means unknown yet.
+ */
+export const isPastVideoEnd = (songTimeSec: number, durationSec: number): boolean =>
+  Number.isFinite(durationSec) &&
+  durationSec > 0 &&
+  songTimeSec >= durationSec - VIDEO_END_MARGIN_SEC;

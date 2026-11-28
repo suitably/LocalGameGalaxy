@@ -19,6 +19,8 @@ export interface YouTubeVideoAdapter {
   error: null;
   currentTime: number;
   playbackRate: number;
+  /** Seconds, NaN until known (like `HTMLMediaElement.duration`). */
+  readonly duration: number;
   paused: boolean;
   readyState: number;
   muted: boolean;
@@ -116,6 +118,18 @@ export function createYouTubeVideoAdapter({
           // ignore API errors
         }
       }
+    },
+    get duration() {
+      const player = getPlayer();
+      if (isPlayerReady() && player && typeof player.getDuration === 'function') {
+        try {
+          const d = player.getDuration();
+          if (typeof d === 'number' && d > 0) return d;
+        } catch {
+          // ignore API read errors
+        }
+      }
+      return NaN;
     },
     get paused() {
       const player = getPlayer();
