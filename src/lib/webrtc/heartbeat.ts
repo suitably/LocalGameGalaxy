@@ -38,3 +38,15 @@ export function isHeartbeatMessage(msg: unknown): msg is HeartbeatMessage {
 
 export const pingMessage = (now: number): PingMessage => ({ type: 'ping', t: now });
 export const pongFor = (ping: PingMessage): PongMessage => ({ type: 'pong', t: ping.t });
+
+/** Round trips above this are ignored (a stalled tab, not the network). */
+const MAX_RTT_SAMPLE_MS = 3000;
+
+/**
+ * Smoothed round-trip time from a pong (`now - pong.t`): exponential average, the first sample
+ * taken as is. Invalid samples keep the previous estimate.
+ */
+export function smoothRtt(previous: number | null, sample: number): number | null {
+  if (!Number.isFinite(sample) || sample < 0 || sample > MAX_RTT_SAMPLE_MS) return previous;
+  return previous === null ? sample : previous + (sample - previous) * 0.25;
+}

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  smoothRtt,
   HEARTBEAT_CHECK_MS,
   PEER_TIMEOUT_MS,
   PING_INTERVAL_MS,
@@ -45,5 +46,18 @@ describe('messages', () => {
 
   it('detects a silent peer within 16 s of the last pong', () => {
     expect(PEER_TIMEOUT_MS + HEARTBEAT_CHECK_MS).toBeLessThanOrEqual(16000);
+  });
+});
+
+describe('smoothRtt', () => {
+  it('takes the first sample and then averages', () => {
+    expect(smoothRtt(null, 40)).toBe(40);
+    expect(smoothRtt(40, 80)).toBe(50);
+  });
+
+  it('ignores negative, huge and invalid samples', () => {
+    expect(smoothRtt(40, -5)).toBe(40);
+    expect(smoothRtt(40, 10_000)).toBe(40);
+    expect(smoothRtt(null, Number.NaN)).toBeNull();
   });
 });

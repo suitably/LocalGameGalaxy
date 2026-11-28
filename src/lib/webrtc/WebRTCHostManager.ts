@@ -15,6 +15,7 @@ import {
   isPeerStale,
   isPingDue,
   pingMessage,
+  smoothRtt,
 } from './heartbeat';
 
 const log = createLogger('WebRTCHostManager');
@@ -125,6 +126,8 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
   protected peers: Map<string, T> = new Map();
   /** When each peer was last heard from (any data, pongs included); drives the heartbeat. */
   private lastSeenAt = new Map<string, number>();
+  /** Smoothed round trip per peer from the heartbeat pongs (`smoothRtt`). */
+  private rttMs = new Map<string, number>();
   private lastPingAt: number | null = null;
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
 
@@ -386,7 +389,11 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
           this.lastSeenAt.set(peerId, Date.now());
 
           if (isHeartbeatMessage(msg)) {
-            continue; // liveness only; games never see ping/pong
+            if (msg.type === 'pong') {
+              const rtt = smoothRtt(this.rttMs.get(peerId) ?? null, Date.now() - msg.t);
+              if (rtt !== null) this.rttMs.set(peerId, rtt);
+            }
+            continue; // games never see ping/pong
           } else if (msg.type === 'identify') {
             this.applyIdentity(remotePeer, msg, 'WebRTC');
           } else {
@@ -444,6 +451,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
     this.callbacks?.onPeerRemoved?.(peerId, remotePeer);
     this.peers.delete(peerId);
     this.lastSeenAt.delete(peerId);
+    this.rttMs.delete(peerId);
     this.callbacks?.onPeerDisconnected?.(peerId);
   }
 
@@ -471,6 +479,7 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
   stop(): void {
     this.stopHeartbeat();
     this.lastSeenAt.clear();
+    this.rttMs.clear();
     this.removeAllListeners();
     if (this.trackerClient) {
       (this.trackerClient as any).stop();
@@ -482,6 +491,11 @@ export class WebRTCHostManager<T extends RemotePeerBase = RemotePeerBase> {
       this.callbacks?.onPeerRemoved?.(p.peerId, p);
     });
     this.peers.clear();
+  }
+
+  /** Smoothed round trip to a peer in ms, or null before its first pong. */
+  getRttMs(peerId: string): number | null {
+    return this.rttMs.get(peerId) ?? null;
   }
 
   sendToPeer(peerId: string, data: any): void {

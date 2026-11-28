@@ -1,0 +1,1 @@
+Melodiq: phone singers are scored on the note they sang, not the one playing when their pitch reached the host: phones send dated pitch frames (only while singing, about 10 messages a second instead of 30), and the host takes the network delay into account.
