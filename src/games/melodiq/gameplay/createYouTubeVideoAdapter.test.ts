@@ -112,6 +112,26 @@ describe('createYouTubeVideoAdapter', () => {
       mockPlayer.getPlayerState = vi.fn().mockReturnValue(0); // ENDED
       expect(adapter.paused).toBe(true);
     });
+
+    it('reports a stopped player (UNSTARTED -1, CUED 5) as paused even after play()', async () => {
+      isReady = true;
+      const adapter = createYouTubeVideoAdapter({
+        videoId: 'dQw4w9WgXcQ',
+        getPlayer: () => mockPlayer as YTPlayerInstance,
+        isPlayerReady: () => isReady,
+      });
+      await adapter.play();
+
+      mockPlayer.getPlayerState = vi.fn().mockReturnValue(-1);
+      expect(adapter.paused).toBe(true);
+      mockPlayer.getPlayerState = vi.fn().mockReturnValue(5);
+      expect(adapter.paused).toBe(true);
+
+      // The media sync's next play() starts it again
+      mockPlayer.playVideo = vi.fn();
+      await adapter.play();
+      expect(mockPlayer.playVideo).toHaveBeenCalled();
+    });
   });
 
   describe('play/pause deduplication', () => {

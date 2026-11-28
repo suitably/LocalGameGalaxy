@@ -3,9 +3,9 @@ import {
   correctDrift,
   type DriftDirection,
   smoothDrift,
-  SEEK_ONLY_VIDEO_DRIFT_POLICY,
   STEM_DRIFT_POLICY,
   VIDEO_DRIFT_POLICY,
+  COARSE_RATE_VIDEO_DRIFT_POLICY,
 } from '../logic/mediaDrift';
 import { startSteadyTicker } from '../../../../lib/utils/steadyTicker';
 
@@ -111,9 +111,9 @@ export function useLocalMediaSync({
           }
 
           if (video.readyState >= 2 && isAudioPlaying && !video.paused && !video.seeking) {
-            // YouTube cannot change its rate in small steps: seeks only
-            const policy = (video as { seekOnly?: boolean }).seekOnly
-              ? SEEK_ONLY_VIDEO_DRIFT_POLICY
+            // YouTube takes only 0.25 rate steps: corrected by short 1.25× / 0.75× runs
+            const policy = (video as { coarseRate?: boolean }).coarseRate
+              ? COARSE_RATE_VIDEO_DRIFT_POLICY
               : VIDEO_DRIFT_POLICY;
             const rawDrift = masterTime - video.currentTime;
             // A video's clock moves in frame steps: smooth it, or the rate flips every frame
