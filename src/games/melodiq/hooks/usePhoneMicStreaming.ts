@@ -3,6 +3,7 @@ import { MicrophoneManager } from '../audio/MicrophoneManager';
 import { startSteadyTicker } from '../../../lib/utils/steadyTicker';
 import { createLogger } from '../../../lib/logger';
 import { micGainFactor } from '../logic/clientProfile';
+import { createPitchBundler } from '../logic/pitchFrames';
 
 const log = createLogger('PhoneClientEngine');
 
@@ -19,8 +20,9 @@ interface Options {
 }
 
 /**
- * Streams the singer's pitch to the host (about 30 Hz) while a session is playing and this
- * phone sings; the microphone is released otherwise to save battery. The ticks come from
+ * Streams the singer's pitch to the host while a session is playing and this phone sings: a
+ * detection about 30 times a second, sent as dated frames (`logic/pitchFrames.ts`, voiced only,
+ * about 3 per message); the microphone is released otherwise to save battery. The ticks come from
  * `startSteadyTicker`, so the pitch keeps flowing while the browser is in the background.
  */
 export const usePhoneMicStreaming = ({
@@ -46,22 +48,14 @@ export const usePhoneMicStreaming = ({
     let mounted = true;
     let mic: MicrophoneManager | null = null;
     let stopTicker: (() => void) | null = null;
+    const bundler = createPitchBundler((message) => sendData({ ...message }));
 
     const tick = (active: MicrophoneManager) => {
       if (!mounted) return;
       const now = performance.now();
       if (now - lastSendRef.current < SEND_INTERVAL_MS - 5) return;
       const pitch = active.getPitch();
-      if (pitch) {
-        sendData({
-          type: 'pitch',
-          frequency: pitch.frequency,
-          note: pitch.note,
-          volume: pitch.volume,
-        });
-      } else {
-        sendData({ type: 'pitch', frequency: -1, note: -1, volume: active.getCurrentVolume() });
-      }
+      bundler.push(pitch, now);
       window.dispatchEvent(new CustomEvent('melodiq_local_pitch', { detail: { pitch } }));
       lastSendRef.current = now;
     };

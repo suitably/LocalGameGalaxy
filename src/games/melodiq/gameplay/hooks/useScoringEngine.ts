@@ -2,7 +2,8 @@ import { useEffect, useRef, useCallback } from 'react';
 import { type PlayerRuntime } from './PlayerRuntime';
 import { type PitchResult } from '../../audio/MicrophoneManager';
 import { type RatingType } from '../ScoreDisplay';
-import { activeNoteIndex, pointsPerBeat } from '../logic/noteScoring';
+import { activeNoteIndex } from '../logic/noteScoring';
+import { matchPitch, sungBeat } from '../logic/pitchMatch';
 import { notesOfTrack, type UseScoringEngineProps } from './scoringEngineTypes';
 import { startSteadyTicker } from '../../../../lib/utils/steadyTicker';
 
@@ -72,7 +73,7 @@ export function useScoringEngine({
 
   const processPlayer = useCallback(
     (player: PlayerRuntime, devOverride: number | null, deltaTimeMs: number) => {
-      let pitch: PitchResult | null = null;
+      let pitch: (PitchResult & { ageMs?: number }) | null = null;
       const effectiveBpmMultiplier = (bpmMultiplier || 1) * ULTRASTAR_BEAT_DIVISOR;
       const beatDuration = 60000 / ((parsedSong?.bpm || 120) * effectiveBpmMultiplier);
 
@@ -117,113 +118,97 @@ export function useScoringEngine({
       player.pitchRef.current = pitch;
 
       if (pitch && pitch.note > 0 && isPlayingRef.current && parsedSong && audioRef.current) {
-        const latency = (player.config.latency || 0) + micLatency;
-        const currentBeat =
-          (audioRef.current.currentTime * 1000 - latency - (parsedSong.gap || 0)) / beatDuration;
+        // A phone's pitch is dated (`ageMs`): score it on the note due when it was sung
+        const currentBeat = sungBeat({
+          songTimeMs: audioRef.current.currentTime * 1000,
+          latencyMs: (player.config.latency || 0) + micLatency,
+          ageMs: pitch.ageMs,
+          gapMs: parsedSong.gap || 0,
+          beatDurationMs: beatDuration,
+        });
 
         const tIdx = player.trackIndex;
         const notesSource = notesOfTrack(parsedSong, tIdx);
 
         if (!notesSource || notesSource.length === 0) return;
 
-        const currentScoreWeight =
-          trackScoreWeights.length > tIdx ? trackScoreWeights[tIdx] : trackScoreWeights[0] || 1;
+        const match = matchPitch({
+          notes: notesSource,
+          beat: currentBeat,
+          sungNote: pitch.note,
+          deltaTimeMs,
+          beatDurationMs: beatDuration,
+          goldenNoteMultiplier,
+          scoreWeight:
+            trackScoreWeights.length > tIdx ? trackScoreWeights[tIdx] : trackScoreWeights[0] || 1,
+        });
 
-        const activeIndex = activeNoteIndex(notesSource, currentBeat);
+        if (match.kind === 'hit') {
+          const activeIndex = match.noteIndex;
+          if (!player.trackScores[tIdx]) player.trackScores[tIdx] = 0;
+          player.trackScores[tIdx] += match.points;
+          player.score = Math.round(Object.values(player.trackScores).reduce((a, b) => a + b, 0));
 
-        if (activeIndex !== -1) {
-          const note = notesSource[activeIndex];
-          const targetPitch = note.pitch;
-          const sungPitch = pitch.note;
+          const activeSegment = player.activeSegments[tIdx];
+          const wasHitting = activeSegment ? activeSegment.noteIndex === activeIndex : false;
 
-          const diff = Math.abs((sungPitch % 12) - (targetPitch % 12));
-          const semitoneDiff = Math.min(diff, 12 - diff);
+          if (!wasHitting) {
+            player.combo += 1;
+            if (player.combo > player.maxCombo) player.maxCombo = player.combo;
 
-          if (semitoneDiff < 1.2) {
-            const durationUnitsCovered = deltaTimeMs / beatDuration;
-            let points =
-              durationUnitsCovered *
-              pointsPerBeat(notesSource, goldenNoteMultiplier) *
-              currentScoreWeight;
-            if (note.type === '*') points *= goldenNoteMultiplier;
+            const rating: RatingType = match.rating;
+            const hitScore = Math.round(player.trackScores[tIdx] || 0);
 
-            if (!player.trackScores[tIdx]) player.trackScores[tIdx] = 0;
-            player.trackScores[tIdx] += points;
-            player.score = Math.round(Object.values(player.trackScores).reduce((a, b) => a + b, 0));
+            player.lastHit = {
+              rating,
+              score: hitScore,
+              timestamp: Date.now(),
+            };
 
-            const activeSegment = player.activeSegments[tIdx];
-            const wasHitting = activeSegment ? activeSegment.noteIndex === activeIndex : false;
+            scoreDisplayRef.current?.triggerHit(player.config.id, rating, player.combo, hitScore);
+          } else if (Math.random() < 0.1) {
+            scoreDisplayRef.current?.triggerHit(
+              player.config.id,
+              'Good',
+              player.combo,
+              Math.round(player.trackScores[tIdx]),
+            );
+          }
 
-            if (!wasHitting) {
-              player.combo += 1;
-              if (player.combo > player.maxCombo) player.maxCombo = player.combo;
+          const record = player.segmentsRef.current;
+          if (record) {
+            const activeSeg = player.activeSegments[tIdx];
 
-              let rating: RatingType = 'Good';
-              if (semitoneDiff < 0.3) rating = 'Perfect';
-              else if (semitoneDiff < 0.7) rating = 'Good';
-              else rating = 'Okay';
-
-              const hitScore = Math.round(player.trackScores[tIdx] || 0);
-
-              player.lastHit = {
-                rating,
-                score: hitScore,
-                timestamp: Date.now(),
-              };
-
-              scoreDisplayRef.current?.triggerHit(player.config.id, rating, player.combo, hitScore);
+            if (activeSeg && activeSeg.trackIndex === tIdx && activeSeg.noteIndex === activeIndex) {
+              activeSeg.endBeat = currentBeat;
             } else {
-              if (Math.random() < 0.1) {
-                scoreDisplayRef.current?.triggerHit(
-                  player.config.id,
-                  'Good',
-                  player.combo,
-                  Math.round(player.trackScores[tIdx]),
-                );
-              }
-            }
-
-            const record = player.segmentsRef.current;
-            if (record) {
-              const activeSeg = player.activeSegments[tIdx];
-
-              if (
-                activeSeg &&
-                activeSeg.trackIndex === tIdx &&
-                activeSeg.noteIndex === activeIndex
-              ) {
-                activeSeg.endBeat = currentBeat;
-              } else {
-                const newSegment = {
-                  noteIndex: activeIndex,
-                  startBeat: currentBeat,
-                  endBeat: currentBeat,
-                  trackIndex: tIdx,
-                };
-                player.activeSegments[tIdx] = newSegment;
-
-                if (!record[activeIndex]) record[activeIndex] = [];
-                record[activeIndex].push(newSegment);
-              }
-            }
-          } else {
-            if (player.activeSegments[tIdx] !== null) {
-              player.combo = 0;
-              const hitScore = Math.round(player.trackScores[tIdx] || 0);
-              player.lastHit = {
-                rating: 'Miss',
-                score: hitScore,
-                timestamp: Date.now(),
+              const newSegment = {
+                noteIndex: activeIndex,
+                startBeat: currentBeat,
+                endBeat: currentBeat,
+                trackIndex: tIdx,
               };
+              player.activeSegments[tIdx] = newSegment;
 
-              scoreDisplayRef.current?.triggerHit(player.config.id, 'Miss', 0, hitScore);
+              if (!record[activeIndex]) record[activeIndex] = [];
+              record[activeIndex].push(newSegment);
             }
-            player.activeSegments[tIdx] = null;
           }
-        } else {
+        } else if (match.kind === 'miss') {
           if (player.activeSegments[tIdx] !== null) {
-            player.activeSegments[tIdx] = null;
+            player.combo = 0;
+            const hitScore = Math.round(player.trackScores[tIdx] || 0);
+            player.lastHit = {
+              rating: 'Miss',
+              score: hitScore,
+              timestamp: Date.now(),
+            };
+
+            scoreDisplayRef.current?.triggerHit(player.config.id, 'Miss', 0, hitScore);
           }
+          player.activeSegments[tIdx] = null;
+        } else if (player.activeSegments[tIdx] !== null) {
+          player.activeSegments[tIdx] = null;
         }
       }
     },
