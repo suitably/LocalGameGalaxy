@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { type Song } from '../../db';
-import { songVocals, type SongVocals } from '../../logic/songVocals';
+import { songVocals, txtHasNotes, type SongVocals } from '../../logic/songVocals';
 import { loadScoreVocals, ScoreVocalsLoadError } from '../../logic/scoreVocals';
 import { fetchCompanionFile } from '../../../../lib/companion/songScoresApi';
 import { getSongMarks } from '../../../../lib/companion/notesLibraryApi';
@@ -40,14 +40,18 @@ function txtState(txtContent: string | undefined): SongVocalsState | null {
 }
 
 /**
- * The song's sung view from the shared ScoreSong model (#604): its karaoke `.txt`, else the vocal
- * part of its sheet music fetched from the companion server.
+ * The song's sung view from the shared ScoreSong model (#604): its karaoke `.txt` when it has notes,
+ * else the vocal part of its sheet music fetched from the companion server, else the note-less `.txt`.
  */
 export function useSongVocals(song: Song): SongVocalsState {
   const { id, txtContent, scores } = song;
-  const fromTxt = useMemo(() => txtState(txtContent), [txtContent]);
+  // A `.txt` without notes (the server's minimal one) gives way to sheet music
+  const needsScore = !txtHasNotes(txtContent) && !!scores?.length;
+  const fromTxt = useMemo(
+    () => (needsScore ? null : txtState(txtContent)),
+    [needsScore, txtContent],
+  );
   const [fromScore, setFromScore] = useState<{ id: string; state: SongVocalsState } | null>(null);
-  const needsScore = !fromTxt && !!scores?.length;
 
   useEffect(() => {
     if (!needsScore || !scores) return;
@@ -60,12 +64,17 @@ export function useSongVocals(song: Song): SongVocalsState {
         done({ parsedSong: vocals, contentLoading: false, loadError: null }),
       )
       .catch((e: unknown) =>
-        done(failed(e instanceof ScoreVocalsLoadError ? e.reason : 'score_load_failed')),
+        // Nothing to sing in the sheet music (e.g. an instrumental arrangement): a note-less
+        // `.txt` still plays the song, as before #604
+        done(
+          txtState(txtContent) ??
+            failed(e instanceof ScoreVocalsLoadError ? e.reason : 'score_load_failed'),
+        ),
       );
     return () => {
       mounted = false;
     };
-  }, [id, needsScore, scores]);
+  }, [id, needsScore, scores, txtContent]);
 
   if (fromTxt) return fromTxt;
   if (!needsScore) return failed('no_lyrics');

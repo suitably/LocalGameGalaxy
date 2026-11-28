@@ -1,0 +1,1 @@
+Melodiq: songs whose lyrics file has no notes (written by the server when no lyrics were found) play again instead of failing with "Failed to parse song format."; they sing the sheet music's vocal part when there is one.
