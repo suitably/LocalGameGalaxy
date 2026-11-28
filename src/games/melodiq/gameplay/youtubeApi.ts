@@ -89,6 +89,8 @@ export interface YTPlayerInstance {
   getPlaybackRate: () => number;
   setPlaybackRate: (rate: number) => void;
   getPlayerState: () => number;
+  /** Seconds; 0 until the video's metadata has loaded. */
+  getDuration: () => number;
   destroy: () => void;
   /** Undocumented but stable: unloads a player module such as the caption renderer. */
   unloadModule?: (module: string) => void;

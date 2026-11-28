@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import {
   correctDrift,
+  isPastVideoEnd,
   type DriftDirection,
   smoothDrift,
   STEM_DRIFT_POLICY,
@@ -85,8 +86,9 @@ export function useLocalMediaSync({
         // While the instrumental buffers its clock stands still: the followers must wait too
         const isAudioPlaying = !audio.paused && !audio.ended && audio.readyState >= 3;
 
-        // Sync Video Play/Pause & Timing (the video follows; audio and lyrics never wait for it)
-        if (video) {
+        // Sync Video Play/Pause & Timing (the video follows; audio and lyrics never wait for it).
+        // A video shorter than the song is left to end: seeking it past its end only ends it again.
+        if (video && !isPastVideoEnd(masterTime, video.duration)) {
           if (
             isAudioPlaying &&
             video.paused &&
