@@ -1,0 +1,1 @@
+Melodiq: settings changed on the host or an admin phone (lyrics position, volumes, vocals/instrumental mode) no longer flip back and forth on the TV and host; the TV window no longer echoes every setting about a thousand times a second.

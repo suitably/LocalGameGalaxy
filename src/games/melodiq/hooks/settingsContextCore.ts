@@ -8,6 +8,8 @@ export interface SettingsContextValue {
   settings: SettingsState;
   updateSetting: <K extends keyof SettingsState>(key: K, value: SettingsState[K]) => void;
   resetSettings: (newState: SettingsState) => void;
+  /** TV only: applies settings the host sent, without storing or publishing them again. */
+  applyRemoteSettings: (payload: unknown) => void;
   saveSettings: () => void;
 }
 
