@@ -8,6 +8,7 @@ import {
   persistSingleSetting,
   type SettingsState,
 } from './settingsStorage';
+import { mergeHostSettings } from '../logic/tvSettings';
 import { SettingsContext } from './settingsContextCore';
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -51,6 +52,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     },
     [publishLocal],
   );
+
+  const applyRemoteSettings = useCallback((payload: unknown) => {
+    setSettings((prev) => mergeHostSettings(prev, payload));
+  }, []);
 
   const saveSettings = useCallback(() => {
     persistSettings(settings);
@@ -106,7 +111,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   return (
-    <SettingsContext.Provider value={{ settings, updateSetting, resetSettings, saveSettings }}>
+    <SettingsContext.Provider
+      value={{ settings, updateSetting, resetSettings, applyRemoteSettings, saveSettings }}
+    >
       {children}
     </SettingsContext.Provider>
   );

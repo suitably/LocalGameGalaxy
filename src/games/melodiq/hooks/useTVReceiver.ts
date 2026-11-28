@@ -5,7 +5,7 @@ import {
   type PresentationConnection,
   type NavigatorWithPresentation,
 } from '../types';
-import { useMelodiqSettings, type SettingsState } from './settingsContextCore';
+import { useMelodiqSettings } from './settingsContextCore';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { TvMediaAssembler, type TvMediaManifest } from '../logic/tvMediaTransfer';
 import { useMultiChannelSync } from '../../../modules/sync';
@@ -42,7 +42,7 @@ export interface TVSessionInfo {
 }
 
 export const useTVReceiver = () => {
-  const { updateSetting } = useMelodiqSettings();
+  const { applyRemoteSettings } = useMelodiqSettings();
 
   const [activeSong, setActiveSong] = useState<(Song & { initialTime?: number }) | null>(null);
   const [passiveState, setPassiveState] = useState<PassiveGameState | null>(null);
@@ -158,9 +158,7 @@ export const useTVReceiver = () => {
         setActiveSong(null);
         setDownloadingSong({ title: payload.value.title, artist: payload.value.artist });
       } else if (type === 'SETTINGS_UPDATE' && payload) {
-        Object.entries(payload).forEach(([k, v]) => {
-          updateSetting(k as keyof SettingsState, v as SettingsState[keyof SettingsState]);
-        });
+        applyRemoteSettings(payload);
       } else if (type === 'GAME_STATE' && payload) {
         const state = payload as unknown as PassiveGameState;
         // usePassiveSync takes every state from the event; React re-renders only for visible
@@ -214,7 +212,7 @@ export const useTVReceiver = () => {
     return () => {
       handleMessageRef.current = () => {};
     };
-  }, [updateSetting, updateSessionInfo, publishLocal]);
+  }, [applyRemoteSettings, updateSessionInfo, publishLocal]);
 
   return {
     activeSong,
