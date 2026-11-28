@@ -28,7 +28,6 @@
   "src/games/melodiq/components/YouTubeSearchDialog.tsx": 1,
   "src/games/melodiq/gameplay/components/SessionBackgroundMedia.tsx": 1,
   "src/games/melodiq/gameplay/components/SessionLyricsVisualizer.tsx": 1,
-  "src/games/melodiq/gameplay/hooks/useLocalMediaSync.ts": 3,
   "src/games/melodiq/gameplay/hooks/useMediaLoaders.ts": 6,
   "src/games/melodiq/gameplay/hooks/usePassiveSync.ts": 6,
   "src/games/melodiq/gameplay/hooks/usePlaybackControls.ts": 1,

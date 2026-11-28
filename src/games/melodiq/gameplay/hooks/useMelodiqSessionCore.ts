@@ -154,8 +154,6 @@ export function useMelodiqSessionCore(
     playersRef,
     scoreDisplayRef: scoringCtrl.scoreDisplayRef,
     audioRef: audioCtrl.audioRef,
-    vocalsRef: audioCtrl.vocalsRef,
-    videoRef: audioCtrl.videoRef,
     isPlayingRef: audioCtrl.isPlayingRef,
     setIsPlaying: audioCtrl.setIsPlaying,
     setIsFinished: audioCtrl.setIsFinished,

@@ -38,6 +38,17 @@ export const VIDEO_DRIFT_POLICY: DriftPolicy = {
   rateDelta: 0.05,
 };
 
+/**
+ * Background video that cannot change its rate in small steps (YouTube rounds to 0.25 steps):
+ * corrected by seeks only, which rebuffer, so only well past lip-sync tolerance.
+ */
+export const SEEK_ONLY_VIDEO_DRIFT_POLICY: DriftPolicy = {
+  engageSec: 0.5,
+  releaseSec: 0.5,
+  seekAboveSec: 0.5,
+  rateDelta: 0,
+};
+
 /** A passive screen's audio (TV) against the host's song clock, which scores the singers. */
 export const FOLLOWER_DRIFT_POLICY: DriftPolicy = {
   engageSec: 0.04,
