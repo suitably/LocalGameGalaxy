@@ -115,25 +115,13 @@ export function applySungSegments(
 
 type RenderKeys = Pick<
   PassiveGameState,
-  | 'isPlaying'
-  | 'isFinished'
-  | 'isPausedForScore'
-  | 'activeSongId'
-  | 'lyricsScale'
-  | 'enableLyricsZoom'
-  | 'lyricsLines'
-  | 'lyricsPosition'
-  | 'youTubeConsent'
+  'isPlaying' | 'isFinished' | 'isPausedForScore' | 'activeSongId' | 'youTubeConsent'
 >;
 const RENDER_KEYS: (keyof RenderKeys)[] = [
   'isPlaying',
   'isFinished',
   'isPausedForScore',
   'activeSongId',
-  'lyricsScale',
-  'enableLyricsZoom',
-  'lyricsLines',
-  'lyricsPosition',
   'youTubeConsent',
 ];
 

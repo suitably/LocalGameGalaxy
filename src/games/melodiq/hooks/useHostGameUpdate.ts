@@ -1,12 +1,10 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { type PassiveGameState } from '../types';
-import { withHostLyricsSettings } from '../logic/hostLyricsSettings';
 import {
   createStateStream,
   PHONE_STATE_INTERVAL_MS,
   TV_STATE_INTERVAL_MS,
 } from '../logic/hostStateStream';
-import { useMelodiqSettings } from './settingsContextCore';
 
 interface GameStateBroadcaster {
   broadcast: (message: unknown) => void;
@@ -21,8 +19,8 @@ export type HostStateUpdate = Partial<PassiveGameState> & {
 };
 
 /**
- * The host's game state publisher: throttles the playback reports to the TV (~30/s, with the
- * host's lyrics display settings) and to the phones (~20/s), sung segments as deltas
+ * The host's game state publisher: throttles the playback reports to the TV (~30/s) and to the
+ * phones (~20/s), sung segments as deltas
  * (`logic/hostStateStream.ts`). `sendTvState` delivers to the TV unchanged.
  */
 export function useHostGameUpdate(
@@ -30,11 +28,6 @@ export function useHostGameUpdate(
   manager: GameStateBroadcaster | null,
   isClient: boolean,
 ) {
-  const { settings } = useMelodiqSettings();
-  const settingsRef = useRef(settings);
-  useEffect(() => {
-    settingsRef.current = settings;
-  });
   const tvStream = useRef(createStateStream(TV_STATE_INTERVAL_MS));
   const phoneStream = useRef(createStateStream(PHONE_STATE_INTERVAL_MS));
 
@@ -50,9 +43,7 @@ export function useHostGameUpdate(
         return built;
       };
 
-      const tv = tvStream.current.next(update.isPlaying, now, () =>
-        withHostLyricsSettings(build(), settingsRef.current),
-      );
+      const tv = tvStream.current.next(update.isPlaying, now, build);
       if (tv) sendTvState(tv);
 
       if (manager && !isClient) {

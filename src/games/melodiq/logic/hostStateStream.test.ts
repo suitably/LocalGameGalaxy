@@ -93,7 +93,7 @@ describe('shouldRenderTvState', () => {
   it('renders on visible changes, new singers, the first state and the refresh interval', () => {
     expect(shouldRenderTvState(null, base, 0)).toBe(true);
     expect(shouldRenderTvState(base, { ...base, isPlaying: false }, 33)).toBe(true);
-    expect(shouldRenderTvState(base, { ...base, lyricsPosition: 'center' }, 33)).toBe(true);
+    expect(shouldRenderTvState(base, { ...base, activeSongId: 't' }, 33)).toBe(true);
     expect(shouldRenderTvState(base, { ...base, players: [] }, 33)).toBe(true);
     expect(shouldRenderTvState(base, { ...base, currentTime: 2 }, TV_RENDER_REFRESH_MS)).toBe(true);
   });

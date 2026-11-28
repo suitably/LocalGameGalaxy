@@ -5,7 +5,7 @@ import { canTryPresentation, currentScreenPlatform } from '../../../lib/secondSc
 import type { Song, SongMeta } from '../db';
 import { TvMediaSender, withAbsoluteMediaUrls } from '../logic/tvMediaTransfer';
 import type { PresentationConnection } from './presentationTypes';
-import { loadTvSettings } from './settingsStorage';
+import { loadTvSettings, pickTvSettings, type SettingsState } from './settingsStorage';
 import { useMultiChannelSync } from '../../../modules/sync';
 import { TV_CONTROL_SYNC, type TvControlMessage } from '../logic/syncChannels';
 import { createLogger } from '../../../lib/logger';
@@ -128,13 +128,13 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
     }
   }, []);
 
-  // Sync settings changes to active PresentationConnection
+  // Settings changes the TV uses go to a cast TV (a TV window shares this device's storage)
   useWindowEventForward('melodiq_settings_updated', (detail) => {
     if (presentationConnectionRef.current?.state !== 'connected') return;
+    const payload = pickTvSettings((detail ?? {}) as Partial<SettingsState>);
+    if (Object.keys(payload).length === 0) return;
     try {
-      presentationConnectionRef.current.send(
-        JSON.stringify({ type: 'SETTINGS_UPDATE', payload: detail || {} }),
-      );
+      presentationConnectionRef.current.send(JSON.stringify({ type: 'SETTINGS_UPDATE', payload }));
     } catch (err) {
       console.error('Failed to send SETTINGS_UPDATE to PresentationConnection:', err);
     }

@@ -270,8 +270,34 @@ export const persistSingleSetting = <K extends keyof SettingsState>(
   }
 };
 
-/** The settings a cast TV needs: it has its own storage, so it only knows what it is told. */
-export const loadTvSettings = (): Partial<SettingsState> => {
-  const { lyricsRows, lyricsMinFit } = loadSettings();
-  return { lyricsRows, lyricsMinFit };
+/**
+ * The settings a TV shows or plays with. A cast TV has its own storage, so it only knows what the
+ * host tells it: all of these on connect, and each change (`SETTINGS_UPDATE`).
+ */
+const TV_SETTING_KEYS = [
+  'songVolume',
+  'masterVolume',
+  'vocalsVolume',
+  'audioPlaybackMode',
+  'hideBackgroundVideo',
+  'fallbackBackgroundUrl',
+  'showNoteLabels',
+  'customLayouts',
+  'lyricsScale',
+  'enableLyricsZoom',
+  'lyricsLines',
+  'lyricsRows',
+  'lyricsMinFit',
+  'lyricsPosition',
+  'showScoreboardQrCode',
+] as const satisfies readonly (keyof SettingsState)[];
+
+/** Keeps only the settings a TV uses (`TV_SETTING_KEYS`). */
+export const pickTvSettings = (settings: Partial<SettingsState>): Partial<SettingsState> => {
+  const out: Record<string, unknown> = {};
+  for (const key of TV_SETTING_KEYS) if (settings[key] !== undefined) out[key] = settings[key];
+  return out as Partial<SettingsState>;
 };
+
+/** The host's TV settings, sent to a TV when it connects. */
+export const loadTvSettings = (): Partial<SettingsState> => pickTvSettings(loadSettings());

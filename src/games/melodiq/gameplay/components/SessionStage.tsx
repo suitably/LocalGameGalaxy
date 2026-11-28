@@ -44,22 +44,11 @@ export const SessionStage: React.FC<SessionStageProps> = ({ session, core }) => 
     isTVMode ? TV_STAGE_CHROME_HIDE_MS : STAGE_CHROME_HIDE_MS,
   );
 
-  const activeLyricsScale =
-    isPassive && passiveState?.lyricsScale !== undefined
-      ? passiveState.lyricsScale
-      : (settings.lyricsScale ?? 1.0);
-  const activeLyricsZoom =
-    isPassive && passiveState?.enableLyricsZoom !== undefined
-      ? passiveState.enableLyricsZoom
-      : (settings.enableLyricsZoom ?? false);
-  const activeLyricsLines =
-    isPassive && passiveState?.lyricsLines !== undefined
-      ? passiveState.lyricsLines
-      : (settings.lyricsLines ?? 2);
-  const activeLyricsPosition =
-    isPassive && passiveState?.lyricsPosition !== undefined
-      ? passiveState.lyricsPosition
-      : (settings.lyricsPosition ?? 'bottom');
+  // A TV gets the host's settings via SETTINGS_UPDATE, so its own settings apply everywhere
+  const activeLyricsScale = settings.lyricsScale ?? 1.0;
+  const activeLyricsZoom = settings.enableLyricsZoom ?? false;
+  const activeLyricsLines = settings.lyricsLines ?? 2;
+  const activeLyricsPosition = settings.lyricsPosition ?? 'bottom';
 
   return (
     <Box
