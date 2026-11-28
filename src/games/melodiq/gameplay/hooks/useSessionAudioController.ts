@@ -8,6 +8,9 @@ import { useMelodiqSettings } from '../../hooks/settingsContextCore';
 import { useYouTubeConsentGate } from './useYouTubeConsentGate';
 import { useRouteActive } from '../../../../context/routeActiveContext';
 
+/** `timeupdate` comes every ~250 ms: a position older than this is not carried forward. */
+const MAX_POS_EXTRAPOLATION_SEC = 0.3;
+
 export interface UseSessionAudioControllerOptions {
   songId: string;
   audioSrc?: string | null;
@@ -79,6 +82,7 @@ export function useSessionAudioController({
 
   // Track playback position to restore on mode/source changes
   const lastPlaybackPosRef = useRef<number>(0);
+  const lastPlaybackPosAtRef = useRef<number>(0);
   const wasPlayingBeforeSwitchRef = useRef<boolean>(false);
   const pendingModeSwitchResumeRef = useRef<{ time: number; shouldPlay: boolean } | null>(null);
 
@@ -88,6 +92,7 @@ export function useSessionAudioController({
     const updatePos = () => {
       if (audio.currentTime > 0) {
         lastPlaybackPosRef.current = audio.currentTime;
+        lastPlaybackPosAtRef.current = performance.now();
         wasPlayingBeforeSwitchRef.current = isPlaying || (!audio.paused && !audio.ended);
       }
     };
@@ -136,12 +141,17 @@ export function useSessionAudioController({
     if (!srcChanged && !vocalsChanged) return;
 
     const resumeInfo = pendingModeSwitchResumeRef.current;
-    const resumeTime = resumeInfo
-      ? resumeInfo.time
-      : lastPlaybackPosRef.current > 0
-        ? lastPlaybackPosRef.current
-        : null;
     const shouldPlay = resumeInfo ? resumeInfo.shouldPlay : isPlaying;
+    // The old source plays on until the new one is ready (a VBR MP3 is decoded first, which
+    // takes seconds): resume where it is now, not where it was when the mode changed
+    const lastPos = lastPlaybackPosRef.current;
+    const sinceLastPos = shouldPlay
+      ? Math.min(
+          MAX_POS_EXTRAPOLATION_SEC,
+          (performance.now() - lastPlaybackPosAtRef.current) / 1000,
+        )
+      : 0;
+    const resumeTime = lastPos > 0 ? lastPos + sinceLastPos : (resumeInfo?.time ?? null);
 
     if (resumeTime !== null && resumeTime > 0) {
       const resumePlayback = async () => {

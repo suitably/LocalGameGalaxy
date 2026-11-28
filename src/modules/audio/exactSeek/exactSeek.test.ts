@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { encodeWav, seeksExactly } from '../exactSeek';
+import { encodeWav, seeksExactly } from './exactSeek';
 
 describe('exact seeking', () => {
   it('knows which formats the browser seeks in exactly', () => {

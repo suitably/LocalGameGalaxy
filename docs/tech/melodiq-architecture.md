@@ -60,6 +60,7 @@ Melodiq follows a strict separation of concerns, divided into domains:
 - **Playback Modes**: Configurable via `settings.audioPlaybackMode` (`'separated'` vs `'original'`):
   - `'separated'`: Plays instrumental on master audio element and vocal stem on secondary audio element; `useLocalMediaSync.ts` keeps the stem on the master (§2.9). Allows independent vocal volume reduction.
   - `'original'`: Plays the untouched original mix directly without secondary vocal stem.
+- **Exact seeking**: the song clock (master `<audio>`) must land exactly on skips (arrow keys), mode switches and resumes, because the lyrics and scoring read its `currentTime`. Chromium seeks a VBR MP3 only by its Xing table, measured 2026-11-28 up to ±0.6 s off while `currentTime` reports the target (only parts already played seek exactly). `useMediaLoaders.ts` therefore passes the master URL through `exactSeekUrl` (`src/modules/audio/exactSeek`): a VBR MP3 (header sniff `mp3Kind`, not the extension) is decoded once and played as WAV (~3 s before it starts, ~45 MB for 4 min); CBR MP3s such as the UVR stems seek exactly and play as they are. On a mode switch the old source plays on until the new one is ready, and `useSessionAudioController.ts` resumes at the live position.
 - **Audio Track Resolution**: `useMediaLoaders.ts` resolves stem paths and URLs automatically based on the user's selected mode and available files.
 
 ### 2.5 Resume after reload / route change

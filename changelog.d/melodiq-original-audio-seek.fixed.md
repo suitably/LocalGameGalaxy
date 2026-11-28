@@ -1,0 +1,1 @@
+Melodiq: lyrics stay in time after skipping forward and after switching from separated tracks to the original audio. A variable-bitrate MP3 is decoded once and played as WAV, because the browser only estimates positions in it.

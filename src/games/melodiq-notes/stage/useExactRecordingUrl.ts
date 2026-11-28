@@ -1,27 +1,11 @@
 /**
  * The URL the stage plays a recording from: the recording itself when the browser seeks in it
- * exactly, else a WAV of its decoded samples (see `logic/exactSeek.ts`). Until the WAV is ready
+ * exactly, else a WAV of its decoded samples (see `src/modules/audio/exactSeek`). Until the WAV is ready
  * (a few seconds) the original plays.
  */
 import { useEffect, useState } from 'react';
-import { encodeWav, seeksExactly } from './logic/exactSeek';
+import { decodeToWavUrl, seeksExactly } from '../../../modules/audio/exactSeek';
 import type { RecordingSource } from './serverScoreLoad';
-
-async function decodeToWavUrl(url: string): Promise<string> {
-  const data = await (await fetch(url)).arrayBuffer();
-  const Ctx = window.AudioContext || window.webkitAudioContext;
-  const ctx = new Ctx();
-  try {
-    const audio = await ctx.decodeAudioData(data);
-    const channels = Array.from({ length: Math.min(2, audio.numberOfChannels) }, (_, c) =>
-      audio.getChannelData(c),
-    );
-    const wav = encodeWav(channels, audio.sampleRate);
-    return URL.createObjectURL(new Blob([wav], { type: 'audio/wav' }));
-  } finally {
-    void ctx.close();
-  }
-}
 
 export function useExactRecordingUrl(recording: RecordingSource | null): string | null {
   const [decoded, setDecoded] = useState<{ from: string; url: string } | null>(null);
