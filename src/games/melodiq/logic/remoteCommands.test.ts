@@ -7,6 +7,7 @@ import {
   joinModeOf,
   parseRemoteCommand,
   profileLatencyOf,
+  trackIndexOf,
   REMOTE_COMMANDS,
   type RemoteCommandEvent,
   type RemoteCommandHostDeps,
@@ -150,6 +151,31 @@ describe('canSendRemoteCommand (#837, graduated roles)', () => {
     };
     handleRemoteCommandEvent(cmd('exit'), deps);
     handleRemoteCommandEvent(cmd('next'), deps);
+    expect(forward).not.toHaveBeenCalled();
+  });
+});
+
+describe('track.select', () => {
+  const select = (value: unknown) => parseRemoteCommand(cmd('track.select', { value }))!;
+
+  it('reads the part index', () => {
+    expect(trackIndexOf(select({ trackIndex: 1 }))).toBe(1);
+    expect(trackIndexOf(select({ trackIndex: -1 }))).toBeUndefined();
+    expect(trackIndexOf(select({ trackIndex: 0.5 }))).toBeUndefined();
+    expect(trackIndexOf(select(undefined))).toBeUndefined();
+  });
+
+  it('is an own-device command for every role and not forwarded by the host handler', () => {
+    expect(canSendRemoteCommand('singer', 'track.select')).toBe(true);
+    const forward = vi.fn();
+    handleRemoteCommandEvent(select({ trackIndex: 1 }), {
+      forward,
+      playCalibrationBeep: vi.fn(),
+      send: vi.fn(),
+      now: () => 0,
+      selfId: 'host',
+      getRole: () => 'singer',
+    });
     expect(forward).not.toHaveBeenCalled();
   });
 });

@@ -9,7 +9,6 @@ import type { RemoteSongSelection } from '../logic/queueRoom';
 import type { QueueItem } from './useQueue';
 import type { MelodiqView } from './useMelodiqNavigation';
 import { useClientSessionSync } from './useClientSessionSync';
-import { useRemoteConfigListener } from './useRemoteConfigListener';
 import { useHostPhoneJoin } from './useHostPhoneJoin';
 import { useHostRemoteCommands } from './useHostRemoteCommands';
 import { createLogger } from '../../../lib/logger';
@@ -167,7 +166,6 @@ export const useMelodiqGlobalEvents = ({
   }, [manager]);
 
   useHostRemoteCommands({ enabled: !!manager && !isClient });
-  useRemoteConfigListener(manager, currentView, setFeedbackMessage);
   // FIXME(#847): MelodiqParticipant.profileId is optional, ActivePlayer.profileId is required
   useHostPhoneJoin({
     manager,

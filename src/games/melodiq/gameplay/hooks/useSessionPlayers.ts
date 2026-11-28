@@ -1,11 +1,4 @@
-import {
-  useState,
-  useEffect,
-  useRef,
-  type Dispatch,
-  type RefObject,
-  type SetStateAction,
-} from 'react';
+import { useState, useEffect, useRef, type RefObject } from 'react';
 import { PlayerRuntime } from './PlayerRuntime';
 import type { ActivePlayer } from '../../types';
 import type { Song } from '../../db';
@@ -14,19 +7,18 @@ import type { MicRemotePeer, WebRTCMicManager } from '../../audio/WebRTCMicManag
 import { assignMicSlots, buildInitialConfigs, loadSessionInputs } from '../logic/sessionRoster';
 import { useSessionOverrideSync } from './useSessionOverrideSync';
 import { usePeerRosterSync } from './usePeerRosterSync';
-import { usePeerSessionMessages, type RemoteResultEntry } from './usePeerSessionMessages';
+import { usePeerSessionMessages } from './usePeerSessionMessages';
 import { useBroadcastSongInfo } from './useBroadcastSongInfo';
 import { createLogger } from '../../../../lib/logger';
 
 const log = createLogger('MelodiqSession');
 
-interface UseSessionPlayersProps<R extends RemoteResultEntry> {
+interface UseSessionPlayersProps {
   manager: WebRTCMicManager | null;
   activePeers: MicRemotePeer[];
   parsedSong: SongWithNotes | null;
   song: Song;
   switchTrack: (playerIndex: number, trackIndex: number) => void;
-  setResults: Dispatch<SetStateAction<R[]>>;
   onExit: () => void;
   audioRef: RefObject<HTMLAudioElement | null>;
   vocalsRef?: RefObject<HTMLAudioElement | null>;
@@ -36,20 +28,19 @@ interface UseSessionPlayersProps<R extends RemoteResultEntry> {
 }
 
 /** Owns the session's `players` and `ready`; roster sync, phone messages and song info are delegated. */
-export function useSessionPlayers<R extends RemoteResultEntry>({
+export function useSessionPlayers({
   manager,
   activePeers,
   parsedSong,
   song,
   switchTrack,
-  setResults,
   onExit,
   audioRef,
   vocalsRef,
   videoRef,
   activeSessionOverride,
   isPassive = false,
-}: UseSessionPlayersProps<R>) {
+}: UseSessionPlayersProps) {
   const [players, setPlayers] = useState<PlayerRuntime[]>([]);
   const [ready, setReady] = useState(false);
   const playersRef = useRef<PlayerRuntime[]>([]);
@@ -104,7 +95,6 @@ export function useSessionPlayers<R extends RemoteResultEntry>({
     playersRef,
     setPlayers,
     switchTrack,
-    setResults,
     onExit,
     audioRef,
     vocalsRef,

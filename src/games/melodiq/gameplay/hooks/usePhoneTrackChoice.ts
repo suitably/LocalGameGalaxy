@@ -3,7 +3,7 @@ import { useClientEngine } from '../../phoneClientContext';
 import type { ActivePlayer } from '../../types';
 import { isWantedByHost } from '../logic/sessionRoster';
 import {
-  buildTrackSelectMessage,
+  trackSelectValue,
   pendingTrackRequest,
   TRACK_ASSIGNED_EVENT,
   type TrackAssignment,
@@ -26,7 +26,7 @@ interface Args {
 
 /**
  * Phone side of the part choice behind the lyrics' part mics: the singer picks its own part, a
- * spectator joins the song with it. Both send `trackSelect`; the host switches this phone's singer
+ * spectator joins the song with it. Both send the `track.select` remote command; the host switches this phone's singer
  * (`usePeerSessionMessages`) or first adds the phone to its singer list (`useHostPhoneJoin`). The
  * wanted part is asked for again until the host's `songInfo` reports it, because a joining phone
  * gets its singer (on P1) only after the list change. Re-sent after a reconnect, too.
@@ -35,9 +35,14 @@ export function usePhoneTrackChoice({
   clientDeviceId,
   activeSessionOverride,
 }: Args): LyricsPartChoice {
-  const { sendClientData, isConnected } = useClientEngine();
+  const { sendClientCommand, isConnected } = useClientEngine();
   const [assignment, setAssignment] = useState<TrackAssignment | null>(() => lastAssignment);
   const desiredRef = useRef<number | null>(null);
+  // `sendClientCommand` is new on every render; the effects below must not re-run for that
+  const commandRef = useRef(sendClientCommand);
+  useEffect(() => {
+    commandRef.current = sendClientCommand;
+  });
 
   useEffect(() => {
     const onAssigned = (e: Event) => setAssignment((e as CustomEvent<TrackAssignment>).detail);
@@ -51,13 +56,10 @@ export function usePhoneTrackChoice({
     (!activeSessionOverride || isWantedByHost(activeSessionOverride, [clientDeviceId]));
   const current = singing ? assignment : null;
 
-  const send = useCallback(
-    (index: number, trackCount: number) => {
-      const message = buildTrackSelectMessage(index, trackCount);
-      if (message) sendClientData(message);
-    },
-    [sendClientData],
-  );
+  const send = useCallback((index: number, trackCount: number) => {
+    const value = trackSelectValue(index, trackCount);
+    if (value) commandRef.current('track.select', value);
+  }, []);
 
   const select = useCallback(
     (index: number, trackCount: number) => {

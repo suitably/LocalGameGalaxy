@@ -3,7 +3,6 @@ import { PlayerRuntime } from './PlayerRuntime';
 import { type Song } from '../../db';
 import type { NavigatorWithPresentation } from '../../types';
 import type { ScoreBoardPlayer } from '../logic/scoreBoardRanking';
-import type { RemoteResultEntry } from './usePeerSessionMessages';
 import { addPlayerScore, getPlayerScores } from '../../logic/melodiqRepository';
 import { useMultiChannelSync } from '../../../../modules/sync';
 import { TV_CONTROL_SYNC, type TvControlMessage } from '../../logic/syncChannels';
@@ -12,7 +11,7 @@ import { createLogger } from '../../../../lib/logger';
 const log = createLogger('MelodiqSession');
 
 /** One scoreboard row of the session just ended. */
-export type SessionResult = ScoreBoardPlayer & RemoteResultEntry;
+export type SessionResult = ScoreBoardPlayer;
 
 /** Publish-only: this hook never listens, so it opens no channel (`enabled: false`). */
 const ignoreMessages = (): void => {};
@@ -56,24 +55,13 @@ export function useSessionEnd({
       p.score = totalScore;
 
       if (p.config.isRemote) {
-        if (p.webRtcManager && p.remotePeerId) {
-          const statsPayload = {
-            type: 'stats',
-            songTitle: song.title,
-            score: totalScore,
-            date: isoDate,
-          };
-          log.debug(`Sending stats to ${p.config.name}`);
-          p.webRtcManager.sendToPeer(p.remotePeerId, statsPayload);
-        }
-
+        // Phone singers get no history entry: neither the host nor the phone stores one
         currentResults.push({
           config: p.config,
           score: totalScore,
           history: [],
           isNewRecord: false,
           isRemote: true,
-          loadingHistory: true,
         });
       } else {
         try {
@@ -139,7 +127,6 @@ export function useSessionEnd({
       }
     }
   }, [
-    song.title,
     song.id,
     playersRef,
     setResults,
