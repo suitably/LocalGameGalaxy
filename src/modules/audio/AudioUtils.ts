@@ -166,3 +166,15 @@ export const autoCorrelate = (buffer: Float32Array, sampleRate: number): number 
 export const freqToMidi = (frequency: number): number => {
   return 69 + 12 * Math.log2(frequency / 440);
 };
+
+/**
+ * One analysis frame to a pitch: silence gate, autocorrelation and MIDI note. Returns `null`
+ * for silence or an unpitched frame.
+ */
+export const detectPitch = (buffer: Float32Array, sampleRate: number): PitchResult | null => {
+  const volume = computeRMS(buffer);
+  if (volume < MIN_PITCH_RMS) return null;
+  const frequency = autoCorrelate(buffer, sampleRate);
+  if (frequency === -1) return null;
+  return { frequency, note: freqToMidi(frequency), volume };
+};

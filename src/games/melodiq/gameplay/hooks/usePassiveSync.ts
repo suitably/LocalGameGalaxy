@@ -5,7 +5,7 @@ import { type PassiveGameState } from '../../types';
 import { type ScoreDisplayHandle } from '../ScoreDisplay';
 import { PASSIVE_PLAY_RETRY_MS, shouldRetryPassivePlay } from '../logic/passivePlayback';
 import { createRemoteClock } from '../logic/remoteClock';
-import { applySungSegments } from '../../logic/tvStateStream';
+import { applySungSegments } from '../../logic/hostStateStream';
 import {
   correctDrift,
   type DriftDirection,

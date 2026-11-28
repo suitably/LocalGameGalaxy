@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { type PassiveGameState } from '../types';
 import { withHostLyricsSettings } from '../logic/hostLyricsSettings';
-import { createSegmentDeltaEncoder } from '../logic/tvStateStream';
+import {
+  createStateStream,
+  PHONE_STATE_INTERVAL_MS,
+  TV_STATE_INTERVAL_MS,
+} from '../logic/hostStateStream';
 import { useMelodiqSettings } from './settingsContextCore';
 
 interface GameStateBroadcaster {
@@ -9,13 +13,20 @@ interface GameStateBroadcaster {
 }
 
 /**
- * Forwards game state to the TV and (throttled to 50 ms) broadcasts it to connected phones; both
- * get sung segments as deltas (`logic/tvStateStream.ts`).
- * The TV state carries the host's lyrics display settings, so a passive TV always shows what the
- * host (or an admin phone via host settings) chose; phones keep their own lyrics settings.
+ * One host playback report. The scoring loop reports every frame; `getPlayers` builds the
+ * player list only when a stream actually sends.
+ */
+export type HostStateUpdate = Partial<PassiveGameState> & {
+  getPlayers?: () => PassiveGameState['players'];
+};
+
+/**
+ * The host's game state publisher: throttles the playback reports to the TV (~30/s, with the
+ * host's lyrics display settings) and to the phones (~20/s), sung segments as deltas
+ * (`logic/hostStateStream.ts`). `sendTvState` delivers to the TV unchanged.
  */
 export function useHostGameUpdate(
-  sendGameUpdate: (state: PassiveGameState) => void,
+  sendTvState: (state: PassiveGameState) => void,
   manager: GameStateBroadcaster | null,
   isClient: boolean,
 ) {
@@ -24,24 +35,36 @@ export function useHostGameUpdate(
   useEffect(() => {
     settingsRef.current = settings;
   });
-  const lastGameUpdateRef = useRef<number>(0);
-  const phoneEncoderRef = useRef(createSegmentDeltaEncoder());
+  const tvStream = useRef(createStateStream(TV_STATE_INTERVAL_MS));
+  const phoneStream = useRef(createStateStream(PHONE_STATE_INTERVAL_MS));
+
   return useCallback(
-    (state: PassiveGameState) => {
-      sendGameUpdate(withHostLyricsSettings(state, settingsRef.current));
+    (update: HostStateUpdate) => {
+      const now = Date.now();
+      let built: PassiveGameState | null = null;
+      const build = (): PassiveGameState => {
+        if (!built) {
+          const { getPlayers, ...rest } = update;
+          built = { ...rest, players: rest.players ?? getPlayers?.() ?? [] } as PassiveGameState;
+        }
+        return built;
+      };
+
+      const tv = tvStream.current.next(update.isPlaying, now, () =>
+        withHostLyricsSettings(build(), settingsRef.current),
+      );
+      if (tv) sendTvState(tv);
+
       if (manager && !isClient) {
-        const now = Date.now();
-        if (now - lastGameUpdateRef.current > 50) {
-          // Sung segments as deltas (full every 2 s), so the payload does not grow over the song
-          const encoded = phoneEncoderRef.current.encode(state, now);
+        const phones = phoneStream.current.next(update.isPlaying, now, build);
+        if (phones) {
           manager.broadcast({
             type: 'game_state_update',
-            state: { ...encoded, hostTimestamp: now },
+            state: { ...phones, hostTimestamp: now },
           });
-          lastGameUpdateRef.current = now;
         }
       }
     },
-    [sendGameUpdate, manager, isClient],
+    [sendTvState, manager, isClient],
   );
 }

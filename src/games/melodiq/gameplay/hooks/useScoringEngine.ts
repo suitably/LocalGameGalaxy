@@ -282,21 +282,23 @@ export function useScoringEngine({
         currentTime,
         duration,
         progress: duration > 0 ? (currentTime / duration) * 100 : 0,
-        players: isPassive
+        // Built only when the host actually sends a state (useHostGameUpdate)
+        getPlayers: isPassive
           ? undefined
-          : players.map((p) => ({
-              config: p.config,
-              id: p.config.id,
-              name: p.config.name,
-              hue: p.config.hue,
-              score: p.score,
-              trackScores: p.trackScores,
-              currentPitch: p.pitchRef.current,
-              activeSegments: p.activeSegments,
-              sungSegments: p.segmentsRef.current,
-              combo: p.combo,
-              lastHit: p.lastHit,
-            })),
+          : () =>
+              players.map((p) => ({
+                config: p.config,
+                id: p.config.id,
+                name: p.config.name,
+                hue: p.config.hue,
+                score: p.score,
+                trackScores: p.trackScores,
+                currentPitch: p.pitchRef.current,
+                activeSegments: p.activeSegments,
+                sungSegments: p.segmentsRef.current,
+                combo: p.combo,
+                lastHit: p.lastHit,
+              })),
       });
     }
 

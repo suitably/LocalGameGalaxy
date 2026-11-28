@@ -1,58 +1,25 @@
-// SimplePeer import removed
-import {
-  type PitchResult,
-  computeRMS,
-  autoCorrelate,
-  freqToMidi,
-  MIN_PITCH_RMS,
-} from './AudioUtils';
+import { type PitchResult } from './AudioUtils';
 import {
   WebRTCHostManager,
   type RemotePeerBase,
   type WebRTCHostManagerCallbacks,
 } from '../../../lib/webrtc';
 
-/**
- * Extends `RemotePeerBase` with audio analysis state for a connected phone client.
- * Each remote singer gets their own `AudioContext` + `AnalyserNode` pipeline.
- */
+/** A connected phone; it detects its pitch itself and sends it over the data channel. */
 export type MicRemotePeer = RemotePeerBase & {
-  audioContext: AudioContext | null;
-  analyser: AnalyserNode | null;
-  buffer: Float32Array | null;
   /** Most recent pitch result received via WebRTC DataChannel, with a `timestamp` for staleness checks. */
   lastPitch?: (PitchResult & { timestamp: number }) | null;
 };
 
+/** A phone's pitch older than this counts as silence (it stopped singing or the link stalled). */
+const PITCH_STALE_MS = 200;
+
 /**
- * `WebRTCMicManager` — Remote Peer Audio Streaming & Pitch Detection
+ * `WebRTCMicManager` — remote phone singers for multi-player Melodiq sessions.
  *
- * Extends `WebRTCHostManager` to manage **remote** phone client audio streams
- * for multi-player Melodiq sessions. Handles two parallel pitch detection paths:
- *
- * ## Pitch Detection Strategy
- *
- * ### Path 1: Phone-Sent Pitch (Preferred)
- * The phone client runs `autoCorrelate()` locally and sends the result over
- * the WebRTC DataChannel as `{ type: 'pitch', frequency, note, volume }`.
- * The host stores this in `remotePeer.lastPitch` and uses it if the timestamp
- * is less than 200ms old.
- *
- * ### Path 2: Local Analysis Fallback
- * If the DataChannel pitch data is stale (> 200ms) or absent, the host falls
- * back to analyzing the raw `MediaStream` received over WebRTC audio track
- * using the same autocorrelation pipeline as `MicrophoneManager`.
- *
- * ## Audio Pipeline (per remote peer)
- * ```
- * WebRTC MediaStream (remote audio track)
- *       ↓
- * AudioContext → MediaStreamAudioSourceNode
- *       ↓
- * AnalyserNode (fftSize=2048) → Float32Array buffer
- *       ↓
- * computeRMS() + autoCorrelate() + freqToMidi()
- * ```
+ * Phones run `detectPitch()` themselves (`usePhoneMicStreaming.ts`) and send
+ * `{ type: 'pitch', frequency, note, volume }` over the WebRTC DataChannel about 30 times a
+ * second; the host keeps the latest one per peer. Phones send no audio track.
  *
  * @see {@link MicrophoneManager} for the local microphone equivalent.
  */
@@ -64,26 +31,12 @@ export class WebRTCMicManager extends WebRTCHostManager<MicRemotePeer> {
   ) {
     super(partyId, trackerUrls, {
       ...callbacks,
-      createRemotePeer: (peerId, connectionId, name, peer) => {
-        return {
-          peer,
-          peerId,
-          connectionId,
-          name,
-          audioContext: null,
-          analyser: null,
-          buffer: null,
-        };
-      },
-      onStream: (peerId, stream) => {
-        this.setupAudioProcessing(peerId, stream);
-        // Also trigger original onStream if passed
-        if (callbacks?.onStream) callbacks.onStream(peerId, stream);
-      },
-      onPeerRemoved: (peerId, remotePeer) => {
-        remotePeer.audioContext?.close();
-        if (callbacks?.onPeerRemoved) callbacks.onPeerRemoved(peerId, remotePeer);
-      },
+      createRemotePeer: (peerId, connectionId, name, peer) => ({
+        peer,
+        peerId,
+        connectionId,
+        name,
+      }),
     });
   }
 
@@ -100,59 +53,10 @@ export class WebRTCMicManager extends WebRTCHostManager<MicRemotePeer> {
     return false;
   }
 
-  private setupAudioProcessing(peerId: string, stream: MediaStream): void {
-    const remotePeer = this.peers.get(peerId);
-    if (!remotePeer) return;
-
-    try {
-      const audioContext = new AudioContext({ latencyHint: 'interactive' });
-      const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 2048;
-
-      const source = audioContext.createMediaStreamSource(stream);
-      source.connect(analyser);
-
-      remotePeer.audioContext = audioContext;
-      remotePeer.analyser = analyser;
-      remotePeer.buffer = new Float32Array(analyser.fftSize);
-    } catch (err) {
-      console.error('[WebRTCMicManager] Failed to setup audio processing:', err);
-    }
-  }
-
   getPitch(peerId: string): PitchResult | null {
-    const remotePeer = this.peers.get(peerId);
-    if (!remotePeer) return null;
-
-    // Prefer the pitch calculated by the phone itself
-    if (remotePeer.lastPitch) {
-      if (Date.now() - remotePeer.lastPitch.timestamp < 200) {
-        return remotePeer.lastPitch;
-      } else {
-        remotePeer.lastPitch = null; // Clear stale pitch
-      }
-    }
-
-    // Fallback to local calculation if we have raw audio but no data stream
-    if (!remotePeer.analyser || !remotePeer.buffer || !remotePeer.audioContext) {
-      return null;
-    }
-
-    remotePeer.analyser.getFloatTimeDomainData(remotePeer.buffer as any);
-
-    const volume = computeRMS(remotePeer.buffer);
-    if (volume < MIN_PITCH_RMS) {
-      return null;
-    }
-
-    const frequency = autoCorrelate(remotePeer.buffer, remotePeer.audioContext.sampleRate);
-    if (frequency === -1) {
-      return null;
-    }
-
-    const note = freqToMidi(frequency);
-
-    return { frequency, note, volume };
+    const lastPitch = this.peers.get(peerId)?.lastPitch;
+    if (!lastPitch || Date.now() - lastPitch.timestamp >= PITCH_STALE_MS) return null;
+    return lastPitch;
   }
 
   getConnectedPeers(): Array<{ peerId: string; name: string; hue?: number; deviceId?: string }> {

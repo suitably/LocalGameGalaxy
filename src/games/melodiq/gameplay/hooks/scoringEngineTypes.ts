@@ -9,7 +9,8 @@ export interface PlaybackUpdateState {
   currentTime: number;
   duration: number;
   progress: number;
-  players?: Array<Partial<PassivePlayerState> & { config?: unknown }>;
+  /** Host only: the player list, built on demand (most reports are throttled away). */
+  getPlayers?: () => Array<Partial<PassivePlayerState> & { config?: unknown }>;
 }
 
 /**

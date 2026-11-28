@@ -2,13 +2,14 @@ import type { SungSegment } from '../gameplay/PitchVisualizer';
 import type { PassiveGameState, PassivePlayerState } from '../types';
 
 /**
- * Host → TV game state stream [ID: LOGIC-MELODIQ-TV-STREAM]
+ * Host game state streams to the TV and the phones [ID: LOGIC-MELODIQ-TV-STREAM]
  *
- * The host sends its game state to the TV about 30 times a second. Two things keep that cheap:
+ * The host sends its game state to the TV (~30/s) and the phones (~20/s), each through a
+ * `createStateStream`. Two things keep that cheap:
  * - `createSegmentDeltaEncoder`: a player's sung segments grow over the whole song; sending them
  *   in full every time made each message bigger and the TV slower towards the end. Only notes
- *   whose segments changed are sent, plus a full keyframe every `TV_KEYFRAME_MS` (a TV that
- *   connects or reloads mid-song is complete again within that time).
+ *   whose segments changed are sent, plus a full keyframe every `TV_KEYFRAME_MS` (a TV or phone
+ *   that connects or reloads mid-song is complete again within that time).
  * - `shouldRenderTvState`: the TV re-renders the session only when something visible in React
  *   changes; the fast data (clock, pitch, scores, segments) reaches `usePassiveSync` through the
  *   window event and refs.
@@ -28,8 +29,6 @@ const signature = (list: SungSegment[]): string => {
 export interface SegmentDeltaEncoder {
   /** Returns a copy of `state` whose players carry only changed segments (or all, on a keyframe). */
   encode<T extends Partial<PassiveGameState>>(state: T, now: number): T;
-  /** The next message is a keyframe (e.g. a TV just connected). */
-  reset(): void;
 }
 
 export function createSegmentDeltaEncoder(keyframeMs = TV_KEYFRAME_MS): SegmentDeltaEncoder {
@@ -69,36 +68,37 @@ export function createSegmentDeltaEncoder(keyframeMs = TV_KEYFRAME_MS): SegmentD
       }
       return { ...state, players: state.players.map((p) => encodePlayer(p, keyframe)) };
     },
-    reset() {
-      sent = new Map();
-      lastKeyframe = -Infinity;
-    },
   };
 }
 
-/** Shortest time between two game states to the TV (~30/s; the TV interpolates the clock). */
-const TV_GAME_STATE_INTERVAL_MS = 33;
+/** Shortest time between two game states to the TV (~30/s; it interpolates the host clock). */
+export const TV_STATE_INTERVAL_MS = 33;
+/** Shortest time between two game states to the phones (~20/s). */
+export const PHONE_STATE_INTERVAL_MS = 50;
 
-export interface TvStateStream {
-  /** The state to send now (segments encoded), or null when throttled away. */
-  next<T extends Partial<PassiveGameState>>(state: T, now: number): T | null;
-  reset(): void;
+export interface StateStream {
+  /**
+   * The state to send now, or null when throttled away; `build` runs only when one is sent, and
+   * a play/stop change is never dropped. Sung segments are encoded as deltas.
+   */
+  next<T extends Partial<PassiveGameState>>(
+    isPlaying: boolean | undefined,
+    now: number,
+    build: () => T,
+  ): T | null;
 }
 
-/** Throttles the host's game states for the TV; a play/stop change is never dropped. */
-export function createTvStateStream(intervalMs = TV_GAME_STATE_INTERVAL_MS): TvStateStream {
+/** One throttled, delta-encoded output of the host's game state (TV or phones). */
+export function createStateStream(intervalMs: number): StateStream {
   const encoder = createSegmentDeltaEncoder();
   let lastSent = -Infinity;
   let lastPlaying: boolean | undefined;
   return {
-    next(state, now) {
-      if (state.isPlaying === lastPlaying && now - lastSent < intervalMs) return null;
-      lastPlaying = state.isPlaying;
+    next(isPlaying, now, build) {
+      if (isPlaying === lastPlaying && now - lastSent < intervalMs) return null;
+      lastPlaying = isPlaying;
       lastSent = now;
-      return encoder.encode(state, now);
-    },
-    reset() {
-      encoder.reset();
+      return encoder.encode(build(), now);
     },
   };
 }
