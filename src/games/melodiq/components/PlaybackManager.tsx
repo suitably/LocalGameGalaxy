@@ -77,7 +77,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
     const { playbackState, setPlaybackState, handlePlaybackUpdate } = usePlaybackReporting(
       selectedSong,
       sendGameUpdate,
-      isClient ? undefined : () => Boolean(sessionRef.current?.isFinished),
+      isClient ? undefined : sessionRef,
     );
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 

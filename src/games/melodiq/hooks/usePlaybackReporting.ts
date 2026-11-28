@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { type Song } from '../db';
 import { useYouTubeConsent } from '../gameplay/hooks/useYouTubeConsentGate';
@@ -17,6 +17,11 @@ export const IDLE_PLAYBACK_STATE: PlaybackState = {
   progress: 0,
 };
 
+interface SessionResultFlags {
+  isFinished: boolean;
+  isPausedForScore: boolean;
+}
+
 /**
  * Tracks the local playback state (throttled to ~1/s), persists the playback position
  * and broadcasts the game state to the TV / remote clients.
@@ -24,8 +29,11 @@ export const IDLE_PLAYBACK_STATE: PlaybackState = {
 export function usePlaybackReporting(
   selectedSong: Song | null,
   sendGameUpdate?: (state: Record<string, unknown>) => void,
-  /** Host only: whether the session shows its results, so phones switch to them too. */
-  isSessionFinished?: () => boolean,
+  /**
+   * Host only: the session, whose results screens (song end, `isFinished`; paused for the
+   * score after "next", `isPausedForScore`) the TV and the phones show too.
+   */
+  session?: RefObject<SessionResultFlags | null>,
 ) {
   const [playbackState, setPlaybackState] = useState<PlaybackState>(IDLE_PLAYBACK_STATE);
 
@@ -33,7 +41,6 @@ export function usePlaybackReporting(
   // This ref allows the playback callback to access broadcast without being a dependency
   const sendGameUpdateRef = useRef(sendGameUpdate);
   const selectedSongRef = useRef(selectedSong);
-  const isSessionFinishedRef = useRef(isSessionFinished);
   // The host's YouTube answer travels with every game state: TV and phones follow it (#645)
   const youTubeConsent = useYouTubeConsent();
   const youTubeConsentRef = useRef(youTubeConsent);
@@ -41,7 +48,6 @@ export function usePlaybackReporting(
   useEffect(() => {
     sendGameUpdateRef.current = sendGameUpdate;
     selectedSongRef.current = selectedSong;
-    isSessionFinishedRef.current = isSessionFinished;
     youTubeConsentRef.current = youTubeConsent;
   });
 
@@ -72,7 +78,12 @@ export function usePlaybackReporting(
       if (sendGameUpdateRef.current && song) {
         sendGameUpdateRef.current({
           ...state,
-          ...(isSessionFinishedRef.current ? { isFinished: isSessionFinishedRef.current() } : {}),
+          ...(session
+            ? {
+                isFinished: Boolean(session.current?.isFinished),
+                isPausedForScore: Boolean(session.current?.isPausedForScore),
+              }
+            : {}),
           activeSongId: song.id,
           activeSong: { id: song.id, title: song.title, artist: song.artist },
           youTubeConsent: youTubeConsentRef.current,
@@ -97,7 +108,7 @@ export function usePlaybackReporting(
         lastStorageRef.current = now;
       }
     },
-    [selectedSong],
+    [selectedSong, session],
   );
 
   return { playbackState, setPlaybackState, handlePlaybackUpdate };
