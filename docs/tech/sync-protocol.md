@@ -149,6 +149,8 @@ Details and sequence diagram: [webrtc-signaling.md](webrtc-signaling.md).
 | `HOST_SESSION_INFO`, `PLAY_SONG`, `STOP_SONG`, `GAME_STATE`, `SETTINGS_UPDATE`, `REMOTE_COMMAND` (`WAIT_FOR_DOWNLOAD`), `SESSION_RESULTS`, `PING` | host → TV |
 | `TV_READY`, `PONG`, `SONG_ENDED`                                                                                                                  | TV → host |
 
+`GAME_STATE` carries the host's results flags with every report (`hooks/usePlaybackReporting.ts`): `isFinished` (song over) and `isPausedForScore` ("next" during a song paused it for the scoreboard), so the TV and the phones switch to the scoreboard with the host.
+
 `SESSION_RESULTS` `{songId, results}` carries the host's scoreboard of the song that just ended (score, new-record flag, best 50 history entries per singer; `logic/tvSessionResults.ts`). The host session fires it as the DOM event `melodiq_session_results` once finished with a TV connected, again whenever a row changes (a phone singer's history arrives later); `useTVMode` forwards it. The TV shows these rows on its scoreboard and falls back to the live scores from `GAME_STATE`; `PLAY_SONG` and `STOP_SONG` clear them.
 
 Host-internal events (`PLAYBACK_STARTED`, `SONG_ENDED`, `TV_READY`) are also dispatched as DOM `CustomEvent`s (`melodiq_client_send_data` and friends) inside the host page.
