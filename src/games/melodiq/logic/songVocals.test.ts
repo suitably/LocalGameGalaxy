@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseUltraStarTxt, type ScoreSong } from '../../../modules/music-score';
 import { groupNotesIntoLines } from '../gameplay/logic/lyricsLines';
 import { activeNoteIndex, isScoredNote, pointsPerBeat } from '../gameplay/logic/noteScoring';
-import { songVocals, type Note, type SongTrack } from './songVocals';
+import { songVocals, txtHasNotes, type Note, type SongTrack } from './songVocals';
 
 // Hand-written fixtures (no real lyrics). Mixed word-boundary styles: leading and trailing spaces.
 const SOLO = [
@@ -206,5 +206,31 @@ describe('songVocals (#604): a song without .txt sings its score', () => {
 
   it('fails without either', () => {
     expect(() => songVocals({})).toThrow();
+  });
+});
+
+/** The server's minimal `.txt` for a song whose lyrics could not be found (`buildMinimalTxt`). */
+const MINIMAL_TXT = '#TITLE:Africa\n#ARTIST:Toto\n#MP3:Toto - Africa.mp3\n#BPM:200\n#GAP:0\nE';
+
+describe('songVocals: the server minimal .txt (headers only)', () => {
+  it('has no notes; a karaoke .txt has', () => {
+    expect(txtHasNotes(MINIMAL_TXT)).toBe(false);
+    expect(txtHasNotes(undefined)).toBe(false);
+    expect(txtHasNotes('#TITLE:x\n#BPM:300\n: 0 4 5 La\n- 6\nE')).toBe(true);
+    expect(txtHasNotes('#TITLE:x\nP1\n* 12 2 7 Gold\nE')).toBe(true);
+  });
+
+  it('gives way to the score', () => {
+    const sung = songVocals({ txtContent: MINIMAL_TXT, score: { song: SCORE, marks: null } });
+    expect(sung.tracks[0].name).toBe('Voice');
+    expect(sung.tracks[0].notes.filter(isScoredNote)).toHaveLength(3);
+  });
+
+  it('plays without notes when there is no score', () => {
+    const vocals = songVocals({ txtContent: MINIMAL_TXT });
+    expect(vocals.tracks).toEqual([{ name: 'Player 1', notes: [] }]);
+    expect(vocals.bpm).toBe(200);
+    expect(vocals.gap).toBe(0);
+    expect(vocals.headers.MP3).toBe('Toto - Africa.mp3');
   });
 });
