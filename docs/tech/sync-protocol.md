@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-11-27
+  at: 2026-11-28
   method: 'read src/modules/sync/*.ts, src/lib/webrtc/*, src/games/melodiq/{PhoneClientEngine.tsx,hooks/usePhoneClientMessages.ts,hooks/usePhoneMicStreaming.ts,hooks/useTVMode.ts,hooks/useTVReceiver.ts,hooks/useMelodiqGlobalEvents.tsx}, public/sw-push.js, server/cloudflare-push-relay/worker.ts, cloudflare/webPushSend.ts, src/lib/push/siteWebPush.ts'
 sources:
   - 'src/modules/sync/MqttMailboxService.ts'
@@ -140,7 +140,6 @@ Details and sequence diagram: [webrtc-signaling.md](webrtc-signaling.md).
 | `api_request` `{reqId, path, options}`                               | phone → host (phone uses host's library)            | `api/melodiqFetch.ts`                                                                              |
 | `api_response` / `api_response_chunk` `{reqId, chunk, index, total}` | host → phone                                        | `hooks/usePhoneClientMessages.ts`                                                                  |
 | `pitch` `{frequency, note, volume}`                                  | phone → host (`-1` = silence)                       | `hooks/usePhoneMicStreaming.ts`                                                                    |
-| `configure` `{config}`                                               | phone → host                                        | `useMelodiqGlobalEvents.tsx`                                                                       |
 | `ping` `{t}` / `pong` `{t}`                                          | host → phone every 5 s / phone → host               | `src/lib/webrtc/heartbeat.ts`, `WebRTCHostManager.ts`, `useWebRTCClient.ts`                        |
 
 ### 4.3 TV control (`melodiq_tv_control` / Presentation API)

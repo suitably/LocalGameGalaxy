@@ -98,7 +98,6 @@ export function useMelodiqSessionCore(
     parsedSong,
     song,
     switchTrack,
-    setResults,
     onExit,
     audioRef: audioCtrl.audioRef,
     vocalsRef: audioCtrl.vocalsRef,

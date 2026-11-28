@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  buildTrackSelectMessage,
-  isDuet,
-  parseAssignedTrack,
-  pendingTrackRequest,
-} from './trackChoice';
+import { trackSelectValue, isDuet, parseAssignedTrack, pendingTrackRequest } from './trackChoice';
 
 describe('trackChoice', () => {
   it('detects duets', () => {
@@ -12,15 +7,15 @@ describe('trackChoice', () => {
     expect(isDuet(2)).toBe(true);
   });
 
-  it('builds a trackSelect message for valid tracks', () => {
-    expect(buildTrackSelectMessage(0, 2)).toEqual({ type: 'trackSelect', trackIndex: 0 });
-    expect(buildTrackSelectMessage(1, 2)).toEqual({ type: 'trackSelect', trackIndex: 1 });
+  it('gives the track.select value for valid tracks', () => {
+    expect(trackSelectValue(0, 2)).toEqual({ trackIndex: 0 });
+    expect(trackSelectValue(1, 2)).toEqual({ trackIndex: 1 });
   });
 
   it('rejects out-of-range or non-integer tracks', () => {
-    expect(buildTrackSelectMessage(2, 2)).toBeNull();
-    expect(buildTrackSelectMessage(-1, 2)).toBeNull();
-    expect(buildTrackSelectMessage(0.5, 2)).toBeNull();
+    expect(trackSelectValue(2, 2)).toBeNull();
+    expect(trackSelectValue(-1, 2)).toBeNull();
+    expect(trackSelectValue(0.5, 2)).toBeNull();
   });
 
   it('reads the parts and the assigned part from songInfo', () => {

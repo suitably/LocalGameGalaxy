@@ -14,6 +14,7 @@ export const REMOTE_COMMANDS = [
   'exit',
   'UPDATE_PROFILE',
   'session.join_mode',
+  'track.select',
   'CALIBRATE_PLAY_BEEP',
   'CALIBRATE_BEEP',
   'PING',
@@ -28,7 +29,7 @@ export interface RemoteCommandEvent {
   /** Sender device id (stamped by the host transport). */
   from: string;
   command: RemoteCommandName;
-  /** Command payload: `{ latency }`, `{ mode }`, the host time for `PONG`; absent otherwise. */
+  /** Command payload: `{ latency }`, `{ mode }`, `{ trackIndex }`, the host time for `PONG`. */
   value?: unknown;
   /** Set on targeted replies (`PONG`): only this device handles the event. */
   to?: string;
@@ -87,6 +88,12 @@ export function profileLatencyOf(event: RemoteCommandEvent): number | undefined 
     : undefined;
 }
 
+/** The part index of a `track.select` command, or undefined. */
+export function trackIndexOf(event: RemoteCommandEvent): number | undefined {
+  const index = (event.value as { trackIndex?: unknown } | undefined)?.trackIndex;
+  return typeof index === 'number' && Number.isInteger(index) && index >= 0 ? index : undefined;
+}
+
 /** The join mode of a `session.join_mode` command ('spectator' or anything else = singer). */
 export const joinModeOf = (event: RemoteCommandEvent): string | undefined => {
   const mode = (event.value as { mode?: unknown } | undefined)?.mode;
@@ -121,7 +128,9 @@ export function handleRemoteCommandEvent(data: unknown, deps: RemoteCommandHostD
   if (!event || event.from === deps.selfId || event.to !== undefined) return;
   if (!canSendRemoteCommand(deps.getRole(event.from), event.command)) return;
   switch (event.command) {
+    // `track.select`: the session (`usePeerSessionMessages`) and the join (`useHostPhoneJoin`)
     case 'PONG':
+    case 'track.select':
       return;
     case 'PING':
       deps.send({
