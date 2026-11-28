@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useLayout } from '../../../context/layoutContextCore';
 import { type MenuItem } from '../../../context/headerLayoutContextCore';
+import { useRouteActive } from '../../../context/routeActiveContext';
 
 import QueueMusicIcon from '@mui/icons-material/QueueMusicRounded';
 import QrCodeIcon from '@mui/icons-material/QrCodeRounded';
@@ -49,6 +50,8 @@ export const useMelodiqHeader = ({
   const { setHostSettingsOpen } = useClientEngine();
   const { t } = useTranslation();
   const { setHeader, setCustomHeaderActions } = useLayout();
+  // Kept alive behind another page (#888): that page owns the header until Melodiq shows again
+  const active = useRouteActive();
 
   const callbacksRef = useRef({
     setCurrentView,
@@ -99,15 +102,17 @@ export const useMelodiqHeader = ({
     );
   }, [isClient, isTVConnected, isPresentationAvailable]);
 
-  // Unmount cleanup only
+  // Cleared on unmount and when another page takes the screen (runs before that page sets its own)
   useEffect(() => {
+    if (!active) return;
     return () => {
       setHeader(null, [], null);
       setCustomHeaderActions(null);
     };
-  }, [setHeader, setCustomHeaderActions]);
+  }, [active, setHeader, setCustomHeaderActions]);
 
   useEffect(() => {
+    if (!active) return;
     const homeAction = currentView === 'Home' ? null : handleHomeAction;
 
     if (currentView === 'Home') {
@@ -167,6 +172,7 @@ export const useMelodiqHeader = ({
       setCustomHeaderActions(null);
     }
   }, [
+    active,
     currentView,
     isClient,
     clientRole,

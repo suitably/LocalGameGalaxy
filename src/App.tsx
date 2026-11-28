@@ -101,9 +101,12 @@ function AppRoutes() {
             key={game.id}
             path={game.route}
             element={
-              <ErrorBoundary componentName={game.id}>
-                <Suspense fallback={<LoadingFallback />}>{game.component}</Suspense>
-              </ErrorBoundary>
+              // keep-alive games render in KeepAliveGames (MainLayout), outside the outlet
+              game.keepAlive ? null : (
+                <ErrorBoundary componentName={game.id}>
+                  <Suspense fallback={<LoadingFallback />}>{game.component}</Suspense>
+                </ErrorBoundary>
+              )
             }
           />
         ))}

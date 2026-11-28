@@ -8,7 +8,7 @@ generated:
   at: 2026-10-18T15:00:00+02:00
   by: claude-code
 verified:
-  at: 2026-10-24
+  at: 2026-11-28
   method: 'excerpts copied from the listed files; export lists via grep'
 sources:
   - 'src/lib/catalog/types.ts'
@@ -74,6 +74,8 @@ export interface GameDefinition extends CatalogEntry {
   settings?: { sections: GameSettingsSectionDefinition[] };
   nestedRoutes?: GameRouteDefinition[];
   standaloneRoutes?: GameRouteDefinition[];
+  /** Stays mounted (hidden) after the first visit; `KeepAliveGames`, `useRouteActive`. */
+  keepAlive?: boolean;
 }
 ```
 

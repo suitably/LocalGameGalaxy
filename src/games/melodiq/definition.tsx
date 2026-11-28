@@ -15,6 +15,8 @@ const MelodiqTV = lazyNamed(load, 'MelodiqTV');
 export const definition = defineGame({
   id: 'melodiq',
   route: 'games/melodiq',
+  // The host keeps playing and serving phones and the TV from anywhere in the app (#888)
+  keepAlive: true,
   i18n: 'games.melodiq',
   title: 'Melodiq',
   kind: 'game',

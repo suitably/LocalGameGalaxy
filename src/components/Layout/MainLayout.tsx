@@ -4,12 +4,16 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { useHeaderLayout } from '../../context/headerLayoutContextCore';
 import { GlobalHeader } from './GlobalHeader';
 import { FeedbackDialog } from '../feedback/FeedbackDialog';
+import { KeepAliveGames } from './KeepAliveGames';
+import { isKeepAlivePath } from './keepAliveRoutes';
 
 export const MainLayout: React.FC = () => {
   const location = useLocation();
   const { headerHidden } = useHeaderLayout();
   // Prefix match: `/settings/games/<id>` is a scrolling settings page, not a game route.
   const isGame = location.pathname.startsWith('/games/') || location.pathname.startsWith('/party');
+  // A keep-alive game renders in `KeepAliveGames`, which stays mounted when another page shows
+  const isKeptGame = isKeepAlivePath(location.pathname);
 
   return (
     <>
@@ -29,7 +33,8 @@ export const MainLayout: React.FC = () => {
       >
         {!headerHidden && <GlobalHeader />}
 
-        {isGame ? (
+        <KeepAliveGames />
+        {isKeptGame ? null : isGame ? (
           <Box sx={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <Outlet />
           </Box>

@@ -64,6 +64,7 @@ Melodiq follows a strict separation of concerns, divided into domains:
 
 ### 2.5 Resume after reload / route change
 
+- **Route change keeps the host running (#888):** the definition sets `keepAlive`, so `KeepAliveGames` (`src/components/Layout/KeepAliveGames.tsx`, rendered by `MainLayout`) keeps Melodiq mounted and hidden while the host opens the hub, settings or another game. Music, TV state, phone connections and the queue go on. Its subtree keeps the location of its last visit; `useRouteActive()` (`src/context/routeActiveContext.ts`) is false meanwhile, so `useMelodiqHeader` leaves the header to the page on screen and the session hotkeys (`useSessionAudioController`) are off. Only a reload unmounts it; the restore below covers that.
 - `useQueue.ts` persists the running song as `STORAGE_KEYS.NOW_PLAYING`; `usePlaybackReporting.ts` writes its position about once per second to `STORAGE_KEYS.MELODIQ_SAVED_TIME` (`{ id, time }`).
 - `useMelodiqPlayback.ts` seeds `restoredSong` from `NOW_PLAYING` plus the saved position (`logic/savedPlayback.ts`). The MiniPlayer shows it as "Paused"; resume (`useRestoredResume.ts`) continues at that position, the restart button plays it from the beginning and drops the saved position.
 
