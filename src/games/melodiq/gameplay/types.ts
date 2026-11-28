@@ -13,7 +13,6 @@ export interface MelodiqSessionHandle {
   resumeFromScore: () => void;
   isPausedForScore: boolean;
   handleNext: () => boolean;
-  getGameState: () => PassiveGameState;
 }
 
 export interface MelodiqSessionProps {

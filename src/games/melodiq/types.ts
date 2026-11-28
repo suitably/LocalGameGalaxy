@@ -65,10 +65,7 @@ export interface PassiveGameState {
   currentTime: number;
   hostTimestamp?: number;
   activeSongId?: string | null;
-  lyricsScale?: number;
-  enableLyricsZoom?: boolean;
-  lyricsLines?: number;
-  lyricsPosition?: 'bottom' | 'center';
+
   /** The host's YouTube answer: a TV or phone never asks itself and follows it (#645). */
   youTubeConsent?: YouTubeConsent;
 }

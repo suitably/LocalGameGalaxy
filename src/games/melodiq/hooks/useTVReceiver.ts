@@ -10,7 +10,7 @@ import { storage, STORAGE_KEYS } from '../../../lib/storage';
 import { TvMediaAssembler, type TvMediaManifest } from '../logic/tvMediaTransfer';
 import { useMultiChannelSync } from '../../../modules/sync';
 import { TV_CONTROL_SYNC, type TvControlMessage } from '../logic/syncChannels';
-import { shouldRenderTvState } from '../logic/tvStateStream';
+import { shouldRenderTvState } from '../logic/hostStateStream';
 import {
   parseTvSessionResults,
   SESSION_RESULTS_MESSAGE,
@@ -164,7 +164,7 @@ export const useTVReceiver = () => {
       } else if (type === 'GAME_STATE' && payload) {
         const state = payload as unknown as PassiveGameState;
         // usePassiveSync takes every state from the event; React re-renders only for visible
-        // changes (logic/tvStateStream.ts), not ~30 times a second
+        // changes (logic/hostStateStream.ts), not ~30 times a second
         window.dispatchEvent(new CustomEvent('melodiq_tv_game_state', { detail: payload }));
         const now = performance.now();
         const last = renderedStateRef.current;

@@ -45,8 +45,6 @@ export const YouTubeBackgroundPlayer: React.FC<YouTubeBackgroundPlayerProps> = (
       getPlayer: () => playerRef.current,
       isPlayerReady: () => isReady,
       initialTime: initialTimeRef.current,
-      driftToleranceSec: 0.4,
-      seekCooldownMs: 1000,
     });
 
     (videoRef as React.MutableRefObject<HTMLVideoElement | null>).current =

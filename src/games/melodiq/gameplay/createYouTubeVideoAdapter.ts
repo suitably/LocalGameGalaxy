@@ -5,11 +5,13 @@ export interface YouTubeVideoAdapterOptions {
   getPlayer: () => YTPlayerInstance | null;
   isPlayerReady: () => boolean;
   initialTime?: number;
-  /** Desync threshold in seconds before seekTo is invoked. Default: 0.4s */
-  driftToleranceSec?: number;
-  /** Minimum milliseconds between seekTo calls. Default: 1000ms */
-  seekCooldownMs?: number;
 }
+
+/**
+ * YouTube seeks are imprecise and rebuffer, so smaller corrections are ignored. When and how
+ * often to seek is decided by the media sync (`SEEK_ONLY_VIDEO_DRIFT_POLICY` in `mediaDrift.ts`).
+ */
+const MIN_SEEK_SEC = 0.4;
 
 export interface YouTubeVideoAdapter {
   src: string;
@@ -21,6 +23,8 @@ export interface YouTubeVideoAdapter {
   muted: boolean;
   seeking: boolean;
   ended: boolean;
+  /** The player cannot change its rate in small steps: drift is corrected by seeks only. */
+  seekOnly: true;
   play: () => Promise<void>;
   pause: () => void;
   addEventListener: () => void;
@@ -33,21 +37,17 @@ export interface YouTubeVideoAdapter {
 /**
  * Creates an HTMLVideoElement-compatible adapter around a YouTube IFrame Player instance.
  *
- * Employs softer drift tolerance (0.4s) and seek rate-limiting (1000ms cooldown)
- * along with play/pause deduplication to avoid triggering YouTube's animated
- * play/pause bezel icon during background video playback while still respecting
- * standard media sync thresholds.
+ * Ignores seeks under `MIN_SEEK_SEC` and deduplicates play/pause to avoid YouTube's animated
+ * play/pause bezel icon during background video playback. It holds no sync policy of its own.
  */
 export function createYouTubeVideoAdapter({
   videoId,
   getPlayer,
   isPlayerReady,
   initialTime = 0,
-  driftToleranceSec = 0.4,
-  seekCooldownMs = 1000,
 }: YouTubeVideoAdapterOptions): YouTubeVideoAdapter {
   let lastKnownTime = initialTime;
-  let lastSeekTimestamp = -seekCooldownMs;
+
   let pendingPlay = false;
   let pendingSeek: number | null = initialTime > 0 ? initialTime : null;
   let isPlayingInternal = false;
@@ -71,20 +71,13 @@ export function createYouTubeVideoAdapter({
     },
     set currentTime(t: number) {
       lastKnownTime = t;
-      const now = performance.now();
       const player = getPlayer();
       if (isPlayerReady() && player && typeof player.seekTo === 'function') {
-        // Softer drift tolerance: only seek if desync exceeds tolerance and cooldown has elapsed
-        if (now - lastSeekTimestamp > seekCooldownMs) {
-          try {
-            const cur = player.getCurrentTime() || 0;
-            if (Math.abs(cur - t) > driftToleranceSec) {
-              lastSeekTimestamp = now;
-              player.seekTo(t, true);
-            }
-          } catch {
-            // ignore API seek errors
-          }
+        try {
+          const cur = player.getCurrentTime() || 0;
+          if (Math.abs(cur - t) > MIN_SEEK_SEC) player.seekTo(t, true);
+        } catch {
+          // ignore API seek errors
         }
       } else {
         pendingSeek = t;
@@ -178,6 +171,7 @@ export function createYouTubeVideoAdapter({
       }
     },
     muted: true,
+    seekOnly: true,
     seeking: false,
     ended: false,
     addEventListener: () => {},

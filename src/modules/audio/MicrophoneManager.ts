@@ -1,10 +1,4 @@
-import {
-  type PitchResult,
-  computeRMS,
-  autoCorrelate,
-  freqToMidi,
-  MIN_PITCH_RMS,
-} from './AudioUtils';
+import { type PitchResult, computeRMS, detectPitch } from './AudioUtils';
 
 export { type PitchResult };
 
@@ -165,21 +159,7 @@ export class MicrophoneManager {
 
   public getPitch(): PitchResult | null {
     if (!this.analyser || !this.buffer || !this.audioContext) return null;
-
     this.analyser.getFloatTimeDomainData(this.buffer);
-
-    const volume = computeRMS(this.buffer);
-    if (volume < MIN_PITCH_RMS) {
-      return null;
-    }
-
-    const frequency = autoCorrelate(this.buffer, this.audioContext.sampleRate);
-    if (frequency === -1) {
-      return null;
-    }
-
-    const note = freqToMidi(frequency);
-
-    return { frequency, note, volume };
+    return detectPitch(this.buffer, this.audioContext.sampleRate);
   }
 }

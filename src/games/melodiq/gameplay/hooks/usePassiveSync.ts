@@ -5,7 +5,7 @@ import { type PassiveGameState } from '../../types';
 import { type ScoreDisplayHandle } from '../ScoreDisplay';
 import { PASSIVE_PLAY_RETRY_MS, shouldRetryPassivePlay } from '../logic/passivePlayback';
 import { createRemoteClock } from '../logic/remoteClock';
-import { applySungSegments } from '../../logic/tvStateStream';
+import { applySungSegments } from '../../logic/hostStateStream';
 import {
   correctDrift,
   type DriftDirection,
@@ -32,8 +32,7 @@ interface UsePassiveSyncProps {
   playersRef: React.RefObject<PlayerRuntime[]>;
   scoreDisplayRef: React.RefObject<ScoreDisplayHandle | null>;
   audioRef: React.RefObject<HTMLAudioElement | null>;
-  vocalsRef?: React.RefObject<HTMLAudioElement | null>;
-  videoRef: React.RefObject<HTMLVideoElement | null>;
+
   isPlayingRef: React.RefObject<boolean>;
   setIsPlaying: React.Dispatch<React.SetStateAction<boolean>>;
   setIsFinished: React.Dispatch<React.SetStateAction<boolean>>;
@@ -51,8 +50,7 @@ export function usePassiveSync({
   playersRef,
   scoreDisplayRef,
   audioRef,
-  vocalsRef,
-  videoRef,
+
   isPlayingRef,
   setIsPlaying,
   setIsFinished,
@@ -129,11 +127,10 @@ export function usePassiveSync({
       const hostClock = hostClockRef.current;
       hostClock.update(passiveState.currentTime, passiveState.isPlaying, perfNow);
       const hostTime = hostClock.now(perfNow);
-      // Audio only: the video follows this screen's own audio (useLocalMediaSync), so an audio
-      // resync does not also make the video (e.g. YouTube) seek and rebuffer.
+      // The instrumental only: stem and video follow it (useLocalMediaSync), so an audio resync
+      // does not also make the video (e.g. YouTube) seek and rebuffer.
       const seekAll = (time: number) => {
         if (audioRef.current) audioRef.current.currentTime = time;
-        if (vocalsRef?.current) vocalsRef.current.currentTime = time;
       };
       const retryPlay =
         !isClient &&
@@ -157,15 +154,11 @@ export function usePassiveSync({
             Math.abs(audioRef.current.currentTime - hostTime) > RESUME_ALIGN_SEC
           ) {
             seekAll(hostTime);
-          } else if (audioRef.current && vocalsRef?.current) {
-            vocalsRef.current.currentTime = audioRef.current.currentTime;
           }
           const tryPlay = async () => {
             setIsPlaying(true);
             try {
               if (audioRef.current) await audioRef.current.play();
-              if (vocalsRef?.current) vocalsRef.current.play().catch(() => {});
-              if (videoRef.current) videoRef.current.play().catch(() => {});
               setPassivePlayBlocked(false);
             } catch (e: any) {
               console.warn('[Session] Passive play blocked by autoplay policy:', e.name);
@@ -173,9 +166,7 @@ export function usePassiveSync({
           };
           tryPlay();
         } else {
-          audioRef.current?.pause();
-          vocalsRef?.current?.pause();
-          videoRef.current?.pause();
+          audioRef.current?.pause(); // stem and video follow (useLocalMediaSync)
           setIsPlaying(false);
         }
       }

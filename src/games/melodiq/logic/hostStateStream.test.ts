@@ -4,11 +4,11 @@ import type { PassivePlayerState } from '../types';
 import {
   applySungSegments,
   createSegmentDeltaEncoder,
-  createTvStateStream,
+  createStateStream,
   shouldRenderTvState,
   TV_KEYFRAME_MS,
   TV_RENDER_REFRESH_MS,
-} from './tvStateStream';
+} from './hostStateStream';
 
 const seg = (noteIndex: number, startBeat: number, endBeat: number): SungSegment =>
   ({ noteIndex, startBeat, endBeat, trackIndex: 0 }) as SungSegment;
@@ -49,16 +49,12 @@ describe('createSegmentDeltaEncoder', () => {
     expect(key.sungSegmentsDelta).toBe(false);
   });
 
-  it('sends a player in full after a reset or when its notes shrink (new song)', () => {
+  it('sends a player in full when its notes shrink (new song)', () => {
     const enc = createSegmentDeltaEncoder();
     enc.encode({ players: [player({ 0: [seg(0, 0, 1)], 1: [seg(1, 2, 3)] })] }, 0);
     const shrunk = enc.encode({ players: [player({ 0: [seg(0, 0, 1)] })] }, 33).players![0];
     expect(shrunk.sungSegmentsDelta).toBe(false);
     expect(Object.keys(shrunk.sungSegments!)).toEqual(['0']);
-
-    enc.reset();
-    const afterReset = enc.encode({ players: [player({ 0: [seg(0, 0, 1)] })] }, 66).players![0];
-    expect(afterReset.sungSegmentsDelta).toBe(false);
   });
 
   it('does not change the input state', () => {
@@ -97,19 +93,34 @@ describe('shouldRenderTvState', () => {
   it('renders on visible changes, new singers, the first state and the refresh interval', () => {
     expect(shouldRenderTvState(null, base, 0)).toBe(true);
     expect(shouldRenderTvState(base, { ...base, isPlaying: false }, 33)).toBe(true);
-    expect(shouldRenderTvState(base, { ...base, lyricsPosition: 'center' }, 33)).toBe(true);
+    expect(shouldRenderTvState(base, { ...base, activeSongId: 't' }, 33)).toBe(true);
     expect(shouldRenderTvState(base, { ...base, players: [] }, 33)).toBe(true);
     expect(shouldRenderTvState(base, { ...base, currentTime: 2 }, TV_RENDER_REFRESH_MS)).toBe(true);
   });
 });
 
-describe('createTvStateStream', () => {
+describe('createStateStream', () => {
   it('throttles to the interval but never drops a play/stop change', () => {
-    const stream = createTvStateStream(33);
-    expect(stream.next({ isPlaying: true }, 0)).not.toBeNull();
-    expect(stream.next({ isPlaying: true }, 10)).toBeNull();
-    expect(stream.next({ isPlaying: false }, 12)).not.toBeNull();
-    expect(stream.next({ isPlaying: false }, 20)).toBeNull();
-    expect(stream.next({ isPlaying: false }, 50)).not.toBeNull();
+    const stream = createStateStream(33);
+    const at = (isPlaying: boolean, now: number) =>
+      stream.next(isPlaying, now, () => ({ isPlaying }));
+    expect(at(true, 0)).not.toBeNull();
+    expect(at(true, 10)).toBeNull();
+    expect(at(false, 12)).not.toBeNull();
+    expect(at(false, 20)).toBeNull();
+    expect(at(false, 50)).not.toBeNull();
+  });
+
+  it('builds the state only when it sends', () => {
+    const stream = createStateStream(33);
+    let builds = 0;
+    const build = () => {
+      builds += 1;
+      return { isPlaying: true };
+    };
+    stream.next(true, 0, build);
+    stream.next(true, 10, build);
+    stream.next(true, 20, build);
+    expect(builds).toBe(1);
   });
 });

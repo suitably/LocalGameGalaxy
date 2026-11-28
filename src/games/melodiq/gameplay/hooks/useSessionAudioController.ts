@@ -400,15 +400,9 @@ export function useSessionAudioController({
     try {
       if (audioRef.current && passiveState?.currentTime) {
         audioRef.current.currentTime = passiveState.currentTime;
-        if (vocalsRef.current) vocalsRef.current.currentTime = passiveState.currentTime;
-        if (videoRef.current) videoRef.current.currentTime = passiveState.currentTime;
       }
-      const playPromises: Promise<void>[] = [];
-      if (audioRef.current) playPromises.push(audioRef.current.play());
-      if (vocalsRef.current) playPromises.push(vocalsRef.current.play().catch(() => {}));
-      // The video never holds back audio and lyrics; the media sync aligns it
-      videoRef.current?.play().catch(() => {});
-      await Promise.all(playPromises);
+      // Stem and video follow the instrumental (useLocalMediaSync)
+      await audioRef.current?.play();
       setIsPlaying(true);
       setPassivePlayBlocked(false);
     } catch (e) {

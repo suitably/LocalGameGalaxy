@@ -5,9 +5,7 @@ import { canTryPresentation, currentScreenPlatform } from '../../../lib/secondSc
 import type { Song, SongMeta } from '../db';
 import { TvMediaSender, withAbsoluteMediaUrls } from '../logic/tvMediaTransfer';
 import type { PresentationConnection } from './presentationTypes';
-import { createTvStateStream } from '../logic/tvStateStream';
-import type { PassiveGameState } from '../types';
-import { loadTvSettings } from './settingsStorage';
+import { loadTvSettings, pickTvSettings, type SettingsState } from './settingsStorage';
 import { useMultiChannelSync } from '../../../modules/sync';
 import { TV_CONTROL_SYNC, type TvControlMessage } from '../logic/syncChannels';
 import { createLogger } from '../../../lib/logger';
@@ -72,9 +70,6 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
   }, []);
   useEffect(() => stopTvWindowPoll, [stopTvWindowPoll]);
 
-  // Game state stream to the TV; a (re)connecting TV gets a keyframe next
-  const tvStream = useRef(createTvStateStream());
-
   // Forward ref to sendMessage so handlers defined prior can use it
   const sendMessageRef = useRef<(type: string, payload?: unknown) => void>(() => {});
 
@@ -92,7 +87,6 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
 
       if (type === 'TV_READY' || type === 'PONG') {
         setIsTVConnected(true);
-        tvStream.current.reset();
         sendSessionInfo();
         sendMessageRef.current('SETTINGS_UPDATE', loadTvSettings());
       } else if (type === 'MEDIA_ACK') {
@@ -134,13 +128,13 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
     }
   }, []);
 
-  // Sync settings changes to active PresentationConnection
+  // Settings changes the TV uses go to a cast TV (a TV window shares this device's storage)
   useWindowEventForward('melodiq_settings_updated', (detail) => {
     if (presentationConnectionRef.current?.state !== 'connected') return;
+    const payload = pickTvSettings((detail ?? {}) as Partial<SettingsState>);
+    if (Object.keys(payload).length === 0) return;
     try {
-      presentationConnectionRef.current.send(
-        JSON.stringify({ type: 'SETTINGS_UPDATE', payload: detail || {} }),
-      );
+      presentationConnectionRef.current.send(JSON.stringify({ type: 'SETTINGS_UPDATE', payload }));
     } catch (err) {
       console.error('Failed to send SETTINGS_UPDATE to PresentationConnection:', err);
     }
@@ -314,12 +308,9 @@ export const useTVMode = (sessionInfo?: TVSessionInfo, onCastFailed?: () => void
     [sendMessage],
   );
 
-  // Host -> TV game state: ~30/s, sung segments as deltas (logic/tvStateStream.ts)
+  // Game state to the TV, already throttled and encoded by useHostGameUpdate
   const sendGameUpdate = useCallback(
-    (state: unknown) => {
-      const next = tvStream.current.next(state as Partial<PassiveGameState>, Date.now());
-      if (next) sendMessage('GAME_STATE', next);
-    },
+    (state: unknown) => sendMessage('GAME_STATE', state),
     [sendMessage],
   );
 

@@ -3,6 +3,7 @@ import {
   correctDrift,
   type DriftDirection,
   smoothDrift,
+  SEEK_ONLY_VIDEO_DRIFT_POLICY,
   STEM_DRIFT_POLICY,
   VIDEO_DRIFT_POLICY,
 } from '../logic/mediaDrift';
@@ -11,6 +12,8 @@ import {
 const STEM_SEEK_COOLDOWN_MS = 1000;
 /** Shortest time between two corrective seeks (or start attempts) of the background video. */
 const VIDEO_SEEK_COOLDOWN_MS = 2000;
+/** After a start, how long the loop leaves a video start already under way alone. */
+const VIDEO_START_GRACE_MS = 300;
 
 interface UseLocalMediaSyncProps {
   audioRef: React.RefObject<HTMLAudioElement | null>;
@@ -19,6 +22,12 @@ interface UseLocalMediaSyncProps {
   isPlaying: boolean;
 }
 
+/**
+ * Keeps the vocal stem and the background video on the instrumental `<audio>` (the song clock).
+ * This loop is the only place that plays, pauses, seeks or re-rates them while a song runs;
+ * callers move only the instrumental. It reads the elements every frame, so it also covers
+ * elements that mount late (their `src` loads asynchronously).
+ */
 export function useLocalMediaSync({
   audioRef,
   videoRef,
@@ -36,76 +45,6 @@ export function useLocalMediaSync({
   const smoothedVideoDriftRef = useRef<number | null>(null);
   const lastVideoSeekRef = useRef(0);
   const videoPlayPendingRef = useRef(false);
-  // The instrumental is buffering: its clock stands still although it is not paused
-  const masterStalledRef = useRef(false);
-
-  // Transport event synchronization
-  useEffect(() => {
-    const audio = audioRef.current;
-    const vocals = vocalsRef.current;
-    if (!audio || !vocals) return;
-
-    // Ensure pitch preservation is always enabled on vocal stem
-    (vocals as any).preservesPitch = true;
-    (vocals as any).mozPreservesPitch = true;
-    (vocals as any).webkitPreservesPitch = true;
-
-    const handleAudioSeeking = () => {
-      if (vocals) {
-        if (Math.abs(vocals.currentTime - audio.currentTime) > 0.002) {
-          vocals.currentTime = audio.currentTime;
-          smoothedDriftRef.current = null;
-        }
-      }
-    };
-
-    const handleRateChange = () => {
-      if (vocals && !vocals.seeking) {
-        vocals.playbackRate = audio.playbackRate;
-      }
-    };
-
-    const handleAudioPause = () => {
-      if (vocals && !vocals.paused) {
-        vocals.pause();
-      }
-    };
-
-    const handleAudioPlay = () => {
-      if (vocals && vocals.paused && vocals.readyState >= 2) {
-        vocals.currentTime = audio.currentTime;
-        vocals.play().catch(() => {});
-      }
-    };
-
-    // While the instrumental buffers, the stem must not run ahead on its own
-    const handleAudioWaiting = () => {
-      masterStalledRef.current = true;
-      if (vocals && !vocals.paused) vocals.pause();
-    };
-    const handleAudioPlaying = () => {
-      masterStalledRef.current = false;
-      smoothedDriftRef.current = null;
-      handleAudioPlay();
-    };
-
-    audio.addEventListener('waiting', handleAudioWaiting);
-    audio.addEventListener('playing', handleAudioPlaying);
-    audio.addEventListener('seeking', handleAudioSeeking);
-    audio.addEventListener('ratechange', handleRateChange);
-    audio.addEventListener('pause', handleAudioPause);
-    audio.addEventListener('play', handleAudioPlay);
-
-    return () => {
-      audio.removeEventListener('waiting', handleAudioWaiting);
-      audio.removeEventListener('playing', handleAudioPlaying);
-      masterStalledRef.current = false;
-      audio.removeEventListener('seeking', handleAudioSeeking);
-      audio.removeEventListener('ratechange', handleRateChange);
-      audio.removeEventListener('pause', handleAudioPause);
-      audio.removeEventListener('play', handleAudioPlay);
-    };
-  }, [audioRef, vocalsRef]);
 
   useEffect(() => {
     if (!isPlaying) {
@@ -135,7 +74,8 @@ export function useLocalMediaSync({
       if (audio) {
         const masterTime = audio.currentTime;
         const baseRate = audio.playbackRate || 1.0;
-        const isAudioPlaying = !audio.paused && !audio.ended && !masterStalledRef.current;
+        // While the instrumental buffers its clock stands still: the followers must wait too
+        const isAudioPlaying = !audio.paused && !audio.ended && audio.readyState >= 3;
 
         // Sync Video Play/Pause & Timing (the video follows; audio and lyrics never wait for it)
         if (video) {
@@ -163,17 +103,16 @@ export function useLocalMediaSync({
           }
 
           if (video.readyState >= 2 && isAudioPlaying && !video.paused && !video.seeking) {
+            // YouTube cannot change its rate in small steps: seeks only
+            const policy = (video as { seekOnly?: boolean }).seekOnly
+              ? SEEK_ONLY_VIDEO_DRIFT_POLICY
+              : VIDEO_DRIFT_POLICY;
             const rawDrift = masterTime - video.currentTime;
             // A video's clock moves in frame steps: smooth it, or the rate flips every frame
-            const jumped = Math.abs(rawDrift) > VIDEO_DRIFT_POLICY.seekAboveSec;
+            const jumped = Math.abs(rawDrift) > policy.seekAboveSec;
             const drift = jumped ? rawDrift : smoothDrift(smoothedVideoDriftRef.current, rawDrift);
             smoothedVideoDriftRef.current = drift;
-            const correction = correctDrift(
-              drift,
-              baseRate,
-              VIDEO_DRIFT_POLICY,
-              videoDirectionRef.current,
-            );
+            const correction = correctDrift(drift, baseRate, policy, videoDirectionRef.current);
             if (correction.kind === 'seek') {
               if (now - lastVideoSeekRef.current > VIDEO_SEEK_COOLDOWN_MS) {
                 lastVideoSeekRef.current = now;
@@ -194,6 +133,7 @@ export function useLocalMediaSync({
           const targetVocalsTime = masterTime;
 
           if (isAudioPlaying && vocals.paused && vocals.readyState >= 2) {
+            vocals.preservesPitch = true; // rate corrections must not change the pitch
             vocals.currentTime = targetVocalsTime;
             vocals.play().catch(() => {});
           } else if (!isAudioPlaying && !vocals.paused) {
@@ -233,8 +173,8 @@ export function useLocalMediaSync({
       rAFRef.current = requestAnimationFrame(syncLoop);
     };
 
-    // Playback was just started (safePlay also starts the video): give that start a moment
-    lastVideoSeekRef.current = performance.now();
+    // Playback was just started and safePlay may be starting the video: give it a moment
+    lastVideoSeekRef.current = performance.now() - VIDEO_SEEK_COOLDOWN_MS + VIDEO_START_GRACE_MS;
     rAFRef.current = requestAnimationFrame(syncLoop);
 
     return () => {

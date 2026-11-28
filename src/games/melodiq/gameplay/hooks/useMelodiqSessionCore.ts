@@ -11,7 +11,6 @@ import { useSessionAudioController } from './useSessionAudioController';
 import { useSessionScoringController } from './useSessionScoringController';
 import { useSongVocals } from './useSongVocals';
 import { useSessionResultsBroadcast } from './useSessionResultsBroadcast';
-import { getYouTubeConsent } from '../youtubeConsent';
 import type { MelodiqSessionHandle, MelodiqSessionProps } from '../types';
 import type { PlayerRuntime } from './PlayerRuntime';
 import type { SessionResult } from './useSessionEnd';
@@ -155,8 +154,6 @@ export function useMelodiqSessionCore(
     playersRef,
     scoreDisplayRef: scoringCtrl.scoreDisplayRef,
     audioRef: audioCtrl.audioRef,
-    vocalsRef: audioCtrl.vocalsRef,
-    videoRef: audioCtrl.videoRef,
     isPlayingRef: audioCtrl.isPlayingRef,
     setIsPlaying: audioCtrl.setIsPlaying,
     setIsFinished: audioCtrl.setIsFinished,
@@ -185,38 +182,8 @@ export function useMelodiqSessionCore(
       resumeFromScore: audioCtrl.resumeFromScore,
       isPausedForScore: audioCtrl.isPausedForScore,
       handleNext: audioCtrl.handleNext,
-      getGameState: () => ({
-        isPlaying: audioCtrl.isPlaying,
-        isFinished: audioCtrl.isFinished,
-        isPausedForScore: audioCtrl.isPausedForScore,
-        lyricsScale: settings.lyricsScale ?? 1.0,
-        enableLyricsZoom: settings.enableLyricsZoom ?? false,
-        lyricsPosition: settings.lyricsPosition ?? 'bottom',
-        youTubeConsent: getYouTubeConsent(),
-        players: playersRef.current.map((p) => ({
-          config: p.config,
-          id: p.config.id,
-          name: p.config.name,
-          hue: p.config.hue,
-          score: p.score,
-          trackScores: p.trackScores,
-          currentPitch: p.pitchRef.current,
-          activeSegments: p.activeSegments,
-          sungSegments: p.segmentsRef.current,
-          combo: p.combo,
-          lastHit: p.lastHit,
-        })),
-        currentTime: audioCtrl.audioRef.current?.currentTime || 0,
-      }),
     }),
-    [
-      audioCtrl,
-      handleSongEndBound,
-      playersRef,
-      settings.lyricsScale,
-      settings.enableLyricsZoom,
-      settings.lyricsPosition,
-    ],
+    [audioCtrl, handleSongEndBound],
   );
 
   return {
