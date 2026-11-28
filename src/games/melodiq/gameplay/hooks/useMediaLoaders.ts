@@ -3,6 +3,7 @@ import { type Song } from '../../db';
 import { getYouTubeVideoId } from '../youtubeApi';
 import { storage, STORAGE_KEYS } from '../../../../lib/storage';
 import { createLogger } from '../../../../lib/logger';
+import { exactSeekUrl } from '../../../../modules/audio/exactSeek';
 
 const log = createLogger('MelodiqSession');
 
@@ -121,6 +122,7 @@ export function useMediaLoaders(
   useEffect(() => {
     let activeAudioUrl: string | undefined;
     let activeVocalsUrl: string | undefined;
+    let exactAudioUrl: string | null = null;
     let mounted = true;
 
     const loadMediaTracks = async () => {
@@ -165,6 +167,10 @@ export function useMediaLoaders(
           // Fallback to default audio
           activeAudioUrl = await resolveMediaTargetUrl(song.audio);
         }
+        // The song clock must seek exactly (skips, mode switches): a VBR MP3 plays as WAV
+        exactAudioUrl = activeAudioUrl
+          ? await exactSeekUrl(activeAudioUrl).catch(() => null)
+          : null;
       } catch (e) {
         if ((e as Error).name === 'NotAllowedError') {
           log.debug('Audio permission not granted yet');
@@ -175,8 +181,11 @@ export function useMediaLoaders(
       }
 
       if (mounted) {
-        setAudioSrc(activeAudioUrl);
+        setAudioSrc(exactAudioUrl ?? activeAudioUrl);
         setVocalsSrc(activeVocalsUrl);
+      } else if (exactAudioUrl) {
+        // decoded after the cleanup ran
+        URL.revokeObjectURL(exactAudioUrl);
       }
     };
 
@@ -190,6 +199,7 @@ export function useMediaLoaders(
       if (activeVocalsUrl && activeVocalsUrl.startsWith('blob:')) {
         URL.revokeObjectURL(activeVocalsUrl);
       }
+      if (exactAudioUrl) URL.revokeObjectURL(exactAudioUrl);
     };
   }, [
     song.audio,
@@ -295,7 +305,12 @@ export function useMediaLoaders(
                 '[Melodiq] Firefox detected: Skipping AVI-as-MP4 hack to prevent browser crash. Video may not play.',
               );
             } else {
-              log.debug('Attempting to force-load AVI file by masking as MP4:', name, 'Type:', type);
+              log.debug(
+                'Attempting to force-load AVI file by masking as MP4:',
+                name,
+                'Type:',
+                type,
+              );
               blobToUrl = new Blob([fileOrBlob], { type: 'video/mp4' });
             }
           }

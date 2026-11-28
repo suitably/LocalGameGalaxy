@@ -1,5 +1,5 @@
 /**
- * Exact seeking for recordings (Melodiq Notes). Browsers seek in M4A/MP4 and WAV to the sample,
+ * Exact seeking for recordings (Melodiq Notes, Melodiq). Browsers seek in M4A/MP4 and WAV to the sample,
  * but in an MP3 (VBR above all, and every older song download) only by an estimate that can land
  * seconds off while `currentTime` still looks right, which puts the notes consistently early or
  * late after every seek or loop. Such recordings are decoded once and played as WAV, the same
