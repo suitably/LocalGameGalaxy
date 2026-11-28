@@ -103,8 +103,8 @@ export const SessionStage: React.FC<SessionStageProps> = ({ session, core }) => 
           progressLineRef={scoringCtrl.progressLineRef}
           isUIVisible={chrome.visible}
         />
-        {/* The TV mirrors the host and has no pointer: no buttons there */}
-        {!isTVMode && (
+        {/* The TV mirrors the host and has no pointer; a phone without playback rights neither */}
+        {!isTVMode && !(isClient && !onRequestTogglePlay) && (
           <SessionTransportControls
             visible={chrome.visible}
             isPlaying={audioCtrl.isPlaying}

@@ -20,10 +20,12 @@ import { useRoomEvents } from '../../../../modules/room-game/useRoomEvents';
 import {
   joinModeOf,
   parseRemoteCommand,
+  canSendRemoteCommand,
   profileLatencyOf,
   type RemoteCommandEvent,
 } from '../../logic/remoteCommands';
 import { MELODIQ_GAME_KEY, useMelodiqRoomTransport } from '../../hooks/useMelodiqRoomTransport';
+import { getRoleForDevice } from '../../components/useStoredRoles';
 import { createLogger } from '../../../../lib/logger';
 
 const log = createLogger('Session');
@@ -131,7 +133,8 @@ export function usePeerSessionMessages<R extends RemoteResultEntry>(
     enabled: !!manager && !!room,
     onEvent: (event) => {
       const cmd = parseRemoteCommand(event);
-      if (cmd && cmd.to === undefined && cmd.from !== room?.selfId) handleCommand(cmd);
+      if (!cmd || cmd.to !== undefined || cmd.from === room?.selfId) return;
+      if (canSendRemoteCommand(getRoleForDevice(cmd.from), cmd.command)) handleCommand(cmd);
     },
   });
 

@@ -1,4 +1,5 @@
 /** Phone remote control as room events: pure guard, types and host handler. */
+import type { ClientRole } from '../types';
 
 /**
  * Every command that is sent or handled today. The playback names are lower case, the rest keeps
@@ -31,6 +32,31 @@ export interface RemoteCommandEvent {
   value?: unknown;
   /** Set on targeted replies (`PONG`): only this device handles the event. */
   to?: string;
+}
+
+/** Commands that change playback for everyone. */
+const PLAYBACK_COMMANDS: readonly RemoteCommandName[] = [
+  'play',
+  'pause',
+  'toggle',
+  'next',
+  'restart',
+];
+
+/**
+ * Which phone role may send a command (#837, maintainer decision 2026-11-28, "graduated"):
+ * `admin` everything; `queue_manager` also playback (play, pause, next, restart); every role its
+ * own device's commands (profile latency, join mode, calibration beep, clock ping). Only `admin`
+ * may end the session (`exit`).
+ */
+export function canSendRemoteCommand(
+  role: ClientRole | string,
+  command: RemoteCommandName,
+): boolean {
+  if (role === 'admin') return true;
+  if (command === 'exit') return false;
+  if (PLAYBACK_COMMANDS.includes(command)) return role === 'queue_manager';
+  return true;
 }
 
 export const isRemoteCommandName = (value: unknown): value is RemoteCommandName =>
@@ -80,16 +106,20 @@ export interface RemoteCommandHostDeps {
   now: () => number;
   /** The host's own id; its own events are ignored. */
   selfId: string;
+  /** Role of a device id (`getRoleForDevice`); called with the transport-stamped `from` only. */
+  getRole: (deviceId: string) => ClientRole | string;
 }
 
 /**
- * Host handler for one room event. `PING` is answered with a `PONG` addressed to the sender, a
+ * Host handler for one room event. Commands the sender's role may not send are dropped
+ * (`canSendRemoteCommand`). `PING` is answered with a `PONG` addressed to the sender, a
  * calibration beep plays locally, every other command is forwarded. Replies (`PONG`, anything
  * with `to`) and the host's own events are ignored.
  */
 export function handleRemoteCommandEvent(data: unknown, deps: RemoteCommandHostDeps): void {
   const event = parseRemoteCommand(data);
   if (!event || event.from === deps.selfId || event.to !== undefined) return;
+  if (!canSendRemoteCommand(deps.getRole(event.from), event.command)) return;
   switch (event.command) {
     case 'PONG':
       return;
@@ -102,7 +132,9 @@ export function handleRemoteCommandEvent(data: unknown, deps: RemoteCommandHostD
         value: deps.now(),
       });
       return;
+    // The phone's calibrator sends CALIBRATE_PLAY_BEEP; forwarded, nothing handled it
     case 'CALIBRATE_BEEP':
+    case 'CALIBRATE_PLAY_BEEP':
       deps.playCalibrationBeep();
       return;
     default:

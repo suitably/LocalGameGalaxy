@@ -9,7 +9,7 @@ generated:
   at: 2026-09-27T10:00:00Z
   by: previous-agent
 verified:
-  at: 2026-11-27
+  at: 2026-11-28
   method: '2026-11-22: §2.16 table checked against event names in logic/ and hooks (#820); §2.12 written from code (#636); §2.11 written from code (#604); 2026-11-14: §2.9 / §2.10 written from code and measurements; rest 2026-10-18 audit: paths, links and identifiers resolved against code, content spot-checked; prose not re-verified line by line'
 ---
 
@@ -177,8 +177,8 @@ The host's `useQueue.ts` (`QueueProvider`, host storage) stays the source of tru
 - Pure logic `logic/remoteCommands.ts` [ID: GAME-MELODIQ-REMOTE-COMMANDS]: `parseRemoteCommand` accepts `{ type: 'remote.command', from, command, value?, to? }` with `command` one of `REMOTE_COMMANDS` (`play`, `pause`, `toggle`, `next`, `restart`, `exit`, `UPDATE_PROFILE`, `session.join_mode`, `CALIBRATE_PLAY_BEEP`, `CALIBRATE_BEEP`, `PING`, `PONG`); unknown commands and a missing `from` are rejected. Extra fields travel in `value` (`{ latency }`, `{ mode }`); `profileLatencyOf` / `joinModeOf` read them.
 - Phone: `hooks/usePhoneRemoteCommands.ts` (used by `sendClientCommand` of `PhoneClientEngine.tsx`, which ignores names outside the list) publishes on the room events channel (`gameKey: 'melodiq'`). It goes to the host only.
 - Host: `hooks/useHostRemoteCommands.ts` (mounted by `useMelodiqGlobalEvents`) runs `handleRemoteCommandEvent`: `PING` is answered with a `PONG` whose `to` is the pinging phone; `CALIBRATE_BEEP` plays the beep; everything else goes to `melodiq_host_command` (`useHostPlaybackCommands`), also with a TV connected: the host runs the real session and the queue, and the TV window ignores `REMOTE_COMMAND` except `WAIT_FOR_DOWNLOAD` (`useTVReceiver.ts`), so forwarding there made phone `play` / `pause` / `next` dead in TV mode. `next` runs the MiniPlayer next handler (`hooks/miniPlayerNext.ts`: first press shows the score, the next one pops the queue); `useHostPlaybackCommands` calls the latest handler through a ref. `usePeerSessionMessages.ts` subscribes to the same events during a session for `UPDATE_PROFILE`, `restart`, `exit` and `session.join_mode` (no longer `next`: its seek to the song end raced with the host's handler); it finds the phone's player by `from` (`deviceId`, else peer id). Both handlers run on the host only (`manager` is null on a phone).
-- No role check: every phone could send every command before, and still can (`exit` and `restart` included). **Unverified:** whether any phone UI should be limited by `getRoleForDevice`.
-- Dead ends kept as they were: no phone sends `PING` or consumes `PONG` today, and `CALIBRATE_PLAY_BEEP` (sent by `RemoteLatencyCalibrator`) reaches `melodiq_host_command`, which has no handler for it. The connection-layer ping (`pongFor` in `useWebRTCClient`) is unrelated and unchanged.
+- Role check (#837, maintainer decision 2026-11-28): `canSendRemoteCommand(role, command)` — `admin` everything; `queue_manager` also playback (`play`, `pause`, `toggle`, `next`, `restart`); every role its own device's commands (`UPDATE_PROFILE`, `session.join_mode`, calibration beep, `PING`); only `admin` sends `exit`. The host checks `getRoleForDevice(from)` in both consumers (`handleRemoteCommandEvent` via `getRole`, `usePeerSessionMessages`); a phone without playback rights gets no play/next buttons (`PlaybackManager` → `MiniPlayer` `canControlPlayback`, `SessionStage`).
+- `CALIBRATE_PLAY_BEEP` (sent by `RemoteLatencyCalibrator`) and `CALIBRATE_BEEP` both play the beep on the host. No phone sends `PING` or consumes `PONG` today. The connection-layer ping (`pongFor` in `useWebRTCClient`) is unrelated and unchanged.
 
 ### 2.16 Room protocol at a glance (#813)
 

@@ -11,6 +11,7 @@ import { useQueue } from '../hooks/useQueue';
 import { usePlaybackReporting, IDLE_PLAYBACK_STATE } from '../hooks/usePlaybackReporting';
 import { useHostPlaybackCommands } from '../hooks/useHostPlaybackCommands';
 import { createMiniPlayerNextHandler } from '../hooks/miniPlayerNext';
+import { canSendRemoteCommand } from '../logic/remoteCommands';
 import { useClientEngine } from '../phoneClientContext';
 import { useTranslation } from 'react-i18next';
 
@@ -96,8 +97,9 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
       ? isSessionPlaying
       : Boolean(selectedSong || remoteSong) && playbackState.isPlaying;
 
+    const canControlPlayback = !isClient || canSendRemoteCommand(clientEngine.clientRole, 'next');
     const clientTogglePlay =
-      isClient && sendClientCommand
+      isClient && sendClientCommand && canControlPlayback
         ? () => sendClientCommand(actualIsPlaying ? 'pause' : 'play')
         : undefined;
 
@@ -107,7 +109,6 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
         onPlayingChange?.(false);
       };
     }, [actualIsPlaying, onPlayingChange]);
-    // Expose methods to parent
     useImperativeHandle(ref, () => ({
       togglePlay: () => {
         if (selectedSong) {
@@ -186,7 +187,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
             clientDeviceId={clientDeviceId}
             hasTv={isTVConnected}
             onRequestTogglePlay={clientTogglePlay}
-            onRequestNext={handleMiniPlayerNext}
+            onRequestNext={canControlPlayback ? handleMiniPlayerNext : undefined}
           />
         )}
 
@@ -235,7 +236,7 @@ export const PlaybackManager = forwardRef<PlaybackManagerHandle, PlaybackManager
                 : undefined
             }
             isClient={isClient}
-            canControlPlayback // all users can control playback
+            canControlPlayback={canControlPlayback}
           />
         )}
 

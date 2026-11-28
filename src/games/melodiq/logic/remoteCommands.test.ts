@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createMemoryTransport } from '../../../modules/room-game/roomTransport';
 import {
+  canSendRemoteCommand,
   commandValue,
   handleRemoteCommandEvent,
   joinModeOf,
@@ -63,7 +64,7 @@ describe('value helpers', () => {
 });
 
 describe('handleRemoteCommandEvent', () => {
-  const setup = () => {
+  const setup = (role = 'admin') => {
     const transport = createMemoryTransport();
     const received: RemoteCommandEvent[] = [];
     transport.subscribe('ch', (msg) => received.push(msg as RemoteCommandEvent));
@@ -73,6 +74,7 @@ describe('handleRemoteCommandEvent', () => {
       send: (event) => transport.publish('ch', event),
       now: () => 1234,
       selfId: 'host',
+      getRole: () => role,
     };
     return { deps, received };
   };
@@ -80,9 +82,7 @@ describe('handleRemoteCommandEvent', () => {
   it('forwards playback commands with their value', () => {
     const { deps } = setup();
     handleRemoteCommandEvent(cmd('next'), deps);
-    handleRemoteCommandEvent(cmd('CALIBRATE_PLAY_BEEP'), deps);
-    expect(deps.forward).toHaveBeenNthCalledWith(1, 'next', undefined);
-    expect(deps.forward).toHaveBeenNthCalledWith(2, 'CALIBRATE_PLAY_BEEP', undefined);
+    expect(deps.forward).toHaveBeenCalledWith('next', undefined);
   });
 
   it('answers PING with a PONG addressed to the pinging phone', () => {
@@ -97,7 +97,9 @@ describe('handleRemoteCommandEvent', () => {
   it('plays the calibration beep locally', () => {
     const { deps } = setup();
     handleRemoteCommandEvent(cmd('CALIBRATE_BEEP'), deps);
-    expect(deps.playCalibrationBeep).toHaveBeenCalledOnce();
+    // what the phone's calibrator sends
+    handleRemoteCommandEvent(cmd('CALIBRATE_PLAY_BEEP'), deps);
+    expect(deps.playCalibrationBeep).toHaveBeenCalledTimes(2);
     expect(deps.forward).not.toHaveBeenCalled();
   });
 
@@ -109,5 +111,45 @@ describe('handleRemoteCommandEvent', () => {
     handleRemoteCommandEvent({ ...cmd('next'), from: 'host' }, deps);
     expect(deps.forward).not.toHaveBeenCalled();
     expect(received).toEqual([]);
+  });
+});
+
+describe('canSendRemoteCommand (#837, graduated roles)', () => {
+  const own = ['UPDATE_PROFILE', 'session.join_mode', 'CALIBRATE_PLAY_BEEP', 'PING'] as const;
+  const playback = ['play', 'pause', 'toggle', 'next', 'restart'] as const;
+
+  it('lets an admin send everything', () => {
+    for (const command of REMOTE_COMMANDS)
+      expect(canSendRemoteCommand('admin', command)).toBe(true);
+  });
+
+  it('lets a queue manager control playback but not end the session', () => {
+    for (const command of playback)
+      expect(canSendRemoteCommand('queue_manager', command)).toBe(true);
+    expect(canSendRemoteCommand('queue_manager', 'exit')).toBe(false);
+  });
+
+  it('limits singers, contributors and unknown roles to their own device', () => {
+    for (const role of ['singer', 'queue_contributor', 'bogus']) {
+      for (const command of own) expect(canSendRemoteCommand(role, command)).toBe(true);
+      for (const command of [...playback, 'exit'] as const) {
+        expect(canSendRemoteCommand(role, command)).toBe(false);
+      }
+    }
+  });
+
+  it('drops a command the sender may not send', () => {
+    const forward = vi.fn();
+    const deps: RemoteCommandHostDeps = {
+      forward,
+      playCalibrationBeep: vi.fn(),
+      send: vi.fn(),
+      now: () => 0,
+      selfId: 'host',
+      getRole: () => 'singer',
+    };
+    handleRemoteCommandEvent(cmd('exit'), deps);
+    handleRemoteCommandEvent(cmd('next'), deps);
+    expect(forward).not.toHaveBeenCalled();
   });
 });
