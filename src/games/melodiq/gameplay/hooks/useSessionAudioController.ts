@@ -6,6 +6,7 @@ import { useLocalMediaSync } from './useLocalMediaSync';
 import { useWakeLock } from '../../../../hooks/useWakeLock';
 import { useMelodiqSettings } from '../../hooks/settingsContextCore';
 import { useYouTubeConsentGate } from './useYouTubeConsentGate';
+import { useRouteActive } from '../../../../context/routeActiveContext';
 
 export interface UseSessionAudioControllerOptions {
   songId: string;
@@ -213,8 +214,10 @@ export function useSessionAudioController({
     };
   }, []);
 
-  // Keyboard shortcuts
+  // Keyboard shortcuts; none while Melodiq is kept alive behind another page (#888)
+  const routeActive = useRouteActive();
   useEffect(() => {
+    if (!routeActive) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       const activeTag = document.activeElement?.tagName.toLowerCase();
       if (activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select') {
@@ -268,7 +271,7 @@ export function useSessionAudioController({
     };
     window.addEventListener('keydown', handleKeyDown, true);
     return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [togglePlay, onExit, isFinished, isPausedForScore]);
+  }, [routeActive, togglePlay, onExit, isFinished, isPausedForScore]);
 
   // Autostart logic
   const hasStartedRef = useRef(false);

@@ -65,4 +65,9 @@ export interface GameDefinition extends CatalogEntry {
   settings?: { sections: GameSettingsSectionDefinition[] };
   nestedRoutes?: GameRouteDefinition[];
   standaloneRoutes?: GameRouteDefinition[];
+  /**
+   * Once opened, the page stays mounted (hidden) while the user is elsewhere in the app, so a
+   * running session (music, connected phones) goes on (`KeepAliveGames`, `useRouteActive`).
+   */
+  keepAlive?: boolean;
 }
