@@ -7,6 +7,7 @@ import {
   STEM_DRIFT_POLICY,
   VIDEO_DRIFT_POLICY,
 } from '../logic/mediaDrift';
+import { startSteadyTicker } from '../../../../lib/utils/steadyTicker';
 
 /** Shortest time between two corrective seeks of the vocal stem. */
 const STEM_SEEK_COOLDOWN_MS = 1000;
@@ -14,6 +15,11 @@ const STEM_SEEK_COOLDOWN_MS = 1000;
 const VIDEO_SEEK_COOLDOWN_MS = 2000;
 /** After a start, how long the loop leaves a video start already under way alone. */
 const VIDEO_START_GRACE_MS = 300;
+/**
+ * Pace of the loop while the window gets no animation frames (hidden, minimized or covered, e.g.
+ * a TV window behind the host): the followers must still follow seeks, pauses and rate changes.
+ */
+const BACKGROUND_TICK_MS = 33;
 
 interface UseLocalMediaSyncProps {
   audioRef: React.RefObject<HTMLAudioElement | null>;
@@ -26,7 +32,8 @@ interface UseLocalMediaSyncProps {
  * Keeps the vocal stem and the background video on the instrumental `<audio>` (the song clock).
  * This loop is the only place that plays, pauses, seeks or re-rates them while a song runs;
  * callers move only the instrumental. It reads the elements every frame, so it also covers
- * elements that mount late (their `src` loads asynchronously).
+ * elements that mount late (their `src` loads asynchronously). Without animation frames a worker
+ * ticker runs it (`startSteadyTicker`), or the stem would stay where it was after a seek.
  */
 export function useLocalMediaSync({
   audioRef,
@@ -35,6 +42,7 @@ export function useLocalMediaSync({
   isPlaying,
 }: UseLocalMediaSyncProps) {
   const rAFRef = useRef<number | null>(null);
+  const lastStepRef = useRef(0);
   const lastSnapTimeRef = useRef<number>(0);
   const smoothedDriftRef = useRef<number | null>(null);
   // Running rate corrections (hysteresis state of `correctDrift`)
@@ -65,7 +73,7 @@ export function useLocalMediaSync({
       return;
     }
 
-    const syncLoop = () => {
+    const step = () => {
       const audio = audioRef.current;
       const video = videoRef.current;
       const vocals = vocalsRef.current;
@@ -170,14 +178,24 @@ export function useLocalMediaSync({
         }
       }
 
-      rAFRef.current = requestAnimationFrame(syncLoop);
+      lastStepRef.current = now;
+    };
+
+    const frame = () => {
+      step();
+      rAFRef.current = requestAnimationFrame(frame);
     };
 
     // Playback was just started and safePlay may be starting the video: give it a moment
     lastVideoSeekRef.current = performance.now() - VIDEO_SEEK_COOLDOWN_MS + VIDEO_START_GRACE_MS;
-    rAFRef.current = requestAnimationFrame(syncLoop);
+    rAFRef.current = requestAnimationFrame(frame);
+    // Idles while frames come; takes over when they stop
+    const stopTicker = startSteadyTicker(BACKGROUND_TICK_MS, () => {
+      if (performance.now() - lastStepRef.current > BACKGROUND_TICK_MS * 1.5) step();
+    });
 
     return () => {
+      stopTicker();
       if (rAFRef.current !== null) {
         cancelAnimationFrame(rAFRef.current);
         rAFRef.current = null;

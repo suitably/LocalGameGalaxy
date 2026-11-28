@@ -1,0 +1,1 @@
+Melodiq: the vocal stem and background video keep following the music when the playing window is hidden or covered (e.g. a TV window behind another window); before, the vocals stayed where they were after a seek or pause until the window showed again.
